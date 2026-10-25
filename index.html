@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="tr" data-theme="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>5. Sınıf İngilizce Kelime Dünyası • Türkiye Yüzyılı Maarif Modeli</title>
+  
+  <!-- Meta & SEO -->
+  <meta name="description" content="5. Sınıf Türkiye Yüzyılı Maarif Modeli ve CEFR seviyeli 506 kelimelik interaktif İngilizce kelime çalışma uygulaması. Flashcard, sesli telaffuz ve quiz testleri.">
+  <meta name="theme-color" content="#090d16">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Maarif İngilizce">
+  
+  <!-- App Icons & Manifest -->
+  <link rel="icon" type="image/png" href="favicon.png">
+  <link rel="apple-touch-icon" href="icon-192.png">
+  <link rel="manifest" href="manifest.json">
+  
+  <!-- Stylesheets -->
+  <link rel="stylesheet" href="app.css">
+</head>
+<body>
+
+  <!-- Confetti Canvas for High Scores -->
+  <canvas id="confetti-canvas"></canvas>
+
+  <!-- Sticky App Header -->
+  <header class="app-header">
+    <div class="header-container">
+      
+      <!-- Brand Group -->
+      <div class="brand-group" onclick="window.APP.switchView('daily')">
+        <img src="icon-192.png" alt="Maarif İngilizce Logo" class="brand-icon">
+        <div class="brand-info">
+          <h1>Maarif İngilizce</h1>
+          <p>5. Sınıf Kelime Dünyası • 506 Kelime</p>
+        </div>
+      </div>
+
+      <!-- Navigation Tabs -->
+      <nav class="nav-tabs" aria-label="Uygulama Modları">
+        <button class="nav-btn active" data-view="daily" id="tab-daily">
+          <span class="nav-btn-icon">📅</span>
+          <span>Günün 10'lusu</span>
+        </button>
+        <button class="nav-btn" data-view="flashcard" id="tab-flashcard">
+          <span class="nav-btn-icon">🗂️</span>
+          <span>Flashcard</span>
+        </button>
+        <button class="nav-btn" data-view="quiz" id="tab-quiz">
+          <span class="nav-btn-icon">🧩</span>
+          <span>Quiz &amp; Test</span>
+        </button>
+        <button class="nav-btn" data-view="directory" id="tab-directory">
+          <span class="nav-btn-icon">📚</span>
+          <span>Kelime Havuzu</span>
+        </button>
+        <button class="nav-btn" data-view="stats" id="tab-stats">
+          <span class="nav-btn-icon">📊</span>
+          <span>İstatistik</span>
+        </button>
+      </nav>
+
+      <!-- Global Settings & Actions -->
+      <div class="header-actions">
+        <button class="ctrl-btn" id="accent-toggle-btn" title="İngilizce Telaffuz Aksanı (İngiliz / Amerikan)">
+          🇬🇧 UK
+        </button>
+        <button class="ctrl-btn" id="speed-toggle-btn" title="Okuma Hızı">
+          ⚡ 1.0x
+        </button>
+        <button class="ctrl-btn" id="sound-toggle-btn" title="Ses Efektleri">
+          🔔 Ses Açık
+        </button>
+        <button class="ctrl-btn" id="theme-toggle-btn" title="Karanlık / Aydınlık Mod">
+          ☀️ Açık
+        </button>
+      </div>
+
+    </div>
+  </header>
+
+  <!-- Main Views Container -->
+  <main class="main-wrapper">
+    
+    <!-- View 1: Günün 10'lusu -->
+    <section id="view-daily" class="view-section active" aria-labelledby="tab-daily">
+      <!-- Injected by app.js -->
+    </section>
+
+    <!-- View 2: 3D Flashcard Modu -->
+    <section id="view-flashcard" class="view-section" aria-labelledby="tab-flashcard">
+      <!-- Injected by app.js -->
+    </section>
+
+    <!-- View 3: Quiz & Test Modu -->
+    <section id="view-quiz" class="view-section" aria-labelledby="tab-quiz">
+      <!-- Injected by app.js -->
+    </section>
+
+    <!-- View 4: Kelime Havuzu & Arama -->
+    <section id="view-directory" class="view-section" aria-labelledby="tab-directory">
+      <!-- Injected by app.js -->
+    </section>
+
+    <!-- View 5: İstatistikler & Kazanım Tablosu -->
+    <section id="view-stats" class="view-section" aria-labelledby="tab-stats">
+      <!-- Injected by app.js -->
+    </section>
+
+  </main>
+
+  <!-- Data & Application Logic -->
+  <script src="words-data.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

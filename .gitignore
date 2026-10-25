@@ -1,0 +1,20 @@
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Security & Private Credentials
+.env
+otomasyon/.env
+*.env
+
+# Python & Runtime
+__pycache__/
+*.py[cod]
+*$py.class
+*.log
+otomasyon.log
+
+# Vercel & Build
+.vercel
+node_modules/
