@@ -53,6 +53,10 @@
   --cefr-c2-text: #fb7185;
   --cefr-c2-border: rgba(244, 63, 94, 0.4);
 
+  --cefr-c2plus-bg: rgba(225, 29, 72, 0.25);
+  --cefr-c2plus-text: #fda4af;
+  --cefr-c2plus-border: rgba(244, 63, 94, 0.6);
+
   /* Typography */
   --font-heading: 'Outfit', -apple-system, sans-serif;
   --font-body: 'Plus Jakarta Sans', -apple-system, sans-serif;
@@ -107,6 +111,10 @@
   --cefr-c2-bg: #fff1f2;
   --cefr-c2-text: #e11d48;
   --cefr-c2-border: #fecdd3;
+
+  --cefr-c2plus-bg: #ffe4e6;
+  --cefr-c2plus-text: #be123c;
+  --cefr-c2plus-border: #fecdd3;
 }
 
 /* Base Styles */

@@ -1,6 +1,6 @@
 # 🌟 Learnish • 5. Sınıf Maarif İngilizce Ekosistemi
 
-**Learnish**, 5. Sınıf Türkiye Yüzyılı Maarif Modeli müfredatına ve uluslararası CEFR standartlarına göre hazırlanmış **506 kelimelik** eksiksiz bir dijital öğrenme, otomasyon ve çalışma merkezidir.
+**Learnish**, 5. Sınıf Türkiye Yüzyılı Maarif Modeli müfredatına ve uluslararası CEFR standartlarına göre hazırlanmış **817 kelimelik** eksiksiz bir dijital öğrenme, otomasyon ve çalışma merkezidir.
 
 ---
 
@@ -12,7 +12,7 @@ Learnish/
 │   ├── index.html                   -> Ana web uygulaması (Çift tıklayarak hemen açılır)
 │   ├── app.css                      -> Modern glassmorphic tasarım sistemi
 │   ├── app.js                       -> Web Speech telaffuz, ses sentezleyici ve test motoru
-│   ├── words-data.js                -> 506 kelimelik çevrimdışı JavaScript veri tabanı
+│   ├── words-data.js                -> 817 kelimelik çevrimdışı JavaScript veri tabanı
 │   ├── Uygulamayı_Başlat.command    -> Tek tıkla Mac & Mobil Wi-Fi sunucusu başlatıcı
 │   ├── manifest.json & worker       -> PWA çevrimdışı mobil yükleme yapılandırması
 │   └── favicon, icon-192, icon-512  -> Uygulama logoları ve simgeleri
@@ -21,7 +21,7 @@ Learnish/
 │   ├── Google_Apps_Script_Kod.js    -> Google Cloud (bilgisayar kapalıyken çalışan kod)
 │   ├── Google_Apps_Script_Kurulum_Rehberi.md -> Adım adım Google kurulum rehberi
 │   ├── kelime_gonderici.py          -> Yerel Python e-posta gönderici
-│   ├── kelimeler_havuzu.json        -> 506 kelimelik birleşik JSON veri havuzu
+│   ├── kelimeler_havuzu.json        -> 817 kelimelik birleşik JSON veri havuzu
 │   ├── unite1_kelimeler.json        -> Ünite 1 kelime listesi
 │   ├── .env                         -> E-posta ve SMTP kimlik bilgileri
 │   ├── ilerleme.json                -> Günlük ilerleme ve gönderim geçmişi

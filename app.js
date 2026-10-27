@@ -220,8 +220,9 @@
   // Helper Formatters
   // ==========================================================================
   function getCefrBadgeHtml(level) {
-    const cls = `cefr-${(level || 'a1').toLowerCase()}`;
-    return `<span class="cefr-pill ${cls}" style="background: var(--${cls}-bg); color: var(--${cls}-text); border-color: var(--${cls}-border);">${level}</span>`;
+    const raw = (level || 'A1').trim();
+    const safeCls = `cefr-${raw.toLowerCase().replace('+', 'plus')}`;
+    return `<span class="cefr-pill ${safeCls}" style="background: var(--${safeCls}-bg, rgba(148,163,184,0.15)); color: var(--${safeCls}-text, #94a3b8); border-color: var(--${safeCls}-border, rgba(148,163,184,0.3));">${raw}</span>`;
   }
 
   function getThemeBadgeHtml(themeCode, themeTitle) {
@@ -237,14 +238,15 @@
     const container = document.getElementById('view-daily');
     if (!container) return;
 
+    const totalDays = Math.max(...WORDS_DATA.map(w => w.day));
     const dayWords = WORDS_DATA.filter(w => w.day === STATE.currentDay);
     const dayLearnedCount = dayWords.filter(w => STATE.userData.learned.has(w.id)).length;
     const dayPercent = Math.round((dayLearnedCount / (dayWords.length || 10)) * 100);
 
     // Build Day select options
     let dayOptionsHtml = '';
-    for (let d = 1; d <= 51; d++) {
-      dayOptionsHtml += `<option value="${d}" ${d === STATE.currentDay ? 'selected' : ''}>Gün ${d} / 51</option>`;
+    for (let d = 1; d <= totalDays; d++) {
+      dayOptionsHtml += `<option value="${d}" ${d === STATE.currentDay ? 'selected' : ''}>Gün ${d} / ${totalDays}</option>`;
     }
 
     let cardsHtml = '';
@@ -272,9 +274,11 @@
             </div>
             <div class="word-tr">
               <span style="display:inline-block; font-size:10px; font-weight:800; padding:2px 5px; border-radius:4px; background:var(--cefr-a1-bg); color:var(--accent-emerald);">TR</span>
-              ${w.tr}
+              ${w.tr || '<span style="color:var(--text-dim); font-style:italic;">(Anlamı yakında eklenecek)</span>'}
             </div>
             <div class="word-pos">${w.desc} • ${w.cat}</div>
+            ${w.synonym ? `<div class="word-synonym" style="font-size:0.75rem; color:var(--text-muted); margin-top:4px;"><strong>Eş Anlam:</strong> ${w.synonym}</div>` : ''}
+            ${w.example ? `<div class="word-example" style="font-size:0.75rem; color:var(--accent-cyan); font-style:italic; margin-top:3px; opacity:0.9;">“${w.example.replace(/^["“”]|["“”]$/g, '')}”</div>` : ''}
           </div>
 
           <div class="card-footer">
@@ -298,14 +302,14 @@
       <div class="daily-banner glass-panel">
         <div class="daily-banner-text">
           <h2>📅 Gün ${STATE.currentDay} Kelimeleri</h2>
-          <p>Bugün üzerinde çalışacağınız <strong>10 hedef kelime</strong> (Sıra: ${(STATE.currentDay - 1) * 10 + 1} – ${Math.min(STATE.currentDay * 10, WORDS_DATA.length)} / 506)</p>
+          <p>Bugün üzerinde çalışacağınız <strong>10 hedef kelime</strong> (Sıra: ${(STATE.currentDay - 1) * 10 + 1} – ${Math.min(STATE.currentDay * 10, WORDS_DATA.length)} / ${WORDS_DATA.length})</p>
         </div>
         <div class="day-picker-control">
           <button class="day-step-btn" id="prev-day-btn" ${STATE.currentDay <= 1 ? 'disabled' : ''}>&larr;</button>
           <select class="day-select-input" id="day-select-dropdown">
             ${dayOptionsHtml}
           </select>
-          <button class="day-step-btn" id="next-day-btn" ${STATE.currentDay >= 51 ? 'disabled' : ''}>&rarr;</button>
+          <button class="day-step-btn" id="next-day-btn" ${STATE.currentDay >= totalDays ? 'disabled' : ''}>&rarr;</button>
         </div>
       </div>
 
@@ -401,7 +405,7 @@
           <div class="flashcard-toolbar">
             <select class="filter-source-select" id="fc-source-select" onchange="window.APP.renderFlashcardView()">
               <option value="daily" ${sourceVal === 'daily' ? 'selected' : ''}>Günün 10 Kelimesi (Gün ${STATE.currentDay})</option>
-              <option value="all" ${sourceVal === 'all' ? 'selected' : ''}>Tüm Kelime Havuzu (506)</option>
+              <option value="all" ${sourceVal === 'all' ? 'selected' : ''}>Tüm Kelime Havuzu (${WORDS_DATA.length})</option>
               <option value="review" ${sourceVal === 'review' ? 'selected' : ''}>Tekrar Edilecekler (${STATE.userData.review.size})</option>
               <option value="starred" ${sourceVal === 'starred' ? 'selected' : ''}>Favorilerim (${STATE.userData.starred.size})</option>
             </select>
@@ -425,7 +429,7 @@
         <div class="flashcard-toolbar">
           <select class="filter-source-select" id="fc-source-select" onchange="window.APP.renderFlashcardView()">
             <option value="daily" ${sourceVal === 'daily' ? 'selected' : ''}>Günün 10 Kelimesi (Gün ${STATE.currentDay})</option>
-            <option value="all" ${sourceVal === 'all' ? 'selected' : ''}>Tüm Kelime Havuzu (506)</option>
+            <option value="all" ${sourceVal === 'all' ? 'selected' : ''}>Tüm Kelime Havuzu (${WORDS_DATA.length})</option>
             <option value="review" ${sourceVal === 'review' ? 'selected' : ''}>Tekrar Edilecekler (${STATE.userData.review.size})</option>
             <option value="starred" ${sourceVal === 'starred' ? 'selected' : ''}>Favorilerim (${STATE.userData.starred.size})</option>
           </select>
@@ -473,8 +477,10 @@
               </div>
 
               <div class="fc-main">
-                <div class="fc-word-tr">${currentWord.tr}</div>
+                <div class="fc-word-tr">${currentWord.tr || '<span style="color:var(--text-dim); font-style:italic;">(Anlamı yakında eklenecek)</span>'}</div>
                 <div class="fc-category-desc">${currentWord.en} &mdash; ${currentWord.desc}</div>
+                ${currentWord.synonym ? `<div style="font-size:0.8rem; color:var(--text-muted); margin-top:6px;"><strong>Eş Anlam:</strong> ${currentWord.synonym}</div>` : ''}
+                ${currentWord.example ? `<div style="font-size:0.8rem; color:var(--accent-cyan); font-style:italic; margin-top:6px; max-width:92%;">“${currentWord.example.replace(/^["“”]|["“”]$/g, '')}”</div>` : ''}
               </div>
 
               <div class="fc-footer">
@@ -570,7 +576,7 @@
                 <label>Soru Kaynağı</label>
                 <select id="quiz-source-select">
                   <option value="daily">Günün 10 Kelimesi (Gün ${STATE.currentDay})</option>
-                  <option value="all">Tüm Kelime Havuzu (506 Kelime)</option>
+                  <option value="all">Tüm Kelime Havuzu (${WORDS_DATA.length} Kelime)</option>
                   <option value="review">Zorlandıklarım / Tekrar Edilecekler (${STATE.userData.review.size})</option>
                 </select>
               </div>
@@ -740,8 +746,8 @@
       if (filters.search) {
         const query = filters.search.toLowerCase();
         const matchEn = w.en.toLowerCase().includes(query);
-        const matchTr = w.tr.toLowerCase().includes(query);
-        const matchCat = w.cat.toLowerCase().includes(query);
+        const matchTr = (w.tr || '').toLowerCase().includes(query);
+        const matchCat = (w.cat || '').toLowerCase().includes(query);
         if (!matchEn && !matchTr && !matchCat) return false;
       }
 
@@ -784,8 +790,10 @@
               <span class="word-en">${w.en}</span>
               <button class="speak-btn" data-word="${w.en}">🔊</button>
             </div>
-            <div class="word-tr">${w.tr}</div>
+            <div class="word-tr">${w.tr || '<span style="color:var(--text-dim); font-style:italic;">(Anlamı yakında eklenecek)</span>'}</div>
             <div class="word-pos">${w.desc} • ${w.cat} • Gün ${w.day}</div>
+            ${w.synonym ? `<div class="word-synonym" style="font-size:0.75rem; color:var(--text-muted); margin-top:4px;"><strong>Eş Anlam:</strong> ${w.synonym}</div>` : ''}
+            ${w.example ? `<div class="word-example" style="font-size:0.75rem; color:var(--accent-cyan); font-style:italic; margin-top:3px; opacity:0.9;">“${w.example.replace(/^["“”]|["“”]$/g, '')}”</div>` : ''}
           </div>
 
           <div class="card-footer">
@@ -816,15 +824,15 @@
         <div style="margin-bottom: 10px;">
           <div style="font-size: 0.72rem; font-weight: 800; text-transform: uppercase; color: var(--text-dim); margin-bottom: 6px;">Maarif Modeli Temaları</div>
           <div class="filter-chips-group" id="theme-chips">
-            <button class="filter-chip ${filters.theme === 'all' ? 'active' : ''}" data-val="all">Tüm Temalar (506)</button>
-            <button class="filter-chip ${filters.theme === '1' ? 'active' : ''}" data-val="1">Theme 1: School (148)</button>
-            <button class="filter-chip ${filters.theme === '2' ? 'active' : ''}" data-val="2">Theme 2: Classroom (33)</button>
-            <button class="filter-chip ${filters.theme === '3' ? 'active' : ''}" data-val="3">Theme 3: Personal (47)</button>
-            <button class="filter-chip ${filters.theme === '4' ? 'active' : ''}" data-val="4">Theme 4: Family (15)</button>
-            <button class="filter-chip ${filters.theme === '5' ? 'active' : ''}" data-val="5">Theme 5: City (25)</button>
-            <button class="filter-chip ${filters.theme === '6' ? 'active' : ''}" data-val="6">Theme 6: World (52)</button>
-            <button class="filter-chip ${filters.theme === '7' ? 'active' : ''}" data-val="7">Theme 7: Nature (28)</button>
-            <button class="filter-chip ${filters.theme === '8' ? 'active' : ''}" data-val="8">Theme 8: Future (158)</button>
+            <button class="filter-chip ${filters.theme === 'all' ? 'active' : ''}" data-val="all">Tüm Temalar (${WORDS_DATA.length})</button>
+            <button class="filter-chip ${filters.theme === '1' ? 'active' : ''}" data-val="1">Theme 1: School (${WORDS_DATA.filter(w=>w.themeNum===1).length})</button>
+            <button class="filter-chip ${filters.theme === '2' ? 'active' : ''}" data-val="2">Theme 2: Classroom (${WORDS_DATA.filter(w=>w.themeNum===2).length})</button>
+            <button class="filter-chip ${filters.theme === '3' ? 'active' : ''}" data-val="3">Theme 3: Personal (${WORDS_DATA.filter(w=>w.themeNum===3).length})</button>
+            <button class="filter-chip ${filters.theme === '4' ? 'active' : ''}" data-val="4">Theme 4: Family (${WORDS_DATA.filter(w=>w.themeNum===4).length})</button>
+            <button class="filter-chip ${filters.theme === '5' ? 'active' : ''}" data-val="5">Theme 5: City (${WORDS_DATA.filter(w=>w.themeNum===5).length})</button>
+            <button class="filter-chip ${filters.theme === '6' ? 'active' : ''}" data-val="6">Theme 6: World (${WORDS_DATA.filter(w=>w.themeNum===6).length})</button>
+            <button class="filter-chip ${filters.theme === '7' ? 'active' : ''}" data-val="7">Theme 7: Nature (${WORDS_DATA.filter(w=>w.themeNum===7).length})</button>
+            <button class="filter-chip ${filters.theme === '8' ? 'active' : ''}" data-val="8">Theme 8: Future (${WORDS_DATA.filter(w=>w.themeNum===8).length})</button>
           </div>
         </div>
 
@@ -839,6 +847,7 @@
             <button class="filter-chip ${filters.cefr === 'B2' ? 'active' : ''}" data-val="B2">B2</button>
             <button class="filter-chip ${filters.cefr === 'C1' ? 'active' : ''}" data-val="C1">C1</button>
             <button class="filter-chip ${filters.cefr === 'C2' ? 'active' : ''}" data-val="C2">C2</button>
+            <button class="filter-chip ${filters.cefr === 'C2+' ? 'active' : ''}" data-val="C2+">C2+</button>
           </div>
         </div>
 
@@ -853,7 +862,7 @@
         </div>
 
         <div class="dir-results-info">
-          506 kelimeden <strong>${filtered.length} tanesi</strong> listeleniyor ${filtered.length > 100 ? '(İlk 100 gösteriliyor)' : ''}
+          ${WORDS_DATA.length} kelimeden <strong>${filtered.length} tanesi</strong> listeleniyor ${filtered.length > 100 ? '(İlk 100 gösteriliyor)' : ''}
         </div>
       </div>
 
