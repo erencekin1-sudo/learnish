@@ -1,6 +1,17 @@
-# 🌟 Learnish • 5. Sınıf Maarif İngilizce Ekosistemi
+# 🌟 Learnish • Modern İngilizce Kelime Platformu
 
-**Learnish**, 5. Sınıf Türkiye Yüzyılı Maarif Modeli müfredatına ve uluslararası CEFR standartlarına göre hazırlanmış **817 kelimelik** eksiksiz bir dijital öğrenme, otomasyon ve çalışma merkezidir.
+**Learnish**, 5. Sınıf Türkiye Yüzyılı Maarif Modeli, YDS/YÖKDİL Akademik Hazırlık ve The Oxford 5000 uluslararası standartlarına göre hazırlanmış **6.658 kelimelik** eksiksiz ve modern bir dijital öğrenme platformudur.
+
+---
+
+## 🏛️ 3 Temel Öğrenim Modülü
+
+1. **🎓 5. Sınıf Maarif Modeli:**
+   - MEB 5. Sınıf müfredatındaki 8 Tema (School Life, Classroom Life vb.) ve 82 günlük kazanım döngüsü (817 kelime).
+2. **🎯 YDS & YÖKDİL Akademik Modülü:**
+   - 2.894 adet B2 ve C1 akademik kelime, eş anlam kümeleri (synonym clusters), edat ipuçları (`+ to`, `+ with` vb.) ve ÖSYM formatında cümle tamamlama (cloze) testleri.
+3. **🌍 The Oxford 5000:**
+   - A1'den C1'e 5.841 kelimelik uluslararası standart sözlük, fonetik IPA okunuşları ve seviye bazlı çalışma.
 
 ---
 
@@ -8,42 +19,25 @@
 
 ```
 Learnish/
-├── 📱 Web Uygulaması & PWA (Kök Dizin)
-│   ├── index.html                   -> Ana web uygulaması (Çift tıklayarak hemen açılır)
-│   ├── app.css                      -> Modern glassmorphic tasarım sistemi
-│   ├── app.js                       -> Web Speech telaffuz, ses sentezleyici ve test motoru
-│   ├── words-data.js                -> 817 kelimelik çevrimdışı JavaScript veri tabanı
-│   ├── Uygulamayı_Başlat.command    -> Tek tıkla Mac & Mobil Wi-Fi sunucusu başlatıcı
-│   ├── manifest.json & worker       -> PWA çevrimdışı mobil yükleme yapılandırması
-│   └── favicon, icon-192, icon-512  -> Uygulama logoları ve simgeleri
-│
-├── ⚙️ otomasyon/                    -> Günlük E-posta ve Arka Plan Görevleri
-│   ├── Google_Apps_Script_Kod.js    -> Google Cloud (bilgisayar kapalıyken çalışan kod)
-│   ├── Google_Apps_Script_Kurulum_Rehberi.md -> Adım adım Google kurulum rehberi
-│   ├── kelime_gonderici.py          -> Yerel Python e-posta gönderici
-│   ├── kelimeler_havuzu.json        -> 817 kelimelik birleşik JSON veri havuzu
-│   ├── unite1_kelimeler.json        -> Ünite 1 kelime listesi
-│   ├── .env                         -> E-posta ve SMTP kimlik bilgileri
-│   ├── ilerleme.json                -> Günlük ilerleme ve gönderim geçmişi
-│   ├── durum.sh                     -> Otomasyon durumunu gösteren terminal kısayolu
-│   ├── test_gonder.sh               -> Test e-postası gönderen kısayol
-│   ├── hemen_gonder.sh              -> Günün kelimelerini anında gönderen kısayol
-│   └── servisi_baslat.sh            -> Mac launchd sabah 06:30 servisini başlatan kısayol
-│
-└── 📄 belgeler/                     -> PDF Kitapçıkları ve Kaynak Planlar
-    ├── 2025-2026_Ingilizce_Kelime_Listesi_CEFR.pdf (11 Sayfa, CEFR A1-C2 sıralı)
-    ├── 2025-2026_Ingilizce_Kelime_Listesi_Maarif_Tema_Sirali.pdf (11 Sayfa, 8 Tema sıralı)
-    ├── 5. Sınıf İngilizce - Ünite 1 - School Life.xlsx
-    └── İNGİLİZCE (2-8. SINIF) TASLAK YILLIK ÇERÇEVE PLAN.xlsx
+├── index.html                   -> Ana web uygulaması (Çift tıklayarak hemen açılır)
+├── app.css                      -> Swiss Minimalist & Editorial Slate tasarım sistemi
+├── app.js                       -> Modüler motor, ses sentezleyici, YDS Cloze test motoru
+├── words-data.js                -> 6.658 kelimelik birleşik JavaScript veritabanı
+├── build.py                     -> Tek tıkla veritabanı ve tek dosya HTML derleyicisi
+├── Learnish_Tek_Dosya_Web_App.html -> İnternetsiz çalışan tek dosya sürümü
+├── Uygulamayı_Başlat.command    -> Tek tıkla Mac & Mobil Wi-Fi sunucusu başlatıcı
+├── GitHuba_Gonder.command       -> Otomatik GitHub senkronizasyonu
+├── manifest.json & service-worker.js -> PWA çevrimdışı mobil yükleme yapılandırması
+├── favicon.png, icon-192.png, icon-512.png -> Uygulama simgeleri
+└── belgeler/                    -> Kaynak Word/Excel belgeleri ve CEFR veritabanı
 ```
 
 ---
 
 ## 🚀 Hızlı Başlangıç
 
-### 1. Web Uygulamasını Çalıştırmak:
-* **Bilgisayarda:** [index.html](file:///Users/erencekin/Desktop/İntegral/Learnish/index.html) dosyasına çift tıklayın.
-* **Telefonda (iPhone/Android):** [Uygulamayı_Başlat.command](file:///Users/erencekin/Desktop/İntegral/Learnish/Uygulamayı_Başlat.command) dosyasını çalıştırın ve ekranda çıkan IP adresini aynı Wi-Fi'deki telefonunuzun tarayıcısına yazıp **"Ana Ekrana Ekle"** deyin.
+### Bilgisayarda:
+* [index.html](file:///Users/erencekin/Desktop/İntegral/Learnish/index.html) veya [Learnish_Tek_Dosya_Web_App.html](file:///Users/erencekin/Desktop/İntegral/Learnish/Learnish_Tek_Dosya_Web_App.html) dosyasına çift tıklayarak tarayıcınızda açabilirsiniz.
 
-### 2. E-posta Otomasyonunu Kontrol Etmek:
-* `Learnish/otomasyon` klasöründeki [durum.sh](file:///Users/erencekin/Desktop/İntegral/Learnish/otomasyon/durum.sh) dosyasını terminalden `./durum.sh` ile çalıştırarak gönderim durumunu kontrol edebilirsiniz.
+### Telefonda (iPhone / Android):
+* [Uygulamayı_Başlat.command](file:///Users/erencekin/Desktop/İntegral/Learnish/Uygulamayı_Başlat.command) dosyasını çalıştırın, ekranda çıkan yerel IP adresini telefon tarayıcınızda açıp **"Ana Ekrana Ekle"** seçeneğini seçin.

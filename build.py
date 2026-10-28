@@ -14,9 +14,9 @@ import xml.etree.ElementTree as ET
 
 BASE_DIR = '/Users/erencekin/Desktop/İntegral/Learnish'
 DOCX_PATH = os.path.join(BASE_DIR, 'belgeler', 'The Oxford 5000 - word.docx')
-CEFR_JSON_PATH = os.path.join(BASE_DIR, 'otomasyon', 'oxford_5000_cefr.json')
+CEFR_JSON_PATH = os.path.join(BASE_DIR, 'belgeler', 'oxford_5000_cefr.json')
 WORDS_DATA_JS_PATH = os.path.join(BASE_DIR, 'words-data.js')
-KELIMELER_HAVUZU_PATH = os.path.join(BASE_DIR, 'otomasyon', 'kelimeler_havuzu.json')
+KELIMELER_HAVUZU_PATH = os.path.join(BASE_DIR, 'belgeler', 'kelimeler_havuzu.json')
 SERVICE_WORKER_PATH = os.path.join(BASE_DIR, 'service-worker.js')
 SINGLE_HTML_PATH = os.path.join(BASE_DIR, 'Learnish_Tek_Dosya_Web_App.html')
 
@@ -360,10 +360,10 @@ const WORDS_DATA = %s;
     if os.path.exists(SERVICE_WORKER_PATH):
         with open(SERVICE_WORKER_PATH, 'r', encoding='utf-8') as f:
             sw_text = f.read()
-        sw_text = re.sub(r"const CACHE_NAME = ['\"][^'\"]+['\"];", "const CACHE_NAME = 'learnish-v4-oxford5000';", sw_text)
+        sw_text = re.sub(r"const CACHE_NAME = ['\"][^'\"]+['\"];", "const CACHE_NAME = 'learnish-v5-swiss-yds';", sw_text)
         with open(SERVICE_WORKER_PATH, 'w', encoding='utf-8') as f:
             f.write(sw_text)
-        log("✅ service-worker.js önbellek sürümü v4-oxford5000 olarak güncellendi.")
+        log("✅ service-worker.js önbellek sürümü v5-swiss-yds olarak güncellendi.")
 
     # 6. Rebuild Learnish_Tek_Dosya_Web_App.html
     log("Learnish_Tek_Dosya_Web_App.html tek dosya uygulaması derleniyor...")
