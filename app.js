@@ -27,6 +27,7 @@
     },
     directoryFilters: {
       search: '',
+      dataset: 'all', // 'all', 'oxford', 'maarif'
       theme: 'all',
       cefr: 'all',
       status: 'all' // 'all', 'learned', 'review', 'starred'
@@ -47,7 +48,9 @@
 
   // Ensure current day is restored or defaults to 1
   const savedDay = parseInt(localStorage.getItem('mk_current_day'), 10);
-  const maxInitialDays = (typeof WORDS_DATA !== 'undefined' && Array.isArray(WORDS_DATA)) ? Math.max(...WORDS_DATA.map(w => w.day)) : 82;
+  const maxInitialDays = (typeof WORDS_DATA !== 'undefined' && Array.isArray(WORDS_DATA)) 
+    ? Math.max(...WORDS_DATA.filter(w => w.dataset === 'maarif' || !w.dataset).map(w => w.day || 1)) 
+    : 82;
   if (savedDay && savedDay >= 1 && savedDay <= maxInitialDays) {
     STATE.currentDay = savedDay;
   }
@@ -239,15 +242,16 @@
     const container = document.getElementById('view-daily');
     if (!container) return;
 
-    const totalDays = Math.max(...WORDS_DATA.map(w => w.day));
-    const dayWords = WORDS_DATA.filter(w => w.day === STATE.currentDay);
+    const maarifWords = WORDS_DATA.filter(w => w.dataset === 'maarif' || !w.dataset);
+    const totalDays = Math.max(...maarifWords.map(w => w.day || 1));
+    const dayWords = maarifWords.filter(w => w.day === STATE.currentDay);
     const dayLearnedCount = dayWords.filter(w => STATE.userData.learned.has(w.id)).length;
     const dayPercent = Math.round((dayLearnedCount / (dayWords.length || 10)) * 100);
 
     // Build Day select options
     let dayOptionsHtml = '';
     for (let d = 1; d <= totalDays; d++) {
-      dayOptionsHtml += `<option value="${d}" ${d === STATE.currentDay ? 'selected' : ''}>Gün ${d} / ${totalDays}</option>`;
+      dayOptionsHtml += `<option value="${d}" ${d === STATE.currentDay ? 'selected' : ''}>Gün ${d} / ${totalDays} (Maarif)</option>`;
     }
 
     let cardsHtml = '';
@@ -269,6 +273,7 @@
           <div class="card-body">
             <div class="word-en-row">
               <span class="word-en">${w.en}</span>
+              ${w.phonetic ? `<span class="word-phonetic" style="font-size:0.8rem; color:var(--accent-cyan); margin-left:6px; opacity:0.85;">${w.phonetic}</span>` : ''}
               <button class="speak-btn" data-word="${w.en}" title="Dinle (${STATE.settings.accent})">
                 🔊
               </button>
@@ -302,8 +307,8 @@
     container.innerHTML = `
       <div class="daily-banner glass-panel">
         <div class="daily-banner-text">
-          <h2>📅 Gün ${STATE.currentDay} Kelimeleri</h2>
-          <p>Bugün üzerinde çalışacağınız <strong>10 hedef kelime</strong> (Sıra: ${(STATE.currentDay - 1) * 10 + 1} – ${Math.min(STATE.currentDay * 10, WORDS_DATA.length)} / ${WORDS_DATA.length})</p>
+          <h2>📅 Gün ${STATE.currentDay} Kelimeleri (5. Sınıf Maarif Modeli)</h2>
+          <p>Bugün üzerinde çalışacağınız <strong>10 hedef kelime</strong> (Sıra: ${(STATE.currentDay - 1) * 10 + 1} – ${Math.min(STATE.currentDay * 10, maarifWords.length)} / ${maarifWords.length} Maarif)</p>
         </div>
         <div class="day-picker-control">
           <button class="day-step-btn" id="prev-day-btn" ${STATE.currentDay <= 1 ? 'disabled' : ''}>&larr;</button>
@@ -384,7 +389,21 @@
 
     let pool = [];
     if (sourceVal === 'daily') {
-      pool = WORDS_DATA.filter(w => w.day === STATE.currentDay);
+      pool = WORDS_DATA.filter(w => (w.dataset === 'maarif' || !w.dataset) && w.day === STATE.currentDay);
+    } else if (sourceVal === 'oxford_all') {
+      pool = WORDS_DATA.filter(w => w.dataset === 'oxford');
+    } else if (sourceVal === 'oxford_a1') {
+      pool = WORDS_DATA.filter(w => w.dataset === 'oxford' && w.cefr === 'A1');
+    } else if (sourceVal === 'oxford_a2') {
+      pool = WORDS_DATA.filter(w => w.dataset === 'oxford' && w.cefr === 'A2');
+    } else if (sourceVal === 'oxford_b1') {
+      pool = WORDS_DATA.filter(w => w.dataset === 'oxford' && w.cefr === 'B1');
+    } else if (sourceVal === 'oxford_b2') {
+      pool = WORDS_DATA.filter(w => w.dataset === 'oxford' && w.cefr === 'B2');
+    } else if (sourceVal === 'oxford_c1') {
+      pool = WORDS_DATA.filter(w => w.dataset === 'oxford' && w.cefr === 'C1');
+    } else if (sourceVal === 'maarif_all') {
+      pool = WORDS_DATA.filter(w => w.dataset === 'maarif' || !w.dataset);
     } else if (sourceVal === 'review') {
       pool = WORDS_DATA.filter(w => STATE.userData.review.has(w.id));
     } else if (sourceVal === 'starred') {
@@ -401,15 +420,26 @@
       STATE.activeFlashcardIndex = Math.max(0, pool.length - 1);
     }
 
+    const flashcardSourceOptions = `
+      <option value="daily" ${sourceVal === 'daily' ? 'selected' : ''}>Günün 10 Kelimesi (Maarif Gün ${STATE.currentDay})</option>
+      <option value="oxford_all" ${sourceVal === 'oxford_all' ? 'selected' : ''}>🌍 The Oxford 5000 (Tümü - 5.841 Kelime)</option>
+      <option value="oxford_a1" ${sourceVal === 'oxford_a1' ? 'selected' : ''}>Oxford 5000: A1 Başlangıç (1.069 Kelime)</option>
+      <option value="oxford_a2" ${sourceVal === 'oxford_a2' ? 'selected' : ''}>Oxford 5000: A2 Temel (980 Kelime)</option>
+      <option value="oxford_b1" ${sourceVal === 'oxford_b1' ? 'selected' : ''}>Oxford 5000: B1 Orta (898 Kelime)</option>
+      <option value="oxford_b2" ${sourceVal === 'oxford_b2' ? 'selected' : ''}>Oxford 5000: B2 Orta-İleri (1.537 Kelime)</option>
+      <option value="oxford_c1" ${sourceVal === 'oxford_c1' ? 'selected' : ''}>Oxford 5000: C1 İleri (1.357 Kelime)</option>
+      <option value="maarif_all" ${sourceVal === 'maarif_all' ? 'selected' : ''}>🎓 5. Sınıf Maarif Modeli (817 Kelime)</option>
+      <option value="all" ${sourceVal === 'all' ? 'selected' : ''}>🌟 Tüm Kelime Havuzu (${WORDS_DATA.length} Kelime)</option>
+      <option value="review" ${sourceVal === 'review' ? 'selected' : ''}>Tekrar Edilecekler (${STATE.userData.review.size})</option>
+      <option value="starred" ${sourceVal === 'starred' ? 'selected' : ''}>Favorilerim (${STATE.userData.starred.size})</option>
+    `;
+
     if (pool.length === 0) {
       container.innerHTML = `
         <div class="flashcard-wrapper">
           <div class="flashcard-toolbar">
             <select class="filter-source-select" id="fc-source-select" onchange="window.APP.renderFlashcardView()">
-              <option value="daily" ${sourceVal === 'daily' ? 'selected' : ''}>Günün 10 Kelimesi (Gün ${STATE.currentDay})</option>
-              <option value="all" ${sourceVal === 'all' ? 'selected' : ''}>Tüm Kelime Havuzu (${WORDS_DATA.length})</option>
-              <option value="review" ${sourceVal === 'review' ? 'selected' : ''}>Tekrar Edilecekler (${STATE.userData.review.size})</option>
-              <option value="starred" ${sourceVal === 'starred' ? 'selected' : ''}>Favorilerim (${STATE.userData.starred.size})</option>
+              ${flashcardSourceOptions}
             </select>
           </div>
           <div class="glass-panel" style="padding: 48px 24px; text-align: center; width: 100%;">
@@ -430,10 +460,7 @@
       <div class="flashcard-wrapper">
         <div class="flashcard-toolbar">
           <select class="filter-source-select" id="fc-source-select" onchange="window.APP.renderFlashcardView()">
-            <option value="daily" ${sourceVal === 'daily' ? 'selected' : ''}>Günün 10 Kelimesi (Gün ${STATE.currentDay})</option>
-            <option value="all" ${sourceVal === 'all' ? 'selected' : ''}>Tüm Kelime Havuzu (${WORDS_DATA.length})</option>
-            <option value="review" ${sourceVal === 'review' ? 'selected' : ''}>Tekrar Edilecekler (${STATE.userData.review.size})</option>
-            <option value="starred" ${sourceVal === 'starred' ? 'selected' : ''}>Favorilerim (${STATE.userData.starred.size})</option>
+            ${flashcardSourceOptions}
           </select>
 
           <div class="flashcard-counter">
@@ -459,7 +486,10 @@
               </div>
 
               <div class="fc-main">
-                <div class="fc-word-en">${currentWord.en}</div>
+                <div class="fc-word-en">
+                  ${currentWord.en}
+                  ${currentWord.phonetic ? `<div style="font-size:1.05rem; color:var(--accent-cyan); font-weight:500; margin-top:5px; opacity:0.9;">${currentWord.phonetic}</div>` : ''}
+                </div>
                 <div class="fc-category-desc">${currentWord.desc} • ${currentWord.cat}</div>
               </div>
 
@@ -481,6 +511,7 @@
               <div class="fc-main">
                 <div class="fc-word-tr">${currentWord.tr || '<span style="color:var(--text-dim); font-style:italic;">(Anlamı yakında eklenecek)</span>'}</div>
                 <div class="fc-category-desc">${currentWord.en} &mdash; ${currentWord.desc}</div>
+                ${currentWord.definition ? `<div style="font-size:0.85rem; color:var(--text-muted); margin-top:5px; font-style:italic;">“${currentWord.definition}”</div>` : ''}
                 ${currentWord.synonym ? `<div style="font-size:0.8rem; color:var(--text-muted); margin-top:6px;"><strong>Eş Anlam:</strong> ${currentWord.synonym}</div>` : ''}
                 ${currentWord.example ? `<div style="font-size:0.8rem; color:var(--accent-cyan); font-style:italic; margin-top:6px; max-width:92%;">“${currentWord.example.replace(/^["“”]|["“”]$/g, '')}”</div>` : ''}
               </div>
@@ -577,9 +608,14 @@
               <div class="config-group">
                 <label>Soru Kaynağı</label>
                 <select id="quiz-source-select">
-                  <option value="daily">Günün 10 Kelimesi (Gün ${STATE.currentDay})</option>
-                  <option value="all">Tüm Kelime Havuzu (${WORDS_DATA.length} Kelime)</option>
-                  <option value="review">Zorlandıklarım / Tekrar Edilecekler (${STATE.userData.review.size})</option>
+                  <option value="daily">Günün 10 Kelimesi (Maarif Gün ${STATE.currentDay})</option>
+                  <option value="oxford_all">🌍 The Oxford 5000 (Tüm Havuz - 5.841 Kelime)</option>
+                  <option value="oxford_a1_a2">Oxford 5000: Temel Düzey (A1 & A2)</option>
+                  <option value="oxford_b1_b2">Oxford 5000: Orta Düzey (B1 & B2)</option>
+                  <option value="oxford_c1">Oxford 5000: İleri Düzey (C1)</option>
+                  <option value="maarif">🎓 5. Sınıf Maarif Modeli (817 Kelime)</option>
+                  <option value="all">🌟 Tüm Kelime Havuzu (${WORDS_DATA.length} Kelime)</option>
+                  <option value="review">⚠️ Zorlandıklarım / Tekrar Edilecekler (${STATE.userData.review.size})</option>
                 </select>
               </div>
 
@@ -744,6 +780,11 @@
     const filters = STATE.directoryFilters;
 
     let filtered = WORDS_DATA.filter(w => {
+      // Dataset filter
+      if (filters.dataset && filters.dataset !== 'all' && w.dataset !== filters.dataset) {
+        return false;
+      }
+
       // Search filter
       if (filters.search) {
         const query = filters.search.toLowerCase();
@@ -790,10 +831,12 @@
           <div class="card-body">
             <div class="word-en-row">
               <span class="word-en">${w.en}</span>
+              ${w.phonetic ? `<span class="word-phonetic" style="font-size:0.8rem; color:var(--accent-cyan); margin-left:6px; opacity:0.85;">${w.phonetic}</span>` : ''}
               <button class="speak-btn" data-word="${w.en}">🔊</button>
             </div>
             <div class="word-tr">${w.tr || '<span style="color:var(--text-dim); font-style:italic;">(Anlamı yakında eklenecek)</span>'}</div>
-            <div class="word-pos">${w.desc} • ${w.cat} • Gün ${w.day}</div>
+            <div class="word-pos">${w.desc} • ${w.cat} ${w.dataset === 'maarif' ? '• Gün ' + w.day : ''}</div>
+            ${w.definition ? `<div class="word-def" style="font-size:0.75rem; color:var(--text-muted); margin-top:3px; font-style:italic;">"${w.definition}"</div>` : ''}
             ${w.synonym ? `<div class="word-synonym" style="font-size:0.75rem; color:var(--text-muted); margin-top:4px;"><strong>Eş Anlam:</strong> ${w.synonym}</div>` : ''}
             ${w.example ? `<div class="word-example" style="font-size:0.75rem; color:var(--accent-cyan); font-style:italic; margin-top:3px; opacity:0.9;">“${w.example.replace(/^["“”]|["“”]$/g, '')}”</div>` : ''}
           </div>
@@ -819,12 +862,22 @@
       <div class="directory-controls glass-panel">
         <div class="search-input-box">
           <span class="search-icon">🔍</span>
-          <input type="text" class="search-input" id="dir-search-input" placeholder="İngilizce veya Türkçe kelime ara... (ör: teacher, okul, hospital)" value="${filters.search}">
+          <input type="text" class="search-input" id="dir-search-input" placeholder="İngilizce veya Türkçe kelime ara... (ör: teacher, okul, hospital, abandon)" value="${filters.search}">
+        </div>
+
+        <!-- Dataset Filter Chips -->
+        <div style="margin-bottom: 10px;">
+          <div style="font-size: 0.72rem; font-weight: 800; text-transform: uppercase; color: var(--text-dim); margin-bottom: 6px;">Kelime Kütüphanesi &amp; Kaynak</div>
+          <div class="filter-chips-group" id="dataset-chips">
+            <button class="filter-chip ${filters.dataset === 'all' ? 'active' : ''}" data-val="all">Tüm Kütüphaneler (${WORDS_DATA.length})</button>
+            <button class="filter-chip ${filters.dataset === 'oxford' ? 'active' : ''}" data-val="oxford" style="border-color:#0284c7; color:#38bdf8;">🌍 The Oxford 5000 (${WORDS_DATA.filter(w=>w.dataset==='oxford').length})</button>
+            <button class="filter-chip ${filters.dataset === 'maarif' ? 'active' : ''}" data-val="maarif" style="border-color:#10b981; color:#34d399;">🎓 5. Sınıf Maarif Modeli (${WORDS_DATA.filter(w=>w.dataset==='maarif').length})</button>
+          </div>
         </div>
 
         <!-- Theme Filter Chips -->
         <div style="margin-bottom: 10px;">
-          <div style="font-size: 0.72rem; font-weight: 800; text-transform: uppercase; color: var(--text-dim); margin-bottom: 6px;">Maarif Modeli Temaları</div>
+          <div style="font-size: 0.72rem; font-weight: 800; text-transform: uppercase; color: var(--text-dim); margin-bottom: 6px;">Maarif Modeli &amp; Temalar</div>
           <div class="filter-chips-group" id="theme-chips">
             <button class="filter-chip ${filters.theme === 'all' ? 'active' : ''}" data-val="all">Tüm Temalar (${WORDS_DATA.length})</button>
             <button class="filter-chip ${filters.theme === '1' ? 'active' : ''}" data-val="1">Theme 1: School (${WORDS_DATA.filter(w=>w.themeNum===1).length})</button>
@@ -835,6 +888,7 @@
             <button class="filter-chip ${filters.theme === '6' ? 'active' : ''}" data-val="6">Theme 6: World (${WORDS_DATA.filter(w=>w.themeNum===6).length})</button>
             <button class="filter-chip ${filters.theme === '7' ? 'active' : ''}" data-val="7">Theme 7: Nature (${WORDS_DATA.filter(w=>w.themeNum===7).length})</button>
             <button class="filter-chip ${filters.theme === '8' ? 'active' : ''}" data-val="8">Theme 8: Future (${WORDS_DATA.filter(w=>w.themeNum===8).length})</button>
+            <button class="filter-chip ${filters.theme === '9' ? 'active' : ''}" data-val="9">Oxford 5000 (${WORDS_DATA.filter(w=>w.themeNum===9).length})</button>
           </div>
         </div>
 
@@ -843,13 +897,11 @@
           <div style="font-size: 0.72rem; font-weight: 800; text-transform: uppercase; color: var(--text-dim); margin-bottom: 6px;">CEFR Düzeyleri</div>
           <div class="filter-chips-group" id="cefr-chips">
             <button class="filter-chip ${filters.cefr === 'all' ? 'active' : ''}" data-val="all">Tüm Düzeyler</button>
-            <button class="filter-chip ${filters.cefr === 'A1' ? 'active' : ''}" data-val="A1">A1</button>
-            <button class="filter-chip ${filters.cefr === 'A2' ? 'active' : ''}" data-val="A2">A2</button>
-            <button class="filter-chip ${filters.cefr === 'B1' ? 'active' : ''}" data-val="B1">B1</button>
-            <button class="filter-chip ${filters.cefr === 'B2' ? 'active' : ''}" data-val="B2">B2</button>
-            <button class="filter-chip ${filters.cefr === 'C1' ? 'active' : ''}" data-val="C1">C1</button>
-            <button class="filter-chip ${filters.cefr === 'C2' ? 'active' : ''}" data-val="C2">C2</button>
-            <button class="filter-chip ${filters.cefr === 'C2+' ? 'active' : ''}" data-val="C2+">C2+</button>
+            <button class="filter-chip ${filters.cefr === 'A1' ? 'active' : ''}" data-val="A1">A1 (${WORDS_DATA.filter(w=>w.cefr==='A1').length})</button>
+            <button class="filter-chip ${filters.cefr === 'A2' ? 'active' : ''}" data-val="A2">A2 (${WORDS_DATA.filter(w=>w.cefr==='A2').length})</button>
+            <button class="filter-chip ${filters.cefr === 'B1' ? 'active' : ''}" data-val="B1">B1 (${WORDS_DATA.filter(w=>w.cefr==='B1').length})</button>
+            <button class="filter-chip ${filters.cefr === 'B2' ? 'active' : ''}" data-val="B2">B2 (${WORDS_DATA.filter(w=>w.cefr==='B2').length})</button>
+            <button class="filter-chip ${filters.cefr === 'C1' ? 'active' : ''}" data-val="C1">C1 (${WORDS_DATA.filter(w=>w.cefr==='C1').length})</button>
           </div>
         </div>
 
@@ -877,6 +929,14 @@
     document.getElementById('dir-search-input')?.addEventListener('input', (e) => {
       STATE.directoryFilters.search = e.target.value;
       renderDirectoryView();
+    });
+
+    // Bind dataset chips
+    container.querySelectorAll('#dataset-chips .filter-chip').forEach(btn => {
+      btn.addEventListener('click', () => {
+        STATE.directoryFilters.dataset = btn.getAttribute('data-val');
+        renderDirectoryView();
+      });
     });
 
     // Bind chip groups
@@ -922,10 +982,18 @@
     const totalWords = WORDS_DATA.length;
     const progressPercent = Math.round((totalLearned / totalWords) * 100);
 
+    const maarifWords = WORDS_DATA.filter(w => w.dataset === 'maarif' || !w.dataset);
+    const maarifLearned = maarifWords.filter(w => STATE.userData.learned.has(w.id)).length;
+    const maarifPct = Math.round((maarifLearned / (maarifWords.length || 1)) * 100);
+
+    const oxfordWords = WORDS_DATA.filter(w => w.dataset === 'oxford');
+    const oxfordLearned = oxfordWords.filter(w => STATE.userData.learned.has(w.id)).length;
+    const oxfordPct = Math.round((oxfordLearned / (oxfordWords.length || 1)) * 100);
+
     const quizStats = STATE.userData.stats;
     const quizAccuracy = quizStats.totalQuestions > 0 ? Math.round((quizStats.correctAnswers / quizStats.totalQuestions) * 100) : 0;
 
-    // Theme breakdown
+    // 1. Maarif 8 Themes breakdown
     let themesBreakdownHtml = '';
     for (let t = 1; t <= 8; t++) {
       const tWords = WORDS_DATA.filter(w => w.themeNum === t);
@@ -949,29 +1017,65 @@
       `;
     }
 
+    // 2. Oxford 5000 CEFR Breakdown
+    const cefrLevels = [
+      { level: 'A1', name: 'A1 Başlangıç (Beginner)', color: '#10b981' },
+      { level: 'A2', name: 'A2 Temel (Elementary)', color: '#06b6d4' },
+      { level: 'B1', name: 'B1 Eşik / Orta (Intermediate)', color: '#f59e0b' },
+      { level: 'B2', name: 'B2 Orta-İleri (Upper Intermediate)', color: '#8b5cf6' },
+      { level: 'C1', name: 'C1 İleri (Advanced)', color: '#f43f5e' }
+    ];
+
+    let oxfordBreakdownHtml = '';
+    cefrLevels.forEach(item => {
+      const cWords = oxfordWords.filter(w => w.cefr === item.level);
+      const cLearned = cWords.filter(w => STATE.userData.learned.has(w.id)).length;
+      const cPct = Math.round((cLearned / (cWords.length || 1)) * 100);
+
+      oxfordBreakdownHtml += `
+        <div class="theme-stat-row">
+          <div style="width: 220px;">
+            <div class="theme-stat-name" style="color: ${item.color}; font-weight: 700;">CEFR ${item.level}</div>
+            <div style="font-size: 0.72rem; color: var(--text-dim);">${item.name}</div>
+          </div>
+          <div class="theme-stat-bar-container">
+            <div style="height: 100%; width: ${cPct}%; background: ${item.color}; border-radius: 4px;"></div>
+          </div>
+          <div style="font-size: 0.82rem; font-weight: 700; min-width: 80px; text-align: right;">
+            ${cLearned} / ${cWords.length} (%${cPct})
+          </div>
+        </div>
+      `;
+    });
+
     container.innerHTML = `
       <div class="stats-summary-grid">
         <div class="stat-metric-card glass-panel">
           <div class="metric-val" style="color: var(--accent-emerald);">${totalLearned}</div>
-          <div class="metric-title">Öğrenilen Kelimeler (%${progressPercent})</div>
+          <div class="metric-title">Toplam Öğrenilen (${totalWords} Kelimede %${progressPercent})</div>
         </div>
         <div class="stat-metric-card glass-panel">
-          <div class="metric-val" style="color: var(--accent-amber);">${totalReview}</div>
-          <div class="metric-title">Tekrar Listesi</div>
+          <div class="metric-val" style="color: var(--accent-cyan);">${maarifLearned} <span style="font-size: 0.9rem; opacity: 0.7;">/ ${maarifWords.length}</span></div>
+          <div class="metric-title">5. Sınıf Maarif Modeli (%${maarifPct})</div>
         </div>
         <div class="stat-metric-card glass-panel">
-          <div class="metric-val" style="color: var(--primary-light);">${quizAccuracy}%</div>
-          <div class="metric-title">Quiz Doğruluk Oranı</div>
+          <div class="metric-val" style="color: var(--accent-purple);">${oxfordLearned} <span style="font-size: 0.9rem; opacity: 0.7;">/ ${oxfordWords.length}</span></div>
+          <div class="metric-title">The Oxford 5000 (%${oxfordPct})</div>
         </div>
         <div class="stat-metric-card glass-panel">
-          <div class="metric-val" style="color: var(--accent-cyan);">${quizStats.bestStreak}</div>
-          <div class="metric-title">En Yüksek Soru Kombosu 🔥</div>
+          <div class="metric-val" style="color: var(--accent-amber);">${quizAccuracy}%</div>
+          <div class="metric-title">Quiz Doğruluğu (Seri: ${quizStats.bestStreak} 🔥)</div>
         </div>
       </div>
 
       <div class="themes-breakdown-card glass-panel" style="margin-bottom: 24px;">
-        <h3 style="font-family: var(--font-heading); margin-bottom: 14px;">📚 8 Maarif Teması Kazanım & İlerleme Tablosu</h3>
+        <h3 style="font-family: var(--font-heading); margin-bottom: 14px;">🎓 5. Sınıf Maarif Modeli (8 Tema İlerlemesi)</h3>
         ${themesBreakdownHtml}
+      </div>
+
+      <div class="themes-breakdown-card glass-panel" style="margin-bottom: 24px;">
+        <h3 style="font-family: var(--font-heading); margin-bottom: 14px;">🌍 The Oxford 5000 (CEFR Seviye Dağılımı & İlerleme)</h3>
+        ${oxfordBreakdownHtml}
       </div>
 
       <div class="glass-panel" style="padding: 20px; text-align: center;">
@@ -1086,9 +1190,19 @@
 
     let pool = [];
     if (source === 'daily') {
-      pool = WORDS_DATA.filter(w => w.day === STATE.currentDay);
+      pool = WORDS_DATA.filter(w => (w.dataset === 'maarif' || !w.dataset) && w.day === STATE.currentDay);
     } else if (source === 'review') {
       pool = WORDS_DATA.filter(w => STATE.userData.review.has(w.id));
+    } else if (source === 'maarif') {
+      pool = WORDS_DATA.filter(w => w.dataset === 'maarif' || !w.dataset);
+    } else if (source === 'oxford_all') {
+      pool = WORDS_DATA.filter(w => w.dataset === 'oxford');
+    } else if (source === 'oxford_a1_a2') {
+      pool = WORDS_DATA.filter(w => w.dataset === 'oxford' && (w.cefr === 'A1' || w.cefr === 'A2'));
+    } else if (source === 'oxford_b1_b2') {
+      pool = WORDS_DATA.filter(w => w.dataset === 'oxford' && (w.cefr === 'B1' || w.cefr === 'B2'));
+    } else if (source === 'oxford_c1') {
+      pool = WORDS_DATA.filter(w => w.dataset === 'oxford' && w.cefr === 'C1');
     } else {
       pool = WORDS_DATA;
     }
@@ -1107,9 +1221,11 @@
     const qCount = countVal === 'all' ? shuffled.length : Math.min(parseInt(countVal, 10), shuffled.length);
     const selectedTargets = shuffled.slice(0, qCount);
 
+    const distractorPool = pool.length >= 10 ? pool : WORDS_DATA;
+
     const questions = selectedTargets.map(target => {
       // Pick 3 distractors
-      const distractors = WORDS_DATA
+      const distractors = distractorPool
         .filter(w => w.id !== target.id)
         .sort(() => Math.random() - 0.5)
         .slice(0, 3);
