@@ -11,7 +11,7 @@
   // State Management
   const STATE = {
     currentView: 'daily', // 'daily', 'flashcard', 'quiz', 'directory', 'stats'
-    currentDay: 1, // 1 to 51
+    currentDay: 1, // 1 to 82 (dinamik)
     activeFlashcardIndex: 0,
     filteredFlashcards: [],
     flashcardFlipped: false,
@@ -47,7 +47,8 @@
 
   // Ensure current day is restored or defaults to 1
   const savedDay = parseInt(localStorage.getItem('mk_current_day'), 10);
-  if (savedDay && savedDay >= 1 && savedDay <= 51) {
+  const maxInitialDays = (typeof WORDS_DATA !== 'undefined' && Array.isArray(WORDS_DATA)) ? Math.max(...WORDS_DATA.map(w => w.day)) : 82;
+  if (savedDay && savedDay >= 1 && savedDay <= maxInitialDays) {
     STATE.currentDay = savedDay;
   }
 
@@ -346,7 +347,8 @@
     });
 
     document.getElementById('next-day-btn')?.addEventListener('click', () => {
-      if (STATE.currentDay < 51) {
+      const maxDays = (typeof WORDS_DATA !== 'undefined' && Array.isArray(WORDS_DATA)) ? Math.max(...WORDS_DATA.map(w => w.day)) : 82;
+      if (STATE.currentDay < maxDays) {
         STATE.currentDay++;
         saveUserData();
         updateUI();
