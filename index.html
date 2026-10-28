@@ -3,11 +3,11 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Learnish • İngilizce Kelime Dünyası (Maarif &amp; Oxford 5000)</title>
+  <title>Learnish • İngilizce Kelime Platformu (Maarif, YDS &amp; Oxford 5000)</title>
   
   <!-- Meta & SEO -->
-  <meta name="description" content="Learnish: 5. Sınıf Türkiye Yüzyılı Maarif Modeli ve The Oxford 5000 (A1-C1) 6.658 kelimelik interaktif İngilizce kelime çalışma uygulaması. Flashcard, sesli telaffuz ve quiz testleri.">
-  <meta name="theme-color" content="#090d16">
+  <meta name="description" content="Learnish: 5. Sınıf Maarif Modeli, YDS/YÖKDİL Akademik Hazırlık ve The Oxford 5000 (A1-C1) 6.658 kelimelik interaktif İngilizce kelime çalışma platformu.">
+  <meta name="theme-color" content="#0b0d13">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="Learnish">
@@ -18,14 +18,55 @@
   <link rel="manifest" href="manifest.json">
   
   <!-- Stylesheets -->
-  <link rel="stylesheet" href="app.css">
+  <link rel="stylesheet" href="app.css?v=swiss2">
 </head>
 <body>
 
   <!-- Confetti Canvas for High Scores -->
-  <canvas id="confetti-canvas"></canvas>
+  <canvas id="confetti-canvas" style="position:fixed; top:0; left:0; width:100vw; height:100vh; pointer-events:none; z-index:9999; display:none;"></canvas>
 
-  <!-- Sticky App Header -->
+  <!-- 1. TOP MODULE SWITCHER BAR -->
+  <div class="module-bar">
+    <div class="module-bar-container">
+      <div class="module-tabs" role="tablist" aria-label="Öğrenim Modülü Seçici">
+        
+        <button class="module-btn active" data-module="maarif" id="mod-tab-maarif" onclick="window.APP.switchModule('maarif')">
+          <span class="mod-icon">🎓</span>
+          <div class="mod-text-group">
+            <span class="mod-title">5. Sınıf Maarif Modeli</span>
+            <span class="mod-meta">8 Tema • 82 Gün • 817 Kelime</span>
+          </div>
+        </button>
+
+        <button class="module-btn" data-module="yds" id="mod-tab-yds" onclick="window.APP.switchModule('yds')">
+          <span class="mod-icon">🎯</span>
+          <div class="mod-text-group">
+            <span class="mod-title">YDS &amp; YÖKDİL Akademik</span>
+            <span class="mod-meta">B2 / C1 Sınav Kelimeleri • 2.894 Kelime</span>
+          </div>
+        </button>
+
+        <button class="module-btn" data-module="oxford" id="mod-tab-oxford" onclick="window.APP.switchModule('oxford')">
+          <span class="mod-icon">🌍</span>
+          <div class="mod-text-group">
+            <span class="mod-title">The Oxford 5000</span>
+            <span class="mod-meta">A1 - C1 Dünya Standardı • 5.841 Kelime</span>
+          </div>
+        </button>
+
+        <button class="module-btn" data-module="all" id="mod-tab-all" onclick="window.APP.switchModule('all')">
+          <span class="mod-icon">📚</span>
+          <div class="mod-text-group">
+            <span class="mod-title">Tüm Kütüphane</span>
+            <span class="mod-meta">6.658 Kelime Birleşik Havuz</span>
+          </div>
+        </button>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- 2. STICKY APP SUB-HEADER -->
   <header class="app-header">
     <div class="header-container">
       
@@ -34,31 +75,31 @@
         <img src="icon-192.png" alt="Learnish Logo" class="brand-icon">
         <div class="brand-info">
           <h1>Learnish</h1>
-          <p>Maarif Modeli &amp; Oxford 5000 • 6.658 Kelime</p>
+          <p id="app-brand-subtitle">5. Sınıf Maarif Modeli • 817 Kelime</p>
         </div>
       </div>
 
       <!-- Navigation Tabs -->
       <nav class="nav-tabs" aria-label="Uygulama Modları">
         <button class="nav-btn active" data-view="daily" id="tab-daily">
-          <span class="nav-btn-icon">📅</span>
-          <span>Günün 10'lusu</span>
+          <span class="nav-btn-icon" id="tab-daily-icon">📅</span>
+          <span id="tab-daily-text">Günün 10'lusu</span>
         </button>
         <button class="nav-btn" data-view="flashcard" id="tab-flashcard">
           <span class="nav-btn-icon">🗂️</span>
-          <span>Flashcard</span>
+          <span id="tab-flashcard-text">Flashcard</span>
         </button>
         <button class="nav-btn" data-view="quiz" id="tab-quiz">
           <span class="nav-btn-icon">🧩</span>
-          <span>Quiz &amp; Test</span>
+          <span id="tab-quiz-text">Quiz &amp; Test</span>
         </button>
         <button class="nav-btn" data-view="directory" id="tab-directory">
           <span class="nav-btn-icon">📚</span>
-          <span>Kelime Havuzu</span>
+          <span id="tab-directory-text">Kelime Havuzu</span>
         </button>
         <button class="nav-btn" data-view="stats" id="tab-stats">
           <span class="nav-btn-icon">📊</span>
-          <span>İstatistik</span>
+          <span id="tab-stats-text">İstatistik</span>
         </button>
       </nav>
 
@@ -81,10 +122,10 @@
     </div>
   </header>
 
-  <!-- Main Views Container -->
+  <!-- 3. MAIN VIEWS CONTAINER -->
   <main class="main-wrapper">
     
-    <!-- View 1: Günün 10'lusu -->
+    <!-- View 1: Günlük Çalışma / Workout -->
     <section id="view-daily" class="view-section active" aria-labelledby="tab-daily">
       <!-- Injected by app.js -->
     </section>
@@ -104,7 +145,7 @@
       <!-- Injected by app.js -->
     </section>
 
-    <!-- View 5: İstatistikler & Kazanım Tablosu -->
+    <!-- View 5: İstatistikler & Analiz -->
     <section id="view-stats" class="view-section" aria-labelledby="tab-stats">
       <!-- Injected by app.js -->
     </section>
