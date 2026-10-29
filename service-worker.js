@@ -3,7 +3,7 @@
  * Caches core assets for offline usage on mobile and desktop
  */
 
-const CACHE_NAME = 'learnish-v8-command-center-home';
+const CACHE_NAME = 'learnish-v9-mission-control-dashboard';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',

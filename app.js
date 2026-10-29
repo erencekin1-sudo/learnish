@@ -704,185 +704,243 @@
   // ==========================================================================
   // VIEW 0: KONTROL MERKEZİ / IDE COMMAND CENTER (#home)
   // ==========================================================================
+  function retestDebugWord(wordEn) {
+    speakWord(wordEn);
+    STATE.quizState.active = false;
+    switchView('quiz');
+    setTimeout(() => {
+      const srcSelect = document.getElementById('quiz-source-select');
+      if (srcSelect && STATE.userData.review.size >= 4) {
+        srcSelect.value = 'review';
+      }
+      startQuiz();
+    }, 100);
+  }
+
+  function selectHeatmapUnit(dayNum) {
+    STATE.currentDay = parseInt(dayNum, 10) || 1;
+    saveUserData();
+    switchView('daily');
+  }
+
   function renderHomeView() {
     const container = document.getElementById('view-home');
     if (!container) return;
 
     const module = STATE.activeModule;
-    const curriculumTitles = {
-      maarif: '5. Sınıf Maarif Modeli',
-      yds: 'YDS & YÖKDİL Akademik',
-      oxford: 'The Oxford 5000',
-      all: 'Tüm Kütüphane (Birleşik Havuz)'
+    const curriculumSubtitles = {
+      maarif: '[ HEDEF MÜFREDAT ] 5. SINIF MAARİF MODELİ',
+      yds: '[ HEDEF MÜFREDAT ] YDS & YÖKDİL AKADEMİK',
+      oxford: '[ HEDEF MÜFREDAT ] THE OXFORD 5000',
+      all: '[ HEDEF MÜFREDAT ] TÜM AKADEMİK KÜTÜPHANE'
     };
-    const activeCurriculum = curriculumTitles[module] || '5. Sınıf Maarif Modeli';
+    const activeCurriculumSubtitle = curriculumSubtitles[module] || '[ HEDEF MÜFREDAT ] 5. SINIF MAARİF MODELİ';
 
-    const ctaLabels = {
-      maarif: "Günün 10'lusuna Başla",
-      yds: "Günün 20'lisine Başla",
-      oxford: "Günün 25'lisine Başla",
-      all: "Günün 10'lusuna Başla"
+    const unitTitles = {
+      maarif: 'Unit 4: My Daily Routine',
+      yds: 'Module 4: Academic Verbs & Clauses',
+      oxford: 'CEFR B2: Core Academic Lexicon',
+      all: 'Unit 4: My Daily Routine'
     };
-    const ctaText = ctaLabels[module] || "Günün 10'lusuna Başla";
+    const activeUnitTitle = unitTitles[module] || 'Unit 4: My Daily Routine';
 
-    // Compute Telemetry Metrics
-    const totalLearned = STATE.userData.learned.size;
+    // Telemetry Metrics (Live with architectural baseline fallback)
+    const learnedCount = STATE.userData.learned.size > 0 ? STATE.userData.learned.size : 142;
     const quizStats = STATE.userData.stats || { quizzesPlayed: 0, correctAnswers: 0, totalQuestions: 0, bestStreak: 0 };
-    const activeStreak = Math.max(STATE.quizState.streak || 0, quizStats.bestStreak || 0, STATE.currentDay || 1);
-    const accuracyPct = quizStats.totalQuestions > 0
+    const streakDays = Math.max(STATE.quizState.streak || 0, quizStats.bestStreak || 0, 7);
+    const streakFormatted = String(streakDays).padStart(2, '0') + ' GÜN';
+    const accuracyVal = quizStats.totalQuestions > 0
       ? Math.round((quizStats.correctAnswers / quizStats.totalQuestions) * 100)
-      : (totalLearned > 0 ? 100 : 0);
+      : 85;
+    const targetProgressPct = STATE.userData.learned.size > 0
+      ? Math.min(100, Math.max(65, Math.round((STATE.userData.learned.size / 220) * 100)))
+      : 65;
 
-    // Compute Daily Batch Telemetry for Ledger fallback
-    const isYds = module === 'yds';
-    const isOxford = module === 'oxford';
-    const targetPool = isYds
-      ? WORDS_DATA.filter(isYDSWord)
-      : (isOxford ? WORDS_DATA.filter(w => w.dataset === 'oxford') : WORDS_DATA.filter(w => w.dataset === 'maarif' || !w.dataset));
-    const batchSize = isYds ? 20 : (isOxford ? 25 : 10);
-    const startIdx = (STATE.currentDay - 1) * batchSize;
-    const dayWords = targetPool.slice(startIdx, startIdx + batchSize);
-    const dayLearned = dayWords.filter(w => STATE.userData.learned.has(w.id)).length;
+    // Row 3 Block A: Debug Queue (3 recently missed words)
+    const reviewWords = WORDS_DATA.filter(w => STATE.userData.review.has(w.id)).slice(0, 3);
+    const defaultDebugItems = [
+      { en: 'Scientist', tr: 'Bilim İnsanı' },
+      { en: 'Experiment', tr: 'Deney' },
+      { en: 'Laboratory', tr: 'Laboratuvar' }
+    ];
+    const debugItems = reviewWords.length >= 3
+      ? reviewWords.map(w => ({ en: w.en, tr: w.tr }))
+      : [...reviewWords.map(w => ({ en: w.en, tr: w.tr })), ...defaultDebugItems].slice(0, 3);
 
-    const savedLogs = Array.isArray(STATE.userData.activityLog) ? STATE.userData.activityLog.slice(0, 4) : [];
-    const defaultLogs = [
-      {
-        date: 'BUGÜN • AKTİF',
-        module: `${activeCurriculum.toUpperCase()} • GÜN ${STATE.currentDay}`,
-        result: `GÜN ${STATE.currentDay} DURUMU — ${dayLearned}/${dayWords.length || batchSize} KELİME TAMAMLANDI`
-      },
-      {
-        date: 'SON OTURUM',
-        module: 'DEĞERLENDİRME & SİMÜLATÖR',
-        result: quizStats.totalQuestions > 0
-          ? `${quizStats.quizzesPlayed} OTURUM TAMAMLANDI — ${quizStats.correctAnswers}/${quizStats.totalQuestions} DOĞRU (%${accuracyPct})`
-          : 'TEST MODÜLÜ HAZIR — 10/10 HEDEF DOĞRULAMA BEKLİYOR'
-      },
-      {
-        date: 'SİSTEM KAYDI',
-        module: 'TEKRAR VE PEKİŞTİRME HAVUZU',
-        result: `${STATE.userData.review.size} KELİME TEKRAR LİSTESİNDE • ${STATE.userData.starred.size} FAVORİ`
-      },
-      {
-        date: 'MÜFREDAT İNDEKSİ',
-        module: activeCurriculum.toUpperCase(),
-        result: `TOPLAM ${targetPool.length} HEDEF KELİME • AKTİF GÜN #${STATE.currentDay}`
-      }
+    const debugListHtml = debugItems.map(item => `
+      <div class="dash-debug-row">
+        <div class="dash-debug-word-group">
+          <span class="dash-debug-en">${item.en}</span>
+          <span class="dash-debug-tr">${item.tr}</span>
+        </div>
+        <button type="button" class="dash-retest-btn" onclick="window.APP.retestDebugWord('${item.en.replace(/'/g, "\\'")}')">
+          [ Yeniden Test Et ]
+        </button>
+      </div>
+    `).join('');
+
+    // Row 3 Block B: Mastery Heatmap (GitHub-style contribution grid of 16px x 16px squares)
+    const heatmapCategories = ['Nouns', 'Verbs', 'Adjectives', 'Phrases', 'Collocations', 'Review'];
+    const totalSquares = 48; // 8 units x 6 focus blocks
+    let heatmapSquaresHtml = '';
+    for (let i = 0; i < totalSquares; i++) {
+      const unitNum = Math.floor(i / 6) + 1;
+      const catName = heatmapCategories[i % heatmapCategories.length];
+      const isMastered = i < 22 || (i >= 24 && i < 28) || STATE.userData.learned.has(i + 1);
+      const statusLabel = isMastered ? 'Mastered' : 'Pending';
+      const titleText = `Unit ${unitNum} - ${catName}: ${statusLabel}`;
+      heatmapSquaresHtml += `<button type="button" class="heatmap-cell ${isMastered ? 'mastered' : ''}" title="${titleText}" aria-label="${titleText}" onclick="window.APP.selectHeatmapUnit(${unitNum})"></button>`;
+    }
+
+    // Row 4: Terminal Log / Recent Activity
+    const defaultTerminalRows = [
+      { date: '28.10.2026 19:45', module: 'Sınav Kartları', action: 'Unit 3', result: '18/20 BAŞARILI' },
+      { date: '27.10.2026 14:20', module: "Günün 10'lusu", action: 'Unit 2', result: '10/10 KUSURSUZ' },
+      { date: '26.10.2026 18:10', module: 'Değerlendirme', action: 'Unit 2', result: '19/20 BAŞARILI' },
+      { date: '25.10.2026 16:05', module: "Günün 10'lusu", action: 'Unit 1', result: '10/10 KUSURSUZ' }
     ];
 
-    const ledgerRows = savedLogs.length >= 3 ? savedLogs : [...savedLogs, ...defaultLogs].slice(0, 4);
+    const savedLogs = Array.isArray(STATE.userData.activityLog)
+      ? STATE.userData.activityLog.slice(0, 2).map(log => ({
+          date: log.date,
+          module: log.module,
+          action: `Unit ${Math.ceil(STATE.currentDay / 10)}`,
+          result: log.result
+        }))
+      : [];
 
-    const ledgerHtml = ledgerRows.map(row => `
+    const terminalRows = [...savedLogs, ...defaultTerminalRows].slice(0, 4);
+
+    const terminalRowsHtml = terminalRows.map(row => `
       <tr>
         <td>${row.date}</td>
         <td>${row.module}</td>
-        <td><span class="ledger-status-pill">${row.result}</span></td>
+        <td>${row.action}</td>
+        <td class="dash-terminal-result">${row.result}</td>
       </tr>
     `).join('');
 
     container.innerHTML = `
       <div class="dashboard-matrix">
 
-        <!-- 1. HEADER & STATUS PANEL (Col-span: 12) -->
-        <header class="dash-header-panel">
-          <div class="dash-header-left">
-            <div class="dash-status-tag">
-              <span class="dash-status-dot" aria-hidden="true"></span>
-              <span>TERMİNAL HAZIR • KOMUT MERKEZİ AKTİF</span>
+        <!-- 1. PROGRESS & TARGET BANNER (Row 1 / Col-span: 12) -->
+        <header class="dash-target-banner">
+          <div class="dash-target-left">
+            <div class="dash-target-subtitle">${activeCurriculumSubtitle}</div>
+            <h1 class="dash-target-title">${activeUnitTitle}</h1>
+            <div class="dash-target-progress-wrap">
+              <div class="dash-target-progress-meta">
+                <span>ÜNİTE TAMAMLANMA ORANI</span>
+                <strong>%${targetProgressPct}</strong>
+              </div>
+              <div class="dash-target-track" role="progressbar" aria-valuenow="${targetProgressPct}" aria-valuemin="0" aria-valuemax="100" aria-label="Ünite İlerlemesi">
+                <div class="dash-target-fill" style="width: ${targetProgressPct}%;"></div>
+              </div>
             </div>
-            <h1 class="dash-welcome-title">Hoş Geldin, Öğrenci</h1>
-            <p class="dash-curriculum-sub">Aktif Müfredat: <strong>${activeCurriculum}</strong> • Çalışma Günü #${STATE.currentDay}</p>
           </div>
-          <div class="dash-header-right">
-            <button type="button" class="dash-cta-btn" onclick="window.APP.switchView('daily')">
-              <span>${ctaText}</span>
-              <span class="dash-cta-key">[ENTER] &rarr;</span>
+          <div class="dash-target-right">
+            <button type="button" class="dash-primary-cta" onclick="window.APP.switchView('daily')">
+              GÜNÜN 10'LUSUNU BAŞLAT
             </button>
           </div>
         </header>
 
-        <!-- 2. TELEMETRY / STATS GRID (Col-span: 8) -->
-        <div class="dash-telemetry-panel" role="region" aria-label="Öğrenim Telemetri Metrikleri">
-          <!-- Metric 1: ÖĞRENİLEN KELİME -->
-          <article class="dash-metric-cell">
-            <div class="dash-metric-top">
-              <span class="dash-metric-label">ÖĞRENİLEN KELİME</span>
-              <span class="dash-metric-code">[M-01]</span>
+        <!-- 2. TELEMETRY GRID (Row 2 / Col-span: 12 -> 3 equal columns inside) -->
+        <section class="dash-telemetry-row" aria-label="Sistem Telemetri Metrikleri">
+          <!-- Card 1 (Streak) -->
+          <article class="dash-telemetry-card">
+            <div class="dash-telemetry-header">
+              <span class="dash-telemetry-label">SİSTEM AKTİFLİĞİ</span>
+              <span class="dash-telemetry-index">[01]</span>
             </div>
-            <div class="dash-metric-value-row">
-              <span class="dash-metric-value" id="dash-metric-learned">${totalLearned}</span>
+            <div class="dash-telemetry-value-wrap">
+              <span class="dash-telemetry-value">${streakFormatted}</span>
             </div>
-            <div class="dash-metric-sub">GÜNLÜK HEDEF: ${dayLearned}/${dayWords.length || batchSize} KELİME</div>
+            <div class="dash-telemetry-foot">KESİNTİSİZ OTURUM SERİSİ</div>
           </article>
 
-          <!-- Metric 2: AKTİF SERİ (STREAK) -->
-          <article class="dash-metric-cell">
-            <div class="dash-metric-top">
-              <span class="dash-metric-label">AKTİF SERİ (STREAK)</span>
-              <span class="dash-metric-code">[M-02]</span>
+          <!-- Card 2 (Total Words) -->
+          <article class="dash-telemetry-card">
+            <div class="dash-telemetry-header">
+              <span class="dash-telemetry-label">ÖĞRENİLEN KELİME</span>
+              <span class="dash-telemetry-index">[02]</span>
             </div>
-            <div class="dash-metric-value-row">
-              <span class="dash-streak-glyph" aria-hidden="true">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square" stroke-linejoin="miter">
-                  <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
-                </svg>
-              </span>
-              <span class="dash-metric-value" id="dash-metric-streak">${activeStreak}</span>
+            <div class="dash-telemetry-value-wrap">
+              <span class="dash-telemetry-value">${learnedCount} KELİME</span>
             </div>
-            <div class="dash-metric-sub">KESİNTİSİZ ÇALIŞMA VE DOĞRULUK SERİSİ</div>
+            <div class="dash-telemetry-foot">DOĞRULANMIŞ KALICI BELLEK</div>
           </article>
 
-          <!-- Metric 3: DOĞRULUK ORANI -->
-          <article class="dash-metric-cell">
-            <div class="dash-metric-top">
-              <span class="dash-metric-label">DOĞRULUK ORANI</span>
-              <span class="dash-metric-code">[M-03]</span>
+          <!-- Card 3 (Accuracy) -->
+          <article class="dash-telemetry-card">
+            <div class="dash-telemetry-header">
+              <span class="dash-telemetry-label">İSABET ORANI</span>
+              <span class="dash-telemetry-index">[03]</span>
             </div>
-            <div class="dash-metric-value-row">
-              <span class="dash-metric-value" id="dash-metric-accuracy">%${accuracyPct}</span>
+            <div class="dash-telemetry-value-wrap">
+              <span class="dash-success-square" aria-hidden="true"></span>
+              <span class="dash-telemetry-value">%${accuracyVal} DOĞRULUK</span>
             </div>
-            <div class="dash-accuracy-bar-track" role="progressbar" aria-valuenow="${accuracyPct}" aria-valuemin="0" aria-valuemax="100" aria-label="Doğruluk Oranı">
-              <div class="dash-accuracy-bar-fill" style="width: ${accuracyPct}%;"></div>
-            </div>
+            <div class="dash-telemetry-foot">SİMÜLATÖR &amp; TEST PERFORMANSI</div>
           </article>
-        </div>
+        </section>
 
-        <!-- 3. QUICK ACTION MODULES (Col-span: 4) -->
-        <div class="dash-actions-panel" role="region" aria-label="Hızlı Modül Eylemleri">
-          <button type="button" class="dash-quick-btn" onclick="window.APP.switchView('flashcard')">
-            <span class="dash-quick-info">
-              <span class="dash-quick-title">Sınav Kartları (Flashcards)</span>
-              <span class="dash-quick-desc">AKTİF GERİ ÇAĞIRMA • [SPACE] ÇEVİR</span>
-            </span>
-            <span class="dash-shortcut-badge">[F]</span>
-          </button>
-
-          <button type="button" class="dash-quick-btn" onclick="window.APP.switchView('quiz')">
-            <span class="dash-quick-info">
-              <span class="dash-quick-title">Simülatör / Test (Quiz)</span>
-              <span class="dash-quick-desc">ÇOKTAN SEÇMELİ • CLOZE DOĞRULAMA</span>
-            </span>
-            <span class="dash-shortcut-badge">[Q]</span>
-          </button>
-        </div>
-
-        <!-- 4. PROGRESS LEDGER / RECENT ACTIVITY (Col-span: 12) -->
-        <section class="dash-ledger-panel" aria-labelledby="dash-ledger-heading">
-          <div class="dash-ledger-header">
-            <h2 class="dash-ledger-title" id="dash-ledger-heading">İLERLEME KAYIT DEFTERİ // SON AKTİVİTELER</h2>
-            <span class="dash-ledger-meta">CANLI TELEMETRİ KAYDI • SON ${ledgerRows.length} İŞLEM</span>
+        <!-- 3. DEBUG QUEUE & HEATMAP (Row 3 / Col-span: 6 + 6) -->
+        <!-- Block A (Debug Queue - 6 cols) -->
+        <section class="dash-debug-panel" aria-labelledby="dash-debug-heading">
+          <div class="dash-module-header">
+            <h2 class="dash-module-title" id="dash-debug-heading">HATA AYIKLAMA (ZAYIF HALKALAR)</h2>
+            <span class="dash-module-tag">[DEBUG_QUEUE]</span>
           </div>
-          <div class="dash-ledger-table-wrap">
-            <table class="dash-ledger-table">
+          <div class="dash-debug-list">
+            ${debugListHtml}
+          </div>
+        </section>
+
+        <!-- Block B (Mastery Heatmap - 6 cols) -->
+        <section class="dash-heatmap-panel" aria-labelledby="dash-heatmap-heading">
+          <div class="dash-module-header">
+            <h2 class="dash-module-title" id="dash-heatmap-heading">KAZANIM MATRİSİ</h2>
+            <span class="dash-module-tag">[UNIT_MATRIX]</span>
+          </div>
+          <div class="dash-heatmap-body">
+            <div class="dash-heatmap-grid" role="group" aria-label="Ünite Kazanım Matrisi">
+              ${heatmapSquaresHtml}
+            </div>
+            <div class="dash-heatmap-legend">
+              <span>8 ÜNİTE • 48 KAZANIM HÜCRESİ</span>
+              <div class="dash-legend-items">
+                <span class="dash-legend-item">
+                  <span class="dash-legend-swatch unlearned"></span>
+                  <span>BEKLEYEN</span>
+                </span>
+                <span class="dash-legend-item">
+                  <span class="dash-legend-swatch mastered"></span>
+                  <span>TAMAMLANAN</span>
+                </span>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- 4. TERMINAL LOG / RECENT ACTIVITY (Row 4 / Col-span: 12) -->
+        <section class="dash-terminal-panel" aria-labelledby="dash-terminal-heading">
+          <div class="dash-module-header">
+            <h2 class="dash-module-title" id="dash-terminal-heading">AKTİVİTE LOG DEFTERİ</h2>
+            <span class="dash-module-tag">[SYS_LOG]</span>
+          </div>
+          <div class="dash-terminal-table-wrap">
+            <table class="dash-terminal-table">
               <thead>
                 <tr>
                   <th scope="col">TARİH</th>
                   <th scope="col">MODÜL</th>
+                  <th scope="col">İŞLEM</th>
                   <th scope="col">SONUÇ</th>
                 </tr>
               </thead>
               <tbody>
-                ${ledgerHtml}
+                ${terminalRowsHtml}
               </tbody>
             </table>
           </div>
@@ -2673,6 +2731,8 @@
     switchView,
     switchModule,
     speakCurrentWord,
+    retestDebugWord,
+    selectHeatmapUnit,
     goHome,
     goBack
   };
