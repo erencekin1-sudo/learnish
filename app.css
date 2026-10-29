@@ -360,12 +360,34 @@ body {
   gap: 12px;
 }
 
-.brand-group {
+.brand-group,
+.brand-group-btn {
   display: flex;
   align-items: center;
   gap: 10px;
   text-decoration: none;
+  background: transparent;
+  border: none;
+  padding: 4px 6px;
+  border-radius: var(--radius-sm);
   cursor: pointer;
+  flex-shrink: 0;
+  text-align: left;
+  transition: all var(--transition-fast);
+  -webkit-tap-highlight-color: transparent;
+}
+
+.brand-group-btn:hover {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.brand-group-btn:active {
+  transform: scale(0.98);
+}
+
+.brand-icon-wrapper {
+  position: relative;
+  display: inline-flex;
   flex-shrink: 0;
 }
 
@@ -376,6 +398,26 @@ body {
   border: none;
   object-fit: contain;
   flex-shrink: 0;
+}
+
+/* Explicit Touch Home Badge on Logo */
+.brand-home-pill {
+  position: absolute;
+  bottom: -4px;
+  right: -6px;
+  background: var(--accent-emerald);
+  color: #022c22;
+  font-size: 0.62rem;
+  font-weight: 800;
+  padding: 1px 5px;
+  border-radius: 8px;
+  border: 1.5px solid var(--bg-surface);
+  line-height: 1.2;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  pointer-events: none;
 }
 
 .brand-info h1 {
@@ -506,7 +548,7 @@ body {
 }
 
 /* ==========================================================================
-   BREADCRUMB & NAVIGATION COMPASS (Anti-Disorientation)
+   BREADCRUMB & NAVIGATION COMPASS (Anti-Disorientation & Touch Target Standard)
    ========================================================================== */
 .breadcrumb-container {
   display: flex;
@@ -518,32 +560,34 @@ body {
   padding: 8px 14px;
   margin-bottom: 18px;
   flex-wrap: wrap;
-  gap: 10px;
+  gap: 12px;
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.15);
 }
 
 .breadcrumb-left {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
   flex-wrap: wrap;
 }
 
 .breadcrumb-back-btn {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  min-height: 40px;
-  padding: 0 14px;
+  gap: 7px;
+  min-height: 44px;
+  min-width: 44px;
+  padding: 0 16px;
   background: var(--bg-primary);
   border: 1.5px solid var(--border-subtle);
-  border-radius: var(--radius-sm);
+  border-radius: 22px;
   color: var(--text-main);
   font-family: var(--font-body);
-  font-size: 0.84rem;
+  font-size: 0.85rem;
   font-weight: 700;
   cursor: pointer;
   transition: all var(--transition-fast);
+  -webkit-tap-highlight-color: transparent;
 }
 
 .breadcrumb-back-btn:hover {
@@ -551,6 +595,10 @@ body {
   border-color: var(--accent-blue);
   color: var(--accent-blue);
   transform: translateX(-2px);
+}
+
+.breadcrumb-back-btn:active {
+  transform: scale(0.97);
 }
 
 .breadcrumb-back-btn .back-arrow {
@@ -569,25 +617,159 @@ body {
   font-weight: 600;
 }
 
-.breadcrumb-item a {
-  color: var(--text-muted);
-  text-decoration: none;
-  transition: color var(--transition-fast);
+/* Bulletproof Tactile Home Chip Button */
+.breadcrumb-home-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 44px;
+  padding: 0 14px;
+  background: var(--bg-primary);
+  border: 1.5px solid var(--border-subtle);
+  border-radius: 22px;
+  color: var(--text-main);
+  font-family: var(--font-body);
+  font-size: 0.84rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  -webkit-tap-highlight-color: transparent;
 }
 
-.breadcrumb-item a:hover {
-  color: var(--text-main);
-  text-decoration: underline;
+.breadcrumb-home-chip:hover {
+  background: var(--bg-card-hover);
+  border-color: var(--accent-blue);
+  color: var(--accent-blue);
+  transform: translateY(-1px);
+}
+
+.breadcrumb-home-chip:active {
+  transform: scale(0.97);
+}
+
+.breadcrumb-home-chip .chip-home-icon {
+  font-size: 0.95rem;
+  line-height: 1;
 }
 
 .breadcrumb-item.active {
   color: var(--text-main);
   font-weight: 700;
+  padding: 0 6px;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
 }
 
 .breadcrumb-sep {
   color: var(--text-dim);
-  font-size: 1rem;
+  font-size: 1.1rem;
+  margin: 0 2px;
+  pointer-events: none;
+  user-select: none;
+}
+
+/* ==========================================================================
+   LIVE DYNAMIC PROGRESS BADGE (Gamified & Anti-Banner Blindness)
+   ========================================================================== */
+.badge-live-container {
+  display: inline-flex;
+  align-items: center;
+}
+
+.badge-live-progress {
+  display: inline-flex;
+  flex-direction: column;
+  gap: 5px;
+  background: var(--bg-primary);
+  border: 1.5px solid var(--border-subtle);
+  border-radius: 14px;
+  padding: 6px 14px;
+  min-width: 190px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+  transition: all var(--transition-fast);
+}
+
+.badge-live-progress.celebrating {
+  border-color: var(--accent-emerald);
+  box-shadow: 0 0 12px rgba(16, 185, 129, 0.35);
+  animation: pulseCelebrating 2s infinite ease-in-out;
+}
+
+@keyframes pulseCelebrating {
+  0%, 100% {
+    transform: scale(1);
+    box-shadow: 0 0 8px rgba(16, 185, 129, 0.25);
+  }
+  50% {
+    transform: scale(1.02);
+    box-shadow: 0 0 16px rgba(16, 185, 129, 0.5);
+  }
+}
+
+.badge-live-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.badge-day-label {
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.badge-live-counter {
+  color: var(--accent-emerald);
+  white-space: nowrap;
+  font-family: var(--font-mono);
+}
+
+.badge-live-stars {
+  font-size: 0.85rem;
+  letter-spacing: 1px;
+}
+
+.badge-streak-flame {
+  color: #f97316;
+  font-size: 0.74rem;
+  font-weight: 800;
+  animation: flamePulse 1s infinite alternate;
+}
+
+@keyframes flamePulse {
+  0% { transform: scale(1); }
+  100% { transform: scale(1.12); }
+}
+
+.badge-mini-track {
+  width: 100%;
+  height: 6px;
+  background: rgba(148, 163, 184, 0.2);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.badge-mini-fill {
+  height: 100%;
+  border-radius: 4px;
+  background: linear-gradient(90deg, #10b981, #34d399);
+  transition: width 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.badge-mini-fill.fill-quiz {
+  background: linear-gradient(90deg, #3b82f6, #60a5fa);
+}
+
+.badge-mini-fill.fill-fc {
+  background: linear-gradient(90deg, #f59e0b, #fbbf24);
+}
+
+.badge-mini-fill.completed {
+  background: linear-gradient(90deg, #10b981, #f59e0b);
 }
 
 .breadcrumb-right .badge-day {

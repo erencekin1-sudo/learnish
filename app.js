@@ -1793,12 +1793,12 @@
   }
 
   // ==========================================================================
-  // NAVIGATION & BREADCRUMB CONTROLLERS
+  // NAVIGATION & BREADCRUMB CONTROLLERS (Live Gamified Progress)
   // ==========================================================================
   function updateBreadcrumb(viewName) {
-    const modLabel = document.getElementById('breadcrumb-module-label');
+    const modText = document.getElementById('breadcrumb-module-text') || document.getElementById('breadcrumb-module-label');
     const viewLabel = document.getElementById('breadcrumb-view-label');
-    const dayBadge = document.getElementById('breadcrumb-day-badge');
+    const badgeContainer = document.getElementById('breadcrumb-dynamic-badge') || document.getElementById('breadcrumb-context-badge');
     const backBtn = document.getElementById('breadcrumb-back-btn');
 
     const moduleNames = {
@@ -1816,32 +1816,113 @@
       stats: "📊 İlerleme ve Analiz"
     };
 
-    if (modLabel) {
-      modLabel.innerText = moduleNames[STATE.activeModule] || '🎓 5. Sınıf Maarif Modeli';
+    if (modText) {
+      modText.innerText = moduleNames[STATE.activeModule] || '🎓 5. Sınıf Maarif Modeli';
     }
     if (viewLabel) {
       viewLabel.innerText = viewNames[viewName] || viewName;
     }
-    if (dayBadge) {
-      if (viewName === 'daily' || viewName === 'flashcard' || viewName === 'quiz') {
-        if (STATE.activeModule === 'maarif') {
-          const themeNum = Math.ceil(STATE.currentDay / 10);
-          const themeInfo = (typeof THEMES_DATA !== 'undefined' && THEMES_DATA[themeNum]) ? THEMES_DATA[themeNum].titleTr : 'Okul Yaşamı';
-          dayBadge.innerText = `Gün ${STATE.currentDay} • Tema ${themeNum}: ${themeInfo}`;
-        } else if (STATE.activeModule === 'yds') {
-          dayBadge.innerText = `Gün ${STATE.currentDay} • Hedef: 20 Akademik Kelime`;
+
+    if (badgeContainer) {
+      if (viewName === 'daily') {
+        const isYds = STATE.activeModule === 'yds';
+        const isOxford = STATE.activeModule === 'oxford';
+        const targetPool = isYds 
+          ? WORDS_DATA.filter(isYDSWord) 
+          : (isOxford ? WORDS_DATA.filter(w => w.dataset === 'oxford') : WORDS_DATA.filter(w => w.dataset === 'maarif' || !w.dataset));
+        
+        const bSize = isYds ? 20 : (isOxford ? 25 : 10);
+        const start = (STATE.currentDay - 1) * bSize;
+        const dayWords = targetPool.slice(start, start + bSize);
+        const dayLearned = dayWords.filter(w => STATE.userData.learned.has(w.id)).length;
+        const totalDay = dayWords.length || bSize;
+        const dayPct = Math.round((dayLearned / (totalDay || 1)) * 100);
+
+        const themeNum = Math.ceil(STATE.currentDay / 10);
+        const dayTitle = isYds ? `Gün ${STATE.currentDay}` : (isOxford ? `Gün ${STATE.currentDay}` : `Gün ${STATE.currentDay} • Tema ${themeNum}`);
+        const isDone = dayLearned >= totalDay && totalDay > 0;
+        const stars = isDone ? '⭐⭐⭐' : (dayLearned >= Math.ceil(totalDay * 0.6) ? '⭐⭐☆' : (dayLearned >= 1 ? '⭐☆☆' : '🎯'));
+
+        badgeContainer.innerHTML = `
+          <div class="badge-live-progress ${isDone ? 'celebrating' : ''}" title="Günün Görev İlerlemesi (%${dayPct})">
+            <div class="badge-live-header">
+              <span class="badge-day-label">${dayTitle}</span>
+              <span class="badge-live-counter"><strong>${dayLearned}</strong>/${totalDay} Kelime</span>
+              <span class="badge-live-stars">${stars}</span>
+            </div>
+            <div class="badge-mini-track" role="progressbar" aria-valuenow="${dayPct}" aria-valuemin="0" aria-valuemax="100">
+              <div class="badge-mini-fill ${isDone ? 'completed' : ''}" style="width: ${dayPct}%;"></div>
+            </div>
+          </div>
+        `;
+        badgeContainer.style.display = 'inline-flex';
+
+      } else if (viewName === 'quiz') {
+        const qState = STATE.quizState;
+        if (qState && qState.active && qState.questions && qState.questions.length > 0) {
+          const currentIdx = Math.min(qState.currentIndex + 1, qState.questions.length);
+          const totalQ = qState.questions.length;
+          const qPct = Math.round(((qState.currentIndex) / totalQ) * 100);
+
+          badgeContainer.innerHTML = `
+            <div class="badge-live-progress quiz-mode" title="Canlı Quiz İlerlemesi">
+              <div class="badge-live-header">
+                <span class="badge-day-label">Soru ${currentIdx}/${totalQ}</span>
+                <span class="badge-live-counter" style="color: var(--accent-emerald);">🎯 ${qState.score} Doğru</span>
+                ${qState.streak > 1 ? `<span class="badge-streak-flame">🔥 ${qState.streak} Seri</span>` : '<span class="badge-live-stars">🧩</span>'}
+              </div>
+              <div class="badge-mini-track" role="progressbar" aria-valuenow="${qPct}" aria-valuemin="0" aria-valuemax="100">
+                <div class="badge-mini-fill fill-quiz" style="width: ${qPct}%;"></div>
+              </div>
+            </div>
+          `;
         } else {
-          dayBadge.innerText = `Gün ${STATE.currentDay} • Çalışma Modu`;
+          badgeContainer.innerHTML = `
+            <div class="badge-live-progress" title="Quiz Modu">
+              <div class="badge-live-header">
+                <span class="badge-day-label">🧩 Mini Test</span>
+                <span class="badge-live-counter" style="color: var(--yds-accent);">Hazır</span>
+                <span class="badge-live-stars">🚀</span>
+              </div>
+              <div class="badge-mini-track">
+                <div class="badge-mini-fill fill-quiz" style="width: 100%;"></div>
+              </div>
+            </div>
+          `;
         }
-        dayBadge.style.display = 'inline-flex';
+        badgeContainer.style.display = 'inline-flex';
+
+      } else if (viewName === 'flashcard') {
+        const totalFc = STATE.filteredFlashcards ? STATE.filteredFlashcards.length : 0;
+        const currentFc = totalFc > 0 ? (STATE.activeFlashcardIndex + 1) : 0;
+        const fcPct = totalFc > 0 ? Math.round((currentFc / totalFc) * 100) : 0;
+
+        badgeContainer.innerHTML = `
+          <div class="badge-live-progress fc-mode" title="Flashcard İlerlemesi">
+            <div class="badge-live-header">
+              <span class="badge-day-label">Kart ${currentFc}/${totalFc}</span>
+              <span class="badge-live-counter">%${fcPct}</span>
+              <span class="badge-live-stars">🗂️</span>
+            </div>
+            <div class="badge-mini-track" role="progressbar" aria-valuenow="${fcPct}" aria-valuemin="0" aria-valuemax="100">
+              <div class="badge-mini-fill fill-fc" style="width: ${fcPct}%;"></div>
+            </div>
+          </div>
+        `;
+        badgeContainer.style.display = 'inline-flex';
+
       } else {
-        dayBadge.style.display = 'none';
+        const label = STATE.activeModule === 'yds' ? '🎯 YDS/YÖKDİL' : (STATE.activeModule === 'oxford' ? '🌍 Oxford 5000' : '🎓 Maarif Modeli');
+        badgeContainer.innerHTML = `
+          <span class="badge-day">${label}</span>
+        `;
+        badgeContainer.style.display = 'inline-flex';
       }
     }
 
     if (backBtn) {
       if (viewName === 'daily') {
-        backBtn.style.opacity = '0.6';
+        backBtn.style.opacity = '0.55';
         backBtn.title = 'Zaten Ana Sayfadasınız';
       } else {
         backBtn.style.opacity = '1';
@@ -2069,6 +2150,7 @@
       STATE.quizState.streak++;
       playSound('correct');
       saveQuizState();
+      updateBreadcrumb('quiz');
 
       // Quick 900ms smooth auto-advance for correct answers
       setTimeout(() => {
@@ -2077,6 +2159,7 @@
         STATE.quizState.waitingFeedback = false;
         saveQuizState();
         renderQuizView();
+        updateBreadcrumb('quiz');
       }, 900);
     } else {
       STATE.quizState.streak = 0;
@@ -2084,6 +2167,7 @@
       STATE.userData.review.add(currentQ.targetWord.id);
       saveUserData();
       saveQuizState();
+      updateBreadcrumb('quiz');
 
       // Pedagogical card: Stop and teach! Wait for student confirmation.
       showQuizFeedbackCard(currentQ, selectedOpt);
@@ -2143,12 +2227,14 @@
     STATE.quizState.waitingFeedback = false;
     saveQuizState();
     renderQuizView();
+    updateBreadcrumb('quiz');
   }
 
   function quitQuiz() {
     STATE.quizState.active = false;
     localStorage.removeItem('learnish_active_quiz');
     renderQuizView();
+    updateBreadcrumb('quiz');
   }
 
   function replayQuizAudio() {
@@ -2166,6 +2252,7 @@
     STATE.activeFlashcardIndex = (STATE.activeFlashcardIndex + 1) % STATE.filteredFlashcards.length;
     STATE.flashcardFlipped = false;
     renderFlashcardView();
+    updateBreadcrumb('flashcard');
   }
 
   function prevFlashcard() {
@@ -2173,6 +2260,7 @@
     STATE.activeFlashcardIndex = (STATE.activeFlashcardIndex - 1 + STATE.filteredFlashcards.length) % STATE.filteredFlashcards.length;
     STATE.flashcardFlipped = false;
     renderFlashcardView();
+    updateBreadcrumb('flashcard');
   }
 
   function shuffleFlashcards() {

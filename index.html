@@ -70,14 +70,17 @@
   <header class="app-header">
     <div class="header-container">
       
-      <!-- Brand & Home Group -->
-      <div class="brand-group" onclick="window.APP.goHome()" title="Ana Sayfaya Dön" style="cursor: pointer;">
-        <img src="logo.svg?v=codex2" alt="Learnish Logo" class="brand-icon">
+      <!-- Brand & Home Group (Visible Home Indication for Touchscreens) -->
+      <button type="button" class="brand-group-btn" onclick="window.APP.goHome()" aria-label="Learnish Ana Sayfasına Dön">
+        <div class="brand-icon-wrapper">
+          <img src="logo.svg?v=codex2" alt="Learnish Logo" class="brand-icon">
+          <span class="brand-home-pill" aria-hidden="true">🏠 Ev</span>
+        </div>
         <div class="brand-info">
           <h1>Learnish</h1>
           <p id="app-brand-subtitle">5. Sınıf Maarif Modeli • Günlük Görev: 10 Kelime</p>
         </div>
-      </div>
+      </button>
 
       <!-- Prominent Home Action for Kids -->
       <button class="nav-home-btn" id="header-home-btn" onclick="window.APP.goHome()" title="Ana Sayfaya / Günün Çalışmasına Dön">
@@ -134,17 +137,25 @@
     <!-- Active Navigation Breadcrumb & Back Navigator -->
     <nav class="breadcrumb-container" id="app-breadcrumb-nav" aria-label="Konum ve Geri Navigasyonu">
       <div class="breadcrumb-left">
-        <button class="breadcrumb-back-btn" id="breadcrumb-back-btn" onclick="window.APP.goBack()" title="Bir Önceki Sayfaya Dön">
-          <span class="back-arrow">←</span> Geri Dön
+        <button type="button" class="breadcrumb-back-btn" id="breadcrumb-back-btn" onclick="window.APP.goBack()" aria-label="Bir Önceki Sayfaya Dön" title="Bir Önceki Sayfaya Dön">
+          <span class="back-arrow" aria-hidden="true">←</span>
+          <span class="back-text">Geri Dön</span>
         </button>
         <ol class="breadcrumb-list" id="app-breadcrumb">
-          <li class="breadcrumb-item"><a href="javascript:void(0)" onclick="window.APP.goHome()" id="breadcrumb-module-label">🎓 5. Sınıf Maarif Modeli</a></li>
-          <li class="breadcrumb-sep">›</li>
+          <li class="breadcrumb-item">
+            <button type="button" class="breadcrumb-home-chip" id="breadcrumb-module-btn" onclick="window.APP.goHome()" aria-label="Ana Sayfaya Dön" title="Ana Sayfaya Dön">
+              <span class="chip-home-icon" aria-hidden="true">🏠</span>
+              <span id="breadcrumb-module-text">🎓 5. Sınıf Maarif Modeli</span>
+            </button>
+          </li>
+          <li class="breadcrumb-sep" aria-hidden="true">›</li>
           <li class="breadcrumb-item active" id="breadcrumb-view-label">📅 Günün 10'lusu</li>
         </ol>
       </div>
       <div class="breadcrumb-right" id="breadcrumb-context-badge">
-        <span class="badge-day" id="breadcrumb-day-badge">Gün 1 • Hedef: 10 Kelime</span>
+        <div id="breadcrumb-dynamic-badge" class="badge-live-container">
+          <!-- Dynamically populated with live Kahoot-style progress -->
+        </div>
       </div>
     </nav>
     
