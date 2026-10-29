@@ -1,11 +1,11 @@
 {
-  "name": "5. Sınıf Maarif İngilizce Kelime Dünyası",
-  "short_name": "Maarif İngilizce",
-  "description": "5. Sınıf Türkiye Yüzyılı Maarif Modeli ve CEFR seviyeli 817 kelimelik interaktif İngilizce kelime çalışma uygulaması.",
+  "name": "Learnish • İngilizce Kelime Platformu",
+  "short_name": "Learnish",
+  "description": "Learnish: 5. Sınıf Maarif Modeli, YDS/YÖKDİL Akademik ve The Oxford 5000 (A1-C1) 6.658 kelimelik interaktif İngilizce kelime çalışma platformu.",
   "start_url": "./index.html",
   "display": "standalone",
-  "background_color": "#090d16",
-  "theme_color": "#6366f1",
+  "background_color": "#0B0E14",
+  "theme_color": "#F59E0B",
   "orientation": "portrait-primary",
   "icons": [
     {

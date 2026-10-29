@@ -1,0 +1,81 @@
+<svg viewBox="0 0 512 512" width="512" height="512" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Matte Obsidian Squircle Base -->
+  <rect x="18" y="18" width="476" height="476" rx="112" fill="#0B0E14" stroke="#F59E0B" stroke-opacity="0.4" stroke-width="4" />
+  <rect x="30" y="30" width="452" height="452" rx="102" fill="none" stroke="#FFFFFF" stroke-opacity="0.04" stroke-width="2" />
+
+  <!-- 1. OUTER HARDCOVER JACKET (Left Vertical Cover + Curved Spine Base + Bottom Cover + 45° Right Receding Cover) -->
+  <path d="M 122 176 L 194 88 L 208 96 L 138 182 Z" fill="#D97706" />
+  <path d="M 194 88 L 208 96 L 208 136 L 194 128 Z" fill="#78350F" />
+
+  <path d="M 122 176
+           L 138 182
+           L 138 368
+           C 138 386, 156 396, 180 392
+           L 340 392
+           L 402 316
+           L 420 316
+           L 350 408
+           L 182 408
+           C 150 416, 122 398, 122 368
+           Z" fill="#D97706" />
+
+  <!-- Bright Gold Outer Spine Rim Highlight -->
+  <path d="M 122 176
+           L 134 180
+           L 134 368
+           C 134 392, 154 406, 182 404
+           L 182 408
+           C 150 416, 122 398, 122 368
+           Z" fill="#F59E0B" />
+
+  <!-- 2. INNER ROUNDED BOOK SPINE (Two-Tone Architectural Bronze & Espresso Shadow) -->
+  <path d="M 138 180
+           C 148 190, 162 192, 168 190
+           L 168 394
+           C 152 394, 138 384, 138 368
+           Z" fill="#854D0E" />
+  <path d="M 168 190
+           L 180 186
+           L 180 392
+           L 168 394
+           Z" fill="#451A03" />
+
+  <!-- 3. TOP FANNED BOOK PAGES (Converging Smoothly Into the Curved Spine Headband) -->
+  <path d="M 138 180 L 202 94 L 260 104 L 180 186 C 166 192, 148 190, 138 180 Z" fill="#451A03" />
+
+  <path d="M 140 176
+           L 204 94 L 212 98 L 150 180
+           L 218 96 L 226 100 L 158 182
+           L 231 98 L 239 102 L 166 184
+           L 244 100 L 251 104 L 174 185
+           C 162 189, 148 186, 140 176 Z" fill="#FEF08A" />
+
+  <path d="M 174 185 L 254 102 L 260 106 L 260 128 L 180 186 Z" fill="#B45309" />
+
+  <!-- Crisp Dark Separation Lines Between the 5 Fanned Pages -->
+  <line x1="149" y1="179" x2="213" y2="97" stroke="#78350F" stroke-width="2.5" stroke-linecap="round" />
+  <line x1="157" y1="182" x2="227" y2="99" stroke="#78350F" stroke-width="2.5" stroke-linecap="round" />
+  <line x1="165" y1="184" x2="240" y2="101" stroke="#78350F" stroke-width="2.5" stroke-linecap="round" />
+  <line x1="173" y1="185" x2="252" y2="103" stroke="#451A03" stroke-width="3" stroke-linecap="round" />
+
+  <!-- 4. ARCHITECTURAL ORIGAMI FACETS ON THE VERTICAL "L" COVER -->
+  <path d="M 180 186 L 270 102 L 270 198 L 224 260 L 180 224 Z" fill="#F59E0B" />
+  <path d="M 180 224 L 224 260 L 180 318 Z" fill="#D97706" />
+  <path d="M 224 260 L 270 198 L 270 294 L 224 260 Z" fill="#DC7609" />
+  <path d="M 180 318 L 224 260 L 270 294 L 180 392 Z" fill="#B45309" />
+
+  <!-- 5. HORIZONTAL BASE OF THE "L" (Layered Page Block + Folded Dog-Ear Page) -->
+  <path d="M 340 356 L 398 316 L 402 316 L 340 392 Z" fill="#FBBF24" />
+  <path d="M 204 368 L 340 368 L 340 392 L 180 392 Z" fill="#FDE68A" />
+  <line x1="196" y1="376" x2="336" y2="376" stroke="#B45309" stroke-width="2.2" stroke-linecap="round" />
+  <line x1="190" y1="384" x2="336" y2="384" stroke="#B45309" stroke-width="2.2" stroke-linecap="round" />
+
+  <path d="M 318 344 L 364 344 L 340 368 L 318 368 Z" fill="#F59E0B" />
+  <path d="M 270 294 L 318 368 L 204 368 Z" fill="#F59E0B" />
+
+  <!-- Top Bright Champagne Open Page with 45° Right Cut -->
+  <path d="M 270 294 L 408 294 L 364 344 L 318 344 L 318 368 Z" fill="#FEF08A" />
+
+  <!-- Dog-Ear Fold Underside Shadow Triangle -->
+  <path d="M 318 344 L 364 344 L 318 368 Z" fill="#92400E" />
+</svg>

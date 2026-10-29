@@ -369,11 +369,12 @@ body {
 }
 
 .brand-icon {
-  width: 36px;
-  height: 36px;
-  border-radius: var(--radius-sm);
-  border: 1px solid var(--border-subtle);
-  object-fit: cover;
+  width: 40px;
+  height: 40px;
+  border-radius: 9px;
+  border: none;
+  object-fit: contain;
+  flex-shrink: 0;
 }
 
 .brand-info h1 {
@@ -385,8 +386,8 @@ body {
 }
 
 .brand-info p {
-  font-size: 0.72rem;
-  color: var(--text-muted);
+  font-size: 0.75rem;
+  color: var(--text-secondary);
   font-weight: 600;
 }
 
