@@ -810,7 +810,35 @@
       `;
     });
 
+    const welcomeHubHtml = `
+      <div class="welcome-module-hub">
+        <div class="welcome-hub-top">
+          <div class="welcome-hub-title">LEARNISH AKADEMİK ÇALIŞMA İSTASYONU • MÜFREDAT SEÇİMİ</div>
+          <div class="welcome-hub-sub">SOL PANEL VEYA AŞAĞIDAKİ KARTLARDAN AKTİF MODÜLÜ DEĞİŞTİREBİLİRSİNİZ</div>
+        </div>
+        <div class="welcome-hub-grid">
+          <button type="button" class="welcome-mod-card ${module === 'maarif' ? 'active' : ''}" onclick="window.APP.switchModule('maarif')">
+            <span class="welcome-mod-name">5. Sınıf Maarif Modeli</span>
+            <span class="welcome-mod-badge">8 TEMA • GÜNLÜK 10 KELİME</span>
+          </button>
+          <button type="button" class="welcome-mod-card ${module === 'yds' ? 'active' : ''}" onclick="window.APP.switchModule('yds')">
+            <span class="welcome-mod-name">YDS &amp; YÖKDİL Akademik</span>
+            <span class="welcome-mod-badge">B2/C1 SINAV • GÜNLÜK 20 KELİME</span>
+          </button>
+          <button type="button" class="welcome-mod-card ${module === 'oxford' ? 'active' : ''}" onclick="window.APP.switchModule('oxford')">
+            <span class="welcome-mod-name">The Oxford 5000</span>
+            <span class="welcome-mod-badge">A1–C1 • GÜNLÜK 25 KELİME</span>
+          </button>
+          <button type="button" class="welcome-mod-card ${module === 'all' ? 'active' : ''}" onclick="window.APP.switchModule('all')">
+            <span class="welcome-mod-name">Tüm Kütüphane</span>
+            <span class="welcome-mod-badge">6.658 KELİME BİRLEŞİK HAVUZ</span>
+          </button>
+        </div>
+      </div>
+    `;
+
     container.innerHTML = `
+      ${welcomeHubHtml}
       ${celebrationHtml}
       <div class="module-hero-card ${heroClass} glass-panel">
         <div class="hero-info">
@@ -1759,37 +1787,45 @@
       viewLabel.innerText = viewNames[viewName] || viewName;
     }
 
+    const sidebarTelemetry = document.getElementById('sidebar-telemetry-badge');
+
+    // Compute Daily Goal telemetry for both sidebar footer & daily view badge
+    const isYds = STATE.activeModule === 'yds';
+    const isOxford = STATE.activeModule === 'oxford';
+    const targetPool = isYds 
+      ? WORDS_DATA.filter(isYDSWord) 
+      : (isOxford ? WORDS_DATA.filter(w => w.dataset === 'oxford') : WORDS_DATA.filter(w => w.dataset === 'maarif' || !w.dataset));
+    
+    const bSize = isYds ? 20 : (isOxford ? 25 : 10);
+    const start = (STATE.currentDay - 1) * bSize;
+    const dayWords = targetPool.slice(start, start + bSize);
+    const dayLearned = dayWords.filter(w => STATE.userData.learned.has(w.id)).length;
+    const totalDay = dayWords.length || bSize;
+    const dayPct = Math.round((dayLearned / (totalDay || 1)) * 100);
+    const themeNum = Math.ceil(STATE.currentDay / 10);
+    const dayTitle = isYds ? `GÜN ${STATE.currentDay}` : (isOxford ? `GÜN ${STATE.currentDay}` : `GÜN ${STATE.currentDay} • TEMA ${themeNum}`);
+    const isDone = dayLearned >= totalDay && totalDay > 0;
+
+    const dailyTelemetryHtml = `
+      <div class="badge-live-progress ${isDone ? 'celebrating' : ''}" title="Günlük Hedef İlerlemesi (%${dayPct})">
+        <div class="badge-live-header">
+          <span class="badge-day-label">${dayTitle}</span>
+          <span class="badge-live-counter"><strong>${dayLearned}</strong>/${totalDay} KELİME</span>
+          <span class="badge-live-stars">%${dayPct}</span>
+        </div>
+        <div class="badge-mini-track" role="progressbar" aria-valuenow="${dayPct}" aria-valuemin="0" aria-valuemax="100">
+          <div class="badge-mini-fill ${isDone ? 'completed' : ''}" style="width: ${dayPct}%;"></div>
+        </div>
+      </div>
+    `;
+
+    if (sidebarTelemetry) {
+      sidebarTelemetry.innerHTML = dailyTelemetryHtml;
+    }
+
     if (badgeContainer) {
       if (viewName === 'daily') {
-        const isYds = STATE.activeModule === 'yds';
-        const isOxford = STATE.activeModule === 'oxford';
-        const targetPool = isYds 
-          ? WORDS_DATA.filter(isYDSWord) 
-          : (isOxford ? WORDS_DATA.filter(w => w.dataset === 'oxford') : WORDS_DATA.filter(w => w.dataset === 'maarif' || !w.dataset));
-        
-        const bSize = isYds ? 20 : (isOxford ? 25 : 10);
-        const start = (STATE.currentDay - 1) * bSize;
-        const dayWords = targetPool.slice(start, start + bSize);
-        const dayLearned = dayWords.filter(w => STATE.userData.learned.has(w.id)).length;
-        const totalDay = dayWords.length || bSize;
-        const dayPct = Math.round((dayLearned / (totalDay || 1)) * 100);
-
-        const themeNum = Math.ceil(STATE.currentDay / 10);
-        const dayTitle = isYds ? `GÜN ${STATE.currentDay}` : (isOxford ? `GÜN ${STATE.currentDay}` : `GÜN ${STATE.currentDay} • TEMA ${themeNum}`);
-        const isDone = dayLearned >= totalDay && totalDay > 0;
-
-        badgeContainer.innerHTML = `
-          <div class="badge-live-progress ${isDone ? 'celebrating' : ''}" title="Günlük Hedef İlerlemesi (%${dayPct})">
-            <div class="badge-live-header">
-              <span class="badge-day-label">${dayTitle}</span>
-              <span class="badge-live-counter"><strong>${dayLearned}</strong>/${totalDay} KELİME</span>
-              <span class="badge-live-stars">%${dayPct}</span>
-            </div>
-            <div class="badge-mini-track" role="progressbar" aria-valuenow="${dayPct}" aria-valuemin="0" aria-valuemax="100">
-              <div class="badge-mini-fill ${isDone ? 'completed' : ''}" style="width: ${dayPct}%;"></div>
-            </div>
-          </div>
-        `;
+        badgeContainer.innerHTML = dailyTelemetryHtml;
         badgeContainer.style.display = 'inline-flex';
 
       } else if (viewName === 'quiz') {
