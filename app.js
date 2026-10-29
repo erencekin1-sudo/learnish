@@ -352,8 +352,8 @@
   // State Management
   const STATE = {
     activeModule: localStorage.getItem('learnish_active_module') || 'maarif', // 'maarif' | 'yds' | 'oxford' | 'all'
-    currentView: 'daily', // 'daily', 'flashcard', 'quiz', 'directory', 'stats'
-    viewHistory: ['daily'],
+    currentView: 'home', // 'home', 'daily', 'flashcard', 'quiz', 'directory', 'stats'
+    viewHistory: ['home'],
     currentDay: 1, // Maarif: 1-82, YDS: 1-145
     activeFlashcardIndex: 0,
     filteredFlashcards: [],
@@ -387,7 +387,8 @@
       learned: new Set(JSON.parse(localStorage.getItem('mk_learned') || '[]')),
       review: new Set(JSON.parse(localStorage.getItem('mk_review') || '[]')),
       starred: new Set(JSON.parse(localStorage.getItem('mk_starred') || '[]')),
-      stats: JSON.parse(localStorage.getItem('mk_stats') || '{"quizzesPlayed":0,"correctAnswers":0,"totalQuestions":0,"bestStreak":0}')
+      stats: JSON.parse(localStorage.getItem('mk_stats') || '{"quizzesPlayed":0,"correctAnswers":0,"totalQuestions":0,"bestStreak":0}'),
+      activityLog: JSON.parse(localStorage.getItem('mk_activity_log') || '[]')
     }
   };
 
@@ -517,19 +518,46 @@
       localStorage.setItem('mk_review', JSON.stringify(Array.from(STATE.userData.review)));
       localStorage.setItem('mk_starred', JSON.stringify(Array.from(STATE.userData.starred)));
       localStorage.setItem('mk_stats', JSON.stringify(STATE.userData.stats));
+      localStorage.setItem('mk_activity_log', JSON.stringify(STATE.userData.activityLog || []));
       localStorage.setItem('mk_current_day', STATE.currentDay.toString());
     } catch (e) {
       console.warn('LocalStorage save error:', e);
     }
   }
 
+  function logActivity(moduleTitle, resultText) {
+    if (!STATE.userData.activityLog) STATE.userData.activityLog = [];
+    const now = new Date();
+    const pad = (n) => String(n).padStart(2, '0');
+    const dateStr = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())} ${pad(now.getHours())}:${pad(now.getMinutes())}`;
+    STATE.userData.activityLog.unshift({
+      date: dateStr,
+      module: moduleTitle,
+      result: resultText
+    });
+    if (STATE.userData.activityLog.length > 8) {
+      STATE.userData.activityLog = STATE.userData.activityLog.slice(0, 8);
+    }
+    saveUserData();
+  }
+
   function toggleLearned(wordId) {
     wordId = parseInt(wordId, 10);
+    const wordObj = WORDS_DATA.find(w => w.id === wordId);
     if (STATE.userData.learned.has(wordId)) {
       STATE.userData.learned.delete(wordId);
     } else {
       STATE.userData.learned.add(wordId);
       STATE.userData.review.delete(wordId);
+      const modMap = {
+        maarif: '5. SINIF MAARİF MODELİ',
+        yds: 'YDS & YÖKDİL AKADEMİK',
+        oxford: 'THE OXFORD 5000',
+        all: 'TÜM KÜTÜPHANE'
+      };
+      const modTitle = modMap[STATE.activeModule] || '5. SINIF MAARİF MODELİ';
+      const wEn = wordObj ? wordObj.en.toUpperCase() : `#${wordId}`;
+      logActivity(`${modTitle} • GÜN ${STATE.currentDay}`, `KELİME DOĞRULANDI [${wEn}] • TOPLAM: ${STATE.userData.learned.size}`);
     }
     saveUserData();
     updateUI();
@@ -671,6 +699,197 @@
     }
 
     updateUI();
+  }
+
+  // ==========================================================================
+  // VIEW 0: KONTROL MERKEZİ / IDE COMMAND CENTER (#home)
+  // ==========================================================================
+  function renderHomeView() {
+    const container = document.getElementById('view-home');
+    if (!container) return;
+
+    const module = STATE.activeModule;
+    const curriculumTitles = {
+      maarif: '5. Sınıf Maarif Modeli',
+      yds: 'YDS & YÖKDİL Akademik',
+      oxford: 'The Oxford 5000',
+      all: 'Tüm Kütüphane (Birleşik Havuz)'
+    };
+    const activeCurriculum = curriculumTitles[module] || '5. Sınıf Maarif Modeli';
+
+    const ctaLabels = {
+      maarif: "Günün 10'lusuna Başla",
+      yds: "Günün 20'lisine Başla",
+      oxford: "Günün 25'lisine Başla",
+      all: "Günün 10'lusuna Başla"
+    };
+    const ctaText = ctaLabels[module] || "Günün 10'lusuna Başla";
+
+    // Compute Telemetry Metrics
+    const totalLearned = STATE.userData.learned.size;
+    const quizStats = STATE.userData.stats || { quizzesPlayed: 0, correctAnswers: 0, totalQuestions: 0, bestStreak: 0 };
+    const activeStreak = Math.max(STATE.quizState.streak || 0, quizStats.bestStreak || 0, STATE.currentDay || 1);
+    const accuracyPct = quizStats.totalQuestions > 0
+      ? Math.round((quizStats.correctAnswers / quizStats.totalQuestions) * 100)
+      : (totalLearned > 0 ? 100 : 0);
+
+    // Compute Daily Batch Telemetry for Ledger fallback
+    const isYds = module === 'yds';
+    const isOxford = module === 'oxford';
+    const targetPool = isYds
+      ? WORDS_DATA.filter(isYDSWord)
+      : (isOxford ? WORDS_DATA.filter(w => w.dataset === 'oxford') : WORDS_DATA.filter(w => w.dataset === 'maarif' || !w.dataset));
+    const batchSize = isYds ? 20 : (isOxford ? 25 : 10);
+    const startIdx = (STATE.currentDay - 1) * batchSize;
+    const dayWords = targetPool.slice(startIdx, startIdx + batchSize);
+    const dayLearned = dayWords.filter(w => STATE.userData.learned.has(w.id)).length;
+
+    const savedLogs = Array.isArray(STATE.userData.activityLog) ? STATE.userData.activityLog.slice(0, 4) : [];
+    const defaultLogs = [
+      {
+        date: 'BUGÜN • AKTİF',
+        module: `${activeCurriculum.toUpperCase()} • GÜN ${STATE.currentDay}`,
+        result: `GÜN ${STATE.currentDay} DURUMU — ${dayLearned}/${dayWords.length || batchSize} KELİME TAMAMLANDI`
+      },
+      {
+        date: 'SON OTURUM',
+        module: 'DEĞERLENDİRME & SİMÜLATÖR',
+        result: quizStats.totalQuestions > 0
+          ? `${quizStats.quizzesPlayed} OTURUM TAMAMLANDI — ${quizStats.correctAnswers}/${quizStats.totalQuestions} DOĞRU (%${accuracyPct})`
+          : 'TEST MODÜLÜ HAZIR — 10/10 HEDEF DOĞRULAMA BEKLİYOR'
+      },
+      {
+        date: 'SİSTEM KAYDI',
+        module: 'TEKRAR VE PEKİŞTİRME HAVUZU',
+        result: `${STATE.userData.review.size} KELİME TEKRAR LİSTESİNDE • ${STATE.userData.starred.size} FAVORİ`
+      },
+      {
+        date: 'MÜFREDAT İNDEKSİ',
+        module: activeCurriculum.toUpperCase(),
+        result: `TOPLAM ${targetPool.length} HEDEF KELİME • AKTİF GÜN #${STATE.currentDay}`
+      }
+    ];
+
+    const ledgerRows = savedLogs.length >= 3 ? savedLogs : [...savedLogs, ...defaultLogs].slice(0, 4);
+
+    const ledgerHtml = ledgerRows.map(row => `
+      <tr>
+        <td>${row.date}</td>
+        <td>${row.module}</td>
+        <td><span class="ledger-status-pill">${row.result}</span></td>
+      </tr>
+    `).join('');
+
+    container.innerHTML = `
+      <div class="dashboard-matrix">
+
+        <!-- 1. HEADER & STATUS PANEL (Col-span: 12) -->
+        <header class="dash-header-panel">
+          <div class="dash-header-left">
+            <div class="dash-status-tag">
+              <span class="dash-status-dot" aria-hidden="true"></span>
+              <span>TERMİNAL HAZIR • KOMUT MERKEZİ AKTİF</span>
+            </div>
+            <h1 class="dash-welcome-title">Hoş Geldin, Öğrenci</h1>
+            <p class="dash-curriculum-sub">Aktif Müfredat: <strong>${activeCurriculum}</strong> • Çalışma Günü #${STATE.currentDay}</p>
+          </div>
+          <div class="dash-header-right">
+            <button type="button" class="dash-cta-btn" onclick="window.APP.switchView('daily')">
+              <span>${ctaText}</span>
+              <span class="dash-cta-key">[ENTER] &rarr;</span>
+            </button>
+          </div>
+        </header>
+
+        <!-- 2. TELEMETRY / STATS GRID (Col-span: 8) -->
+        <div class="dash-telemetry-panel" role="region" aria-label="Öğrenim Telemetri Metrikleri">
+          <!-- Metric 1: ÖĞRENİLEN KELİME -->
+          <article class="dash-metric-cell">
+            <div class="dash-metric-top">
+              <span class="dash-metric-label">ÖĞRENİLEN KELİME</span>
+              <span class="dash-metric-code">[M-01]</span>
+            </div>
+            <div class="dash-metric-value-row">
+              <span class="dash-metric-value" id="dash-metric-learned">${totalLearned}</span>
+            </div>
+            <div class="dash-metric-sub">GÜNLÜK HEDEF: ${dayLearned}/${dayWords.length || batchSize} KELİME</div>
+          </article>
+
+          <!-- Metric 2: AKTİF SERİ (STREAK) -->
+          <article class="dash-metric-cell">
+            <div class="dash-metric-top">
+              <span class="dash-metric-label">AKTİF SERİ (STREAK)</span>
+              <span class="dash-metric-code">[M-02]</span>
+            </div>
+            <div class="dash-metric-value-row">
+              <span class="dash-streak-glyph" aria-hidden="true">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square" stroke-linejoin="miter">
+                  <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+                </svg>
+              </span>
+              <span class="dash-metric-value" id="dash-metric-streak">${activeStreak}</span>
+            </div>
+            <div class="dash-metric-sub">KESİNTİSİZ ÇALIŞMA VE DOĞRULUK SERİSİ</div>
+          </article>
+
+          <!-- Metric 3: DOĞRULUK ORANI -->
+          <article class="dash-metric-cell">
+            <div class="dash-metric-top">
+              <span class="dash-metric-label">DOĞRULUK ORANI</span>
+              <span class="dash-metric-code">[M-03]</span>
+            </div>
+            <div class="dash-metric-value-row">
+              <span class="dash-metric-value" id="dash-metric-accuracy">%${accuracyPct}</span>
+            </div>
+            <div class="dash-accuracy-bar-track" role="progressbar" aria-valuenow="${accuracyPct}" aria-valuemin="0" aria-valuemax="100" aria-label="Doğruluk Oranı">
+              <div class="dash-accuracy-bar-fill" style="width: ${accuracyPct}%;"></div>
+            </div>
+          </article>
+        </div>
+
+        <!-- 3. QUICK ACTION MODULES (Col-span: 4) -->
+        <div class="dash-actions-panel" role="region" aria-label="Hızlı Modül Eylemleri">
+          <button type="button" class="dash-quick-btn" onclick="window.APP.switchView('flashcard')">
+            <span class="dash-quick-info">
+              <span class="dash-quick-title">Sınav Kartları (Flashcards)</span>
+              <span class="dash-quick-desc">AKTİF GERİ ÇAĞIRMA • [SPACE] ÇEVİR</span>
+            </span>
+            <span class="dash-shortcut-badge">[F]</span>
+          </button>
+
+          <button type="button" class="dash-quick-btn" onclick="window.APP.switchView('quiz')">
+            <span class="dash-quick-info">
+              <span class="dash-quick-title">Simülatör / Test (Quiz)</span>
+              <span class="dash-quick-desc">ÇOKTAN SEÇMELİ • CLOZE DOĞRULAMA</span>
+            </span>
+            <span class="dash-shortcut-badge">[Q]</span>
+          </button>
+        </div>
+
+        <!-- 4. PROGRESS LEDGER / RECENT ACTIVITY (Col-span: 12) -->
+        <section class="dash-ledger-panel" aria-labelledby="dash-ledger-heading">
+          <div class="dash-ledger-header">
+            <h2 class="dash-ledger-title" id="dash-ledger-heading">İLERLEME KAYIT DEFTERİ // SON AKTİVİTELER</h2>
+            <span class="dash-ledger-meta">CANLI TELEMETRİ KAYDI • SON ${ledgerRows.length} İŞLEM</span>
+          </div>
+          <div class="dash-ledger-table-wrap">
+            <table class="dash-ledger-table">
+              <thead>
+                <tr>
+                  <th scope="col">TARİH</th>
+                  <th scope="col">MODÜL</th>
+                  <th scope="col">SONUÇ</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${ledgerHtml}
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+      </div>
+    `;
   }
 
   // ==========================================================================
@@ -1248,6 +1467,10 @@
       if (qState.streak > STATE.userData.stats.bestStreak) {
         STATE.userData.stats.bestStreak = qState.streak;
       }
+      logActivity(
+        STATE.activeModule === 'yds' ? 'YDS SİMÜLATÖR TESTİ' : 'DEĞERLENDİRME TESTİ',
+        `OTURUM TAMAMLANDI — ${qState.score}/${totalQ} DOĞRU (%${accuracy})`
+      );
       saveUserData();
 
       let statusCode = '[ OTURUM TAMAMLANDI ]';
@@ -1773,6 +1996,7 @@
     };
 
     const viewNames = {
+      home: "KONTROL MERKEZİ",
       daily: STATE.activeModule === 'yds' ? "YDS WORKOUT" : "GÜNÜN 10'LUSU",
       flashcard: "FLASHCARD KARTLARI",
       quiz: STATE.activeModule === 'yds' ? "YDS SİMÜLATÖR" : "DEĞERLENDİRME TESTİ",
@@ -1824,7 +2048,7 @@
     }
 
     if (badgeContainer) {
-      if (viewName === 'daily') {
+      if (viewName === 'daily' || viewName === 'home') {
         badgeContainer.innerHTML = dailyTelemetryHtml;
         badgeContainer.style.display = 'inline-flex';
 
@@ -1890,9 +2114,9 @@
     }
 
     if (backBtn) {
-      if (viewName === 'daily') {
+      if (viewName === 'home') {
         backBtn.style.opacity = '0.55';
-        backBtn.title = 'Zaten Ana Çalışma Alanındasınız';
+        backBtn.title = 'Zaten Kontrol Merkezindesiniz';
       } else {
         backBtn.style.opacity = '1';
         backBtn.title = 'Önceki Görünüme Dön';
@@ -1901,16 +2125,16 @@
   }
 
   function goHome() {
-    switchView('daily');
+    switchView('home');
   }
 
   function goBack() {
     if (STATE.viewHistory && STATE.viewHistory.length > 1) {
       STATE.viewHistory.pop();
       const prev = STATE.viewHistory.pop();
-      switchView(prev || 'daily');
+      switchView(prev || 'home');
     } else {
-      switchView('daily');
+      switchView('home');
     }
   }
 
@@ -1919,7 +2143,7 @@
   // ==========================================================================
   function switchView(viewName, pushHash = true) {
     STATE.currentView = viewName;
-    if (!STATE.viewHistory) STATE.viewHistory = ['daily'];
+    if (!STATE.viewHistory) STATE.viewHistory = ['home'];
     if (STATE.viewHistory[STATE.viewHistory.length - 1] !== viewName) {
       STATE.viewHistory.push(viewName);
     }
@@ -1942,6 +2166,7 @@
 
     updateBreadcrumb(viewName);
 
+    if (viewName === 'home') renderHomeView();
     if (viewName === 'daily') renderDailyView();
     if (viewName === 'flashcard') renderFlashcardView();
     if (viewName === 'quiz') renderQuizView();
@@ -2261,6 +2486,7 @@
       STATE.userData.review.clear();
       STATE.userData.starred.clear();
       STATE.userData.stats = { quizzesPlayed: 0, correctAnswers: 0, totalQuestions: 0, bestStreak: 0 };
+      STATE.userData.activityLog = [];
       STATE.currentDay = 1;
       saveUserData();
       updateUI();
@@ -2268,10 +2494,25 @@
   }
 
   // ==========================================================================
-  // KEYBOARD SHORTCUTS (Flashcard & Quiz Mechanical Ergonomics)
+  // KEYBOARD SHORTCUTS (Home, Flashcard & Quiz Mechanical Ergonomics)
   // ==========================================================================
   window.addEventListener('keydown', (e) => {
     if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT' || e.target.tagName === 'TEXTAREA') {
+      return;
+    }
+
+    if (STATE.currentView === 'home') {
+      const keyUpper = (e.key || '').toUpperCase();
+      if (keyUpper === 'F') {
+        e.preventDefault();
+        switchView('flashcard');
+      } else if (keyUpper === 'Q') {
+        e.preventDefault();
+        switchView('quiz');
+      } else if (e.code === 'Enter') {
+        e.preventDefault();
+        switchView('daily');
+      }
       return;
     }
 
@@ -2388,18 +2629,18 @@
       });
     }
 
-    // Hash routing
-    const validViews = ['daily', 'flashcard', 'quiz', 'directory', 'stats'];
+    // Hash routing — default landing page is #home (Kontrol Merkezi)
+    const validViews = ['home', 'daily', 'flashcard', 'quiz', 'directory', 'stats'];
     const initialHash = window.location.hash.replace('#', '');
-    const initialView = validViews.includes(initialHash) ? initialHash : 'daily';
-    switchView(initialView, false);
+    const initialView = validViews.includes(initialHash) ? initialHash : 'home';
+    switchView(initialView, !initialHash);
 
     window.addEventListener('hashchange', () => {
       const hView = window.location.hash.replace('#', '');
       if (validViews.includes(hView) && hView !== STATE.currentView) {
         switchView(hView, false);
-      } else if (!hView && STATE.currentView !== 'daily') {
-        switchView('daily', false);
+      } else if (!hView && STATE.currentView !== 'home') {
+        switchView('home', false);
       }
     });
 

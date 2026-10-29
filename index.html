@@ -99,8 +99,16 @@
       <nav class="nav-tabs" aria-label="Çalışma Modları">
         <div class="sidebar-section-label">ÇALIŞMA MODLARI</div>
 
-        <button type="button" class="nav-btn active" data-view="daily" id="tab-daily">
+        <button type="button" class="nav-btn active" data-view="home" id="tab-home">
           <span class="nav-index">[1]</span>
+          <span class="nav-btn-icon" aria-hidden="true">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square" stroke-linejoin="miter"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+          </span>
+          <span class="nav-btn-label" id="tab-home-text">Kontrol Merkezi</span>
+        </button>
+
+        <button type="button" class="nav-btn" data-view="daily" id="tab-daily">
+          <span class="nav-index">[2]</span>
           <span class="nav-btn-icon" id="tab-daily-icon" aria-hidden="true">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square" stroke-linejoin="miter"><rect x="3" y="4" width="18" height="18"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
           </span>
@@ -108,7 +116,7 @@
         </button>
 
         <button type="button" class="nav-btn" data-view="flashcard" id="tab-flashcard">
-          <span class="nav-index">[2]</span>
+          <span class="nav-index">[3]</span>
           <span class="nav-btn-icon" aria-hidden="true">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square" stroke-linejoin="miter"><rect x="2" y="4" width="20" height="16"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
           </span>
@@ -116,7 +124,7 @@
         </button>
 
         <button type="button" class="nav-btn" data-view="quiz" id="tab-quiz">
-          <span class="nav-index">[3]</span>
+          <span class="nav-index">[4]</span>
           <span class="nav-btn-icon" aria-hidden="true">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square" stroke-linejoin="miter"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
           </span>
@@ -124,7 +132,7 @@
         </button>
 
         <button type="button" class="nav-btn" data-view="directory" id="tab-directory">
-          <span class="nav-index">[4]</span>
+          <span class="nav-index">[5]</span>
           <span class="nav-btn-icon" aria-hidden="true">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square" stroke-linejoin="miter"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
           </span>
@@ -132,7 +140,7 @@
         </button>
 
         <button type="button" class="nav-btn" data-view="stats" id="tab-stats">
-          <span class="nav-index">[5]</span>
+          <span class="nav-index">[6]</span>
           <span class="nav-btn-icon" aria-hidden="true">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square" stroke-linejoin="miter"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
           </span>
@@ -188,7 +196,7 @@
               </button>
             </li>
             <li class="breadcrumb-sep" aria-hidden="true">/</li>
-            <li class="breadcrumb-item active" id="breadcrumb-view-label">GÜNÜN 10'LUSU</li>
+            <li class="breadcrumb-item active" id="breadcrumb-view-label">KONTROL MERKEZİ</li>
           </ol>
         </div>
         <div class="breadcrumb-right" id="breadcrumb-context-badge">
@@ -198,8 +206,13 @@
         </div>
       </nav>
       
+      <!-- View 0: Kontrol Merkezi / IDE Dashboard (#home) -->
+      <section id="view-home" class="view-section active" aria-labelledby="tab-home">
+        <!-- Injected by app.js -->
+      </section>
+
       <!-- View 1: Günlük Çalışma / Workout -->
-      <section id="view-daily" class="view-section active" aria-labelledby="tab-daily">
+      <section id="view-daily" class="view-section" aria-labelledby="tab-daily">
         <!-- Injected by app.js -->
       </section>
 
