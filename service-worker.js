@@ -3,7 +3,7 @@
  * Caches core assets for offline usage on mobile and desktop
  */
 
-const CACHE_NAME = 'learnish-v5-swiss-yds';
+const CACHE_NAME = 'learnish-v6-dark-geometric-amber';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',

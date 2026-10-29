@@ -1,14 +1,25 @@
 /**
  * ============================================================================
- * LEARNISH • MODERN İNGİLİZCE KELİME PLATFORMU
+ * LEARNISH • DARK GEOMETRIC & AMBER PRECISION SYSTEM
  * Mimari: Maarif 5. Sınıf Modülü | YDS & YÖKDİL Akademik | The Oxford 5000
- * Tasarım: Swiss Minimalist & Editorial Slate (Stripe / Raycast Stili)
+ * Tasarım: Dark Geometric & Amber Precision (Neo-Brutalist Academic Instrument)
  * Web Speech API, Web Audio API Synthesizer, PWA, Cloze Test & Flashcards
  * ============================================================================
  */
 
 (function () {
   'use strict';
+
+  // Geometric 2px-stroke square-cap SVG icons
+  const ICONS = {
+    speaker: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square" stroke-linejoin="miter" aria-hidden="true"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path><path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path></svg>`,
+    check: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="square" stroke-linejoin="miter" aria-hidden="true"><polyline points="20 6 9 17 4 12"></polyline></svg>`,
+    repeat: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square" stroke-linejoin="miter" aria-hidden="true"><polyline points="17 1 21 5 17 9"></polyline><path d="M3 11V9a4 4 0 0 1 4-4h14"></path><polyline points="7 23 3 19 7 15"></polyline><path d="M21 13v2a4 4 0 0 1-4 4H3"></path></svg>`,
+    starOutline: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square" stroke-linejoin="miter" aria-hidden="true"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>`,
+    starFilled: `<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="square" stroke-linejoin="miter" aria-hidden="true"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>`,
+    shuffle: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square" stroke-linejoin="miter" aria-hidden="true"><polyline points="16 3 21 3 21 8"></polyline><line x1="4" y1="20" x2="21" y2="3"></line><polyline points="21 16 21 21 16 21"></polyline><line x1="15" y1="15" x2="21" y2="21"></line><line x1="4" y1="4" x2="9" y2="9"></line></svg>`,
+    search: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square" stroke-linejoin="miter" aria-hidden="true"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>`
+  };
 
   // ==========================================================================
   // YDS AKADEMİK EŞ ANLAM VE PREPOSITION SÖZLÜĞÜ (High-Yield Collocations)
@@ -586,7 +597,7 @@
   function getCefrBadgeHtml(level) {
     const raw = (level || 'A1').trim();
     const safeCls = `cefr-${raw.toLowerCase().replace('+', 'plus')}`;
-    return `<span class="cefr-pill ${safeCls}" style="background: var(--${safeCls}-bg, rgba(148,163,184,0.12)); color: var(--${safeCls}-text, #94a3b8); border-color: var(--${safeCls}-border, rgba(148,163,184,0.3));">${raw}</span>`;
+    return `<span class="cefr-pill ${safeCls}">${raw}</span>`;
   }
 
   function getThemeBadgeHtml(themeCode, themeTitle) {
@@ -605,13 +616,13 @@
       btn.classList.toggle('active', btn.getAttribute('data-module') === moduleName);
     });
 
-    // Update brand info subtitle - Friendly, bite-sized micro-goals instead of intimidating numbers
+    // Update brand info subtitle - Architectural micro-goal telemetry
     const brandSub = document.getElementById('app-brand-subtitle');
     if (brandSub) {
-      if (moduleName === 'maarif') brandSub.innerText = '5. Sınıf Maarif Modeli • Günlük Görev: 10 Kelime';
+      if (moduleName === 'maarif') brandSub.innerText = '5. Sınıf Maarif Modeli • Günlük Hedef: 10 Kelime';
       else if (moduleName === 'yds') brandSub.innerText = 'YDS & YÖKDİL Akademik • Günlük Hedef: 20 Kelime';
       else if (moduleName === 'oxford') brandSub.innerText = 'The Oxford 5000 • Günlük Hedef: 25 Kelime';
-      else brandSub.innerText = 'Tüm Kütüphane • Kelime Keşfi & Serbest Havuz';
+      else brandSub.innerText = 'Tüm Kütüphane • Akademik Kelime Arşivi';
     }
 
     // Dynamic Navigation Labels
@@ -682,25 +693,24 @@
       batchSize = 20;
       heroClass = 'module-hero-yds';
       progressFillClass = 'progress-fill-yds';
-      bannerTitle = `🎯 Gün ${STATE.currentDay} • YDS & YÖKDİL Akademik Workout`;
-      bannerDesc = `Bugünkü <strong>${batchSize} hedef akademik kelime</strong> (Sıra: ${(STATE.currentDay - 1) * batchSize + 1} – ${Math.min(STATE.currentDay * batchSize, targetPool.length)} / ${targetPool.length} B2-C1 Kelime)`;
+      bannerTitle = `GÜN ${STATE.currentDay} • YDS & YÖKDİL AKADEMİK WORKOUT`;
+      bannerDesc = `Günlük <strong>${batchSize} hedef akademik kelime</strong> — İndeks: ${(STATE.currentDay - 1) * batchSize + 1}–${Math.min(STATE.currentDay * batchSize, targetPool.length)} / ${targetPool.length} (B2–C1)`;
     } else if (module === 'oxford') {
       targetPool = WORDS_DATA.filter(w => w.dataset === 'oxford');
       batchSize = 25;
       heroClass = 'module-hero-oxford';
       progressFillClass = 'progress-fill-oxford';
-      bannerTitle = `🌍 Gün ${STATE.currentDay} • The Oxford 5000 Kelime Paketi`;
-      bannerDesc = `Bugünkü <strong>${batchSize} kelime</strong> (Sıra: ${(STATE.currentDay - 1) * batchSize + 1} – ${Math.min(STATE.currentDay * batchSize, targetPool.length)} / ${targetPool.length} Oxford)`;
+      bannerTitle = `GÜN ${STATE.currentDay} • THE OXFORD 5000 KELİME MODÜLÜ`;
+      bannerDesc = `Günlük <strong>${batchSize} hedef kelime</strong> — İndeks: ${(STATE.currentDay - 1) * batchSize + 1}–${Math.min(STATE.currentDay * batchSize, targetPool.length)} / ${targetPool.length}`;
     } else {
-      // Default: Maarif Modeli (Bite-sized pedagogical micro-goals)
       targetPool = WORDS_DATA.filter(w => w.dataset === 'maarif' || !w.dataset);
       batchSize = 10;
       heroClass = 'module-hero-maarif';
       progressFillClass = 'progress-fill-maarif';
       const curThemeNum = Math.ceil(STATE.currentDay / 10);
       const curTheme = (typeof THEMES_DATA !== 'undefined' && THEMES_DATA[curThemeNum]) ? THEMES_DATA[curThemeNum] : { titleTr: 'Okul Yaşamı' };
-      bannerTitle = `🎓 Gün ${STATE.currentDay} • Tema ${curThemeNum}: ${curTheme.titleTr || curTheme.title || 'Okul Yaşamı'}`;
-      bannerDesc = `Bugünkü <strong>10 hedef kelime</strong> • Küçük adımlarla İngilizceyi eğlenerek öğren!`;
+      bannerTitle = `GÜN ${STATE.currentDay} • TEMA ${curThemeNum}: ${(curTheme.titleTr || curTheme.title || 'Okul Yaşamı').toUpperCase()}`;
+      bannerDesc = `Günlük <strong>10 hedef kelime</strong> • Odaklı öğrenim ve kalıcı kelime kazanımı`;
     }
 
     const totalDays = Math.ceil(targetPool.length / batchSize) || 1;
@@ -727,13 +737,13 @@
     if (dayLearnedCount === dayWords.length && dayWords.length > 0) {
       celebrationHtml = `
         <div class="daily-celebration-banner glass-panel">
-          <div class="celebration-icon">🎉 🌟 🏆</div>
+          <div class="celebration-icon">[ ${dayWords.length}/${dayWords.length} ]</div>
           <div class="celebration-body">
-            <h3>Harikasın! Bugünkü ${dayWords.length} Kelimelik Görevini Tamamladın!</h3>
-            <p>Bugünün tüm kelimelerini başarıyla öğrendin. Bilgilerini pekiştirmek için mini quizi çözmeye ne dersin?</p>
+            <h3>GÜNLÜK HEDEF TAMAMLANDI (${dayWords.length} / ${dayWords.length} KELİME)</h3>
+            <p>Bu çalışma günündeki tüm kelimeler öğrenildi olarak işaretlendi. Kazanımı doğrulamak için günün testini başlatın.</p>
           </div>
           <button class="celebration-action-btn" onclick="window.APP.startDailyQuiz()">
-            🧩 Günün Mini Testini Çöz
+            GÜNÜN TESTİNİ BAŞLAT &rarr;
           </button>
         </div>
       `;
@@ -743,10 +753,10 @@
     if (dayWords.length === 0) {
       cardsHtml = `
         <div class="empty-state-box glass-panel" style="grid-column: 1 / -1; margin: 24px 0;">
-          <div class="empty-icon">📂</div>
-          <div class="empty-title">Bu gün için kelime bulunamadı</div>
-          <div class="empty-desc">Lütfen yukarıdaki menüden başka bir gün seçin veya Gün 1'e dönün.</div>
-          <button class="ctrl-btn" onclick="window.APP.goHome()" style="margin-top: 14px; min-height: 44px; padding: 0 16px;">🏠 Gün 1'e Dön</button>
+          <div class="empty-icon">[ 0 ]</div>
+          <div class="empty-title">Bu gün için kelime kaydı bulunamadı</div>
+          <div class="empty-desc">Lütfen gün seçiciden başka bir çalışma günü seçin veya Gün 1'e dönün.</div>
+          <button class="ctrl-btn" onclick="window.APP.goHome()" style="margin-top: 14px; min-height: 44px; padding: 0 16px;">GÜN 1'E DÖN</button>
         </div>
       `;
     }
@@ -774,26 +784,26 @@
             <div class="word-en-row">
               <span class="word-en">${w.en}</span>
               ${w.phonetic ? `<span class="word-phonetic">${w.phonetic}</span>` : ''}
-              <button class="speak-btn" data-word="${w.en}" title="Dinle (${STATE.settings.accent})">🔊</button>
+              <button class="speak-btn" data-word="${w.en}" title="Sesli Telaffuz (${STATE.settings.accent})" aria-label="Telaffuzu dinle: ${w.en}">${ICONS.speaker}</button>
             </div>
-            <div class="word-tr">${w.tr || '<span style="color:var(--text-dim); font-style:italic;">(Anlamı ekleniyor)</span>'}</div>
-            <div class="word-pos">${w.desc} • ${w.cat || ''}</div>
+            <div class="word-tr">${w.tr || '<span style="color:var(--dp-color-ink-muted); font-style:italic;">(Anlamı ekleniyor)</span>'}</div>
+            <div class="word-pos">${w.desc} ${w.cat ? '• ' + w.cat : ''}</div>
             ${w.definition ? `<div class="word-def">"${w.definition}"</div>` : ''}
-            ${syn ? `<div class="yds-syn-tag"><strong>Eş Anlam:</strong> ${syn}</div>` : ''}
+            ${syn ? `<div class="yds-syn-tag"><strong>EŞ ANLAM:</strong> ${syn}</div>` : ''}
             ${w.example ? `<div class="word-example">“${w.example.replace(/^["“”]|["“”]$/g, '')}”</div>` : ''}
           </div>
 
           <div class="card-footer">
             <div class="card-action-bar">
               <button class="status-badge-btn ${isLearned ? 'learned' : ''}" onclick="window.APP.toggleLearned(${w.id})">
-                ${isLearned ? '✅ Öğrendim' : 'Öğren'}
+                ${ICONS.check} <span>${isLearned ? 'ÖĞRENDİM' : 'ÖĞREN'}</span>
               </button>
               <button class="status-badge-btn ${isReview ? 'review' : ''}" onclick="window.APP.toggleReview(${w.id})">
-                ${isReview ? '🔄 Tekrar Et' : 'Zor'}
+                ${ICONS.repeat} <span>${isReview ? 'TEKRARDA' : 'TEKRAR'}</span>
               </button>
             </div>
-            <button class="star-btn ${isStarred ? 'starred' : ''}" onclick="window.APP.toggleStarred(${w.id})" title="Favori">
-              ${isStarred ? '★' : '☆'}
+            <button class="star-btn ${isStarred ? 'starred' : ''}" onclick="window.APP.toggleStarred(${w.id})" title="Favorilere Ekle" aria-label="Favori">
+              ${isStarred ? ICONS.starFilled : ICONS.starOutline}
             </button>
           </div>
         </div>
@@ -808,28 +818,28 @@
           <p>${bannerDesc}</p>
         </div>
         <div class="day-picker-control">
-          <button class="day-step-btn" id="prev-day-btn" ${STATE.currentDay <= 1 ? 'disabled' : ''}>&larr;</button>
-          <select class="day-select-input" id="day-select-dropdown">
+          <button class="day-step-btn" id="prev-day-btn" ${STATE.currentDay <= 1 ? 'disabled' : ''} aria-label="Önceki Gün">&larr;</button>
+          <select class="day-select-input" id="day-select-dropdown" aria-label="Çalışma Günü Seçimi">
             ${dayOptionsHtml}
           </select>
-          <button class="day-step-btn" id="next-day-btn" ${STATE.currentDay >= totalDays ? 'disabled' : ''}>&rarr;</button>
+          <button class="day-step-btn" id="next-day-btn" ${STATE.currentDay >= totalDays ? 'disabled' : ''} aria-label="Sonraki Gün">&rarr;</button>
         </div>
       </div>
 
       <div class="daily-progress-box glass-panel">
         <div class="progress-header">
-          <span>Günün İlerlemesi: <strong>${dayLearnedCount} / ${dayWords.length}</strong> Kelime</span>
-          <span style="color: var(--accent-emerald); font-weight:700;">%${dayPercent} Tamamlandı</span>
+          <span>GÜNLÜK İLERLEME: <strong>${dayLearnedCount} / ${dayWords.length}</strong> KELİME</span>
+          <span style="color: var(--dp-color-field-support); font-weight:700;">%${dayPercent} TAMAMLANDI</span>
         </div>
         <div class="progress-track">
           <div class="progress-fill ${progressFillClass}" style="width: ${dayPercent}%;"></div>
         </div>
-        <div style="display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap;">
+        <div style="display: flex; gap: 10px; margin-top: 14px; flex-wrap: wrap;">
           <button class="ctrl-btn" onclick="window.APP.startDailyFlashcards()">
-            🗂️ Günün Kartlarıyla Çalış
+            GÜNÜN KARTLARIYLA ÇALIŞ
           </button>
           <button class="ctrl-btn" onclick="window.APP.startDailyQuiz()">
-            🧩 Günün Mini Testini Çöz
+            GÜNÜN TESTİNİ BAŞLAT
           </button>
         </div>
       </div>
@@ -931,39 +941,39 @@
 
     const flashcardSourceOptions = `
       ${isYdsMod ? `
-        <option value="daily" ${sourceVal === 'daily' ? 'selected' : ''}>🎯 Günün 20 Hedefi (YDS Gün ${STATE.currentDay})</option>
-        <option value="yds_all" ${sourceVal === 'yds_all' ? 'selected' : ''}>🎯 Tüm YDS/YÖKDİL Kelimeleri (2.894)</option>
-        <option value="yds_verbs" ${sourceVal === 'yds_verbs' ? 'selected' : ''}>⚡ Akademik Fiiller (1.100+ Kelime)</option>
-        <option value="yds_nouns" ${sourceVal === 'yds_nouns' ? 'selected' : ''}>⚡ Akademik İsimler (900+ Kelime)</option>
-        <option value="yds_adj_adv" ${sourceVal === 'yds_adj_adv' ? 'selected' : ''}>⚡ Sıfatlar & Zarflar (800+ Kelime)</option>
-        <option value="yds_c1" ${sourceVal === 'yds_c1' ? 'selected' : ''}>💎 C1 İleri Akademik (1.357 Kelime)</option>
-        <option value="yds_b2" ${sourceVal === 'yds_b2' ? 'selected' : ''}>💎 B2 Orta-İleri (1.537 Kelime)</option>
+        <option value="daily" ${sourceVal === 'daily' ? 'selected' : ''}>Günün 20 Hedefi (YDS Gün ${STATE.currentDay})</option>
+        <option value="yds_all" ${sourceVal === 'yds_all' ? 'selected' : ''}>Tüm YDS/YÖKDİL Kelimeleri (2.894)</option>
+        <option value="yds_verbs" ${sourceVal === 'yds_verbs' ? 'selected' : ''}>Akademik Fiiller (1.100+ Kelime)</option>
+        <option value="yds_nouns" ${sourceVal === 'yds_nouns' ? 'selected' : ''}>Akademik İsimler (900+ Kelime)</option>
+        <option value="yds_adj_adv" ${sourceVal === 'yds_adj_adv' ? 'selected' : ''}>Sıfatlar & Zarflar (800+ Kelime)</option>
+        <option value="yds_c1" ${sourceVal === 'yds_c1' ? 'selected' : ''}>C1 İleri Akademik (1.357 Kelime)</option>
+        <option value="yds_b2" ${sourceVal === 'yds_b2' ? 'selected' : ''}>B2 Orta-İleri (1.537 Kelime)</option>
       ` : `
         <option value="daily" ${sourceVal === 'daily' ? 'selected' : ''}>Günün Kelimeleri (Gün ${STATE.currentDay})</option>
-        <option value="maarif_all" ${sourceVal === 'maarif_all' ? 'selected' : ''}>🎓 5. Sınıf Maarif Modeli (817 Kelime)</option>
-        <option value="yds_all" ${sourceVal === 'yds_all' ? 'selected' : ''}>🎯 YDS & YÖKDİL Akademik (2.894 Kelime)</option>
-        <option value="oxford_all" ${sourceVal === 'oxford_all' ? 'selected' : ''}>🌍 The Oxford 5000 (Tümü - 5.841)</option>
+        <option value="maarif_all" ${sourceVal === 'maarif_all' ? 'selected' : ''}>5. Sınıf Maarif Modeli (817 Kelime)</option>
+        <option value="yds_all" ${sourceVal === 'yds_all' ? 'selected' : ''}>YDS & YÖKDİL Akademik (2.894 Kelime)</option>
+        <option value="oxford_all" ${sourceVal === 'oxford_all' ? 'selected' : ''}>The Oxford 5000 (Tümü - 5.841)</option>
         <option value="oxford_a1" ${sourceVal === 'oxford_a1' ? 'selected' : ''}>Oxford 5000: A1 Başlangıç</option>
         <option value="oxford_a2" ${sourceVal === 'oxford_a2' ? 'selected' : ''}>Oxford 5000: A2 Temel</option>
         <option value="oxford_b1" ${sourceVal === 'oxford_b1' ? 'selected' : ''}>Oxford 5000: B1 Orta</option>
       `}
-      <option value="all" ${sourceVal === 'all' ? 'selected' : ''}>🌟 Tüm Kelime Havuzu (${WORDS_DATA.length})</option>
-      <option value="review" ${sourceVal === 'review' ? 'selected' : ''}>⚠️ Tekrar Edilecekler (${STATE.userData.review.size})</option>
-      <option value="starred" ${sourceVal === 'starred' ? 'selected' : ''}>⭐ Favorilerim (${STATE.userData.starred.size})</option>
+      <option value="all" ${sourceVal === 'all' ? 'selected' : ''}>Tüm Kelime Havuzu (${WORDS_DATA.length})</option>
+      <option value="review" ${sourceVal === 'review' ? 'selected' : ''}>Tekrar Edilecekler (${STATE.userData.review.size})</option>
+      <option value="starred" ${sourceVal === 'starred' ? 'selected' : ''}>Favorilerim (${STATE.userData.starred.size})</option>
     `;
 
     if (pool.length === 0) {
       container.innerHTML = `
         <div class="flashcard-wrapper">
           <div class="flashcard-toolbar">
-            <select class="filter-source-select" id="fc-source-select" onchange="window.APP.renderFlashcardView()">
+            <select class="filter-source-select" id="fc-source-select" onchange="window.APP.renderFlashcardView()" aria-label="Kart Kaynağı Seçimi">
               ${flashcardSourceOptions}
             </select>
           </div>
           <div class="glass-panel" style="padding: 48px 24px; text-align: center; width: 100%;">
-            <div style="font-size: 2.5rem; margin-bottom: 12px;">📭</div>
-            <h3>Bu grupta henüz kelime bulunmuyor.</h3>
-            <p style="color: var(--text-muted); margin-top: 6px;">Lütfen yukarıdan başka bir kelime grubu seçin.</p>
+            <div style="font-family: var(--dp-typography-mono); font-size: 1.5rem; color: var(--dp-color-accent); margin-bottom: 12px;">[ 0 KART ]</div>
+            <h3>Bu filtre grubunda henüz kelime bulunmuyor.</h3>
+            <p style="color: var(--dp-color-ink-muted); margin-top: 6px;">Lütfen yukarıdaki menüden başka bir kelime havuzu seçin.</p>
           </div>
         </div>
       `;
@@ -979,7 +989,7 @@
     container.innerHTML = `
       <div class="flashcard-wrapper">
         <div class="flashcard-toolbar">
-          <select class="filter-source-select" id="fc-source-select" onchange="window.APP.renderFlashcardView()">
+          <select class="filter-source-select" id="fc-source-select" onchange="window.APP.renderFlashcardView()" aria-label="Kart Kaynağı Seçimi">
             ${flashcardSourceOptions}
           </select>
 
@@ -988,11 +998,11 @@
           </div>
 
           <button class="ctrl-btn" onclick="window.APP.shuffleFlashcards()" title="Kartları Karıştır">
-            🔀 Karıştır
+            ${ICONS.shuffle} <span>KARIŞTIR</span>
           </button>
         </div>
 
-        <div class="card-scene" id="flashcard-scene" title="Kartı çevirmek için tıklayın veya [Space] tuşuna basın">
+        <div class="card-scene" id="flashcard-scene" tabindex="0" role="button" aria-label="Kartı çevirmek için tıklayın veya Space tuşuna basın">
           <div class="flashcard-inner ${STATE.flashcardFlipped ? 'flipped' : ''}" id="flashcard-inner">
             
             <!-- Front Face -->
@@ -1003,20 +1013,20 @@
                   ${currentWord.themeCode ? getThemeBadgeHtml(currentWord.themeCode, currentWord.themeTitle) : ''}
                   ${prepBadge ? `<span class="yds-prep-tag">${prepBadge}</span>` : ''}
                 </div>
-                <button class="speak-btn" data-word="${currentWord.en}" onclick="event.stopPropagation(); window.APP.speakCurrentWord('${currentWord.en}')" title="Dinle">
-                  🔊
+                <button class="speak-btn" data-word="${currentWord.en}" onclick="event.stopPropagation(); window.APP.speakCurrentWord('${currentWord.en}')" title="Dinle" aria-label="Dinle">
+                  ${ICONS.speaker}
                 </button>
               </div>
 
               <div class="fc-main">
                 <div class="fc-word-en">${currentWord.en}</div>
-                ${currentWord.phonetic ? `<div style="font-family:var(--font-mono); color:var(--accent-cyan); font-size:1.05rem; margin-bottom:8px;">${currentWord.phonetic}</div>` : ''}
+                ${currentWord.phonetic ? `<div class="word-phonetic" style="font-size:1.05rem; margin-bottom:8px;">${currentWord.phonetic}</div>` : ''}
                 <div class="fc-category-desc">${currentWord.desc || ''} ${currentWord.cat ? '• ' + currentWord.cat : ''}</div>
-                ${syn ? `<div class="yds-syn-tag" style="margin-top:10px; font-size:0.85rem;"><strong>Eş Anlam:</strong> ${syn}</div>` : ''}
+                ${syn ? `<div class="yds-syn-tag" style="margin-top:10px; font-size:0.85rem;"><strong>EŞ ANLAM:</strong> ${syn}</div>` : ''}
               </div>
 
               <div class="fc-footer">
-                <span class="fc-hint">👆 Tıkla veya <span class="kbd-badge">Space</span> ile Türkçe anlamı gör</span>
+                <span class="fc-hint">ÇEVİRMEK İÇİN TIKLA VEYA <span class="kbd-badge">SPACE</span></span>
                 <span>#${currentWord.no || currentWord.id}</span>
               </div>
             </div>
@@ -1024,23 +1034,23 @@
             <!-- Back Face -->
             <div class="card-face card-face-back">
               <div class="fc-header">
-                <span class="theme-pill" style="color: #34d399; border-color: rgba(16,185,129,0.3);">TÜRKÇE ANLAMI</span>
-                <button class="speak-btn" data-word="${currentWord.en}" onclick="event.stopPropagation(); window.APP.speakCurrentWord('${currentWord.en}')" title="Dinle">
-                  🔊
+                <span class="cefr-pill">TÜRKÇE ANLAMI</span>
+                <button class="speak-btn" data-word="${currentWord.en}" onclick="event.stopPropagation(); window.APP.speakCurrentWord('${currentWord.en}')" title="Dinle" aria-label="Dinle">
+                  ${ICONS.speaker}
                 </button>
               </div>
 
               <div class="fc-main">
                 <div class="fc-word-tr">${currentWord.tr || '(Anlamı yakında eklenecek)'}</div>
-                <div style="font-size: 0.88rem; color: var(--text-muted); font-weight: 600; margin-bottom: 8px;">
+                <div style="font-size: 0.9rem; color: var(--dp-color-ink-muted); font-weight: 600; margin-bottom: 8px;">
                   ${currentWord.en} — ${currentWord.desc || ''}
                 </div>
-                ${currentWord.definition ? `<div style="font-size:0.82rem; color:var(--text-secondary); margin-bottom:8px; font-style:italic;">“${currentWord.definition}”</div>` : ''}
-                ${currentWord.example ? `<div style="font-size:0.82rem; color:#93c5fd; font-style:italic;">“${currentWord.example.replace(/^["“”]|["“”]$/g, '')}”</div>` : ''}
+                ${currentWord.definition ? `<div class="word-def" style="max-width: 52ch;">“${currentWord.definition}”</div>` : ''}
+                ${currentWord.example ? `<div class="word-example" style="max-width: 52ch;">“${currentWord.example.replace(/^["“”]|["“”]$/g, '')}”</div>` : ''}
               </div>
 
               <div class="fc-footer">
-                <span class="fc-hint">👆 Tıkla veya <span class="kbd-badge">Space</span> ile İngilizceye dön</span>
+                <span class="fc-hint">İNGİLİZCE YÜZE DÖNMEK İÇİN <span class="kbd-badge">SPACE</span></span>
                 <span>${currentWord.cat || ''}</span>
               </div>
             </div>
@@ -1050,28 +1060,28 @@
 
         <div class="fc-controls">
           <button class="fc-action-btn" onclick="window.APP.prevFlashcard()">
-            &larr; Önceki
+            &larr; ÖNCEKİ
           </button>
           
           <button class="fc-action-btn ${isReview ? 'btn-review' : ''}" onclick="window.APP.toggleReview(${currentWord.id})">
-            🔄 Tekrar Et <span class="kbd-badge">1</span>
+            ${ICONS.repeat} <span>TEKRAR ET</span> <span class="kbd-badge">1</span>
           </button>
 
           <button class="fc-action-btn ${isLearned ? 'btn-learned' : ''}" onclick="window.APP.toggleLearned(${currentWord.id})">
-            ✅ Öğrendim <span class="kbd-badge">2</span>
+            ${ICONS.check} <span>ÖĞRENDİM</span> <span class="kbd-badge">2</span>
           </button>
 
           <button class="fc-action-btn" onclick="window.APP.nextFlashcard()">
-            Sonraki &rarr;
+            SONRAKİ &rarr;
           </button>
         </div>
 
         <div class="fc-shortcuts-hint">
-          <span><span class="kbd-badge">Space</span> Çevir</span>
-          <span><span class="kbd-badge">&larr; / &rarr;</span> Değiştir</span>
-          <span><span class="kbd-badge">P</span> Dinle</span>
-          <span><span class="kbd-badge">1</span> Tekrar</span>
-          <span><span class="kbd-badge">2</span> Öğrendim</span>
+          <span><span class="kbd-badge">SPACE</span> ÇEVİR</span>
+          <span><span class="kbd-badge">&larr; / &rarr;</span> GEÇİŞ</span>
+          <span><span class="kbd-badge">P</span> DİNLE</span>
+          <span><span class="kbd-badge">1</span> TEKRAR</span>
+          <span><span class="kbd-badge">2</span> ÖĞRENDİM</span>
         </div>
       </div>
     `;
@@ -1103,18 +1113,18 @@
             resumeCardHtml = `
               <div class="resume-quiz-card glass-panel">
                 <div class="resume-quiz-info">
-                  <span class="resume-quiz-badge">⚠️ Kaldığın Yer Saklandı</span>
-                  <div class="resume-quiz-title">Yarım kalan bir test oturumunuz var!</div>
+                  <span class="resume-quiz-badge">[ OTURUM KAYDEDİLDİ ]</span>
+                  <div class="resume-quiz-title">Yarım kalan bir test oturumunuz bulunuyor</div>
                   <div class="resume-quiz-meta">
-                    Soru ${sq.currentIndex + 1} / ${sq.questions.length} • Puan: ${sq.score}
+                    SORU ${sq.currentIndex + 1} / ${sq.questions.length} • MEVCUT SKOR: ${sq.score}
                   </div>
                 </div>
                 <div class="resume-quiz-actions">
                   <button class="ctrl-btn resume-continue-btn" onclick="window.APP.resumeQuiz()">
-                    ▶️ Kaldığım Yerden Devam Et
+                    OTURUMA DEVAM ET &rarr;
                   </button>
                   <button class="ctrl-btn resume-discard-btn" onclick="window.APP.discardSavedQuiz()">
-                    🗑️ Yeni Test Başlat
+                    YENİ TEST BAŞLAT
                   </button>
                 </div>
               </div>
@@ -1129,44 +1139,44 @@
         <div class="quiz-wrapper">
           ${resumeCardHtml}
           <div class="quiz-setup-card glass-panel">
-            <h2>${isYds ? '🎯 YDS & YÖKDİL Akademik Sınav Simülatörü' : '🧩 İngilizce Kelime Testi & Quiz'}</h2>
-            <p>${isYds ? 'ÖSYM sınav formatında cümle tamamlama (cloze), akademik tanım eşleştirme ve kelime soruları.' : 'Bilgilerini pekiştir, çoktan seçmeli sorularla kendini test et.'}</p>
+            <h2>${isYds ? 'YDS & YÖKDİL AKADEMİK SINAV SİMÜLATÖRÜ' : 'KELİME DEĞERLENDİRME & TEST MODÜLÜ'}</h2>
+            <p>${isYds ? 'ÖSYM sınav formatında cümle tamamlama (cloze), akademik tanım eşleştirme ve kelime soruları.' : 'Kelime kazanımlarınızı çoktan seçmeli sorularla doğrulayın. Yanlış cevaplanan kelimeler otomatik olarak tekrar listesine alınır.'}</p>
 
             <div class="quiz-config-grid">
               <div class="config-group">
-                <label>Soru Türü</label>
+                <label for="quiz-mode-select">Soru Türü</label>
                 <select id="quiz-mode-select">
-                  <option value="en-tr">🇬🇧 İngilizce &rarr; 🇹🇷 Türkçe (Anlamını Bul)</option>
-                  <option value="tr-en">🇹🇷 Türkçe &rarr; 🇬🇧 İngilizce (Kelimeyi Bul)</option>
+                  <option value="en-tr">İngilizce &rarr; Türkçe (Anlamını Bul)</option>
+                  <option value="tr-en">Türkçe &rarr; İngilizce (Kelimeyi Bul)</option>
                   ${isYds ? `
-                    <option value="cloze">📝 Cümle Tamamlama (YDS Cloze Test)</option>
-                    <option value="definition">📖 İngilizce Tanımdan Kelimeyi Bulma</option>
+                    <option value="cloze">Cümle Tamamlama (YDS Cloze Test)</option>
+                    <option value="definition">İngilizce Tanımdan Kelimeyi Bulma</option>
                   ` : ''}
-                  <option value="listening">🎧 Dinleme & Anlama (Sesi Dinle)</option>
+                  <option value="listening">Dinleme &amp; Anlama (Sesli Telaffuz)</option>
                 </select>
               </div>
 
               <div class="config-group">
-                <label>Soru Kaynağı</label>
+                <label for="quiz-source-select">Soru Kaynağı</label>
                 <select id="quiz-source-select">
                   ${isYds ? `
-                    <option value="yds_all">🎯 Tüm YDS/YÖKDİL Havuzu (2.894 Kelime)</option>
-                    <option value="yds_verbs">⚡ Akademik Fiiller (Verbs)</option>
-                    <option value="yds_nouns">⚡ Akademik İsimler (Nouns)</option>
-                    <option value="yds_adj_adv">⚡ Sıfatlar & Zarflar</option>
+                    <option value="yds_all">Tüm YDS/YÖKDİL Havuzu (2.894 Kelime)</option>
+                    <option value="yds_verbs">Akademik Fiiller (Verbs)</option>
+                    <option value="yds_nouns">Akademik İsimler (Nouns)</option>
+                    <option value="yds_adj_adv">Sıfatlar &amp; Zarflar</option>
                     <option value="daily">Günün 20 Hedefi (YDS Gün ${STATE.currentDay})</option>
                   ` : `
                     <option value="daily">Günün 10 Kelimesi (Gün ${STATE.currentDay})</option>
-                    <option value="maarif">🎓 5. Sınıf Maarif Modeli</option>
-                    <option value="oxford_all">🌍 The Oxford 5000 (Tüm Havuz)</option>
-                    <option value="all">🌟 Tüm Kelime Havuzu (${WORDS_DATA.length})</option>
+                    <option value="maarif">5. Sınıf Maarif Modeli</option>
+                    <option value="oxford_all">The Oxford 5000 (Tüm Havuz)</option>
+                    <option value="all">Tüm Kelime Havuzu (${WORDS_DATA.length})</option>
                   `}
-                  <option value="review">⚠️ Zorlandıklarım / Tekrar Edilecekler (${STATE.userData.review.size})</option>
+                  <option value="review">Tekrar Edilecekler (${STATE.userData.review.size})</option>
                 </select>
               </div>
 
               <div class="config-group">
-                <label>Soru Sayısı</label>
+                <label for="quiz-count-select">Soru Sayısı</label>
                 <select id="quiz-count-select">
                   <option value="10">10 Soru</option>
                   <option value="20">20 Soru</option>
@@ -1175,7 +1185,7 @@
               </div>
 
               <div class="config-group">
-                <label>Zorluk Seviyesi</label>
+                <label for="quiz-level-select">Zorluk Seviyesi</label>
                 <select id="quiz-level-select">
                   <option value="all">Tüm Seviyeler</option>
                   <option value="A1">A1 Başlangıç</option>
@@ -1188,7 +1198,7 @@
             </div>
 
             <button class="start-quiz-btn" onclick="window.APP.startQuiz()">
-              🚀 Sınava / Teste Başla
+              TEST OTURUMUNU BAŞLAT &rarr;
             </button>
           </div>
         </div>
@@ -1199,13 +1209,11 @@
     // Active Quiz View
     const qState = STATE.quizState;
     if (qState.currentIndex >= qState.questions.length) {
-      // Clear saved quiz
       localStorage.removeItem('learnish_active_quiz');
       const totalQ = qState.questions.length;
       const accuracy = Math.round((qState.score / (totalQ || 1)) * 100);
       const earnedXP = qState.score * 15;
-      
-      // Update statistics
+
       STATE.userData.stats.quizzesPlayed++;
       STATE.userData.stats.correctAnswers += qState.score;
       STATE.userData.stats.totalQuestions += totalQ;
@@ -1214,53 +1222,50 @@
       }
       saveUserData();
 
-      let starsHtml = '⭐☆☆';
-      let titleMessage = 'Güzel Deneme!';
-      let subMessage = 'Pratik yaparak kelime dağarcığını daha da büyütebilirsin.';
+      let statusCode = '[ OTURUM TAMAMLANDI ]';
+      let titleMessage = 'DEĞERLENDİRME TAMAMLANDI';
+      let subMessage = 'Yanlış cevaplanan kelimeler tekrar listesine eklendi.';
       if (accuracy >= 90) {
-        starsHtml = '⭐⭐⭐';
-        titleMessage = 'Mükemmel Başarı!';
-        subMessage = 'Bütün soruları neredeyse eksiksiz bildin. Harikasın!';
+        statusCode = '[ ÜSTÜN BAŞARI • %' + accuracy + ' ]';
+        titleMessage = 'YÜKSEK DOĞRULUK ORANI';
+        subMessage = 'Hedef kelimelerin tamamına yakını doğrulandı.';
       } else if (accuracy >= 70) {
-        starsHtml = '⭐⭐☆';
-        titleMessage = 'Tebrikler, Çok Başarılı!';
-        subMessage = 'Hedef kelimelerin büyük çoğunluğunu pekiştirdin.';
+        statusCode = '[ HEDEF ONAYLANDI • %' + accuracy + ' ]';
+        titleMessage = 'BAŞARILI PERFORMANS';
+        subMessage = 'Hedef kelimelerin büyük çoğunluğu kalıcı olarak pekiştirildi.';
       }
-
-      if (accuracy >= 70) triggerConfetti();
 
       container.innerHTML = `
         <div class="quiz-wrapper">
           <div class="quiz-setup-card glass-panel" style="text-align: center;">
-            <div style="font-size: 2.8rem; margin-bottom: 4px; letter-spacing: 4px;">${starsHtml}</div>
-            <div style="font-size: 2.2rem; margin-bottom: 8px;">${accuracy >= 80 ? '🏆' : (accuracy >= 50 ? '👏' : '📚')}</div>
+            <div style="font-family: var(--dp-typography-mono); font-size: 0.9rem; font-weight: 700; color: var(--dp-color-accent); margin-bottom: 10px; letter-spacing: 0.06em;">${statusCode}</div>
             <h2>${titleMessage}</h2>
             <p>${subMessage}</p>
 
             <div class="stats-summary-grid" style="margin: 20px 0;">
               <div class="stat-metric-card glass-panel">
-                <div class="metric-val" style="color: var(--accent-emerald);">${qState.score} / ${totalQ}</div>
-                <div class="metric-title">Doğru Sayısı</div>
+                <div class="metric-val">${qState.score} / ${totalQ}</div>
+                <div class="metric-title">DOĞRU SAYISI</div>
               </div>
               <div class="stat-metric-card glass-panel">
-                <div class="metric-val" style="color: var(--yds-accent);">%${accuracy}</div>
-                <div class="metric-title">Başarı Oranı</div>
+                <div class="metric-val" style="color: var(--dp-color-accent);">%${accuracy}</div>
+                <div class="metric-title">BAŞARI ORANI</div>
               </div>
               <div class="stat-metric-card glass-panel">
-                <div class="metric-val" style="color: var(--accent-amber);">+${earnedXP} XP</div>
-                <div class="metric-title">Kazanılan Puan</div>
+                <div class="metric-val" style="color: var(--dp-color-field-support);">+${earnedXP}</div>
+                <div class="metric-title">KAZANIM PUANI</div>
               </div>
             </div>
 
             <div class="quiz-finished-actions" style="display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin-top: 24px;">
               <button class="fc-action-btn" onclick="window.APP.goHome()" style="min-height: 48px; min-width: 160px; font-weight: 700;">
-                🏠 Ana Sayfaya Dön
+                ANA SAYFAYA DÖN
               </button>
               <button class="fc-action-btn" onclick="window.APP.quitQuiz()" style="min-height: 48px; min-width: 160px;">
-                🔄 Yeniden Test Çöz
+                YENİ TEST BAŞLAT
               </button>
               <button class="fc-action-btn" onclick="window.APP.switchView('daily')" style="min-height: 48px; min-width: 160px;">
-                📅 Günün Çalışması
+                GÜNLÜK ÇALIŞMA
               </button>
             </div>
           </div>
@@ -1272,41 +1277,44 @@
     const currentQ = qState.questions[qState.currentIndex];
     const targetWord = currentQ.targetWord;
 
+    const modeLabels = {
+      'cloze': 'CÜMLE TAMAMLAMA',
+      'definition': 'TANIM EŞLEŞTİRME',
+      'listening': 'DİNLEME TESTİ',
+      'tr-en': 'TR → EN',
+      'en-tr': 'EN → TR'
+    };
+    const activeModeTitle = modeLabels[qState.mode] || 'EN → TR';
+
     let questionContentHtml = '';
     if (qState.mode === 'cloze') {
       const regex = new RegExp(`\\b${targetWord.en}[a-z]*\\b`, 'i');
       const clozeText = currentQ.clozeSentence || (targetWord.example ? targetWord.example.replace(regex, '<span class="cloze-blank">_______</span>') : `${targetWord.tr} anlamına gelen kelimeyi seçiniz: <span class="cloze-blank">_______</span>`);
       questionContentHtml = `
-        <div class="quiz-mode-label">📝 Cümle Tamamlama (Cloze Soru)</div>
         <div class="quiz-cloze-sentence">“${clozeText}”</div>
-        <div style="font-size:0.78rem; color:var(--text-dim); margin-top:8px;">[${targetWord.desc} • ${targetWord.cefr}]</div>
+        <div style="font-family:var(--dp-typography-mono); font-size:0.78rem; color:var(--dp-color-ink-muted); margin-top:10px;">[${targetWord.desc} • ${targetWord.cefr}]</div>
       `;
     } else if (qState.mode === 'definition') {
       questionContentHtml = `
-        <div class="quiz-mode-label">📖 İngilizce Tanım Eşleştirme</div>
-        <div style="font-size: 1.15rem; color: var(--text-main); line-height: 1.5; font-style: italic;">“${targetWord.definition || targetWord.tr}”</div>
-        <div style="font-size:0.78rem; color:var(--text-dim); margin-top:8px;">[${targetWord.desc} • ${targetWord.cefr}]</div>
+        <div style="font-size: 1.15rem; color: var(--dp-color-ink); line-height: 1.5; font-style: italic;">“${targetWord.definition || targetWord.tr}”</div>
+        <div style="font-family:var(--dp-typography-mono); font-size:0.78rem; color:var(--dp-color-ink-muted); margin-top:10px;">[${targetWord.desc} • ${targetWord.cefr}]</div>
       `;
     } else if (qState.mode === 'listening') {
       questionContentHtml = `
-        <div class="quiz-mode-label">🎧 Telaffuzu Dinleyin</div>
-        <button class="speak-btn" style="width: 56px; height: 56px; font-size: 1.6rem; margin: 12px auto;" onclick="window.APP.replayQuizAudio()">
-          🔊
+        <button class="speak-btn" style="width: 56px; height: 56px; margin: 8px auto;" onclick="window.APP.replayQuizAudio()" aria-label="Sesi Tekrar Dinle">
+          ${ICONS.speaker}
         </button>
-        <div style="font-size:0.82rem; color:var(--text-muted); margin-top:6px;">Sesi tekrar dinlemek için butona basın</div>
+        <div style="font-family:var(--dp-typography-mono); font-size:0.82rem; color:var(--dp-color-ink-muted); margin-top:8px;">SESİ TEKRAR DİNLEMEK İÇİN TIKLAYIN VEYA [R] TUŞUNA BASIN</div>
       `;
     } else if (qState.mode === 'tr-en') {
       questionContentHtml = `
-        <div class="quiz-mode-label">🇹🇷 Türkçe Anlamı Verilen Kelimeyi Seçin</div>
         <div class="quiz-target-word">${targetWord.tr}</div>
-        <div style="font-size:0.8rem; color:var(--text-muted);">${targetWord.desc} • ${targetWord.cefr}</div>
+        <div style="font-family:var(--dp-typography-mono); font-size:0.8rem; color:var(--dp-color-ink-muted);">${targetWord.desc} • ${targetWord.cefr}</div>
       `;
     } else {
-      // en-tr
       questionContentHtml = `
-        <div class="quiz-mode-label">🇬🇧 Kelimenin Türkçe Anlamını Seçin</div>
         <div class="quiz-target-word">${targetWord.en}</div>
-        <div style="font-size:0.8rem; color:var(--text-muted);">${targetWord.desc} • ${targetWord.cefr}</div>
+        <div style="font-family:var(--dp-typography-mono); font-size:0.8rem; color:var(--dp-color-ink-muted);">${targetWord.desc} • ${targetWord.cefr}</div>
       `;
     }
 
@@ -1321,17 +1329,17 @@
       <div class="quiz-wrapper">
         <div class="quiz-active-card glass-panel">
           <div class="quiz-top-bar">
-            <span style="font-family:var(--font-mono); font-size:0.85rem; color:var(--text-muted); font-weight:700;">
-              Soru ${qState.currentIndex + 1} / ${qState.questions.length}
+            <span style="font-family:var(--dp-typography-mono); font-size:0.85rem; color:var(--dp-color-ink-muted); font-weight:700;">
+              SORU ${qState.currentIndex + 1} / ${qState.questions.length} • ${activeModeTitle}
             </span>
             <div style="display: flex; gap: 8px; align-items: center;">
-              <span class="theme-pill" style="color:var(--yds-accent);">Skor: ${qState.score}</span>
-              <button class="ctrl-btn" style="height: 32px; padding: 0 10px; font-size:0.75rem;" onclick="window.APP.quitQuiz()">Çıkış</button>
+              <span class="theme-pill" style="color:var(--dp-color-field-support);">SKOR: ${qState.score}</span>
+              <button class="ctrl-btn" style="min-height: 36px; padding: 0 12px; font-size:0.75rem;" onclick="window.APP.quitQuiz()">ÇIKIŞ</button>
             </div>
           </div>
 
           <div class="progress-track" style="margin-bottom: 20px;">
-            <div class="progress-fill" style="width: ${((qState.currentIndex) / qState.questions.length) * 100}%; background:var(--accent-blue);"></div>
+            <div class="progress-fill" style="width: ${((qState.currentIndex) / qState.questions.length) * 100}%;"></div>
           </div>
 
           <div class="quiz-target-box">
@@ -1342,7 +1350,6 @@
             ${optionsHtml}
           </div>
 
-          <!-- Pedagogical Feedback Card injected here when wrong answer is chosen -->
           <div id="quiz-feedback-container"></div>
         </div>
       </div>
@@ -1365,7 +1372,6 @@
 
     let pool = WORDS_DATA;
 
-    // Module-specific initial scoping
     if (isYdsModule) {
       pool = WORDS_DATA.filter(isYDSWord);
     } else if (filters.dataset === 'oxford') {
@@ -1374,22 +1380,18 @@
       pool = WORDS_DATA.filter(w => w.dataset === 'maarif' || !w.dataset);
     }
 
-    // YDS POS filter
     if (filters.pos && filters.pos !== 'all') {
       pool = pool.filter(w => getWordPOS(w) === filters.pos);
     }
 
-    // Theme filter
     if (filters.theme && filters.theme !== 'all') {
       pool = pool.filter(w => w.themeNum === parseInt(filters.theme, 10));
     }
 
-    // CEFR filter
     if (filters.cefr && filters.cefr !== 'all') {
       pool = pool.filter(w => w.cefr === filters.cefr);
     }
 
-    // Status filter
     if (filters.status === 'learned') {
       pool = pool.filter(w => STATE.userData.learned.has(w.id));
     } else if (filters.status === 'review') {
@@ -1398,7 +1400,6 @@
       pool = pool.filter(w => STATE.userData.starred.has(w.id));
     }
 
-    // Search query filter
     if (filters.search && filters.search.trim()) {
       const q = filters.search.trim().toLowerCase();
       pool = pool.filter(w => 
@@ -1435,26 +1436,26 @@
             <div class="word-en-row">
               <span class="word-en">${w.en}</span>
               ${w.phonetic ? `<span class="word-phonetic">${w.phonetic}</span>` : ''}
-              <button class="speak-btn" data-word="${w.en}">🔊</button>
+              <button class="speak-btn" data-word="${w.en}" aria-label="Dinle: ${w.en}">${ICONS.speaker}</button>
             </div>
-            <div class="word-tr">${w.tr || '<span style="color:var(--text-dim); font-style:italic;">(Anlamı ekleniyor)</span>'}</div>
-            <div class="word-pos">${w.desc} • ${w.cat || ''}</div>
+            <div class="word-tr">${w.tr || '<span style="color:var(--dp-color-ink-muted); font-style:italic;">(Anlamı ekleniyor)</span>'}</div>
+            <div class="word-pos">${w.desc} ${w.cat ? '• ' + w.cat : ''}</div>
             ${w.definition ? `<div class="word-def">"${w.definition}"</div>` : ''}
-            ${syn ? `<div class="yds-syn-tag"><strong>Eş Anlam:</strong> ${syn}</div>` : ''}
+            ${syn ? `<div class="yds-syn-tag"><strong>EŞ ANLAM:</strong> ${syn}</div>` : ''}
             ${w.example ? `<div class="word-example">“${w.example.replace(/^["“”]|["“”]$/g, '')}”</div>` : ''}
           </div>
 
           <div class="card-footer">
             <div class="card-action-bar">
               <button class="status-badge-btn ${isLearned ? 'learned' : ''}" onclick="window.APP.toggleLearned(${w.id})">
-                ${isLearned ? '✅ Öğrendim' : 'Öğren'}
+                ${ICONS.check} <span>${isLearned ? 'ÖĞRENDİM' : 'ÖĞREN'}</span>
               </button>
               <button class="status-badge-btn ${isReview ? 'review' : ''}" onclick="window.APP.toggleReview(${w.id})">
-                ${isReview ? '🔄 Tekrar' : 'Zor'}
+                ${ICONS.repeat} <span>${isReview ? 'TEKRARDA' : 'TEKRAR'}</span>
               </button>
             </div>
-            <button class="star-btn ${isStarred ? 'starred' : ''}" onclick="window.APP.toggleStarred(${w.id})">
-              ${isStarred ? '★' : '☆'}
+            <button class="star-btn ${isStarred ? 'starred' : ''}" onclick="window.APP.toggleStarred(${w.id})" aria-label="Favori">
+              ${isStarred ? ICONS.starFilled : ICONS.starOutline}
             </button>
           </div>
         </div>
@@ -1464,58 +1465,54 @@
     container.innerHTML = `
       <div class="directory-controls glass-panel">
         <div class="search-input-box">
-          <span class="search-icon">🔍</span>
-          <input type="text" class="search-input" id="dir-search-input" placeholder="İngilizce, Türkçe veya eş anlam ara... (ör: abandon, advocate, relieve)" value="${filters.search}">
+          <span class="search-icon">${ICONS.search}</span>
+          <input type="text" class="search-input" id="dir-search-input" placeholder="İngilizce, Türkçe veya eş anlam ara... (ör: abandon, advocate, relieve)" value="${filters.search}" aria-label="Kelime Ara">
         </div>
 
         ${isYdsModule ? `
-          <!-- YDS POS Filter Chips -->
-          <div style="margin-bottom: 10px;">
-            <div style="font-size: 0.72rem; font-weight: 700; text-transform: uppercase; color: var(--text-dim); margin-bottom: 6px;">YDS Kelime Türleri</div>
+          <div style="margin-bottom: 12px;">
+            <div style="font-family: var(--dp-typography-mono); font-size: 0.78rem; font-weight: 700; text-transform: uppercase; color: var(--dp-color-ink-muted); margin-bottom: 6px;">YDS KELİME TÜRLERİ</div>
             <div class="filter-chips-group" id="yds-pos-chips">
-              <button class="filter-chip ${filters.pos === 'all' ? 'active' : ''}" data-val="all">Tüm YDS (2.894)</button>
-              <button class="filter-chip ${filters.pos === 'verb' ? 'active' : ''}" data-val="verb">⚡ Akademik Fiiller (Verbs)</button>
-              <button class="filter-chip ${filters.pos === 'noun' ? 'active' : ''}" data-val="noun">⚡ Akademik İsimler (Nouns)</button>
-              <button class="filter-chip ${filters.pos === 'adj_adv' ? 'active' : ''}" data-val="adj_adv">⚡ Sıfatlar &amp; Zarflar</button>
+              <button class="filter-chip ${filters.pos === 'all' ? 'active' : ''}" data-val="all">TÜM YDS (2.894)</button>
+              <button class="filter-chip ${filters.pos === 'verb' ? 'active' : ''}" data-val="verb">AKADEMİK FİİLLER (VERBS)</button>
+              <button class="filter-chip ${filters.pos === 'noun' ? 'active' : ''}" data-val="noun">AKADEMİK İSİMLER (NOUNS)</button>
+              <button class="filter-chip ${filters.pos === 'adj_adv' ? 'active' : ''}" data-val="adj_adv">SIFATLAR &amp; ZARFLAR</button>
             </div>
           </div>
         ` : `
-          <!-- Dataset Filter Chips -->
-          <div style="margin-bottom: 10px;">
-            <div style="font-size: 0.72rem; font-weight: 700; text-transform: uppercase; color: var(--text-dim); margin-bottom: 6px;">Kelime Kütüphanesi</div>
+          <div style="margin-bottom: 12px;">
+            <div style="font-family: var(--dp-typography-mono); font-size: 0.78rem; font-weight: 700; text-transform: uppercase; color: var(--dp-color-ink-muted); margin-bottom: 6px;">KELİME KÜTÜPHANESİ</div>
             <div class="filter-chips-group" id="dataset-chips">
-              <button class="filter-chip ${filters.dataset === 'all' ? 'active' : ''}" data-val="all">Tüm Kütüphaneler (${WORDS_DATA.length})</button>
-              <button class="filter-chip ${filters.dataset === 'oxford' ? 'active' : ''}" data-val="oxford" style="color:var(--oxford-accent);">🌍 The Oxford 5000 (5.841)</button>
-              <button class="filter-chip ${filters.dataset === 'maarif' ? 'active' : ''}" data-val="maarif" style="color:var(--maarif-accent);">🎓 5. Sınıf Maarif Modeli (817)</button>
+              <button class="filter-chip ${filters.dataset === 'all' ? 'active' : ''}" data-val="all">TÜM KÜTÜPHANELER (${WORDS_DATA.length})</button>
+              <button class="filter-chip ${filters.dataset === 'oxford' ? 'active' : ''}" data-val="oxford">THE OXFORD 5000 (5.841)</button>
+              <button class="filter-chip ${filters.dataset === 'maarif' ? 'active' : ''}" data-val="maarif">5. SINIF MAARİF MODELİ (817)</button>
             </div>
           </div>
         `}
 
-        <!-- CEFR Filter Chips -->
-        <div style="margin-bottom: 10px;">
-          <div style="font-size: 0.72rem; font-weight: 700; text-transform: uppercase; color: var(--text-dim); margin-bottom: 6px;">CEFR Düzeyleri</div>
+        <div style="margin-bottom: 12px;">
+          <div style="font-family: var(--dp-typography-mono); font-size: 0.78rem; font-weight: 700; text-transform: uppercase; color: var(--dp-color-ink-muted); margin-bottom: 6px;">CEFR DÜZEYLERİ</div>
           <div class="filter-chips-group" id="cefr-chips">
-            <button class="filter-chip ${filters.cefr === 'all' ? 'active' : ''}" data-val="all">Tüm Düzeyler</button>
+            <button class="filter-chip ${filters.cefr === 'all' ? 'active' : ''}" data-val="all">TÜM DÜZEYLER</button>
             <button class="filter-chip ${filters.cefr === 'A1' ? 'active' : ''}" data-val="A1">A1</button>
             <button class="filter-chip ${filters.cefr === 'A2' ? 'active' : ''}" data-val="A2">A2</button>
             <button class="filter-chip ${filters.cefr === 'B1' ? 'active' : ''}" data-val="B1">B1</button>
-            <button class="filter-chip ${filters.cefr === 'B2' ? 'active' : ''}" data-val="B2">B2 (Orta-İleri)</button>
-            <button class="filter-chip ${filters.cefr === 'C1' ? 'active' : ''}" data-val="C1">C1 (İleri Akademik)</button>
+            <button class="filter-chip ${filters.cefr === 'B2' ? 'active' : ''}" data-val="B2">B2 (ORTA-İLERİ)</button>
+            <button class="filter-chip ${filters.cefr === 'C1' ? 'active' : ''}" data-val="C1">C1 (İLERİ AKADEMİK)</button>
           </div>
         </div>
 
-        <!-- Status Filter Chips -->
         <div>
           <div class="filter-chips-group" id="status-chips">
-            <button class="filter-chip ${filters.status === 'all' ? 'active' : ''}" data-val="all">Tümü</button>
-            <button class="filter-chip ${filters.status === 'learned' ? 'active' : ''}" data-val="learned">✅ Öğrenilenler (${STATE.userData.learned.size})</button>
-            <button class="filter-chip ${filters.status === 'review' ? 'active' : ''}" data-val="review">🔄 Tekrar Edilecekler (${STATE.userData.review.size})</button>
-            <button class="filter-chip ${filters.status === 'starred' ? 'active' : ''}" data-val="starred">⭐ Favoriler (${STATE.userData.starred.size})</button>
+            <button class="filter-chip ${filters.status === 'all' ? 'active' : ''}" data-val="all">TÜMÜ</button>
+            <button class="filter-chip ${filters.status === 'learned' ? 'active' : ''}" data-val="learned">ÖĞRENİLENLER (${STATE.userData.learned.size})</button>
+            <button class="filter-chip ${filters.status === 'review' ? 'active' : ''}" data-val="review">TEKRAR EDİLECEKLER (${STATE.userData.review.size})</button>
+            <button class="filter-chip ${filters.status === 'starred' ? 'active' : ''}" data-val="starred">FAVORİLER (${STATE.userData.starred.size})</button>
           </div>
         </div>
 
         <div class="dir-results-info">
-          ${filtered.length} kelime listeleniyor ${filtered.length > 100 ? '(İlk 100 gösteriliyor)' : ''}
+          ${filtered.length} KAYIT LİSTELENİYOR ${filtered.length > 100 ? '(İLK 100 GÖSTERİLİYOR)' : ''}
         </div>
       </div>
 
@@ -1524,13 +1521,11 @@
       </div>
     `;
 
-    // Search input
     document.getElementById('dir-search-input')?.addEventListener('input', (e) => {
       STATE.directoryFilters.search = e.target.value;
       renderDirectoryView();
     });
 
-    // Chip bindings
     container.querySelectorAll('#yds-pos-chips .filter-chip').forEach(btn => {
       btn.addEventListener('click', () => {
         STATE.directoryFilters.pos = btn.getAttribute('data-val');
@@ -1576,10 +1571,6 @@
     const container = document.getElementById('view-stats');
     if (!container) return;
 
-    const totalLearned = STATE.userData.learned.size;
-    const totalWords = WORDS_DATA.length;
-    const progressPercent = Math.round((totalLearned / totalWords) * 100);
-
     const maarifWords = WORDS_DATA.filter(w => w.dataset === 'maarif' || !w.dataset);
     const maarifLearned = maarifWords.filter(w => STATE.userData.learned.has(w.id)).length;
     const maarifPct = Math.round((maarifLearned / (maarifWords.length || 1)) * 100);
@@ -1601,18 +1592,18 @@
       const tWords = WORDS_DATA.filter(w => w.themeNum === t);
       const tLearned = tWords.filter(w => STATE.userData.learned.has(w.id)).length;
       const tPct = Math.round((tLearned / (tWords.length || 1)) * 100);
-      const tMeta = THEMES_DATA[t] || { code: `THEME ${t}`, title: `Tema ${t}`, titleTr: '', badgeBg: '#10b981' };
+      const tMeta = THEMES_DATA[t] || { code: `THEME ${t}`, title: `Tema ${t}`, titleTr: '' };
 
       themesBreakdownHtml += `
         <div class="theme-stat-row">
-          <div style="width: 220px;">
+          <div style="width: 240px;">
             <div class="theme-stat-name">${tMeta.code}: ${tMeta.title}</div>
-            <div style="font-size: 0.72rem; color: var(--text-dim);">${tMeta.titleTr}</div>
+            <div style="font-family: var(--dp-typography-mono); font-size: 0.78rem; color: var(--dp-color-ink-muted);">${tMeta.titleTr}</div>
           </div>
           <div class="theme-stat-bar-container">
-            <div style="height: 100%; width: ${tPct}%; background: ${tMeta.badgeBg}; border-radius: 4px;"></div>
+            <div style="height: 100%; width: ${tPct}%; background: var(--dp-color-accent);"></div>
           </div>
-          <div style="font-size: 0.82rem; font-weight: 700; min-width: 80px; text-align: right;">
+          <div style="font-family: var(--dp-typography-mono); font-size: 0.82rem; font-weight: 700; min-width: 96px; text-align: right;">
             ${tLearned} / ${tWords.length} (%${tPct})
           </div>
         </div>
@@ -1627,11 +1618,11 @@
     const ydsC1 = ydsWords.filter(w => w.cefr === 'C1');
 
     const ydsItems = [
-      { name: 'C1 İleri Akademik Kelimeler', words: ydsC1, color: '#f59e0b' },
-      { name: 'B2 Orta-İleri Kelimeler', words: ydsB2, color: '#8b5cf6' },
-      { name: 'Akademik Fiiller (Verbs)', words: ydsVerbs, color: '#3b82f6' },
-      { name: 'Akademik İsimler (Nouns)', words: ydsNouns, color: '#10b981' },
-      { name: 'Sıfatlar & Zarflar', words: ydsAdjs, color: '#06b6d4' }
+      { name: 'C1 İleri Akademik Kelimeler', words: ydsC1 },
+      { name: 'B2 Orta-İleri Kelimeler', words: ydsB2 },
+      { name: 'Akademik Fiiller (Verbs)', words: ydsVerbs },
+      { name: 'Akademik İsimler (Nouns)', words: ydsNouns },
+      { name: 'Sıfatlar & Zarflar', words: ydsAdjs }
     ];
 
     let ydsBreakdownHtml = '';
@@ -1641,12 +1632,12 @@
       ydsBreakdownHtml += `
         <div class="theme-stat-row">
           <div style="width: 240px;">
-            <div class="theme-stat-name" style="color: ${item.color};">${item.name}</div>
+            <div class="theme-stat-name">${item.name}</div>
           </div>
           <div class="theme-stat-bar-container">
-            <div style="height: 100%; width: ${pct}%; background: ${item.color}; border-radius: 4px;"></div>
+            <div style="height: 100%; width: ${pct}%; background: var(--dp-color-accent);"></div>
           </div>
-          <div style="font-size: 0.82rem; font-weight: 700; min-width: 80px; text-align: right;">
+          <div style="font-family: var(--dp-typography-mono); font-size: 0.82rem; font-weight: 700; min-width: 96px; text-align: right;">
             ${learned} / ${item.words.length} (%${pct})
           </div>
         </div>
@@ -1655,11 +1646,11 @@
 
     // 3. Oxford CEFR breakdown
     const cefrLevels = [
-      { level: 'A1', name: 'A1 Başlangıç (Beginner)', color: '#10b981' },
-      { level: 'A2', name: 'A2 Temel (Elementary)', color: '#06b6d4' },
-      { level: 'B1', name: 'B1 Eşik / Orta (Intermediate)', color: '#3b82f6' },
-      { level: 'B2', name: 'B2 Orta-İleri (Upper Intermediate)', color: '#8b5cf6' },
-      { level: 'C1', name: 'C1 İleri (Advanced)', color: '#f59e0b' }
+      { level: 'A1', name: 'A1 Başlangıç (Beginner)' },
+      { level: 'A2', name: 'A2 Temel (Elementary)' },
+      { level: 'B1', name: 'B1 Eşik / Orta (Intermediate)' },
+      { level: 'B2', name: 'B2 Orta-İleri (Upper Intermediate)' },
+      { level: 'C1', name: 'C1 İleri (Advanced)' }
     ];
 
     let oxfordBreakdownHtml = '';
@@ -1670,14 +1661,14 @@
 
       oxfordBreakdownHtml += `
         <div class="theme-stat-row">
-          <div style="width: 220px;">
-            <div class="theme-stat-name" style="color: ${item.color}; font-weight: 700;">CEFR ${item.level}</div>
-            <div style="font-size: 0.72rem; color: var(--text-dim);">${item.name}</div>
+          <div style="width: 240px;">
+            <div class="theme-stat-name" style="color: var(--dp-color-field-support); font-weight: 700;">CEFR ${item.level}</div>
+            <div style="font-family: var(--dp-typography-mono); font-size: 0.78rem; color: var(--dp-color-ink-muted);">${item.name}</div>
           </div>
           <div class="theme-stat-bar-container">
-            <div style="height: 100%; width: ${cPct}%; background: ${item.color}; border-radius: 4px;"></div>
+            <div style="height: 100%; width: ${cPct}%; background: var(--dp-color-accent);"></div>
           </div>
-          <div style="font-size: 0.82rem; font-weight: 700; min-width: 80px; text-align: right;">
+          <div style="font-family: var(--dp-typography-mono); font-size: 0.82rem; font-weight: 700; min-width: 96px; text-align: right;">
             ${cLearned} / ${cWords.length} (%${cPct})
           </div>
         </div>
@@ -1687,113 +1678,58 @@
     container.innerHTML = `
       <div class="stats-summary-grid">
         <div class="stat-metric-card glass-panel">
-          <div class="metric-val" style="color: var(--maarif-accent);">${maarifLearned} <span style="font-size: 0.9rem; opacity: 0.7;">/ ${maarifWords.length}</span></div>
-          <div class="metric-title">5. Sınıf Maarif Modeli (%${maarifPct})</div>
+          <div class="metric-val">${maarifLearned} <span style="font-size: 0.9rem; color: var(--dp-color-ink-muted);">/ ${maarifWords.length}</span></div>
+          <div class="metric-title">5. SINIF MAARİF MODELİ (%${maarifPct})</div>
         </div>
         <div class="stat-metric-card glass-panel">
-          <div class="metric-val" style="color: var(--yds-accent);">${ydsLearned} <span style="font-size: 0.9rem; opacity: 0.7;">/ ${ydsWords.length}</span></div>
-          <div class="metric-title">YDS &amp; YÖKDİL Akademik (%${ydsPct})</div>
+          <div class="metric-val" style="color: var(--dp-color-accent);">${ydsLearned} <span style="font-size: 0.9rem; color: var(--dp-color-ink-muted);">/ ${ydsWords.length}</span></div>
+          <div class="metric-title">YDS &amp; YÖKDİL AKADEMİK (%${ydsPct})</div>
         </div>
         <div class="stat-metric-card glass-panel">
-          <div class="metric-val" style="color: var(--oxford-accent);">${oxfordLearned} <span style="font-size: 0.9rem; opacity: 0.7;">/ ${oxfordWords.length}</span></div>
-          <div class="metric-title">The Oxford 5000 (%${oxfordPct})</div>
+          <div class="metric-val">${oxfordLearned} <span style="font-size: 0.9rem; color: var(--dp-color-ink-muted);">/ ${oxfordWords.length}</span></div>
+          <div class="metric-title">THE OXFORD 5000 (%${oxfordPct})</div>
         </div>
         <div class="stat-metric-card glass-panel">
-          <div class="metric-val" style="color: #60a5fa;">${quizAccuracy}%</div>
-          <div class="metric-title">Quiz Doğruluğu (En İyi Seri: ${quizStats.bestStreak} 🔥)</div>
+          <div class="metric-val" style="color: var(--dp-color-field-support);">${quizAccuracy}%</div>
+          <div class="metric-title">TEST DOĞRULUĞU (MAKS SERİ: ${quizStats.bestStreak})</div>
         </div>
       </div>
 
       <div class="themes-breakdown-card glass-panel" style="margin-bottom: 20px;">
-        <h3 style="font-family: var(--font-heading); margin-bottom: 12px; display:flex; align-items:center; gap:8px;">
-          <span>🎯 YDS &amp; YÖKDİL Akademik Seviye &amp; Tür Dağılımı</span>
+        <h3 style="margin-bottom: 14px; text-transform: uppercase; letter-spacing: 0.03em;">
+          YDS &amp; YÖKDİL AKADEMİK SEVİYE VE TÜR DAĞILIMI
         </h3>
         ${ydsBreakdownHtml}
       </div>
 
       <div class="themes-breakdown-card glass-panel" style="margin-bottom: 20px;">
-        <h3 style="font-family: var(--font-heading); margin-bottom: 12px; display:flex; align-items:center; gap:8px;">
-          <span>🎓 5. Sınıf Maarif Modeli (8 Tema İlerlemesi)</span>
+        <h3 style="margin-bottom: 14px; text-transform: uppercase; letter-spacing: 0.03em;">
+          5. SINIF MAARİF MODELİ (8 TEMA İLERLEMESİ)
         </h3>
         ${themesBreakdownHtml}
       </div>
 
       <div class="themes-breakdown-card glass-panel" style="margin-bottom: 20px;">
-        <h3 style="font-family: var(--font-heading); margin-bottom: 12px; display:flex; align-items:center; gap:8px;">
-          <span>🌍 The Oxford 5000 (CEFR Seviye Dağılımı)</span>
+        <h3 style="margin-bottom: 14px; text-transform: uppercase; letter-spacing: 0.03em;">
+          THE OXFORD 5000 (CEFR SEVİYE DAĞILIMI)
         </h3>
         ${oxfordBreakdownHtml}
       </div>
 
-      <div class="glass-panel" style="padding: 16px; text-align: center;">
-        <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 10px;">İlerlemenizi sıfırlayıp baştan başlamak ister misiniz?</p>
-        <button class="ctrl-btn" style="color: var(--accent-rose); border-color: rgba(244,63,94,0.4); margin: 0 auto;" onclick="window.APP.resetAllProgress()">
-          ⚠️ İlerlemeyi Sıfırla
+      <div class="glass-panel" style="padding: 20px; text-align: center;">
+        <p style="color: var(--dp-color-ink-muted); font-size: 0.85rem; margin-bottom: 12px;">Tüm yerel ilerleme verilerini sıfırlamak ister misiniz?</p>
+        <button class="ctrl-btn" style="border-color: var(--dp-color-error); margin: 0 auto;" onclick="window.APP.resetAllProgress()">
+          İLERLEME VERİLERİNİ SIFIRLA
         </button>
       </div>
     `;
   }
 
-  // ==========================================================================
-  // CONFETTI CELEBRATION
-  // ==========================================================================
-  function triggerConfetti() {
-    const canvas = document.getElementById('confetti-canvas');
-    if (!canvas) return;
-    canvas.style.display = 'block';
-    const ctx = canvas.getContext('2d');
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
-
-    const particles = [];
-    const colors = ['#f59e0b', '#10b981', '#3b82f6', '#8b5cf6', '#06b6d4'];
-
-    for (let i = 0; i < 80; i++) {
-      particles.push({
-        x: canvas.width / 2,
-        y: canvas.height / 2,
-        vx: (Math.random() - 0.5) * 15,
-        vy: (Math.random() - 0.7) * 15,
-        size: Math.random() * 7 + 4,
-        color: colors[Math.floor(Math.random() * colors.length)],
-        rotation: Math.random() * 360,
-        vr: (Math.random() - 0.5) * 10,
-        alpha: 1
-      });
-    }
-
-    let frame = 0;
-    function anim() {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      particles.forEach(p => {
-        p.x += p.vx;
-        p.y += p.vy;
-        p.vy += 0.35;
-        p.rotation += p.vr;
-        p.alpha -= 0.014;
-
-        ctx.save();
-        ctx.globalAlpha = Math.max(0, p.alpha);
-        ctx.translate(p.x, p.y);
-        ctx.rotate((p.rotation * Math.PI) / 180);
-        ctx.fillStyle = p.color;
-        ctx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size);
-        ctx.restore();
-      });
-
-      frame++;
-      if (frame < 80) {
-        requestAnimationFrame(anim);
-      } else {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        canvas.style.display = 'none';
-      }
-    }
-    anim();
-  }
+  // No-op: childish gamification / confetti disabled by Dark Geometric & Amber Precision spec
+  function triggerConfetti() {}
 
   // ==========================================================================
-  // NAVIGATION & BREADCRUMB CONTROLLERS (Live Gamified Progress)
+  // NAVIGATION & BREADCRUMB CONTROLLERS (Live Architectural Telemetry)
   // ==========================================================================
   function updateBreadcrumb(viewName) {
     const modText = document.getElementById('breadcrumb-module-text') || document.getElementById('breadcrumb-module-label');
@@ -1802,22 +1738,22 @@
     const backBtn = document.getElementById('breadcrumb-back-btn');
 
     const moduleNames = {
-      maarif: '🎓 5. Sınıf Maarif Modeli',
-      yds: '🎯 YDS & YÖKDİL Akademik',
-      oxford: '🌍 The Oxford 5000',
-      all: '🌟 Tüm Kütüphane'
+      maarif: '5. SINIF MAARİF MODELİ',
+      yds: 'YDS & YÖKDİL AKADEMİK',
+      oxford: 'THE OXFORD 5000',
+      all: 'TÜM KÜTÜPHANE'
     };
 
     const viewNames = {
-      daily: STATE.activeModule === 'yds' ? "🎯 YDS Workout" : "📅 Günün 10'lusu",
-      flashcard: "🗂️ Flashcard Kartları",
-      quiz: STATE.activeModule === 'yds' ? "🎯 YDS Simülatör" : "🧩 Mini Quiz & Test",
-      directory: "📚 Kelime Havuzu",
-      stats: "📊 İlerleme ve Analiz"
+      daily: STATE.activeModule === 'yds' ? "YDS WORKOUT" : "GÜNÜN 10'LUSU",
+      flashcard: "FLASHCARD KARTLARI",
+      quiz: STATE.activeModule === 'yds' ? "YDS SİMÜLATÖR" : "DEĞERLENDİRME TESTİ",
+      directory: "KELİME HAVUZU",
+      stats: "İLERLEME VE ANALİZ"
     };
 
     if (modText) {
-      modText.innerText = moduleNames[STATE.activeModule] || '🎓 5. Sınıf Maarif Modeli';
+      modText.innerText = moduleNames[STATE.activeModule] || '5. SINIF MAARİF MODELİ';
     }
     if (viewLabel) {
       viewLabel.innerText = viewNames[viewName] || viewName;
@@ -1839,16 +1775,15 @@
         const dayPct = Math.round((dayLearned / (totalDay || 1)) * 100);
 
         const themeNum = Math.ceil(STATE.currentDay / 10);
-        const dayTitle = isYds ? `Gün ${STATE.currentDay}` : (isOxford ? `Gün ${STATE.currentDay}` : `Gün ${STATE.currentDay} • Tema ${themeNum}`);
+        const dayTitle = isYds ? `GÜN ${STATE.currentDay}` : (isOxford ? `GÜN ${STATE.currentDay}` : `GÜN ${STATE.currentDay} • TEMA ${themeNum}`);
         const isDone = dayLearned >= totalDay && totalDay > 0;
-        const stars = isDone ? '⭐⭐⭐' : (dayLearned >= Math.ceil(totalDay * 0.6) ? '⭐⭐☆' : (dayLearned >= 1 ? '⭐☆☆' : '🎯'));
 
         badgeContainer.innerHTML = `
-          <div class="badge-live-progress ${isDone ? 'celebrating' : ''}" title="Günün Görev İlerlemesi (%${dayPct})">
+          <div class="badge-live-progress ${isDone ? 'celebrating' : ''}" title="Günlük Hedef İlerlemesi (%${dayPct})">
             <div class="badge-live-header">
               <span class="badge-day-label">${dayTitle}</span>
-              <span class="badge-live-counter"><strong>${dayLearned}</strong>/${totalDay} Kelime</span>
-              <span class="badge-live-stars">${stars}</span>
+              <span class="badge-live-counter"><strong>${dayLearned}</strong>/${totalDay} KELİME</span>
+              <span class="badge-live-stars">%${dayPct}</span>
             </div>
             <div class="badge-mini-track" role="progressbar" aria-valuenow="${dayPct}" aria-valuemin="0" aria-valuemax="100">
               <div class="badge-mini-fill ${isDone ? 'completed' : ''}" style="width: ${dayPct}%;"></div>
@@ -1865,11 +1800,11 @@
           const qPct = Math.round(((qState.currentIndex) / totalQ) * 100);
 
           badgeContainer.innerHTML = `
-            <div class="badge-live-progress quiz-mode" title="Canlı Quiz İlerlemesi">
+            <div class="badge-live-progress quiz-mode" title="Canlı Test Telemetrisi">
               <div class="badge-live-header">
-                <span class="badge-day-label">Soru ${currentIdx}/${totalQ}</span>
-                <span class="badge-live-counter" style="color: var(--accent-emerald);">🎯 ${qState.score} Doğru</span>
-                ${qState.streak > 1 ? `<span class="badge-streak-flame">🔥 ${qState.streak} Seri</span>` : '<span class="badge-live-stars">🧩</span>'}
+                <span class="badge-day-label">SORU ${currentIdx}/${totalQ}</span>
+                <span class="badge-live-counter">DOĞRU: ${qState.score}</span>
+                <span class="badge-streak-flame">SERİ: ${qState.streak}</span>
               </div>
               <div class="badge-mini-track" role="progressbar" aria-valuenow="${qPct}" aria-valuemin="0" aria-valuemax="100">
                 <div class="badge-mini-fill fill-quiz" style="width: ${qPct}%;"></div>
@@ -1878,11 +1813,10 @@
           `;
         } else {
           badgeContainer.innerHTML = `
-            <div class="badge-live-progress" title="Quiz Modu">
+            <div class="badge-live-progress" title="Test Modu">
               <div class="badge-live-header">
-                <span class="badge-day-label">🧩 Mini Test</span>
-                <span class="badge-live-counter" style="color: var(--yds-accent);">Hazır</span>
-                <span class="badge-live-stars">🚀</span>
+                <span class="badge-day-label">TEST MODÜLÜ</span>
+                <span class="badge-live-counter">HAZIR</span>
               </div>
               <div class="badge-mini-track">
                 <div class="badge-mini-fill fill-quiz" style="width: 100%;"></div>
@@ -1900,9 +1834,8 @@
         badgeContainer.innerHTML = `
           <div class="badge-live-progress fc-mode" title="Flashcard İlerlemesi">
             <div class="badge-live-header">
-              <span class="badge-day-label">Kart ${currentFc}/${totalFc}</span>
+              <span class="badge-day-label">KART ${currentFc}/${totalFc}</span>
               <span class="badge-live-counter">%${fcPct}</span>
-              <span class="badge-live-stars">🗂️</span>
             </div>
             <div class="badge-mini-track" role="progressbar" aria-valuenow="${fcPct}" aria-valuemin="0" aria-valuemax="100">
               <div class="badge-mini-fill fill-fc" style="width: ${fcPct}%;"></div>
@@ -1912,7 +1845,7 @@
         badgeContainer.style.display = 'inline-flex';
 
       } else {
-        const label = STATE.activeModule === 'yds' ? '🎯 YDS/YÖKDİL' : (STATE.activeModule === 'oxford' ? '🌍 Oxford 5000' : '🎓 Maarif Modeli');
+        const label = STATE.activeModule === 'yds' ? 'YDS/YÖKDİL' : (STATE.activeModule === 'oxford' ? 'OXFORD 5000' : 'MAARİF MODELİ');
         badgeContainer.innerHTML = `
           <span class="badge-day">${label}</span>
         `;
@@ -1923,10 +1856,10 @@
     if (backBtn) {
       if (viewName === 'daily') {
         backBtn.style.opacity = '0.55';
-        backBtn.title = 'Zaten Ana Sayfadasınız';
+        backBtn.title = 'Zaten Ana Çalışma Alanındasınız';
       } else {
         backBtn.style.opacity = '1';
-        backBtn.title = 'Bir Önceki Sayfaya Dön';
+        backBtn.title = 'Önceki Görünüme Dön';
       }
     }
   }
@@ -1937,8 +1870,8 @@
 
   function goBack() {
     if (STATE.viewHistory && STATE.viewHistory.length > 1) {
-      STATE.viewHistory.pop(); // Remove current view
-      const prev = STATE.viewHistory.pop(); // Pop target previous
+      STATE.viewHistory.pop();
+      const prev = STATE.viewHistory.pop();
       switchView(prev || 'daily');
     } else {
       switchView('daily');
@@ -2152,7 +2085,6 @@
       saveQuizState();
       updateBreadcrumb('quiz');
 
-      // Quick 900ms smooth auto-advance for correct answers
       setTimeout(() => {
         STATE.quizState.currentIndex++;
         STATE.quizState.answered = false;
@@ -2169,7 +2101,6 @@
       saveQuizState();
       updateBreadcrumb('quiz');
 
-      // Pedagogical card: Stop and teach! Wait for student confirmation.
       showQuizFeedbackCard(currentQ, selectedOpt);
     }
   }
@@ -2184,40 +2115,37 @@
     }
 
     feedbackBox.innerHTML = `
-      <div class="quiz-feedback-card glass-panel" style="animation: popIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);">
+      <div class="quiz-feedback-card glass-panel">
         <div class="feedback-header">
-          <span class="feedback-badge-wrong">❌ Yanlış Cevap</span>
-          <span class="feedback-hint">Öğrenmek için harika bir fırsat! Doğrusu:</span>
+          <span class="feedback-badge-wrong">[ YANLIŞ CEVAP ]</span>
+          <span class="feedback-hint">KELİME TEKRAR LİSTESİNE EKLENDİ • DOĞRU KARŞILIK:</span>
         </div>
         <div class="feedback-body">
           <div class="feedback-word-row">
             <span class="feedback-word-en">${targetWord.en}</span>
-            <button class="speak-btn" style="width:40px; height:40px; font-size:1.15rem;" onclick="window.APP.speakCurrentWord('${targetWord.en}')" title="Telaffuzu Dinle">🔊</button>
+            <button class="speak-btn" style="width:40px; height:40px;" onclick="window.APP.speakCurrentWord('${targetWord.en}')" title="Telaffuzu Dinle" aria-label="Telaffuzu Dinle">${ICONS.speaker}</button>
             <span class="feedback-word-pos">${targetWord.desc || ''} ${targetWord.cefr ? '• ' + targetWord.cefr : ''}</span>
           </div>
           <div class="feedback-meaning-row">
-            <span class="feedback-meaning-label">Doğru Anlam:</span>
+            <span class="feedback-meaning-label">DOĞRU ANLAM:</span>
             <strong class="feedback-meaning-tr">${targetWord.tr}</strong>
           </div>
           ${targetWord.example ? `
             <div class="feedback-example-row">
-              <span class="feedback-ex-label">Örnek Kullanım:</span>
+              <span class="feedback-ex-label">ÖRNEK KULLANIM:</span>
               <p class="feedback-example">“${targetWord.example}”</p>
             </div>
           ` : ''}
         </div>
         <div class="feedback-footer">
           <button class="ctrl-btn quiz-next-btn" onclick="window.APP.nextQuizQuestion()">
-            Anladım, Sıradaki Soruya Geç ➔
+            ANLADIM, SIRADAKİ SORUYA GEÇ [ENTER] &rarr;
           </button>
         </div>
       </div>
     `;
 
-    // Speak the target word after a brief moment
     setTimeout(() => speakWord(targetWord.en), 250);
-
-    // Scroll smoothly to feedback if needed
     feedbackBox.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
   }
 
@@ -2304,7 +2232,7 @@
   }
 
   // ==========================================================================
-  // KEYBOARD SHORTCUTS
+  // KEYBOARD SHORTCUTS (Flashcard & Quiz Mechanical Ergonomics)
   // ==========================================================================
   window.addEventListener('keydown', (e) => {
     if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT' || e.target.tagName === 'TEXTAREA') {
@@ -2336,6 +2264,29 @@
         toggleLearned(currentWord.id);
         nextFlashcard();
       }
+    } else if (STATE.currentView === 'quiz' && STATE.quizState.active) {
+      if (STATE.quizState.waitingFeedback && (e.code === 'Enter' || e.code === 'Space')) {
+        e.preventDefault();
+        nextQuizQuestion();
+      } else if (!STATE.quizState.answered && !STATE.quizState.waitingFeedback) {
+        const keyUpper = (e.key || '').toUpperCase();
+        if (keyUpper === '1' || keyUpper === 'A') {
+          e.preventDefault();
+          handleQuizAnswer(0);
+        } else if (keyUpper === '2' || keyUpper === 'B') {
+          e.preventDefault();
+          handleQuizAnswer(1);
+        } else if (keyUpper === '3' || keyUpper === 'C') {
+          e.preventDefault();
+          handleQuizAnswer(2);
+        } else if (keyUpper === '4' || keyUpper === 'D') {
+          e.preventDefault();
+          handleQuizAnswer(3);
+        } else if (keyUpper === 'R') {
+          e.preventDefault();
+          replayQuizAudio();
+        }
+      }
     }
   });
 
@@ -2359,45 +2310,45 @@
     // Accent Switcher (UK / US)
     const accentBtn = document.getElementById('accent-toggle-btn');
     if (accentBtn) {
-      accentBtn.innerHTML = STATE.settings.accent === 'en-GB' ? '🇬🇧 UK' : '🇺🇸 US';
+      accentBtn.innerText = STATE.settings.accent === 'en-GB' ? 'UK' : 'US';
       accentBtn.addEventListener('click', () => {
         STATE.settings.accent = STATE.settings.accent === 'en-GB' ? 'en-US' : 'en-GB';
         localStorage.setItem('mk_accent', STATE.settings.accent);
-        accentBtn.innerHTML = STATE.settings.accent === 'en-GB' ? '🇬🇧 UK' : '🇺🇸 US';
+        accentBtn.innerText = STATE.settings.accent === 'en-GB' ? 'UK' : 'US';
       });
     }
 
     // Speed Switcher
     const speedBtn = document.getElementById('speed-toggle-btn');
     if (speedBtn) {
-      speedBtn.innerHTML = `⚡ ${STATE.settings.speed}x`;
+      speedBtn.innerText = `${STATE.settings.speed.toFixed(1)}x`;
       speedBtn.addEventListener('click', () => {
         STATE.settings.speed = STATE.settings.speed === 1.0 ? 0.8 : 1.0;
         localStorage.setItem('mk_speed', STATE.settings.speed.toString());
-        speedBtn.innerHTML = `⚡ ${STATE.settings.speed}x`;
+        speedBtn.innerText = `${STATE.settings.speed.toFixed(1)}x`;
       });
     }
 
     // Sound effects toggle
     const soundBtn = document.getElementById('sound-toggle-btn');
     if (soundBtn) {
-      soundBtn.innerHTML = STATE.settings.soundEffects ? '🔔 Ses Açık' : '🔕 Sessiz';
+      soundBtn.innerText = STATE.settings.soundEffects ? 'SES: AÇIK' : 'SES: KAPALI';
       soundBtn.addEventListener('click', () => {
         STATE.settings.soundEffects = !STATE.settings.soundEffects;
         localStorage.setItem('mk_sound', STATE.settings.soundEffects.toString());
-        soundBtn.innerHTML = STATE.settings.soundEffects ? '🔔 Ses Açık' : '🔕 Sessiz';
+        soundBtn.innerText = STATE.settings.soundEffects ? 'SES: AÇIK' : 'SES: KAPALI';
       });
     }
 
     // Theme toggle
     const themeBtn = document.getElementById('theme-toggle-btn');
     if (themeBtn) {
-      themeBtn.innerHTML = STATE.settings.theme === 'dark' ? '☀️ Açık' : '🌙 Koyu';
+      themeBtn.innerText = STATE.settings.theme === 'dark' ? 'TEMA: KOYU' : 'TEMA: AÇIK';
       themeBtn.addEventListener('click', () => {
         STATE.settings.theme = STATE.settings.theme === 'dark' ? 'light' : 'dark';
         document.documentElement.setAttribute('data-theme', STATE.settings.theme);
         localStorage.setItem('mk_theme', STATE.settings.theme);
-        themeBtn.innerHTML = STATE.settings.theme === 'dark' ? '☀️ Açık' : '🌙 Koyu';
+        themeBtn.innerText = STATE.settings.theme === 'dark' ? 'TEMA: KOYU' : 'TEMA: AÇIK';
       });
     }
 
