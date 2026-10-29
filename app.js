@@ -342,6 +342,7 @@
   const STATE = {
     activeModule: localStorage.getItem('learnish_active_module') || 'maarif', // 'maarif' | 'yds' | 'oxford' | 'all'
     currentView: 'daily', // 'daily', 'flashcard', 'quiz', 'directory', 'stats'
+    viewHistory: ['daily'],
     currentDay: 1, // Maarif: 1-82, YDS: 1-145
     activeFlashcardIndex: 0,
     filteredFlashcards: [],
@@ -604,13 +605,13 @@
       btn.classList.toggle('active', btn.getAttribute('data-module') === moduleName);
     });
 
-    // Update brand info subtitle
+    // Update brand info subtitle - Friendly, bite-sized micro-goals instead of intimidating numbers
     const brandSub = document.getElementById('app-brand-subtitle');
     if (brandSub) {
-      if (moduleName === 'maarif') brandSub.innerText = '5. Sınıf Maarif Modeli • 817 Kelime & 8 Tema';
-      else if (moduleName === 'yds') brandSub.innerText = 'YDS & YÖKDİL Akademik • 2.894 B2/C1 Sınav Kelimesi';
-      else if (moduleName === 'oxford') brandSub.innerText = 'The Oxford 5000 • 5.841 Kelime (A1-C1)';
-      else brandSub.innerText = 'Tüm Kütüphane • 6.658 Kelime Birleşik Havuz';
+      if (moduleName === 'maarif') brandSub.innerText = '5. Sınıf Maarif Modeli • Günlük Görev: 10 Kelime';
+      else if (moduleName === 'yds') brandSub.innerText = 'YDS & YÖKDİL Akademik • Günlük Hedef: 20 Kelime';
+      else if (moduleName === 'oxford') brandSub.innerText = 'The Oxford 5000 • Günlük Hedef: 25 Kelime';
+      else brandSub.innerText = 'Tüm Kütüphane • Kelime Keşfi & Serbest Havuz';
     }
 
     // Dynamic Navigation Labels
@@ -691,13 +692,15 @@
       bannerTitle = `🌍 Gün ${STATE.currentDay} • The Oxford 5000 Kelime Paketi`;
       bannerDesc = `Bugünkü <strong>${batchSize} kelime</strong> (Sıra: ${(STATE.currentDay - 1) * batchSize + 1} – ${Math.min(STATE.currentDay * batchSize, targetPool.length)} / ${targetPool.length} Oxford)`;
     } else {
-      // Default: Maarif Modeli
+      // Default: Maarif Modeli (Bite-sized pedagogical micro-goals)
       targetPool = WORDS_DATA.filter(w => w.dataset === 'maarif' || !w.dataset);
       batchSize = 10;
       heroClass = 'module-hero-maarif';
       progressFillClass = 'progress-fill-maarif';
-      bannerTitle = `🎓 Gün ${STATE.currentDay} • 5. Sınıf Maarif Modeli`;
-      bannerDesc = `Bugünkü <strong>10 hedef kelime</strong> (Sıra: ${(STATE.currentDay - 1) * 10 + 1} – ${Math.min(STATE.currentDay * 10, targetPool.length)} / ${targetPool.length} Maarif)`;
+      const curThemeNum = Math.ceil(STATE.currentDay / 10);
+      const curTheme = (typeof THEMES_DATA !== 'undefined' && THEMES_DATA[curThemeNum]) ? THEMES_DATA[curThemeNum] : { titleTr: 'Okul Yaşamı' };
+      bannerTitle = `🎓 Gün ${STATE.currentDay} • Tema ${curThemeNum}: ${curTheme.titleTr || curTheme.title || 'Okul Yaşamı'}`;
+      bannerDesc = `Bugünkü <strong>10 hedef kelime</strong> • Küçük adımlarla İngilizceyi eğlenerek öğren!`;
     }
 
     const totalDays = Math.ceil(targetPool.length / batchSize) || 1;
@@ -708,13 +711,45 @@
     const dayLearnedCount = dayWords.filter(w => STATE.userData.learned.has(w.id)).length;
     const dayPercent = Math.round((dayLearnedCount / (dayWords.length || 1)) * 100);
 
-    // Build Day options dropdown
+    // Build Day options dropdown with Themes
     let dayOptionsHtml = '';
     for (let d = 1; d <= totalDays; d++) {
-      dayOptionsHtml += `<option value="${d}" ${d === STATE.currentDay ? 'selected' : ''}>Gün ${d} / ${totalDays}</option>`;
+      let dayThemeTitle = '';
+      if (module === 'maarif') {
+        const themeNum = Math.ceil(d / 10);
+        const t = (typeof THEMES_DATA !== 'undefined' && THEMES_DATA[themeNum]) ? THEMES_DATA[themeNum].titleTr : '';
+        dayThemeTitle = t ? ` (${t})` : '';
+      }
+      dayOptionsHtml += `<option value="${d}" ${d === STATE.currentDay ? 'selected' : ''}>Gün ${d}${dayThemeTitle}</option>`;
+    }
+
+    let celebrationHtml = '';
+    if (dayLearnedCount === dayWords.length && dayWords.length > 0) {
+      celebrationHtml = `
+        <div class="daily-celebration-banner glass-panel">
+          <div class="celebration-icon">🎉 🌟 🏆</div>
+          <div class="celebration-body">
+            <h3>Harikasın! Bugünkü ${dayWords.length} Kelimelik Görevini Tamamladın!</h3>
+            <p>Bugünün tüm kelimelerini başarıyla öğrendin. Bilgilerini pekiştirmek için mini quizi çözmeye ne dersin?</p>
+          </div>
+          <button class="celebration-action-btn" onclick="window.APP.startDailyQuiz()">
+            🧩 Günün Mini Testini Çöz
+          </button>
+        </div>
+      `;
     }
 
     let cardsHtml = '';
+    if (dayWords.length === 0) {
+      cardsHtml = `
+        <div class="empty-state-box glass-panel" style="grid-column: 1 / -1; margin: 24px 0;">
+          <div class="empty-icon">📂</div>
+          <div class="empty-title">Bu gün için kelime bulunamadı</div>
+          <div class="empty-desc">Lütfen yukarıdaki menüden başka bir gün seçin veya Gün 1'e dönün.</div>
+          <button class="ctrl-btn" onclick="window.APP.goHome()" style="margin-top: 14px; min-height: 44px; padding: 0 16px;">🏠 Gün 1'e Dön</button>
+        </div>
+      `;
+    }
     dayWords.forEach(w => {
       const isLearned = STATE.userData.learned.has(w.id);
       const isReview = STATE.userData.review.has(w.id);
@@ -766,6 +801,7 @@
     });
 
     container.innerHTML = `
+      ${celebrationHtml}
       <div class="module-hero-card ${heroClass} glass-panel">
         <div class="hero-info">
           <h2>${bannerTitle}</h2>
@@ -1057,11 +1093,44 @@
     if (!STATE.quizState.active) {
       const isYds = STATE.activeModule === 'yds';
 
+      // Check saved quiz
+      const savedQuizJson = localStorage.getItem('learnish_active_quiz');
+      let resumeCardHtml = '';
+      if (savedQuizJson) {
+        try {
+          const sq = JSON.parse(savedQuizJson);
+          if (sq && sq.questions && sq.currentIndex < sq.questions.length) {
+            resumeCardHtml = `
+              <div class="resume-quiz-card glass-panel">
+                <div class="resume-quiz-info">
+                  <span class="resume-quiz-badge">⚠️ Kaldığın Yer Saklandı</span>
+                  <div class="resume-quiz-title">Yarım kalan bir test oturumunuz var!</div>
+                  <div class="resume-quiz-meta">
+                    Soru ${sq.currentIndex + 1} / ${sq.questions.length} • Puan: ${sq.score}
+                  </div>
+                </div>
+                <div class="resume-quiz-actions">
+                  <button class="ctrl-btn resume-continue-btn" onclick="window.APP.resumeQuiz()">
+                    ▶️ Kaldığım Yerden Devam Et
+                  </button>
+                  <button class="ctrl-btn resume-discard-btn" onclick="window.APP.discardSavedQuiz()">
+                    🗑️ Yeni Test Başlat
+                  </button>
+                </div>
+              </div>
+            `;
+          }
+        } catch (e) {
+          localStorage.removeItem('learnish_active_quiz');
+        }
+      }
+
       container.innerHTML = `
         <div class="quiz-wrapper">
+          ${resumeCardHtml}
           <div class="quiz-setup-card glass-panel">
             <h2>${isYds ? '🎯 YDS & YÖKDİL Akademik Sınav Simülatörü' : '🧩 İngilizce Kelime Testi & Quiz'}</h2>
-            <p>${isYds ? 'ÖSYM sınav formatında cümle tamamlama (cloze), akademik tanım eşleştirme ve kelime soruları.' : 'Bilgilerinizi pekiştirin, çoktan seçmeli sorularla kendinizi test edin.'}</p>
+            <p>${isYds ? 'ÖSYM sınav formatında cümle tamamlama (cloze), akademik tanım eşleştirme ve kelime soruları.' : 'Bilgilerini pekiştir, çoktan seçmeli sorularla kendini test et.'}</p>
 
             <div class="quiz-config-grid">
               <div class="config-group">
@@ -1088,7 +1157,7 @@
                     <option value="daily">Günün 20 Hedefi (YDS Gün ${STATE.currentDay})</option>
                   ` : `
                     <option value="daily">Günün 10 Kelimesi (Gün ${STATE.currentDay})</option>
-                    <option value="maarif">🎓 5. Sınıf Maarif Modeli (817 Kelime)</option>
+                    <option value="maarif">🎓 5. Sınıf Maarif Modeli</option>
                     <option value="oxford_all">🌍 The Oxford 5000 (Tüm Havuz)</option>
                     <option value="all">🌟 Tüm Kelime Havuzu (${WORDS_DATA.length})</option>
                   `}
@@ -1130,30 +1199,47 @@
     // Active Quiz View
     const qState = STATE.quizState;
     if (qState.currentIndex >= qState.questions.length) {
-      // Quiz Finished Screen
-      const accuracy = Math.round((qState.score / qState.questions.length) * 100);
+      // Clear saved quiz
+      localStorage.removeItem('learnish_active_quiz');
+      const totalQ = qState.questions.length;
+      const accuracy = Math.round((qState.score / (totalQ || 1)) * 100);
+      const earnedXP = qState.score * 15;
       
       // Update statistics
       STATE.userData.stats.quizzesPlayed++;
       STATE.userData.stats.correctAnswers += qState.score;
-      STATE.userData.stats.totalQuestions += qState.questions.length;
+      STATE.userData.stats.totalQuestions += totalQ;
       if (qState.streak > STATE.userData.stats.bestStreak) {
         STATE.userData.stats.bestStreak = qState.streak;
       }
       saveUserData();
 
-      if (accuracy >= 80) triggerConfetti();
+      let starsHtml = '⭐☆☆';
+      let titleMessage = 'Güzel Deneme!';
+      let subMessage = 'Pratik yaparak kelime dağarcığını daha da büyütebilirsin.';
+      if (accuracy >= 90) {
+        starsHtml = '⭐⭐⭐';
+        titleMessage = 'Mükemmel Başarı!';
+        subMessage = 'Bütün soruları neredeyse eksiksiz bildin. Harikasın!';
+      } else if (accuracy >= 70) {
+        starsHtml = '⭐⭐☆';
+        titleMessage = 'Tebrikler, Çok Başarılı!';
+        subMessage = 'Hedef kelimelerin büyük çoğunluğunu pekiştirdin.';
+      }
+
+      if (accuracy >= 70) triggerConfetti();
 
       container.innerHTML = `
         <div class="quiz-wrapper">
           <div class="quiz-setup-card glass-panel" style="text-align: center;">
-            <div style="font-size: 3rem; margin-bottom: 8px;">${accuracy >= 80 ? '🏆' : (accuracy >= 50 ? '👏' : '📚')}</div>
-            <h2>Test Tamamlandı!</h2>
-            <p>Harika bir çalışma seansı geçirdiniz.</p>
+            <div style="font-size: 2.8rem; margin-bottom: 4px; letter-spacing: 4px;">${starsHtml}</div>
+            <div style="font-size: 2.2rem; margin-bottom: 8px;">${accuracy >= 80 ? '🏆' : (accuracy >= 50 ? '👏' : '📚')}</div>
+            <h2>${titleMessage}</h2>
+            <p>${subMessage}</p>
 
             <div class="stats-summary-grid" style="margin: 20px 0;">
               <div class="stat-metric-card glass-panel">
-                <div class="metric-val" style="color: var(--accent-emerald);">${qState.score} / ${qState.questions.length}</div>
+                <div class="metric-val" style="color: var(--accent-emerald);">${qState.score} / ${totalQ}</div>
                 <div class="metric-title">Doğru Sayısı</div>
               </div>
               <div class="stat-metric-card glass-panel">
@@ -1161,17 +1247,20 @@
                 <div class="metric-title">Başarı Oranı</div>
               </div>
               <div class="stat-metric-card glass-panel">
-                <div class="metric-val" style="color: var(--accent-cyan);">${qState.streak} 🔥</div>
-                <div class="metric-title">En Yüksek Seri</div>
+                <div class="metric-val" style="color: var(--accent-amber);">+${earnedXP} XP</div>
+                <div class="metric-title">Kazanılan Puan</div>
               </div>
             </div>
 
-            <div style="display: flex; gap: 10px; justify-content: center;">
-              <button class="fc-action-btn" onclick="window.APP.quitQuiz()">
-                Yeniden Test Çöz
+            <div class="quiz-finished-actions" style="display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin-top: 24px;">
+              <button class="fc-action-btn" onclick="window.APP.goHome()" style="min-height: 48px; min-width: 160px; font-weight: 700;">
+                🏠 Ana Sayfaya Dön
               </button>
-              <button class="fc-action-btn" onclick="window.APP.switchView('daily')">
-                Günün Çalışmasına Dön
+              <button class="fc-action-btn" onclick="window.APP.quitQuiz()" style="min-height: 48px; min-width: 160px;">
+                🔄 Yeniden Test Çöz
+              </button>
+              <button class="fc-action-btn" onclick="window.APP.switchView('daily')" style="min-height: 48px; min-width: 160px;">
+                📅 Günün Çalışması
               </button>
             </div>
           </div>
@@ -1237,7 +1326,7 @@
             </span>
             <div style="display: flex; gap: 8px; align-items: center;">
               <span class="theme-pill" style="color:var(--yds-accent);">Skor: ${qState.score}</span>
-              <button class="ctrl-btn" style="height: 28px; padding: 0 8px; font-size:0.72rem;" onclick="window.APP.quitQuiz()">Çıkış</button>
+              <button class="ctrl-btn" style="height: 32px; padding: 0 10px; font-size:0.75rem;" onclick="window.APP.quitQuiz()">Çıkış</button>
             </div>
           </div>
 
@@ -1252,6 +1341,9 @@
           <div class="quiz-options-grid">
             ${optionsHtml}
           </div>
+
+          <!-- Pedagogical Feedback Card injected here when wrong answer is chosen -->
+          <div id="quiz-feedback-container"></div>
         </div>
       </div>
     `;
@@ -1701,12 +1793,93 @@
   }
 
   // ==========================================================================
+  // NAVIGATION & BREADCRUMB CONTROLLERS
+  // ==========================================================================
+  function updateBreadcrumb(viewName) {
+    const modLabel = document.getElementById('breadcrumb-module-label');
+    const viewLabel = document.getElementById('breadcrumb-view-label');
+    const dayBadge = document.getElementById('breadcrumb-day-badge');
+    const backBtn = document.getElementById('breadcrumb-back-btn');
+
+    const moduleNames = {
+      maarif: '🎓 5. Sınıf Maarif Modeli',
+      yds: '🎯 YDS & YÖKDİL Akademik',
+      oxford: '🌍 The Oxford 5000',
+      all: '🌟 Tüm Kütüphane'
+    };
+
+    const viewNames = {
+      daily: STATE.activeModule === 'yds' ? "🎯 YDS Workout" : "📅 Günün 10'lusu",
+      flashcard: "🗂️ Flashcard Kartları",
+      quiz: STATE.activeModule === 'yds' ? "🎯 YDS Simülatör" : "🧩 Mini Quiz & Test",
+      directory: "📚 Kelime Havuzu",
+      stats: "📊 İlerleme ve Analiz"
+    };
+
+    if (modLabel) {
+      modLabel.innerText = moduleNames[STATE.activeModule] || '🎓 5. Sınıf Maarif Modeli';
+    }
+    if (viewLabel) {
+      viewLabel.innerText = viewNames[viewName] || viewName;
+    }
+    if (dayBadge) {
+      if (viewName === 'daily' || viewName === 'flashcard' || viewName === 'quiz') {
+        if (STATE.activeModule === 'maarif') {
+          const themeNum = Math.ceil(STATE.currentDay / 10);
+          const themeInfo = (typeof THEMES_DATA !== 'undefined' && THEMES_DATA[themeNum]) ? THEMES_DATA[themeNum].titleTr : 'Okul Yaşamı';
+          dayBadge.innerText = `Gün ${STATE.currentDay} • Tema ${themeNum}: ${themeInfo}`;
+        } else if (STATE.activeModule === 'yds') {
+          dayBadge.innerText = `Gün ${STATE.currentDay} • Hedef: 20 Akademik Kelime`;
+        } else {
+          dayBadge.innerText = `Gün ${STATE.currentDay} • Çalışma Modu`;
+        }
+        dayBadge.style.display = 'inline-flex';
+      } else {
+        dayBadge.style.display = 'none';
+      }
+    }
+
+    if (backBtn) {
+      if (viewName === 'daily') {
+        backBtn.style.opacity = '0.6';
+        backBtn.title = 'Zaten Ana Sayfadasınız';
+      } else {
+        backBtn.style.opacity = '1';
+        backBtn.title = 'Bir Önceki Sayfaya Dön';
+      }
+    }
+  }
+
+  function goHome() {
+    switchView('daily');
+  }
+
+  function goBack() {
+    if (STATE.viewHistory && STATE.viewHistory.length > 1) {
+      STATE.viewHistory.pop(); // Remove current view
+      const prev = STATE.viewHistory.pop(); // Pop target previous
+      switchView(prev || 'daily');
+    } else {
+      switchView('daily');
+    }
+  }
+
+  // ==========================================================================
   // VIEW SWITCHER & DISPATCHER
   // ==========================================================================
-  function switchView(viewName) {
+  function switchView(viewName, pushHash = true) {
     STATE.currentView = viewName;
-    if (window.location.hash !== '#' + viewName) {
-      window.location.hash = viewName;
+    if (!STATE.viewHistory) STATE.viewHistory = ['daily'];
+    if (STATE.viewHistory[STATE.viewHistory.length - 1] !== viewName) {
+      STATE.viewHistory.push(viewName);
+    }
+
+    if (pushHash && window.location.hash !== '#' + viewName) {
+      try {
+        history.pushState(null, '', '#' + viewName);
+      } catch (e) {
+        window.location.hash = viewName;
+      }
     }
 
     document.querySelectorAll('.nav-btn').forEach(btn => {
@@ -1716,6 +1889,8 @@
     document.querySelectorAll('.view-section').forEach(sec => {
       sec.classList.toggle('active', sec.id === `view-${viewName}`);
     });
+
+    updateBreadcrumb(viewName);
 
     if (viewName === 'daily') renderDailyView();
     if (viewName === 'flashcard') renderFlashcardView();
@@ -1729,8 +1904,56 @@
   }
 
   // ==========================================================================
-  // QUIZ LOGIC
+  // QUIZ LOGIC & SESSION PERSISTENCE
   // ==========================================================================
+  function saveQuizState() {
+    if (STATE.quizState.active && STATE.quizState.currentIndex < STATE.quizState.questions.length) {
+      try {
+        localStorage.setItem('learnish_active_quiz', JSON.stringify({
+          active: true,
+          questions: STATE.quizState.questions,
+          currentIndex: STATE.quizState.currentIndex,
+          score: STATE.quizState.score,
+          streak: STATE.quizState.streak,
+          mode: STATE.quizState.mode,
+          source: STATE.quizState.source
+        }));
+      } catch (e) {
+        console.warn('Quiz state save error:', e);
+      }
+    } else {
+      localStorage.removeItem('learnish_active_quiz');
+    }
+  }
+
+  function resumeQuiz() {
+    const saved = localStorage.getItem('learnish_active_quiz');
+    if (!saved) return;
+    try {
+      const q = JSON.parse(saved);
+      STATE.quizState = {
+        active: true,
+        questions: q.questions,
+        currentIndex: q.currentIndex || 0,
+        score: q.score || 0,
+        streak: q.streak || 0,
+        mode: q.mode || 'en-tr',
+        source: q.source || 'daily',
+        answered: false,
+        waitingFeedback: false
+      };
+      renderQuizView();
+    } catch (e) {
+      console.warn('Resume error:', e);
+      localStorage.removeItem('learnish_active_quiz');
+    }
+  }
+
+  function discardSavedQuiz() {
+    localStorage.removeItem('learnish_active_quiz');
+    renderQuizView();
+  }
+
   function startQuiz() {
     const modeSelect = document.getElementById('quiz-mode-select');
     const sourceSelect = document.getElementById('quiz-source-select');
@@ -1816,14 +2039,16 @@
       streak: 0,
       mode: mode,
       source: source,
-      answered: false
+      answered: false,
+      waitingFeedback: false
     };
 
+    saveQuizState();
     renderQuizView();
   }
 
   function handleQuizAnswer(optionIdx) {
-    if (STATE.quizState.answered) return;
+    if (STATE.quizState.answered || STATE.quizState.waitingFeedback) return;
     STATE.quizState.answered = true;
 
     const currentQ = STATE.quizState.questions[STATE.quizState.currentIndex];
@@ -1843,22 +2068,86 @@
       STATE.quizState.score++;
       STATE.quizState.streak++;
       playSound('correct');
+      saveQuizState();
+
+      // Quick 900ms smooth auto-advance for correct answers
+      setTimeout(() => {
+        STATE.quizState.currentIndex++;
+        STATE.quizState.answered = false;
+        STATE.quizState.waitingFeedback = false;
+        saveQuizState();
+        renderQuizView();
+      }, 900);
     } else {
       STATE.quizState.streak = 0;
       playSound('wrong');
       STATE.userData.review.add(currentQ.targetWord.id);
       saveUserData();
+      saveQuizState();
+
+      // Pedagogical card: Stop and teach! Wait for student confirmation.
+      showQuizFeedbackCard(currentQ, selectedOpt);
+    }
+  }
+
+  function showQuizFeedbackCard(currentQ, selectedOpt) {
+    STATE.quizState.waitingFeedback = true;
+    const targetWord = currentQ.targetWord;
+    const feedbackBox = document.getElementById('quiz-feedback-container');
+    if (!feedbackBox) {
+      setTimeout(nextQuizQuestion, 2000);
+      return;
     }
 
-    setTimeout(() => {
-      STATE.quizState.currentIndex++;
-      STATE.quizState.answered = false;
-      renderQuizView();
-    }, 1100);
+    feedbackBox.innerHTML = `
+      <div class="quiz-feedback-card glass-panel" style="animation: popIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);">
+        <div class="feedback-header">
+          <span class="feedback-badge-wrong">❌ Yanlış Cevap</span>
+          <span class="feedback-hint">Öğrenmek için harika bir fırsat! Doğrusu:</span>
+        </div>
+        <div class="feedback-body">
+          <div class="feedback-word-row">
+            <span class="feedback-word-en">${targetWord.en}</span>
+            <button class="speak-btn" style="width:40px; height:40px; font-size:1.15rem;" onclick="window.APP.speakCurrentWord('${targetWord.en}')" title="Telaffuzu Dinle">🔊</button>
+            <span class="feedback-word-pos">${targetWord.desc || ''} ${targetWord.cefr ? '• ' + targetWord.cefr : ''}</span>
+          </div>
+          <div class="feedback-meaning-row">
+            <span class="feedback-meaning-label">Doğru Anlam:</span>
+            <strong class="feedback-meaning-tr">${targetWord.tr}</strong>
+          </div>
+          ${targetWord.example ? `
+            <div class="feedback-example-row">
+              <span class="feedback-ex-label">Örnek Kullanım:</span>
+              <p class="feedback-example">“${targetWord.example}”</p>
+            </div>
+          ` : ''}
+        </div>
+        <div class="feedback-footer">
+          <button class="ctrl-btn quiz-next-btn" onclick="window.APP.nextQuizQuestion()">
+            Anladım, Sıradaki Soruya Geç ➔
+          </button>
+        </div>
+      </div>
+    `;
+
+    // Speak the target word after a brief moment
+    setTimeout(() => speakWord(targetWord.en), 250);
+
+    // Scroll smoothly to feedback if needed
+    feedbackBox.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
+
+  function nextQuizQuestion() {
+    STATE.quizState.currentIndex++;
+    STATE.quizState.answered = false;
+    STATE.quizState.waitingFeedback = false;
+    saveQuizState();
+    renderQuizView();
   }
 
   function quitQuiz() {
     STATE.quizState.active = false;
+    localStorage.removeItem('learnish_active_quiz');
     renderQuizView();
   }
 
@@ -2028,12 +2317,14 @@
     const validViews = ['daily', 'flashcard', 'quiz', 'directory', 'stats'];
     const initialHash = window.location.hash.replace('#', '');
     const initialView = validViews.includes(initialHash) ? initialHash : 'daily';
-    switchView(initialView);
+    switchView(initialView, false);
 
     window.addEventListener('hashchange', () => {
       const hView = window.location.hash.replace('#', '');
       if (validViews.includes(hView) && hView !== STATE.currentView) {
-        switchView(hView);
+        switchView(hView, false);
+      } else if (!hView && STATE.currentView !== 'daily') {
+        switchView('daily', false);
       }
     });
 
@@ -2056,13 +2347,18 @@
     startDailyQuiz,
     startQuiz,
     handleQuizAnswer,
+    nextQuizQuestion,
+    resumeQuiz,
+    discardSavedQuiz,
     quitQuiz,
     replayQuizAudio,
     renderFlashcardView,
     resetAllProgress,
     switchView,
     switchModule,
-    speakCurrentWord
+    speakCurrentWord,
+    goHome,
+    goBack
   };
 
   document.addEventListener('DOMContentLoaded', initApp);
