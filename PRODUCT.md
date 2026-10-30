@@ -12,3 +12,4 @@ Learnish is an interactive English lexical acquisition and exam preparation inst
 - **`#quiz` (Sınav & Test Simülatörü):** Multiple-choice, listening, definition-matching, and YDS Cloze tests with `localStorage` session persistence and mandatory pedagogical error review before advancing on incorrect answers.
 - **`#directory` (Kelime Havuzu):** Instant search and multi-facet filtering across all 6,658 entries by dataset, POS, CEFR level, and mastery state.
 - **`#stats` (Telemetri & Analiz):** Quantitative breakdown of lexical acquisition across themes, CEFR tiers, and academic parts of speech.
+

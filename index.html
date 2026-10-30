@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="tr" data-theme="dark">
+<html lang="tr" data-theme="light">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,9 +7,9 @@
   
   <!-- Meta & SEO -->
   <meta name="description" content="Learnish: 5. Sınıf Maarif Modeli, YDS/YÖKDİL Akademik Hazırlık ve The Oxford 5000 (A1-C1) 6.658 kelimelik interaktif İngilizce kelime çalışma platformu.">
-  <meta name="theme-color" content="#0D0E12">
+  <meta name="theme-color" content="#F5F4EE">
   <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <meta name="apple-mobile-web-app-title" content="Learnish">
   
   <!-- App Icons & Manifest -->
@@ -23,7 +23,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Host+Grotesk:ital,wght@0,400..800;1,400..800&family=JetBrains+Mono:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
   <!-- Stylesheets -->
-  <link rel="stylesheet" href="app.css">
+  <link rel="stylesheet" href="app.css?v=bauhaus3">
 </head>
 <body data-impeccable-ignore="hard-offset-shadow side-tab">
 
@@ -38,13 +38,24 @@
         <button type="button" class="brand-group brand-group-btn" onclick="window.APP.goHome()" aria-label="Learnish Ana Çalışma Alanına Dön">
           <div class="brand-icon-wrapper">
             <img src="logo.svg?v=codex2" alt="Learnish Logo" class="brand-icon">
-            <span class="brand-home-pill" aria-hidden="true">EV</span>
           </div>
           <div class="brand-info">
             <h1>Learnish</h1>
             <p id="app-brand-subtitle">5. Sınıf Maarif • Hedef: 10 Kelime</p>
           </div>
         </button>
+
+        <!-- Mobil Açılır Pencere Tetikleyicileri (<= 900px ekranlarda görünür) -->
+        <div class="mobile-window-triggers" aria-label="Mobil Pencere Menüleri">
+          <button type="button" class="mobile-trigger-btn" id="mobile-curr-trigger-btn" onclick="window.APP.openCurriculumModal()" aria-label="Müfredat Seçim Penceresi">
+            <span class="m-trig-icon">🎓</span>
+            <span class="m-trig-text" id="mobile-curr-label">MÜFREDAT ▾</span>
+          </button>
+          <button type="button" class="mobile-trigger-btn" id="mobile-mode-trigger-btn" onclick="window.APP.openModesModal()" aria-label="Çalışma Modları Penceresi">
+            <span class="m-trig-icon">☰</span>
+            <span class="m-trig-text" id="mobile-mode-label">MODLAR ▾</span>
+          </button>
+        </div>
       </div>
 
       <!-- 1.2 Curriculum / Module Selector (.module-bar) -->
@@ -240,8 +251,119 @@
 
   </div>
 
+
+  <!-- =========================================================================
+       BAUHAUS MODAL PENCERELERİ (MOBİL MODÜL & MÜFREDAT PENCERELERİ)
+       ========================================================================= -->
+  <div class="bauhaus-modal-backdrop" id="bauhaus-modal-backdrop" onclick="window.APP.closeModals()" aria-hidden="true"></div>
+
+  <!-- 1. Müfredat Seçim Penceresi -->
+  <div class="bauhaus-window-dialog" id="modal-curriculum" role="dialog" aria-modal="true" aria-labelledby="modal-curr-title">
+    <div class="window-titlebar">
+      <div class="window-title-left">
+        <span class="window-title-square"></span>
+        <span class="window-title-text" id="modal-curr-title">MÜFREDAT SEÇİM PENCERESİ</span>
+      </div>
+      <button type="button" class="window-close-btn" onclick="window.APP.closeModals()" aria-label="Pencereyi Kapat">✕ KAPAT</button>
+    </div>
+    <div class="window-body">
+      <p class="window-body-desc">Çalışmak istediğiniz hedef müfredat modülünü seçiniz:</p>
+      <div class="window-module-list">
+        <button type="button" class="window-item-btn active" data-mod-id="maarif" onclick="window.APP.switchModuleAndClose('maarif')">
+          <span class="w-item-icon">🎓</span>
+          <div class="w-item-info">
+            <span class="w-item-title">5. Sınıf Maarif Modeli</span>
+            <span class="w-item-meta">8 TEMA • 817 KELİME</span>
+          </div>
+          <span class="w-item-arrow">→</span>
+        </button>
+        <button type="button" class="window-item-btn" data-mod-id="yds" onclick="window.APP.switchModuleAndClose('yds')">
+          <span class="w-item-icon">🎯</span>
+          <div class="w-item-info">
+            <span class="w-item-title">YDS &amp; YÖKDİL Akademik</span>
+            <span class="w-item-meta">B2/C1 SINAV • 2.894 KELİME</span>
+          </div>
+          <span class="w-item-arrow">→</span>
+        </button>
+        <button type="button" class="window-item-btn" data-mod-id="oxford" onclick="window.APP.switchModuleAndClose('oxford')">
+          <span class="w-item-icon">📖</span>
+          <div class="w-item-info">
+            <span class="w-item-title">The Oxford 5000</span>
+            <span class="w-item-meta">A1–C1 SEVİYELER • 5.841 KELİME</span>
+          </div>
+          <span class="w-item-arrow">→</span>
+        </button>
+        <button type="button" class="window-item-btn" data-mod-id="all" onclick="window.APP.switchModuleAndClose('all')">
+          <span class="w-item-icon">📚</span>
+          <div class="w-item-info">
+            <span class="w-item-title">Tüm Kütüphane</span>
+            <span class="w-item-meta">6.658 KELİME BİRLEŞİK HAVUZ</span>
+          </div>
+          <span class="w-item-arrow">→</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 2. Çalışma Modları & Ayarlar Penceresi -->
+  <div class="bauhaus-window-dialog" id="modal-modes" role="dialog" aria-modal="true" aria-labelledby="modal-modes-title">
+    <div class="window-titlebar">
+      <div class="window-title-left">
+        <span class="window-title-square"></span>
+        <span class="window-title-text" id="modal-modes-title">ÇALIŞMA MODLARI &amp; AYARLAR</span>
+      </div>
+      <button type="button" class="window-close-btn" onclick="window.APP.closeModals()" aria-label="Pencereyi Kapat">✕ KAPAT</button>
+    </div>
+    <div class="window-body">
+      <p class="window-body-desc">Geçmek istediğiniz çalışma alanını seçiniz:</p>
+      <div class="window-modes-grid">
+        <button type="button" class="window-item-btn active" data-view-id="home" onclick="window.APP.switchViewAndClose('home')">
+          <span class="w-num">[1]</span>
+          <span class="w-item-title">Kontrol Merkezi</span>
+          <span class="w-item-arrow">→</span>
+        </button>
+        <button type="button" class="window-item-btn" data-view-id="daily" onclick="window.APP.switchViewAndClose('daily')">
+          <span class="w-num">[2]</span>
+          <span class="w-item-title" id="m-modal-daily-text">Günün 10'lusu</span>
+          <span class="w-item-arrow">→</span>
+        </button>
+        <button type="button" class="window-item-btn" data-view-id="flashcard" onclick="window.APP.switchViewAndClose('flashcard')">
+          <span class="w-num">[3]</span>
+          <span class="w-item-title" id="m-modal-fc-text">Flashcard Kartları</span>
+          <span class="w-item-arrow">→</span>
+        </button>
+        <button type="button" class="window-item-btn" data-view-id="quiz" onclick="window.APP.switchViewAndClose('quiz')">
+          <span class="w-num">[4]</span>
+          <span class="w-item-title" id="m-modal-quiz-text">Quiz &amp; Test</span>
+          <span class="w-item-arrow">→</span>
+        </button>
+        <button type="button" class="window-item-btn" data-view-id="directory" onclick="window.APP.switchViewAndClose('directory')">
+          <span class="w-num">[5]</span>
+          <span class="w-item-title">Kelime Havuzu</span>
+          <span class="w-item-arrow">→</span>
+        </button>
+        <button type="button" class="window-item-btn" data-view-id="stats" onclick="window.APP.switchViewAndClose('stats')">
+          <span class="w-num">[6]</span>
+          <span class="w-item-title">İstatistik &amp; Analiz</span>
+          <span class="w-item-arrow">→</span>
+        </button>
+      </div>
+
+      <!-- Mobil Hızlı Ayarlar -->
+      <div class="window-sub-section">
+        <div class="window-sub-label">SİSTEM AYARLARI</div>
+        <div class="window-settings-row">
+          <button type="button" class="ctrl-btn" id="m-accent-toggle-btn" title="İngilizce Telaffuz Aksanı">UK</button>
+          <button type="button" class="ctrl-btn" id="m-speed-toggle-btn" title="Okuma Hızı">1.0x</button>
+          <button type="button" class="ctrl-btn" id="m-sound-toggle-btn" title="Ses Efektleri">SES: AÇIK</button>
+          <button type="button" class="ctrl-btn" id="m-theme-toggle-btn" title="Karanlık/Aydınlık Mod">TEMA: AÇIK</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- Data & Application Logic -->
   <script src="words-data.js?v=817"></script>
-  <script src="app.js?v=817"></script>
+  <script src="app.js?v=817c"></script>
 </body>
 </html>

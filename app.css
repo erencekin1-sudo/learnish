@@ -1,52 +1,60 @@
 /**
  * ============================================================================
- * LEARNISH • DARK GEOMETRIC & AMBER PRECISION DESIGN SYSTEM
- * Aesthetic: Adult, Academic, Mechanical Neo-Brutalist
+ * LEARNISH • BAUHAUS DESIGN SYSTEM
+ * Aesthetic: off-white, black, red, blue and yellow planes with heavy seams
  * Typography: Host Grotesk (Display/Body) + JetBrains Mono (Telemetry/Data)
  * ============================================================================
  */
 
 :root {
-  /* Temel Mimari Yüzeyler (Logonun karanlık teması) */
-  --dp-color-ground: #0D0E12;          /* Derin Gece Siyahı - Ana arka plan */
-  --dp-color-surface: #181A20;         /* Koyu Antrasit - Aktif çalışma kartları ve paneller */
-  --dp-color-quiet: #242730;           /* Pasif/İkincil paneller */
-  
-  /* Logodan Alınan Vurgu Renkleri */
-  --dp-color-accent: #E89D1F;          /* Altın/Kehribar - Ana butonlar, aktif vurgular */
-  --dp-color-field: #54311C;           /* Koyu Kahve/Amber - İkincil başlıklar ve destek alanları */
-  --dp-color-field-support: #FCE179;   /* Açık Sayfa Sarısı - Seçili şıklar, streak vurguları */
-  
-  /* Metin ve Sınır Renkleri */
-  --dp-color-ink: #F4F1EA;             /* Kırık Beyaz - Ana metinler (Okunabilirlik için) */
-  --dp-color-ink-muted: #8B8E98;       /* Gri - İkincil metinler, etiketler (WCAG AA >= 4.55:1 on #242730) */
-  --dp-color-border: #2A2D37;          /* Paneller için standart çerçeve rengi */
-  --dp-color-border-accent: #E89D1F;   /* Aktif/Hover durumları için Altın çerçeve */
-  
-  /* Geri Bildirim Renkleri */
-  --dp-color-success: #2E7D32;         /* Doğru cevap çerçeve/vurgu */
-  --dp-color-success-bg: rgba(46, 125, 50, 0.15);
-  --dp-color-error: #D32F2F;           /* Yanlış cevap çerçeve/vurgu */
-  --dp-color-error-bg: rgba(211, 47, 47, 0.15);
+  /* Bauhaus: off-white, black, red, blue and yellow planes */
+  --dp-color-ground: #F5F4EE;          /* Off-white ground */
+  --dp-color-surface: #FFFFFF;         /* Paper plane for working cards */
+  --dp-color-quiet: #E8E8E8;           /* Quiet secondary plane */
 
-  /* Tipografi */
-  --dp-typography-face: 'Host Grotesk', -apple-system, BlinkMacSystemFont, sans-serif;
+  --dp-color-accent: #FF0000;          /* Red action plane */
+  --dp-color-field: #0000FF;           /* Blue field */
+  --dp-color-field-support: #FFFF00;   /* Yellow plane / text on blue */
+  --dp-color-on-field: #FFFFFF;
+  --dp-color-on-accent: #000000;
+  --dp-color-accent-ink: #C40000;      /* Red that stays legible as small text */
+  --dp-color-emphasis: #0000FF;        /* Emphasis text on ground/surface */
+
+  --dp-color-ink: #000000;
+  --dp-color-ink-muted: #3F3F3F;
+  --dp-color-border: #000000;
+  --dp-color-border-accent: #0000FF;
+
+  --dp-color-success: #00743A;
+  --dp-color-success-bg: rgba(0, 116, 58, 0.14);
+  --dp-color-error: #C40000;
+  --dp-color-error-bg: rgba(196, 0, 0, 0.12);
+
+  /* Typography */
+  --dp-typography-face: 'Host Grotesk', 'Bauhaus Host', -apple-system, BlinkMacSystemFont, sans-serif;
   --dp-typography-mono: 'JetBrains Mono', monospace;
-  --dp-typography-body: 1.0625rem;     
-  --dp-typography-label: 0.9375rem;    
-  --dp-typography-caption: 0.8125rem;  
+  --dp-typography-body: 1.125rem;
+  --dp-typography-reading: 1.0625rem;
+  --dp-typography-label: 0.9375rem;
+  --dp-typography-caption: 0.875rem;
   --dp-typography-weight-display: 800;
-  --dp-typography-weight-action: 700;
+  --dp-typography-weight-action: 750;
+  --dp-typography-weight-label: 650;
+  --dp-typography-weight-reading: 450;
+  --dp-typography-reading-leading: 1.5;
 
-  /* Geometri ve Mekanik Gölgeler */
+  /* Geometry & hard shadows */
   --dp-radius-square: 0px;
-  --dp-border-heavy: 2px solid var(--dp-color-border);
+  --dp-radius-circle: 50%;
+  --dp-border-rule: 4px;
+  --dp-border-rule-compact: 3px;
+  --dp-border-heavy: 3px solid var(--dp-color-border);
   --dp-shadow-hard-lg: 6px 6px 0px #000000;
   --dp-shadow-hard-md: 4px 4px 0px #000000;
   --dp-shadow-none: 0px 0px 0px transparent;
-  --dp-motion-snap: 80ms cubic-bezier(0.2, 0, 0, 1);
+  --dp-motion-snap: 0s;
 
-  /* Legacy Alias Bridges (Mapped strictly to Dark Geometric tokens) */
+  /* Legacy Alias Bridges */
   --bg-primary: var(--dp-color-ground);
   --bg-surface: var(--dp-color-surface);
   --bg-quiet: var(--dp-color-quiet);
@@ -57,36 +65,34 @@
   --border-subtle: var(--dp-color-border);
   --border-highlight: var(--dp-color-border-accent);
   --accent-amber: var(--dp-color-accent);
-  --accent-emerald: var(--dp-color-field-support);
-  --accent-blue: var(--dp-color-accent);
-  --accent-cyan: var(--dp-color-field-support);
+  --accent-emerald: var(--dp-color-success);
+  --accent-blue: var(--dp-color-field);
+  --accent-cyan: var(--dp-color-field);
   --accent-rose: var(--dp-color-error);
   --maarif-accent: var(--dp-color-accent);
-  --yds-accent: var(--dp-color-field-support);
+  --yds-accent: var(--dp-color-field);
   --oxford-accent: var(--dp-color-accent);
   --font-heading: var(--dp-typography-face);
   --font-body: var(--dp-typography-face);
   --font-mono: var(--dp-typography-mono);
 }
 
-/* Archival Paper Mode (Optional Light Contrast Parity) */
-[data-theme="light"] {
-  --dp-color-ground: #F4F1EA;
-  --dp-color-surface: #FFFFFF;
-  --dp-color-quiet: #E6E1D6;
-  --dp-color-accent: #C47D0E;
-  --dp-color-field: #F5E6C8;
-  --dp-color-field-support: #54311C;
-  --dp-color-ink: #0D0E12;
-  --dp-color-ink-muted: #4A4D57;
-  --dp-color-border: #0D0E12;
-  --dp-color-border-accent: #C47D0E;
-  --dp-color-success: #1B5E20;
-  --dp-color-success-bg: rgba(27, 94, 32, 0.12);
-  --dp-color-error: #B71C1C;
-  --dp-color-error-bg: rgba(183, 28, 28, 0.12);
-  --dp-shadow-hard-lg: 6px 6px 0px #0D0E12;
-  --dp-shadow-hard-md: 4px 4px 0px #0D0E12;
+/* Bauhaus Night: same planes on a black ground */
+[data-theme="dark"] {
+  --dp-color-ground: #0A0A0A;
+  --dp-color-surface: #161616;
+  --dp-color-quiet: #262626;
+  --dp-color-accent: #FF2A2A;
+  --dp-color-accent-ink: #FF5A5A;
+  --dp-color-emphasis: #FFFF00;
+  --dp-color-ink: #F5F4EE;
+  --dp-color-ink-muted: #BDBDB5;
+  --dp-color-border: #F5F4EE;
+  --dp-color-border-accent: #FFFF00;
+  --dp-color-success: #2BD070;
+  --dp-color-success-bg: rgba(43, 208, 112, 0.16);
+  --dp-color-error: #FF5A5A;
+  --dp-color-error-bg: rgba(255, 90, 90, 0.16);
 }
 
 /* ==========================================================================
@@ -105,11 +111,11 @@ html {
   scroll-padding-top: 140px;
   background-color: var(--dp-color-ground);
   color: var(--dp-color-ink);
-  color-scheme: dark;
+  color-scheme: light;
 }
 
-[data-theme="light"] {
-  color-scheme: light;
+[data-theme="dark"] {
+  color-scheme: dark;
 }
 
 body {
@@ -248,21 +254,6 @@ body {
   background-color: var(--dp-color-ground);
 }
 
-.brand-home-pill {
-  position: absolute;
-  bottom: -4px;
-  right: -6px;
-  background-color: var(--dp-color-accent);
-  color: #0D0E12;
-  font-family: var(--dp-typography-mono);
-  font-size: 0.75rem;
-  font-weight: 800;
-  padding: 0px 4px;
-  border: 1px solid #0D0E12;
-  line-height: 1.2;
-  pointer-events: none;
-}
-
 .brand-info {
   min-width: 0;
 }
@@ -376,9 +367,6 @@ body {
   color: var(--dp-color-field-support);
 }
 
-[data-theme="light"] .module-btn.active .mod-title {
-  color: var(--dp-color-ink);
-}
 
 .mod-meta {
   font-family: var(--dp-typography-mono);
@@ -442,9 +430,6 @@ body {
   box-shadow: var(--dp-shadow-hard-md);
 }
 
-[data-theme="light"] .nav-btn.active {
-  color: var(--dp-color-ink);
-}
 
 .nav-index {
   font-family: var(--dp-typography-mono);
@@ -526,14 +511,11 @@ body {
 .ctrl-btn:hover {
   background-color: var(--dp-color-quiet);
   border-color: var(--dp-color-border-accent);
-  color: var(--dp-color-field-support);
+  color: var(--dp-color-emphasis);
   transform: translate(-1px, -1px);
   box-shadow: 5px 5px 0px #000000;
 }
 
-[data-theme="light"] .ctrl-btn:hover {
-  color: var(--dp-color-ink);
-}
 
 .ctrl-btn:active {
   transform: translate(4px, 4px);
@@ -639,9 +621,6 @@ body {
   color: var(--dp-color-field-support);
 }
 
-[data-theme="light"] .welcome-mod-card.active .welcome-mod-name {
-  color: var(--dp-color-ink);
-}
 
 .welcome-mod-badge {
   font-family: var(--dp-typography-mono);
@@ -703,7 +682,7 @@ body {
 
 .breadcrumb-back-btn:hover {
   border-color: var(--dp-color-border-accent);
-  color: var(--dp-color-field-support);
+  color: var(--dp-color-emphasis);
   transform: translate(-1px, -1px);
   box-shadow: 5px 5px 0px #000000;
 }
@@ -741,7 +720,7 @@ body {
 
 .breadcrumb-home-chip:hover {
   border-color: var(--dp-color-border-accent);
-  color: var(--dp-color-field-support);
+  color: var(--dp-color-emphasis);
   transform: translate(-1px, -1px);
   box-shadow: 5px 5px 0px #000000;
 }
@@ -754,7 +733,7 @@ body {
 .breadcrumb-home-chip .chip-home-icon {
   display: inline-flex;
   align-items: center;
-  color: var(--dp-color-accent);
+  color: var(--dp-color-accent-ink);
 }
 
 .breadcrumb-item.active {
@@ -770,9 +749,6 @@ body {
   font-weight: var(--dp-typography-weight-action);
 }
 
-[data-theme="light"] .breadcrumb-item.active {
-  color: var(--dp-color-ink);
-}
 
 .breadcrumb-sep {
   font-family: var(--dp-typography-mono);
@@ -828,21 +804,18 @@ body {
 }
 
 .badge-live-counter {
-  color: var(--dp-color-field-support);
+  color: var(--dp-color-emphasis);
   white-space: nowrap;
   font-family: var(--dp-typography-mono);
 }
 
-[data-theme="light"] .badge-live-counter {
-  color: var(--dp-color-ink);
-}
 
 .badge-live-stars,
 .badge-streak-flame {
   font-family: var(--dp-typography-mono);
   font-size: 0.75rem;
   font-weight: 800;
-  color: var(--dp-color-accent);
+  color: var(--dp-color-accent-ink);
   text-transform: uppercase;
 }
 
@@ -874,7 +847,7 @@ body {
   min-height: 38px;
   padding: 6px 14px;
   background-color: var(--dp-color-ground);
-  color: var(--dp-color-field-support);
+  color: var(--dp-color-emphasis);
   border: 2px solid var(--dp-color-border-accent);
   font-family: var(--dp-typography-mono);
   font-size: var(--dp-typography-caption);
@@ -913,13 +886,10 @@ body {
 }
 
 .hero-info p strong {
-  color: var(--dp-color-field-support);
+  color: var(--dp-color-emphasis);
   font-family: var(--dp-typography-mono);
 }
 
-[data-theme="light"] .hero-info p strong {
-  color: var(--dp-color-ink);
-}
 
 .day-picker-control {
   display: flex;
@@ -944,7 +914,7 @@ body {
 
 .day-step-btn:hover:not(:disabled) {
   border-color: var(--dp-color-border-accent);
-  color: var(--dp-color-field-support);
+  color: var(--dp-color-emphasis);
   transform: translate(-1px, -1px);
   box-shadow: 5px 5px 0px #000000;
 }
@@ -999,7 +969,7 @@ body {
 }
 
 .progress-header strong {
-  color: var(--dp-color-field-support);
+  color: var(--dp-color-emphasis);
 }
 
 .progress-track {
@@ -1057,9 +1027,6 @@ body {
   margin-bottom: 4px;
 }
 
-[data-theme="light"] .celebration-body h3 {
-  color: var(--dp-color-ink);
-}
 
 .celebration-body p {
   font-size: var(--dp-typography-label);
@@ -1153,9 +1120,6 @@ body {
   background-color: var(--dp-color-field);
 }
 
-[data-theme="light"] .cefr-pill {
-  color: var(--dp-color-ink);
-}
 
 .yds-prep-tag {
   background-color: var(--dp-color-accent);
@@ -1241,13 +1205,10 @@ body {
   font-family: var(--dp-typography-face);
   font-size: 1.15rem;
   font-weight: var(--dp-typography-weight-action);
-  color: var(--dp-color-field-support);
+  color: var(--dp-color-emphasis);
   line-height: 1.35;
 }
 
-[data-theme="light"] .word-tr {
-  color: var(--dp-color-accent);
-}
 
 .word-pos {
   font-family: var(--dp-typography-mono);
@@ -1274,9 +1235,6 @@ body {
   padding: 6px 10px;
 }
 
-[data-theme="light"] .yds-syn-tag {
-  color: var(--dp-color-ink);
-}
 
 .word-example {
   font-size: var(--dp-typography-label);
@@ -1347,9 +1305,6 @@ body {
   color: var(--dp-color-field-support);
 }
 
-[data-theme="light"] .status-badge-btn.review {
-  color: var(--dp-color-ink);
-}
 
 .star-btn {
   display: inline-flex;
@@ -1368,7 +1323,7 @@ body {
 
 .star-btn:hover {
   border-color: var(--dp-color-border-accent);
-  color: var(--dp-color-accent);
+  color: var(--dp-color-accent-ink);
   transform: translate(-1px, -1px);
   box-shadow: 5px 5px 0px #000000;
 }
@@ -1434,9 +1389,6 @@ body {
   align-items: center;
 }
 
-[data-theme="light"] .flashcard-counter {
-  color: var(--dp-color-ink);
-}
 
 .card-scene {
   width: 100%;
@@ -1514,12 +1466,9 @@ body {
   font-family: var(--dp-typography-face);
   font-size: 2rem;
   font-weight: var(--dp-typography-weight-display);
-  color: var(--dp-color-field-support);
+  color: var(--dp-color-emphasis);
 }
 
-[data-theme="light"] .fc-word-tr {
-  color: var(--dp-color-accent);
-}
 
 .fc-category-desc {
   font-family: var(--dp-typography-mono);
@@ -1606,15 +1555,12 @@ body {
   padding: 2px 6px;
   background-color: var(--dp-color-ground);
   border: 1px solid var(--dp-color-border-accent);
-  color: var(--dp-color-field-support);
+  color: var(--dp-color-emphasis);
   font-family: var(--dp-typography-mono);
   font-size: 0.75rem;
   font-weight: var(--dp-typography-weight-action);
 }
 
-[data-theme="light"] .kbd-badge {
-  color: var(--dp-color-ink);
-}
 
 /* ==========================================================================
    6. VIEW 3: QUIZ & SIMULATOR (#quiz)
@@ -1659,13 +1605,10 @@ body {
 .resume-quiz-meta {
   font-family: var(--dp-typography-mono);
   font-size: var(--dp-typography-caption);
-  color: var(--dp-color-field-support);
+  color: var(--dp-color-emphasis);
   margin-top: 4px;
 }
 
-[data-theme="light"] .resume-quiz-meta {
-  color: var(--dp-color-ink);
-}
 
 .resume-quiz-actions {
   display: flex;
@@ -1804,7 +1747,7 @@ body {
 
 .cloze-blank {
   font-family: var(--dp-typography-mono);
-  color: var(--dp-color-accent);
+  color: var(--dp-color-accent-ink);
   font-weight: 800;
   text-decoration: underline;
   text-underline-offset: 4px;
@@ -1913,12 +1856,9 @@ body {
   font-family: var(--dp-typography-face);
   font-size: 1.5rem;
   font-weight: var(--dp-typography-weight-display);
-  color: var(--dp-color-field-support);
+  color: var(--dp-color-emphasis);
 }
 
-[data-theme="light"] .feedback-word-en {
-  color: var(--dp-color-ink);
-}
 
 .feedback-word-pos {
   font-family: var(--dp-typography-mono);
@@ -2073,6 +2013,60 @@ body {
   border-top: 1px solid var(--dp-color-border);
 }
 
+/* Bauhaus Directory Pagination */
+.dir-pagination-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin: 24px 0 32px 0;
+  padding: 14px 18px;
+  background: var(--dp-color-surface);
+  border: var(--dp-border-rule) solid var(--dp-color-border);
+  box-shadow: 4px 4px 0 #000000;
+}
+
+.dir-page-btn {
+  font-family: var(--dp-typography-face);
+  font-weight: 800;
+  font-size: 0.85rem;
+  letter-spacing: 0.02em;
+  padding: 8px 16px;
+  background: var(--dp-color-ground);
+  color: var(--dp-color-ink);
+  border: var(--dp-border-rule-compact) solid var(--dp-color-border);
+  box-shadow: 2px 2px 0 #000000;
+  cursor: pointer;
+  transition: none;
+}
+
+.dir-page-btn:hover:not(:disabled) {
+  background: var(--dp-color-field-support);
+  color: #000000;
+}
+
+.dir-page-btn:active:not(:disabled) {
+  transform: translate(2px, 2px);
+  box-shadow: none;
+}
+
+.dir-page-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+.dir-page-indicator {
+  font-family: var(--dp-typography-mono);
+  font-size: 0.85rem;
+  font-weight: 800;
+  padding: 6px 14px;
+  background: var(--dp-color-surface);
+  color: var(--dp-color-ink);
+  border: var(--dp-border-rule-compact) solid var(--dp-color-border);
+}
+
 /* ==========================================================================
    8. VIEW 5: TELEMETRY & ANALYTICS (#stats)
    ========================================================================== */
@@ -2094,14 +2088,11 @@ body {
   font-family: var(--dp-typography-mono);
   font-size: 2rem;
   font-weight: var(--dp-typography-weight-display);
-  color: var(--dp-color-field-support);
+  color: var(--dp-color-emphasis);
   line-height: 1.1;
   margin-bottom: 6px;
 }
 
-[data-theme="light"] .metric-val {
-  color: var(--dp-color-ink);
-}
 
 .metric-title {
   font-family: var(--dp-typography-mono);
@@ -2217,7 +2208,7 @@ body {
   font-family: var(--dp-typography-mono);
   font-size: 0.75rem;
   font-weight: 700;
-  color: var(--dp-color-accent);
+  color: var(--dp-color-accent-ink);
   text-transform: uppercase;
   letter-spacing: 0.08em;
 }
@@ -2342,7 +2333,7 @@ body {
   font-family: var(--dp-typography-mono);
   font-size: 0.75rem;
   font-weight: 700;
-  color: var(--dp-color-accent);
+  color: var(--dp-color-accent-ink);
 }
 
 .dash-telemetry-value-wrap {
@@ -2469,7 +2460,7 @@ body {
 
 .dash-retest-btn:hover {
   border-color: var(--dp-color-accent);
-  color: var(--dp-color-accent);
+  color: var(--dp-color-accent-ink);
   transform: translate(-1px, -1px);
   box-shadow: 3px 3px 0px #000000;
 }
@@ -2712,5 +2703,1136 @@ body {
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
+  }
+}
+
+
+/* ==========================================================================
+   10. BAUHAUS COMPOSITION LAYER
+   Heavy seams, flat colour planes, one circle action and one triangle.
+   ========================================================================== */
+
+/* Focus: thick, always visible, readable on every plane */
+:focus-visible {
+  outline: 4px solid var(--dp-color-field);
+  outline-offset: 3px;
+  box-shadow: 0 0 0 7px var(--dp-color-field-support);
+}
+
+[data-theme="dark"] :focus-visible {
+  outline-color: var(--dp-color-field-support);
+  box-shadow: 0 0 0 7px var(--dp-color-field);
+}
+
+body {
+  line-height: var(--dp-typography-reading-leading);
+}
+
+/* Sidebar: heavy black seam on the right */
+.sidebar-plane {
+  border-right: var(--dp-border-rule) solid var(--dp-color-border);
+}
+
+.sidebar-brand-cell,
+.module-bar {
+  border-bottom: var(--dp-border-rule) solid var(--dp-color-border);
+}
+
+/* Brand cell is a yellow plane with a blue triangle; the logo asset is untouched */
+.sidebar-brand-cell {
+  position: relative;
+  background-color: var(--dp-color-field-support);
+  overflow: hidden;
+}
+
+.sidebar-brand-cell::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 34px;
+  height: 34px;
+  background: var(--dp-color-field);
+  clip-path: polygon(100% 0, 0 0, 100% 100%);
+  pointer-events: none;
+}
+
+.brand-group,
+.brand-group-btn {
+  background-color: var(--dp-color-surface);
+  color: var(--dp-color-ink);
+  border: var(--dp-border-rule-compact) solid var(--dp-color-border);
+  box-shadow: 4px 4px 0 #000000;
+}
+
+.brand-group-btn:hover {
+  background-color: var(--dp-color-accent);
+  border-color: var(--dp-color-border);
+  transform: none;
+  box-shadow: 2px 2px 0 #000000;
+}
+
+.brand-group-btn:active {
+  transform: translate(4px, 4px);
+  box-shadow: none;
+}
+
+.brand-info h1 {
+  color: var(--dp-color-ink);
+}
+
+.brand-info p {
+  color: var(--dp-color-ink-muted);
+}
+
+.brand-icon {
+  border: none;
+  background: transparent;
+}
+
+/* Sidebar controls: crisp pressed state, no travel on hover */
+.module-btn,
+.nav-btn {
+  border: var(--dp-border-rule-compact) solid var(--dp-color-border);
+}
+
+.module-btn:hover,
+.nav-btn:hover {
+  background-color: var(--dp-color-field-support);
+  color: #000000;
+  border-color: var(--dp-color-border);
+  transform: none;
+  box-shadow: 2px 2px 0 #000000;
+}
+
+.module-btn:hover .mod-title,
+.module-btn:hover .mod-meta,
+.nav-btn:hover .nav-index {
+  color: #000000;
+}
+
+.module-btn:active,
+.nav-btn:active {
+  transform: translate(4px, 4px);
+  box-shadow: none;
+}
+
+/* Active state: blue plane + yellow text + red edge + bold weight (not colour alone) */
+.module-btn.active,
+.nav-btn.active {
+  background-color: var(--dp-color-field);
+  border: var(--dp-border-rule-compact) solid var(--dp-color-border);
+  border-left: 10px solid var(--dp-color-accent);
+  color: var(--dp-color-field-support);
+}
+
+.module-btn.active:hover,
+.nav-btn.active:hover {
+  background-color: var(--dp-color-field);
+}
+
+.module-btn.active .mod-title,
+.module-btn.active:hover .mod-title,
+.nav-btn.active .nav-btn-label,
+.nav-btn.active:hover {
+  color: var(--dp-color-field-support);
+}
+
+.module-btn.active .mod-meta,
+.module-btn.active:hover .mod-meta {
+  color: var(--dp-color-on-field);
+}
+
+.module-btn.active .mod-icon {
+  background-color: var(--dp-color-field-support);
+  border-color: #000000;
+  color: #000000;
+}
+
+.nav-btn.active .nav-index,
+.nav-btn.active .nav-btn-icon,
+.nav-btn.active:hover .nav-index {
+  color: var(--dp-color-on-field);
+}
+
+.nav-btn.active::after {
+  content: "";
+  margin-left: auto;
+  width: 0;
+  height: 0;
+  border-top: 7px solid transparent;
+  border-bottom: 7px solid transparent;
+  border-left: 10px solid var(--dp-color-field-support);
+  flex-shrink: 0;
+}
+
+.sidebar-section-label {
+  color: var(--dp-color-ink);
+  font-weight: 800;
+}
+
+/* Telemetry footer */
+.sidebar-telemetry-footer {
+  border-top: var(--dp-border-rule) solid var(--dp-color-border);
+}
+
+/* Workspace plane */
+.workspace-plane {
+  background-color: var(--dp-color-ground);
+}
+
+/* Dashboard banner: broad off-white plane beside a narrower red action plane */
+.dash-target-banner {
+  padding: 0;
+  gap: 0;
+  display: grid;
+  grid-template-columns: 1.7fr 1fr;
+  align-items: stretch;
+  border: var(--dp-border-rule) solid var(--dp-color-border);
+  background: var(--dp-color-surface);
+  box-shadow: 8px 8px 0 #000000;
+}
+
+.dash-target-left {
+  padding: clamp(22px, 4.45cqi, 40px);
+  min-width: 0;
+  justify-content: center;
+}
+
+.dash-target-right {
+  background: var(--dp-color-accent);
+  border-left: var(--dp-border-rule) solid var(--dp-color-border);
+  justify-content: center;
+  padding: 28px;
+}
+
+.dash-target-title {
+  font-size: clamp(1.9rem, 3.4vw, 2.75rem);
+  letter-spacing: -0.035em;
+  line-height: 1.02;
+}
+
+.dash-target-subtitle {
+  color: var(--dp-color-ink);
+}
+
+/* Guide Banner & Recommended Steps */
+.dash-guide-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+  margin: 16px 0 14px 0;
+}
+
+.dash-guide-step {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  background: var(--dp-color-ground);
+  border: var(--dp-border-rule-compact) solid var(--dp-color-border);
+  padding: 10px 12px;
+  box-shadow: 3px 3px 0 #000000;
+}
+
+.guide-step-num {
+  font-family: var(--dp-typography-mono);
+  font-size: 0.85rem;
+  font-weight: 900;
+  background: var(--dp-color-field-support);
+  color: #000000;
+  border: 1.5px solid #000000;
+  padding: 2px 6px;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.guide-step-content {
+  font-size: 0.84rem;
+  line-height: 1.35;
+  color: var(--dp-color-ink);
+}
+
+.guide-step-content strong {
+  font-weight: 800;
+  color: var(--dp-color-ink);
+  display: inline;
+}
+
+.dash-guide-footer-tip {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  font-size: 0.8rem;
+  color: var(--dp-color-ink-muted);
+  border-top: 1px dashed var(--dp-color-border);
+  padding-top: 10px;
+  margin-top: 4px;
+}
+
+.guide-tip-tag {
+  font-family: var(--dp-typography-mono);
+  font-weight: 800;
+  font-size: 0.72rem;
+  background: var(--dp-color-field);
+  color: #ffffff;
+  padding: 2px 6px;
+  letter-spacing: 0.05em;
+}
+
+.kbd-mini {
+  display: inline-block;
+  padding: 1px 5px;
+  font-family: var(--dp-typography-mono);
+  font-size: 0.72rem;
+  font-weight: 700;
+  background: var(--dp-color-surface);
+  color: var(--dp-color-ink);
+  border: 1.5px solid var(--dp-color-border);
+  box-shadow: 1.5px 1.5px 0 #000000;
+}
+
+.dash-target-track {
+  height: 18px;
+  border: var(--dp-border-rule-compact) solid var(--dp-color-border);
+  background: var(--dp-color-surface);
+}
+
+.dash-target-fill {
+  background: var(--dp-color-field);
+  transition: none;
+}
+
+/* The one large circular action */
+.dash-primary-cta {
+  width: 188px;
+  height: 188px;
+  min-height: 0;
+  padding: 20px;
+  border-radius: var(--dp-radius-circle);
+  background: #FFFFFF;
+  color: #000000;
+  border: var(--dp-border-rule) solid #000000;
+  box-shadow: 8px 8px 0 #000000;
+  flex-direction: column;
+  text-align: center;
+  font-size: 1.05rem;
+  font-weight: var(--dp-typography-weight-display);
+  line-height: 1.15;
+  letter-spacing: 0.01em;
+  transition: none;
+}
+
+.dash-primary-cta::after {
+  content: "→";
+  font-size: 1.75rem;
+  line-height: 1;
+}
+
+.dash-primary-cta:hover {
+  transform: none;
+  background: var(--dp-color-field-support);
+  box-shadow: 4px 4px 0 #000000;
+}
+
+.dash-primary-cta:active {
+  transform: translate(8px, 8px);
+  box-shadow: none;
+}
+
+/* Telemetry and panels: black seams, three flat colour accents */
+.dash-telemetry-card,
+.dash-debug-panel,
+.dash-heatmap-panel,
+.dash-terminal-panel {
+  border: var(--dp-border-rule) solid var(--dp-color-border);
+  background: var(--dp-color-surface);
+  box-shadow: 6px 6px 0 #000000;
+}
+
+.dash-telemetry-row .dash-telemetry-card:nth-child(1) { background: var(--dp-color-field-support); color: #000000; }
+.dash-telemetry-row .dash-telemetry-card:nth-child(2) { background: var(--dp-color-field); }
+.dash-telemetry-row .dash-telemetry-card:nth-child(3) { background: var(--dp-color-surface); }
+
+.dash-telemetry-row .dash-telemetry-card:nth-child(1) .dash-telemetry-label,
+.dash-telemetry-row .dash-telemetry-card:nth-child(1) .dash-telemetry-index,
+.dash-telemetry-row .dash-telemetry-card:nth-child(1) .dash-telemetry-value,
+.dash-telemetry-row .dash-telemetry-card:nth-child(1) .dash-telemetry-foot {
+  color: #000000;
+}
+
+.dash-telemetry-row .dash-telemetry-card:nth-child(2) .dash-telemetry-label,
+.dash-telemetry-row .dash-telemetry-card:nth-child(2) .dash-telemetry-index,
+.dash-telemetry-row .dash-telemetry-card:nth-child(2) .dash-telemetry-value,
+.dash-telemetry-row .dash-telemetry-card:nth-child(2) .dash-telemetry-foot {
+  color: var(--dp-color-on-field);
+}
+
+.dash-telemetry-value {
+  font-size: 2.75rem;
+  font-weight: 800;
+}
+
+.dash-telemetry-index {
+  color: var(--dp-color-ink);
+}
+
+.dash-module-header {
+  border-bottom: var(--dp-border-rule-compact) solid var(--dp-color-border);
+}
+
+.dash-debug-row,
+.dash-terminal-table tbody td {
+  border-bottom: 2px solid var(--dp-color-border);
+}
+
+.dash-terminal-table thead th {
+  border-bottom: var(--dp-border-rule-compact) solid var(--dp-color-border);
+}
+
+.dash-terminal-table tbody tr:hover {
+  background: var(--dp-color-field-support);
+  color: #000000;
+}
+
+.dash-terminal-table tbody tr:hover td {
+  color: #000000;
+}
+
+.dash-retest-btn {
+  border: var(--dp-border-rule-compact) solid var(--dp-color-border);
+  box-shadow: 3px 3px 0 #000000;
+  transition: none;
+}
+
+.dash-retest-btn:hover {
+  background: var(--dp-color-field-support);
+  border-color: #000000;
+  color: #000000;
+  transform: none;
+  box-shadow: 1px 1px 0 #000000;
+}
+
+.dash-retest-btn:active {
+  transform: translate(3px, 3px);
+  box-shadow: none;
+}
+
+.heatmap-cell {
+  border: 2px solid var(--dp-color-border);
+  transition: none;
+}
+
+.heatmap-cell.mastered,
+.dash-legend-swatch.mastered {
+  background: var(--dp-color-field);
+  border-color: #000000;
+}
+
+/* Immediate feedback everywhere: no animated travel */
+.progress-fill {
+  transition: none;
+}
+
+@media (max-width: 1050px) {
+  .dash-target-banner {
+    grid-template-columns: 1.4fr 1fr;
+  }
+
+  .dash-primary-cta {
+    width: 164px;
+    height: 164px;
+    font-size: 0.95rem;
+  }
+}
+
+@media (max-width: 900px) {
+  .sidebar-plane {
+    border-right: none;
+    border-bottom: var(--dp-border-rule) solid var(--dp-color-border);
+  }
+}
+
+@media (max-width: 720px) {
+  .dash-target-banner {
+    grid-template-columns: 1fr;
+  }
+
+  .dash-target-right {
+    border-left: none;
+    border-top: var(--dp-border-rule) solid var(--dp-color-border);
+    padding: 28px 16px;
+  }
+
+  .dash-primary-cta {
+    width: min(220px, 70vw);
+    height: min(220px, 70vw);
+  }
+
+  .dash-telemetry-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Welcome hub: active module card is a blue plane */
+.welcome-mod-card:hover {
+  background-color: var(--dp-color-field-support);
+  color: #000000;
+  transform: none;
+  box-shadow: 2px 2px 0 #000000;
+}
+
+.welcome-mod-card:hover .welcome-mod-badge {
+  color: #000000;
+}
+
+.welcome-mod-card.active,
+.welcome-mod-card.active:hover {
+  background-color: var(--dp-color-field);
+  border: var(--dp-border-rule-compact) solid var(--dp-color-border);
+  border-left: 10px solid var(--dp-color-accent);
+}
+
+.welcome-mod-card.active .welcome-mod-name,
+.welcome-mod-card.active:hover .welcome-mod-name {
+  color: var(--dp-color-field-support);
+}
+
+.welcome-mod-card.active .welcome-mod-badge,
+.welcome-mod-card.active:hover .welcome-mod-badge {
+  color: var(--dp-color-on-field);
+}
+
+@media (max-width: 900px) {
+  .module-tabs,
+  .nav-tabs {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .nav-btn {
+    padding: 0 8px;
+    gap: 6px;
+  }
+}
+
+@media (max-width: 600px) {
+  .module-tabs {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* Sidebar planes keep their height; the sidebar itself scrolls */
+.sidebar-plane > * {
+  flex-shrink: 0;
+}
+
+.sidebar-plane > .sidebar-spacer {
+  flex-shrink: 1;
+  min-height: 0;
+}
+
+/* ==========================================================================
+   11. BAUHAUS MOBİL PENCERELERİ (MODAL DIALOGS & WINDOW SYSTEM)
+   ========================================================================== */
+
+/* Masaüstünde mobil tetikleyiciler ve pencereler gizlidir */
+.mobile-window-triggers,
+.bauhaus-modal-backdrop,
+.bauhaus-window-dialog,
+.mobile-curriculum-banner {
+  display: none;
+}
+
+/* Modal Açıkken Arka Planı Sabitle */
+body.modal-open {
+  overflow: hidden !important;
+}
+
+/* ==========================================================================
+   MOBİL VE TABLET UYARLAMASI (<= 900px)
+   ========================================================================== */
+@media (max-width: 900px) {
+  /* 1. Sidebar'ı Kompakt Tek Satırlık Mobil Üst Çubuğa Dönüştür */
+  .sidebar-plane {
+    width: 100% !important;
+    height: auto !important;
+    min-height: 56px !important;
+    border-right: none !important;
+    border-bottom: 4px solid var(--dp-color-border) !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    overflow: visible !important;
+    padding: 0 !important;
+    position: sticky !important;
+    top: 0 !important;
+    z-index: 500 !important;
+    background: var(--dp-color-field-support) !important;
+  }
+
+  .sidebar-brand-cell {
+    width: 100% !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    padding: 6px 12px !important;
+    border-bottom: none !important;
+    background: transparent !important;
+  }
+
+  .sidebar-brand-cell::after {
+    display: none !important; /* Mobilde üçgen alanı kapatmasın */
+  }
+
+  .brand-group,
+  .brand-group-btn {
+    width: auto !important;
+    min-height: 42px !important;
+    padding: 4px 8px !important;
+    box-shadow: 3px 3px 0 #000000 !important;
+    gap: 8px !important;
+  }
+
+  .brand-icon {
+    width: 28px !important;
+    height: 28px !important;
+  }
+
+  .brand-info h1 {
+    font-size: 0.95rem !important;
+  }
+
+  .brand-info p {
+    display: none !important; /* Mobilde yer kazanmak için logoda alt metni gizle */
+  }
+
+  /* 2. Mobilde Başlık Olarak Açık Durup Göz Yoran Alanları Gizle */
+  .sidebar-plane > .module-bar,
+  .sidebar-plane > .nav-tabs,
+  .sidebar-plane > .sidebar-spacer,
+  .sidebar-plane > .sidebar-telemetry-footer {
+    display: none !important;
+  }
+
+  /* 3. Mobil Pencere Tetikleyici Butonları Göster */
+  .mobile-window-triggers {
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+  }
+
+  .mobile-trigger-btn {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+    min-height: 40px !important;
+    padding: 6px 10px !important;
+    background: var(--dp-color-surface) !important;
+    color: #000000 !important;
+    border: 3px solid #000000 !important;
+    box-shadow: 3px 3px 0 #000000 !important;
+    font-family: var(--dp-typography-face) !important;
+    font-size: 0.78rem !important;
+    font-weight: 800 !important;
+    text-transform: uppercase !important;
+    cursor: pointer !important;
+    transition: none !important;
+  }
+
+  .mobile-trigger-btn:active {
+    transform: translate(3px, 3px) !important;
+    box-shadow: none !important;
+  }
+
+  .m-trig-icon {
+    font-size: 0.95rem;
+    line-height: 1;
+  }
+
+  .m-trig-text {
+    letter-spacing: 0.02em;
+  }
+
+  /* 4. Daily Görünümündeki 4 Koca Kartı Mobilde Gizle, Tek Şık Pencere Şeridi Göster */
+  .welcome-module-hub .welcome-hub-top,
+  .welcome-module-hub .welcome-hub-grid {
+    display: none !important;
+  }
+
+  .mobile-curriculum-banner {
+    display: block !important;
+    margin-bottom: 16px !important;
+  }
+
+  .mobile-curriculum-open-btn {
+    width: 100% !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    padding: 12px 14px !important;
+    background: var(--dp-color-surface) !important;
+    border: 3px solid #000000 !important;
+    box-shadow: 4px 4px 0 #000000 !important;
+    font-family: var(--dp-typography-face) !important;
+    text-align: left !important;
+    cursor: pointer !important;
+  }
+
+  .mobile-curriculum-open-btn:active {
+    transform: translate(4px, 4px) !important;
+    box-shadow: none !important;
+  }
+
+  .mcb-badge {
+    font-family: var(--dp-typography-mono) !important;
+    font-size: 0.72rem !important;
+    font-weight: 800 !important;
+    background: var(--dp-color-field-support) !important;
+    color: #000000 !important;
+    padding: 2px 6px !important;
+    border: 2px solid #000000 !important;
+  }
+
+  .mcb-title {
+    font-size: 0.88rem !important;
+    font-weight: 800 !important;
+    color: var(--dp-color-ink) !important;
+    flex: 1 !important;
+    margin: 0 10px !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+  }
+
+  .mcb-action {
+    font-family: var(--dp-typography-mono) !important;
+    font-size: 0.72rem !important;
+    font-weight: 800 !important;
+    color: var(--dp-color-emphasis) !important;
+    white-space: nowrap !important;
+  }
+
+  /* 5. Bauhaus Modal Backdrop */
+  .bauhaus-modal-backdrop.active {
+    display: block !important;
+    position: fixed !important;
+    inset: 0 !important;
+    background: rgba(0, 0, 0, 0.7) !important;
+    z-index: 9998 !important;
+  }
+
+  /* 6. Bauhaus Pencere / Dialog Kapsayıcısı (Daha Kompakt & Nefes Alan Oranlar) */
+  .bauhaus-window-dialog.active {
+    display: flex !important;
+    flex-direction: column !important;
+    position: fixed !important;
+    top: 50% !important;
+    left: 50% !important;
+    transform: translate(-50%, -50%) !important;
+    width: 86% !important;
+    max-width: 360px !important;
+    max-height: 78vh !important;
+    background: var(--dp-color-surface) !important;
+    border: 3.5px solid #000000 !important;
+    box-shadow: 6px 6px 0 #000000 !important;
+    z-index: 9999 !important;
+    overflow: hidden !important;
+  }
+
+  /* Pencere Başlık Çubuğu */
+  .window-titlebar {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    padding: 7px 11px !important;
+    background: var(--dp-color-field-support) !important;
+    border-bottom: 2.5px solid #000000 !important;
+    flex-shrink: 0 !important;
+  }
+
+  .window-title-left {
+    display: flex !important;
+    align-items: center !important;
+    gap: 7px !important;
+  }
+
+  .window-title-square {
+    width: 10px !important;
+    height: 10px !important;
+    background: var(--dp-color-accent) !important;
+    border: 1.5px solid #000000 !important;
+    display: inline-block !important;
+  }
+
+  .window-title-text {
+    font-family: var(--dp-typography-face) !important;
+    font-size: 0.76rem !important;
+    font-weight: 800 !important;
+    color: #000000 !important;
+    letter-spacing: 0.03em !important;
+    text-transform: uppercase !important;
+  }
+
+  .window-close-btn {
+    font-family: var(--dp-typography-mono) !important;
+    font-size: 0.68rem !important;
+    font-weight: 800 !important;
+    padding: 3px 6px !important;
+    background: var(--dp-color-accent) !important;
+    color: #000000 !important;
+    border: 1.5px solid #000000 !important;
+    box-shadow: 1.5px 1.5px 0 #000000 !important;
+    cursor: pointer !important;
+  }
+
+  .window-close-btn:active {
+    transform: translate(1.5px, 1.5px) !important;
+    box-shadow: none !important;
+  }
+
+  /* Pencere Gövdesi */
+  .window-body {
+    padding: 11px 12px !important;
+    overflow-y: auto !important;
+    flex: 1 !important;
+  }
+
+  .window-body-desc {
+    font-family: var(--dp-typography-mono) !important;
+    font-size: 0.68rem !important;
+    color: var(--dp-color-ink-muted) !important;
+    margin-bottom: 9px !important;
+    font-weight: 600 !important;
+  }
+
+  /* Pencere İçi Butonlar */
+  .window-module-list,
+  .window-modes-grid {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 6px !important;
+  }
+
+  .window-item-btn {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 8px !important;
+    width: 100% !important;
+    min-height: 40px !important;
+    padding: 7px 10px !important;
+    background: var(--dp-color-surface) !important;
+    border: 2.5px solid #000000 !important;
+    box-shadow: 2.5px 2.5px 0 #000000 !important;
+    text-align: left !important;
+    cursor: pointer !important;
+    color: var(--dp-color-ink) !important;
+    font-family: var(--dp-typography-face) !important;
+  }
+
+  .window-item-btn:active {
+    transform: translate(2px, 2px) !important;
+    box-shadow: none !important;
+  }
+
+  /* Aktif Modül / View Pencere İçinde */
+  .window-item-btn.active {
+    background: var(--dp-color-field) !important;
+    color: var(--dp-color-field-support) !important;
+    border-left: 8px solid var(--dp-color-accent) !important;
+  }
+
+  .window-item-btn.active .w-item-title,
+  .window-item-btn.active .w-item-arrow,
+  .window-item-btn.active .w-num {
+    color: var(--dp-color-field-support) !important;
+    font-weight: 800 !important;
+  }
+
+  .window-item-btn.active .w-item-meta {
+    color: #FFFFFF !important;
+  }
+
+  .w-item-icon {
+    font-size: 0.95rem;
+    flex-shrink: 0;
+  }
+
+  .w-item-info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    min-width: 0;
+  }
+
+  .w-item-title {
+    font-size: 0.82rem;
+    font-weight: 800;
+    line-height: 1.15;
+    color: inherit;
+  }
+
+  .w-item-meta {
+    font-family: var(--dp-typography-mono);
+    font-size: 0.67rem;
+    color: var(--dp-color-ink-muted);
+    font-weight: 600;
+  }
+
+  .w-item-arrow {
+    font-size: 0.95rem;
+    font-weight: 800;
+    flex-shrink: 0;
+  }
+
+  .w-num {
+    font-family: var(--dp-typography-mono);
+    font-size: 0.72rem;
+    font-weight: 800;
+    color: var(--dp-color-ink-muted);
+    flex-shrink: 0;
+  }
+
+  /* Pencere İçi Ayarlar */
+  .window-sub-section {
+    margin-top: 10px !important;
+    padding-top: 9px !important;
+    border-top: 2px solid #000000 !important;
+  }
+
+  .window-sub-label {
+    font-family: var(--dp-typography-mono) !important;
+    font-size: 0.68rem !important;
+    font-weight: 800 !important;
+    color: var(--dp-color-ink) !important;
+    margin-bottom: 6px !important;
+  }
+
+  .window-settings-row {
+    display: grid !important;
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 6px !important;
+  }
+
+  .window-settings-row .ctrl-btn {
+    width: 100% !important;
+    min-height: 34px !important;
+    padding: 0 6px !important;
+    justify-content: center !important;
+    font-size: 0.72rem !important;
+  }
+}
+
+/* ==========================================================================
+   12. MOBİL BUTON & BREADCRUMB BOYUT KÜÇÜLTME (FERAH & KOMPAKT ORANLAR)
+   ========================================================================== */
+@media (max-width: 900px) {
+  /* 1. Üst Bar: Learnish, Maarif ve Kontrol Merkezi Tetikleyici Tuşları */
+  .sidebar-plane {
+    min-height: 44px !important;
+    border-bottom: 3px solid var(--dp-color-border) !important;
+  }
+
+  .sidebar-brand-cell {
+    padding: 4px 8px !important;
+    gap: 6px !important;
+  }
+
+  .brand-group,
+  .brand-group-btn {
+    min-height: 32px !important;
+    padding: 2px 6px !important;
+    border: 2px solid #000000 !important;
+    box-shadow: 2px 2px 0 #000000 !important;
+    gap: 5px !important;
+  }
+
+  .brand-icon-wrapper {
+    width: 22px !important;
+    height: 22px !important;
+  }
+
+  .brand-icon {
+    width: 22px !important;
+    height: 22px !important;
+  }
+
+    .brand-info h1 {
+    font-size: 0.82rem !important;
+    letter-spacing: -0.01em !important;
+  }
+
+  .mobile-window-triggers {
+    gap: 5px !important;
+  }
+
+  .mobile-trigger-btn {
+    min-height: 32px !important;
+    padding: 3px 8px !important;
+    border: 2px solid #000000 !important;
+    box-shadow: 2px 2px 0 #000000 !important;
+    font-size: 0.68rem !important;
+    gap: 4px !important;
+  }
+
+  .mobile-trigger-btn:active {
+    transform: translate(2px, 2px) !important;
+    box-shadow: none !important;
+  }
+
+  .m-trig-icon {
+    font-size: 0.80rem !important;
+  }
+
+  /* 2. Ana Ekran Breadcrumb Tuşları: Geri Dön, Maarif Modeli, Kontrol Merkezi */
+  .workspace-plane {
+    padding: 10px 10px 40px !important;
+  }
+
+  .breadcrumb-container {
+    padding: 6px 8px !important;
+    margin-bottom: 12px !important;
+    border: 2px solid var(--dp-color-border) !important;
+    box-shadow: 3px 3px 0 #000000 !important;
+    gap: 6px !important;
+  }
+
+  .breadcrumb-left {
+    gap: 5px !important;
+    align-items: center !important;
+  }
+
+  .breadcrumb-back-btn {
+    min-height: 28px !important;
+    min-width: 28px !important;
+    padding: 0 8px !important;
+    font-size: 0.65rem !important;
+    border: 1.5px solid var(--dp-color-border) !important;
+    box-shadow: 1.5px 1.5px 0 #000000 !important;
+    gap: 4px !important;
+  }
+
+  .breadcrumb-back-btn:active {
+    transform: translate(1.5px, 1.5px) !important;
+    box-shadow: none !important;
+  }
+
+  .breadcrumb-list {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 5px !important;
+  }
+
+  .breadcrumb-home-chip {
+    min-height: 28px !important;
+    padding: 0 8px !important;
+    font-size: 0.68rem !important;
+    border: 1.5px solid var(--dp-color-border) !important;
+    box-shadow: 1.5px 1.5px 0 #000000 !important;
+    gap: 4px !important;
+  }
+
+  .breadcrumb-home-chip:active {
+    transform: translate(1.5px, 1.5px) !important;
+    box-shadow: none !important;
+  }
+
+  .breadcrumb-home-chip .chip-home-icon svg {
+    width: 11px !important;
+    height: 11px !important;
+  }
+
+  .breadcrumb-sep {
+    font-size: 0.70rem !important;
+    color: var(--dp-color-ink-muted) !important;
+  }
+
+  .breadcrumb-item.active {
+    min-height: 28px !important;
+    padding: 0 8px !important;
+    font-size: 0.68rem !important;
+    border: 1.5px solid var(--dp-color-border) !important;
+    box-shadow: 1.5px 1.5px 0 #000000 !important;
+  }
+
+  .badge-live-container {
+    padding: 2px 6px !important;
+    min-height: 28px !important;
+  }
+
+  .breadcrumb-right .badge-day {
+    padding: 2px 6px !important;
+    font-size: 0.65rem !important;
+    border: 1.5px solid var(--dp-color-border) !important;
+  }
+
+  /* 3. Ana Ekranda (Kontrol Merkezi) Üst Banner ve Buton Boyutunu da Dengele */
+  .dash-target-banner {
+    padding: 14px !important;
+    gap: 12px !important;
+    box-shadow: 5px 5px 0 #000000 !important;
+  }
+
+  .dash-target-left {
+    padding: 4px !important;
+    gap: 6px !important;
+  }
+
+  .dash-target-subtitle {
+    font-size: 0.68rem !important;
+  }
+
+  .dash-target-title {
+    font-size: 1.35rem !important;
+    line-height: 1.1 !important;
+  }
+
+  .dash-guide-grid {
+    grid-template-columns: 1fr !important;
+    gap: 8px !important;
+    margin: 12px 0 10px 0 !important;
+  }
+
+  .dash-guide-step {
+    padding: 8px 10px !important;
+    box-shadow: 2px 2px 0 #000000 !important;
+  }
+
+  .guide-step-content {
+    font-size: 0.78rem !important;
+    line-height: 1.3 !important;
+  }
+
+  .guide-step-num {
+    font-size: 0.75rem !important;
+    padding: 2px 4px !important;
+  }
+
+  .dash-guide-footer-tip {
+    font-size: 0.72rem !important;
+    gap: 6px !important;
+    padding-top: 8px !important;
+  }
+
+  .kbd-mini {
+    font-size: 0.65rem !important;
+    padding: 0 4px !important;
+  }
+
+  .dash-target-right {
+    padding: 14px 8px !important;
+  }
+
+  .dash-primary-cta {
+    width: 140px !important;
+    height: 140px !important;
+    font-size: 0.78rem !important;
+    padding: 12px !important;
+    border: 3px solid #000000 !important;
+    box-shadow: 4px 4px 0 #000000 !important;
+  }
+
+  .dash-primary-cta::after {
+    font-size: 1.25rem !important;
   }
 }
