@@ -566,7 +566,7 @@
       STATE.userData.learned.add(wordId);
       STATE.userData.review.delete(wordId);
       const modMap = {
-        maarif: '5. SINIF MAARİF MODELİ',
+        maarif: 'MEB 5. SINIF MAARİF',
         yds: 'YDS & YÖKDİL AKADEMİK',
         oxford: 'THE OXFORD 5000',
         all: 'TÜM KÜTÜPHANE'
@@ -727,7 +727,7 @@
   function updateMobileTriggerLabels() {
     const titleEl = document.getElementById('header-user-title');
     const modTitles = {
-      maarif: '5. Sınıf Maarif Modeli',
+      maarif: 'MEB Müfredatı',
       yds: 'YDS & YÖKDİL Akademik',
       oxford: 'The Oxford 5000',
       all: 'Tüm Kütüphane'
@@ -749,7 +749,7 @@
     });
 
     const modTitles = {
-      maarif: '5. Sınıf Maarif Modeli',
+      maarif: 'MEB Müfredatı',
       yds: 'YDS & YÖKDİL Akademik',
       oxford: 'The Oxford 5000',
       all: 'Tüm Kütüphane'
@@ -762,7 +762,7 @@
     // Update brand info subtitle - Architectural micro-goal telemetry
     const brandSub = document.getElementById('app-brand-subtitle');
     if (brandSub) {
-      if (moduleName === 'maarif') brandSub.innerText = '5. Sınıf Maarif Modeli • Günlük Hedef: 10 Kelime';
+      if (moduleName === 'maarif') brandSub.innerText = 'MEB Müfredatı • 5. Sınıf Maarif Modeli (817 Kelime)';
       else if (moduleName === 'yds') brandSub.innerText = 'YDS & YÖKDİL Akademik • Günlük Hedef: 20 Kelime';
       else if (moduleName === 'oxford') brandSub.innerText = 'The Oxford 5000 • Günlük Hedef: 25 Kelime';
       else brandSub.innerText = 'Tüm Kütüphane • Akademik Kelime Arşivi';
@@ -787,11 +787,11 @@
       STATE.directoryPage = 1;
       STATE.flashcardSource = 'yds_all';
     } else if (moduleName === 'maarif') {
-      if (dailyText) dailyText.innerText = "Günün 10'lusu";
-      if (flashText) flashText.innerText = "Maarif Kartları";
-      if (quizText) quizText.innerText = "Maarif Quiz";
-      if (dirText) dirText.innerText = "8 Tema Havuzu";
-      if (statsText) statsText.innerText = "Kazanım Analizi";
+      if (dailyText) dailyText.innerText = "MEB Günün 10'lusu";
+      if (flashText) flashText.innerText = "MEB Kartları";
+      if (quizText) quizText.innerText = "MEB Quiz";
+      if (dirText) dirText.innerText = "MEB 5. Sınıf Havuzu";
+      if (statsText) statsText.innerText = "MEB Kazanım Analizi";
       STATE.directoryFilters.dataset = 'maarif';
       STATE.directoryFilters.cefr = 'all';
       STATE.directoryFilters.search = '';
@@ -896,18 +896,18 @@
 
     const module = STATE.activeModule;
     const curriculumSubtitles = {
-      maarif: '[ HEDEF MÜFREDAT ] 5. SINIF MAARİF MODELİ',
+      maarif: '[ MEB MÜFREDATI ] 5. SINIF MAARİF MODELİ',
       yds: '[ HEDEF MÜFREDAT ] YDS & YÖKDİL AKADEMİK',
       oxford: '[ HEDEF MÜFREDAT ] THE OXFORD 5000',
       all: '[ HEDEF MÜFREDAT ] TÜM AKADEMİK KÜTÜPHANE'
     };
-    const activeCurriculumSubtitle = curriculumSubtitles[module] || '[ HEDEF MÜFREDAT ] 5. SINIF MAARİF MODELİ';
+    const activeCurriculumSubtitle = curriculumSubtitles[module] || '[ MEB MÜFREDATI ] 5. SINIF MAARİF MODELİ';
 
     const unitTitles = {
-      maarif: 'Unit 4: My Daily Routine (5. Sınıf Maarif)',
-      yds: 'Module 4: Academic Verbs & Clauses (YDS/YÖKDİL)',
-      oxford: 'CEFR B2: Core Academic Lexicon (Oxford 5000)',
-      all: 'Akademik Arşiv: 6.658 Kelimelik Birleşik Kütüphane'
+      maarif: 'MEB 5. Sınıf Maarif • Unit 4: My Daily Routine',
+      yds: 'YDS/YÖKDİL • Module 4: Academic Verbs & Clauses',
+      oxford: 'Oxford 5000 • CEFR B2: Core Academic Lexicon',
+      all: 'Learnish Arşiv: 6.658 Kelimelik Birleşik Kütüphane'
     };
     const activeUnitTitle = unitTitles[module] || 'Unit 4: My Daily Routine';
 
@@ -1167,8 +1167,8 @@
       batchSize = 10;
       const curThemeNum = (targetPool[(STATE.currentDay - 1) * batchSize] && targetPool[(STATE.currentDay - 1) * batchSize].themeNum) || Math.min(8, Math.max(1, Math.ceil(STATE.currentDay / 10)));
       const curTheme = (typeof THEMES_DATA !== 'undefined' && THEMES_DATA[curThemeNum]) ? THEMES_DATA[curThemeNum] : { titleTr: 'Okul Yaşamı' };
-      bannerTitle = `GÜN ${STATE.currentDay} • TEMA ${curThemeNum}: ${(curTheme.titleTr || curTheme.title || 'Okul Yaşamı').toUpperCase()}`;
-      bannerDesc = `5. Sınıf İngilizce Maarif Modeli günlük ${batchSize} kelimelik odaklı çalışma.`;
+      bannerTitle = `GÜN ${STATE.currentDay} • MEB 5. SINIF MAARİF • TEMA ${curThemeNum}: ${(curTheme.titleTr || curTheme.title || 'Okul Yaşamı').toUpperCase()}`;
+      bannerDesc = `MEB 5. Sınıf İngilizce Maarif Modeli günlük ${batchSize} kelimelik odaklı çalışma.`;
     }
     const totalDays = Math.ceil(targetPool.length / batchSize) || 1;
     if (STATE.currentDay > totalDays) STATE.currentDay = 1;
@@ -1456,7 +1456,7 @@
         <option value="yds_b2" ${sourceVal === 'yds_b2' ? 'selected' : ''}>B2 Orta-İleri (1.537 Kelime)</option>
       ` : `
         <option value="daily" ${sourceVal === 'daily' ? 'selected' : ''}>Günün Kelimeleri (Gün ${STATE.currentDay})</option>
-        <option value="maarif_all" ${sourceVal === 'maarif_all' ? 'selected' : ''}>5. Sınıf Maarif Modeli (817 Kelime)</option>
+        <option value="maarif_all" ${sourceVal === 'maarif_all' ? 'selected' : ''}>MEB: 5. Sınıf Maarif Modeli (817 Kelime)</option>
         <option value="yds_all" ${sourceVal === 'yds_all' ? 'selected' : ''}>YDS & YÖKDİL Akademik (2.894 Kelime)</option>
         <option value="oxford_all" ${sourceVal === 'oxford_all' ? 'selected' : ''}>The Oxford 5000 (Tümü - 5.841)</option>
         <option value="oxford_a1" ${sourceVal === 'oxford_a1' ? 'selected' : ''}>Oxford 5000: A1 Başlangıç</option>
@@ -1680,7 +1680,7 @@
                     <option value="daily">Günün 20 Hedefi (YDS Gün ${STATE.currentDay})</option>
                   ` : `
                     <option value="daily">Günün 10 Kelimesi (Gün ${STATE.currentDay})</option>
-                    <option value="maarif">5. Sınıf Maarif Modeli</option>
+                    <option value="maarif">MEB: 5. Sınıf Maarif Modeli</option>
                     <option value="oxford_all">The Oxford 5000 (Tüm Havuz)</option>
                     <option value="all">Tüm Kelime Havuzu (${WORDS_DATA.length})</option>
                   `}
@@ -2095,7 +2095,7 @@
             <div class="filter-chips-group" id="dataset-chips">
               <button class="filter-chip ${filters.dataset === 'all' ? 'active' : ''}" data-val="all">TÜM KÜTÜPHANELER (${WORDS_DATA.length})</button>
               <button class="filter-chip ${filters.dataset === 'oxford' ? 'active' : ''}" data-val="oxford">THE OXFORD 5000 (5.841)</button>
-              <button class="filter-chip ${filters.dataset === 'maarif' ? 'active' : ''}" data-val="maarif">5. SINIF MAARİF MODELİ (817)</button>
+              <button class="filter-chip ${filters.dataset === 'maarif' ? 'active' : ''}" data-val="maarif">MEB: 5. SINIF MAARİF (817)</button>
             </div>
           </div>
         `}
@@ -2300,7 +2300,7 @@
 
     // Aktif Müfredat Verileri (Home'dan taşınan hedef kontrolü)
     const curMaarifThemeNum = Math.min(8, Math.max(1, Math.ceil(STATE.currentDay / 10)));
-    let activeCurriculumTitle = '5. Sınıf Maarif Modeli';
+    let activeCurriculumTitle = 'MEB Müfredatı (5. Sınıf Maarif)';
     let activeFocusName = THEMES_DATA[curMaarifThemeNum]?.titleTr ? `Tema ${curMaarifThemeNum}: ${THEMES_DATA[curMaarifThemeNum].titleTr}` : 'Tüm Temalar';
     let activeWords = maarifWords;
     let activeLearned = maarifLearned;
@@ -2369,7 +2369,7 @@
       <div class="stats-summary-grid">
         <div class="stat-metric-card glass-panel">
           <div class="metric-val">${maarifLearned} <span style="font-size: 0.9rem; color: var(--dp-color-ink-muted);">/ ${maarifWords.length}</span></div>
-          <div class="metric-title">5. SINIF MAARİF MODELİ (%${maarifPct})</div>
+          <div class="metric-title">MEB 5. SINIF MAARİF (%${maarifPct})</div>
         </div>
         <div class="stat-metric-card glass-panel">
           <div class="metric-val" style="color: var(--dp-color-accent-ink);">${ydsLearned} <span style="font-size: 0.9rem; color: var(--dp-color-ink-muted);">/ ${ydsWords.length}</span></div>
@@ -2394,7 +2394,7 @@
 
       <div class="themes-breakdown-card glass-panel" style="margin-bottom: 20px;">
         <h3 style="margin-bottom: 14px; text-transform: uppercase; letter-spacing: 0.03em;">
-          5. SINIF MAARİF MODELİ (8 TEMA İLERLEMESİ)
+          MEB 5. SINIF MAARİF MODELİ (8 TEMA KAZANIM İLERLEMESİ)
         </h3>
         ${themesBreakdownHtml}
       </div>
@@ -2428,7 +2428,7 @@
     const backBtn = document.getElementById('breadcrumb-back-btn');
 
     const moduleNames = {
-      maarif: '5. SINIF MAARİF MODELİ',
+      maarif: 'MEB MÜFREDATI • 5. SINIF',
       yds: 'YDS & YÖKDİL AKADEMİK',
       oxford: 'THE OXFORD 5000',
       all: 'TÜM KÜTÜPHANE'
@@ -2616,7 +2616,7 @@
     const titleEl = document.getElementById('header-user-title');
     const labelEl = document.getElementById('header-greeting-label');
     const modTitles = {
-      maarif: '5. Sınıf Maarif Modeli',
+      maarif: 'MEB Müfredatı',
       yds: 'YDS & YÖKDİL Akademik',
       oxford: 'The Oxford 5000',
       all: 'Tüm Kütüphane'
