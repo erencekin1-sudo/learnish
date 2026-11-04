@@ -657,34 +657,32 @@
   // ==========================================================================
   function openCurriculumModal() {
     closeModals();
-    const backdrop = document.getElementById('bauhaus-modal-backdrop');
-    const modal = document.getElementById('modal-curriculum');
-    if (backdrop && modal) {
-      backdrop.classList.add('active');
-      modal.classList.add('active');
-      document.body.classList.add('modal-open');
-    }
+  function openSettingsModal() {
+    const backdrop = document.getElementById('settings-modal-backdrop');
+    const dialog = document.getElementById('settings-dialog');
+    if (backdrop) backdrop.classList.add('active');
+    if (dialog) dialog.classList.add('active');
+    document.body.classList.add('modal-open');
+  }
+
+  function closeSettingsModal() {
+    const backdrop = document.getElementById('settings-modal-backdrop');
+    const dialog = document.getElementById('settings-dialog');
+    if (backdrop) backdrop.classList.remove('active');
+    if (dialog) dialog.classList.remove('active');
+    document.body.classList.remove('modal-open');
+  }
+
+  function openCurriculumModal() {
+    openSettingsModal();
   }
 
   function openModesModal() {
-    closeModals();
-    const backdrop = document.getElementById('bauhaus-modal-backdrop');
-    const modal = document.getElementById('modal-modes');
-    if (backdrop && modal) {
-      backdrop.classList.add('active');
-      modal.classList.add('active');
-      document.body.classList.add('modal-open');
-    }
+    openSettingsModal();
   }
 
   function closeModals() {
-    const backdrop = document.getElementById('bauhaus-modal-backdrop');
-    const currModal = document.getElementById('modal-curriculum');
-    const modesModal = document.getElementById('modal-modes');
-    if (backdrop) backdrop.classList.remove('active');
-    if (currModal) currModal.classList.remove('active');
-    if (modesModal) modesModal.classList.remove('active');
-    document.body.classList.remove('modal-open');
+    closeSettingsModal();
   }
 
   function switchModuleAndClose(moduleKey) {
@@ -697,49 +695,71 @@
     closeModals();
   }
 
+  function handleFabAction() {
+    if (STATE.currentView === 'home') {
+      switchView('daily');
+    } else if (STATE.currentView === 'daily') {
+      startDailyQuiz();
+    } else if (STATE.currentView === 'flashcard') {
+      startDailyQuiz();
+    } else if (STATE.currentView === 'quiz') {
+      startQuizSession(10);
+    } else {
+      switchView('daily');
+    }
+  }
+
+  function speakWord(wordText, onEndCallback) {
+    if (!wordText || !('speechSynthesis' in window)) return;
+    try {
+      window.speechSynthesis.cancel();
+      const utterance = new SpeechSynthesisUtterance(wordText);
+      utterance.lang = STATE.settings.accent || 'en-GB';
+      utterance.rate = STATE.settings.speed || 1.0;
+      if (typeof onEndCallback === 'function') {
+        utterance.onend = onEndCallback;
+        utterance.onerror = onEndCallback;
+      }
+      window.speechSynthesis.speak(utterance);
+    } catch (err) {
+      console.warn('Speech synthesis error:', err);
+    }
+  }
+
   function updateMobileTriggerLabels() {
-    const currLabel = document.getElementById('mobile-curr-label');
-    const modeLabel = document.getElementById('mobile-mode-label');
-
+    const titleEl = document.getElementById('header-user-title');
     const modTitles = {
-      maarif: '5. Sınıf Maarif',
-      yds: 'YDS/YÖKDİL',
-      oxford: 'Oxford 5000',
-      all: 'Tüm Havuz'
+      maarif: '5. Sınıf Maarif Modeli',
+      yds: 'YDS & YÖKDİL Akademik',
+      oxford: 'The Oxford 5000',
+      all: 'Tüm Kütüphane'
     };
-    if (currLabel) {
-      currLabel.textContent = (modTitles[STATE.activeModule] || 'Müfredat') + ' ▾';
+    if (titleEl && STATE.currentView === 'home') {
+      titleEl.textContent = modTitles[STATE.activeModule] || '5. Sınıf Maarif Modeli';
     }
-
-    const viewTitles = {
-      home: 'Kontrol Merkezi',
-      daily: STATE.activeModule === 'yds' ? "Günün 20'si" : "Günün 10'lusu",
-      flashcard: 'Flashcard',
-      quiz: 'Quiz & Test',
-      directory: 'Kelime Havuzu',
-      stats: 'İstatistik'
-    };
-    if (modeLabel) {
-      modeLabel.textContent = (viewTitles[STATE.currentView] || 'Menü') + ' ▾';
-    }
-
-    // Modal içindeki aktif sınıflar
-    document.querySelectorAll('.window-item-btn[data-mod-id]').forEach(btn => {
-      btn.classList.toggle('active', btn.getAttribute('data-mod-id') === STATE.activeModule);
-    });
-    document.querySelectorAll('.window-item-btn[data-view-id]').forEach(btn => {
-      btn.classList.toggle('active', btn.getAttribute('data-view-id') === STATE.currentView);
-    });
   }
 
   function switchModule(moduleName) {
     STATE.activeModule = moduleName;
     localStorage.setItem('learnish_active_module', moduleName);
 
-    // Update active tab buttons in top bar
+    // Update active tab buttons in horizontal scroll selector
     document.querySelectorAll('.module-btn').forEach(btn => {
-      btn.classList.toggle('active', btn.getAttribute('data-module') === moduleName);
+      const isActive = btn.getAttribute('data-module') === moduleName;
+      btn.classList.toggle('active', isActive);
+      btn.setAttribute('aria-selected', isActive ? 'true' : 'false');
     });
+
+    const modTitles = {
+      maarif: '5. Sınıf Maarif Modeli',
+      yds: 'YDS & YÖKDİL Akademik',
+      oxford: 'The Oxford 5000',
+      all: 'Tüm Kütüphane'
+    };
+    const titleEl = document.getElementById('header-user-title');
+    if (titleEl && STATE.currentView === 'home') {
+      titleEl.textContent = modTitles[moduleName] || '5. Sınıf Maarif Modeli';
+    }
 
     // Update brand info subtitle - Architectural micro-goal telemetry
     const brandSub = document.getElementById('app-brand-subtitle');
@@ -969,154 +989,142 @@
     }
 
     container.innerHTML = `
-      <div class="dashboard-matrix">
+      <!-- HERO FEATURE CARD (40px Radius & Atmospheric Depth) -->
+      <article class="hero-feature-card">
+        <!-- 1. Semi-transparent decorative blob (#b7c6c2/20) in top-right -->
+        <div class="hero-decorative-blob" aria-hidden="true"></div>
 
-        <!-- 1. LEARNISH ÇALIŞMA REHBERİ & TAVSİYELER (Row 1 / Col-span: 12) -->
-        <header class="dash-target-banner dash-guide-banner">
-          <div class="dash-target-left">
-            <div class="dash-target-subtitle">[ REHBER &amp; METODOLOJİ ] ÖNERİLEN ÇALIŞMA ADIMLARI</div>
-            <h1 class="dash-target-title">Learnish ile Nasıl İlerlemelisin?</h1>
-            
-            <div class="dash-guide-grid">
-              <div class="dash-guide-step">
-                <span class="guide-step-num">01</span>
-                <div class="guide-step-content">
-                  <strong>Günün Hedefi:</strong> Her gün belirlenen mikro kelime havuzunu tamamla, bilişsel yorgunluğu önle.
-                </div>
-              </div>
-              <div class="dash-guide-step">
-                <span class="guide-step-num">02</span>
-                <div class="guide-step-content">
-                  <strong>Flashcard &amp; Telaffuz:</strong> Kartları çevirip sesini dinle; zorlandıklarını "Tekrar Et"e al.
-                </div>
-              </div>
-              <div class="dash-guide-step">
-                <span class="guide-step-num">03</span>
-                <div class="guide-step-content">
-                  <strong>Quiz &amp; Aktif Hatırlama:</strong> Test modlarıyla kendini sına; yanlışların zayıf halkalara kaydedilir.
-                </div>
-              </div>
-              <div class="dash-guide-step">
-                <span class="guide-step-num">04</span>
-                <div class="guide-step-content">
-                  <strong>Aralıklı Tekrar:</strong> Hata ayıklama listendeki kelimeleri düzenli test ederek belleğini kalıcı kıl.
-                </div>
-              </div>
-            </div>
+        <!-- 2. 64x64px white square icon holder with an emoji -->
+        <div class="hero-icon-holder" aria-hidden="true">
+          <span>🎯</span>
+        </div>
 
-            <div class="dash-guide-footer-tip">
-              <span class="guide-tip-tag">İPUCU:</span> Klavye kısayolları ile hızlanın: <kbd class="kbd-mini">SPACE</kbd> Çevir, <kbd class="kbd-mini">P</kbd> Dinle, <kbd class="kbd-mini">1</kbd> Tekrar, <kbd class="kbd-mini">2</kbd> Öğrendim.
+        <!-- Labels & Headings -->
+        <div class="hero-label-wrap">
+          <span class="hero-tag-label">${activeCurriculumSubtitle}</span>
+          <h2 class="hero-card-title">${activeUnitTitle}</h2>
+          <p class="hero-card-desc">Günün mikro kelime hedefini tamamlayarak aktif kelime dağarcığını kalıcı kıl.</p>
+        </div>
+
+        <!-- 3. Nested 2-column grid for metrics (Bento Metric Cards) -->
+        <div class="bento-metrics-grid">
+          <div class="bento-metric-card">
+            <span class="bento-card-title">GÜNLÜK SERİ</span>
+            <div class="bento-card-content">
+              <div class="bento-circular-icon">🔥</div>
+              <span class="bento-val">${streakFormatted}</span>
             </div>
           </div>
-          <div class="dash-target-right">
-            <button type="button" class="dash-primary-cta" onclick="window.APP.switchView('daily')">
-              GÜNÜN 10'LUSUNU BAŞLAT
-            </button>
-          </div>
-        </header>
 
-        <!-- 2. TELEMETRY GRID (Row 2 / Col-span: 12 -> 3 equal columns inside) -->
-        <section class="dash-telemetry-row" aria-label="Sistem Telemetri Metrikleri">
-          <!-- Card 1 (Streak) -->
-          <article class="dash-telemetry-card">
-            <div class="dash-telemetry-header">
-              <span class="dash-telemetry-label">SİSTEM AKTİFLİĞİ</span>
-              <span class="dash-telemetry-index">[01]</span>
-            </div>
-            <div class="dash-telemetry-value-wrap">
-              <span class="dash-telemetry-value">${streakFormatted}</span>
-            </div>
-            <div class="dash-telemetry-foot">KESİNTİSİZ OTURUM SERİSİ</div>
-          </article>
-
-          <!-- Card 2 (Total Words) -->
-          <article class="dash-telemetry-card">
-            <div class="dash-telemetry-header">
-              <span class="dash-telemetry-label">ÖĞRENİLEN KELİME</span>
-              <span class="dash-telemetry-index">[02]</span>
-            </div>
-            <div class="dash-telemetry-value-wrap">
-              <span class="dash-telemetry-value">${learnedCount} KELİME</span>
-            </div>
-            <div class="dash-telemetry-foot">DOĞRULANMIŞ KALICI BELLEK</div>
-          </article>
-
-          <!-- Card 3 (Accuracy) -->
-          <article class="dash-telemetry-card">
-            <div class="dash-telemetry-header">
-              <span class="dash-telemetry-label">İSABET ORANI</span>
-              <span class="dash-telemetry-index">[03]</span>
-            </div>
-            <div class="dash-telemetry-value-wrap">
-              <span class="dash-success-square" aria-hidden="true"></span>
-              <span class="dash-telemetry-value">${accuracyText}</span>
-            </div>
-            <div class="dash-telemetry-foot">SİMÜLATÖR &amp; TEST PERFORMANSI</div>
-          </article>
-        </section>
-
-        <!-- 3. DEBUG QUEUE & HEATMAP (Row 3 / Col-span: 6 + 6) -->
-        <!-- Block A (Debug Queue - 6 cols) -->
-        <section class="dash-debug-panel" aria-labelledby="dash-debug-heading">
-          <div class="dash-module-header">
-            <h2 class="dash-module-title" id="dash-debug-heading">HATA AYIKLAMA (ZAYIF HALKALAR)</h2>
-            <span class="dash-module-tag">[DEBUG_QUEUE]</span>
-          </div>
-          <div class="dash-debug-list">
-            ${debugListHtml}
-          </div>
-        </section>
-
-        <!-- Block B (Mastery Heatmap - 6 cols) -->
-        <section class="dash-heatmap-panel" aria-labelledby="dash-heatmap-heading">
-          <div class="dash-module-header">
-            <h2 class="dash-module-title" id="dash-heatmap-heading">KAZANIM MATRİSİ</h2>
-            <span class="dash-module-tag">[UNIT_MATRIX]</span>
-          </div>
-          <div class="dash-heatmap-body">
-            <div class="dash-heatmap-grid" role="group" aria-label="Ünite Kazanım Matrisi">
-              ${heatmapSquaresHtml}
-            </div>
-            <div class="dash-heatmap-legend">
-              <span>8 ÜNİTE • 48 KAZANIM HÜCRESİ</span>
-              <div class="dash-legend-items">
-                <span class="dash-legend-item">
-                  <span class="dash-legend-swatch unlearned"></span>
-                  <span>BEKLEYEN</span>
-                </span>
-                <span class="dash-legend-item">
-                  <span class="dash-legend-swatch mastered"></span>
-                  <span>TAMAMLANAN</span>
-                </span>
-              </div>
+          <div class="bento-metric-card">
+            <span class="bento-card-title">ÖĞRENİLEN KELİME</span>
+            <div class="bento-card-content">
+              <div class="bento-circular-icon">📖</div>
+              <span class="bento-val">${learnedCount} KELİME</span>
             </div>
           </div>
-        </section>
 
-        <!-- 4. TERMINAL LOG / RECENT ACTIVITY (Row 4 / Col-span: 12) -->
-        <section class="dash-terminal-panel" aria-labelledby="dash-terminal-heading">
-          <div class="dash-module-header">
-            <h2 class="dash-module-title" id="dash-terminal-heading">AKTİVİTE LOG DEFTERİ</h2>
-            <span class="dash-module-tag">[SYS_LOG]</span>
+          <div class="bento-metric-card">
+            <span class="bento-card-title">İSABET ORANI</span>
+            <div class="bento-card-content">
+              <div class="bento-circular-icon">🎯</div>
+              <span class="bento-val">${accuracyText}</span>
+            </div>
           </div>
-          <div class="dash-terminal-table-wrap">
-            <table class="dash-terminal-table">
-              <thead>
-                <tr>
-                  <th scope="col">TARİH</th>
-                  <th scope="col">MODÜL</th>
-                  <th scope="col">İŞLEM</th>
-                  <th scope="col">SONUÇ</th>
-                </tr>
-              </thead>
-              <tbody>
-                ${terminalRowsHtml}
-              </tbody>
-            </table>
-          </div>
-        </section>
 
-      </div>
+          <div class="bento-metric-card">
+            <span class="bento-card-title">ÇALIŞMA GÜNÜ</span>
+            <div class="bento-card-content">
+              <div class="bento-circular-icon">⚡</div>
+              <span class="bento-val">GÜN ${STATE.currentDay} / 82</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 4. Alert/info box at the bottom using #b7c6c2/20 background -->
+        <div class="hero-alert-box">
+          <span class="alert-icon">💡</span>
+          <span class="alert-text"><strong>Günün Tavsiyesi:</strong> Günde 10 kelimelik aralıklı tekrarlar uzun vadeli kelime kalıcılığını 4 kat hızlandırır.</span>
+        </div>
+
+        <!-- Primary High-Impact CTA in Red (#ca0013) -->
+        <button type="button" class="hero-primary-cta-btn" onclick="window.APP.switchView('daily')">
+          <span>${module === 'yds' ? "GÜNÜN 20'SİNİ BAŞLAT" : "GÜNÜN 10'LUSUNU BAŞLAT"}</span>
+          <span class="cta-arrow">→</span>
+        </button>
+      </article>
+
+      <!-- SECONDARY FEED ITEMS (24px Radius, White, #b7c6c2/30 Border) -->
+      <section class="secondary-feed-section" aria-label="Öğrenim Akışı ve Aktiviteler">
+        <div class="feed-section-heading">
+          <span>ÖĞRENİM AKIŞI &amp; AKTİVİTELER</span>
+          <span class="feed-section-badge">GÜNLÜK MODÜLLER</span>
+        </div>
+
+        <!-- Feed Item 1: Tekrar Kuyruğu -->
+        <div class="secondary-feed-card">
+          <div class="feed-icon-box">🔁</div>
+          <div class="feed-content-wrap">
+            <h4 class="feed-card-title">Hata Ayıklama &amp; Tekrar Kuyruğu</h4>
+            <p class="feed-card-desc">
+              ${reviewWords.length > 0
+                ? `${reviewWords.length} kelime tekrar bekliyor: <strong>${reviewWords.map(w => w.en).join(', ')}</strong>`
+                : 'Tekrar listeniz temiz, harika gidiyorsunuz!'}
+            </p>
+          </div>
+          <button type="button" class="feed-trailing-btn" onclick="window.APP.switchView('flashcard')" aria-label="Tekrarı Başlat" title="Tekrarı Başlat">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+          </button>
+        </div>
+
+        <!-- Feed Item 2: Flashcard -->
+        <div class="secondary-feed-card">
+          <div class="feed-icon-box">🗂️</div>
+          <div class="feed-content-wrap">
+            <h4 class="feed-card-title">Flashcard İnceleme Kartları</h4>
+            <p class="feed-card-desc">İki yüzlü interaktif kartlar, fonetik telaffuz ve örnek cümle bağlamları.</p>
+          </div>
+          <button type="button" class="feed-trailing-btn" onclick="window.APP.switchView('flashcard')" aria-label="Kartları İncele" title="Kartları İncele">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+          </button>
+        </div>
+
+        <!-- Feed Item 3: Quiz Test -->
+        <div class="secondary-feed-card">
+          <div class="feed-icon-box">⚡</div>
+          <div class="feed-content-wrap">
+            <h4 class="feed-card-title">Kazanım Sınavı &amp; Aktif Hatırlama</h4>
+            <p class="feed-card-desc">Çoktan seçmeli, dinleme ve anlam eşleştirme sorularıyla kendini sına.</p>
+          </div>
+          <button type="button" class="feed-trailing-btn" onclick="window.APP.switchView('quiz')" aria-label="Testi Başlat" title="Testi Başlat">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+          </button>
+        </div>
+
+        <!-- Feed Item 4: Kelime Havuzu -->
+        <div class="secondary-feed-card">
+          <div class="feed-icon-box">📚</div>
+          <div class="feed-content-wrap">
+            <h4 class="feed-card-title">Kelime Kütüphanesi &amp; Arama</h4>
+            <p class="feed-card-desc">6.658 kelimelik birleşik sözlük veritabanında anında arama ve filtreleme.</p>
+          </div>
+          <button type="button" class="feed-trailing-btn" onclick="window.APP.switchView('directory')" aria-label="Kütüphaneye Git" title="Kütüphaneye Git">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+          </button>
+        </div>
+
+        <!-- Feed Item 5: İstatistikler -->
+        <div class="secondary-feed-card">
+          <div class="feed-icon-box">📊</div>
+          <div class="feed-content-wrap">
+            <h4 class="feed-card-title">Öğrenim Telemetrisi &amp; Analiz</h4>
+            <p class="feed-card-desc">Tema bazlı ilerleme, başarı grafiği ve çalışma oturumu geçmişi.</p>
+          </div>
+          <button type="button" class="feed-trailing-btn" onclick="window.APP.switchView('stats')" aria-label="İstatistikleri İncele" title="İstatistikleri İncele">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+          </button>
+        </div>
+      </section>
     `;
   }
 
@@ -2347,10 +2355,10 @@
             </div>
           </div>
           <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
-            <button class="ctrl-btn" onclick="window.APP.switchView('directory')" style="font-size: 0.78rem; padding: 6px 12px; background: var(--dp-color-ground); border: 2px solid #000000; box-shadow: 3px 3px 0 #000000;">
+            <button class="ctrl-btn" onclick="window.APP.switchView('directory')" style="font-size: 0.78rem; padding: 6px 12px; background: var(--dp-color-ground); border: 2px solid var(--dp-color-border); box-shadow: 3px 3px 0 #000000;">
               📚 KELİME DİZİNİ
             </button>
-            <button class="ctrl-btn" onclick="window.APP.switchView('quiz')" style="font-size: 0.78rem; padding: 6px 12px; background: var(--dp-color-field-support); color: #000000; border: 2px solid #000000; box-shadow: 3px 3px 0 #000000;">
+            <button class="ctrl-btn" onclick="window.APP.switchView('quiz')" style="font-size: 0.78rem; padding: 6px 12px; background: var(--dp-color-field-support); color: #000000; border: 2px solid var(--dp-color-border); box-shadow: 3px 3px 0 #000000;">
               ⚡ KAZANIM TESTİ
             </button>
           </div>
@@ -2365,7 +2373,7 @@
               %${activePct} (${activeLearned} / ${activeWords.length} KELİME)
             </span>
           </div>
-          <div style="height: 16px; border: 2px solid #000000; background: var(--dp-color-surface); overflow: hidden;">
+          <div style="height: 16px; border: 2px solid var(--dp-color-border); background: var(--dp-color-surface); overflow: hidden;">
             <div style="height: 100%; width: ${activePct}%; background: var(--dp-color-field); transition: width 0.3s cubic-bezier(0.2, 0, 0, 1);"></div>
           </div>
         </div>
@@ -2583,9 +2591,19 @@
   }
 
   // ==========================================================================
-  // VIEW SWITCHER & DISPATCHER
+  // VIEW SWITCHER & DISPATCHER (With 0.25s View-Transition Fade)
   // ==========================================================================
   function switchView(viewName, pushHash = true) {
+    if (document.startViewTransition) {
+      document.startViewTransition(() => {
+        executeSwitchView(viewName, pushHash);
+      });
+    } else {
+      executeSwitchView(viewName, pushHash);
+    }
+  }
+
+  function executeSwitchView(viewName, pushHash = true) {
     STATE.currentView = viewName;
     if (!STATE.viewHistory) STATE.viewHistory = ['home'];
     if (STATE.viewHistory[STATE.viewHistory.length - 1] !== viewName) {
@@ -2608,7 +2626,31 @@
       sec.classList.toggle('active', sec.id === `view-${viewName}`);
     });
 
-    updateBreadcrumb(viewName);
+    const titleEl = document.getElementById('header-user-title');
+    const labelEl = document.getElementById('header-greeting-label');
+    const modTitles = {
+      maarif: '5. Sınıf Maarif Modeli',
+      yds: 'YDS & YÖKDİL Akademik',
+      oxford: 'The Oxford 5000',
+      all: 'Tüm Kütüphane'
+    };
+    const viewLabels = {
+      home: 'GÜNLÜK HEDEF • LEARNISH',
+      daily: 'GÜNLÜK ÇALIŞMA • WORKOUT',
+      flashcard: 'FLASHCARD • KART İNCELEME',
+      quiz: 'KAZANIM SINAVI • TEST',
+      directory: 'KELİME HAVUZU • ARAMA',
+      stats: 'ÖĞRENİM TELEMETRİSİ • ANALİZ'
+    };
+    if (labelEl) labelEl.textContent = viewLabels[viewName] || 'GÜNLÜK HEDEF • LEARNISH';
+    if (titleEl) {
+      if (viewName === 'home') titleEl.textContent = modTitles[STATE.activeModule] || 'İngilizce Çalışması';
+      else if (viewName === 'daily') titleEl.textContent = STATE.activeModule === 'yds' ? "Günün 20'si" : "Günün 10'lusu";
+      else if (viewName === 'flashcard') titleEl.textContent = 'Flashcard Kartları';
+      else if (viewName === 'quiz') titleEl.textContent = 'Quiz & Test';
+      else if (viewName === 'directory') titleEl.textContent = 'Kelime Havuzu';
+      else if (viewName === 'stats') titleEl.textContent = 'İstatistik & Analiz';
+    }
 
     if (viewName === 'home') renderHomeView();
     if (viewName === 'daily') renderDailyView();
@@ -3066,6 +3108,10 @@
   // ==========================================================================
   function initApp() {
     document.documentElement.setAttribute('data-theme', STATE.settings.theme);
+    const metaThemeColor = document.querySelector('meta[name="theme-color"]');
+    if (metaThemeColor) {
+      metaThemeColor.setAttribute('content', STATE.settings.theme === 'dark' ? '#0A0A0A' : '#F5F4EE');
+    }
 
     // Apply saved module
     switchModule(STATE.activeModule);
@@ -3127,6 +3173,10 @@
       STATE.settings.theme = STATE.settings.theme === 'dark' ? 'light' : 'dark';
       document.documentElement.setAttribute('data-theme', STATE.settings.theme);
       localStorage.setItem('mk_theme', STATE.settings.theme);
+      const metaThemeColor = document.querySelector('meta[name="theme-color"]');
+      if (metaThemeColor) {
+        metaThemeColor.setAttribute('content', STATE.settings.theme === 'dark' ? '#0A0A0A' : '#F5F4EE');
+      }
       syncAllSettingsButtons();
     }
 

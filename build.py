@@ -374,9 +374,10 @@ const WORDS_DATA = %s;
     with open(os.path.join(BASE_DIR, 'app.js'), 'r', encoding='utf-8') as f:
         app_js = f.read()
 
-    bundle_html = index_html.replace(
-        '<link rel="stylesheet" href="app.css">',
-        f'<style>\n{app_css}\n</style>'
+    bundle_html = re.sub(
+        r'<link rel="stylesheet" href="app\.css.*?">',
+        f'<style>\n{app_css}\n</style>',
+        index_html
     )
     bundle_html = bundle_html.replace(
         '<script src="words-data.js?v=817"></script>\n  <script src="app.js?v=817"></script>',

@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="tr" data-theme="dark">
+<html lang="tr" data-theme="light">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,9 +7,10 @@
   
   <!-- Meta & SEO -->
   <meta name="description" content="Learnish: 5. Sınıf Maarif Modeli, YDS/YÖKDİL Akademik Hazırlık ve The Oxford 5000 (A1-C1) 6.658 kelimelik interaktif İngilizce kelime çalışma platformu.">
-  <meta name="theme-color" content="#0D0E12">
+  <meta name="theme-color" content="#F5F4EE">
+  <meta name="color-scheme" content="light dark">
   <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <meta name="apple-mobile-web-app-title" content="Learnish">
   
   <!-- App Icons & Manifest -->
@@ -26,53 +27,61 @@
   <style>
 /**
  * ============================================================================
- * LEARNISH • DARK GEOMETRIC & AMBER PRECISION DESIGN SYSTEM
- * Aesthetic: Adult, Academic, Mechanical Neo-Brutalist
+ * LEARNISH • BAUHAUS DESIGN SYSTEM
+ * Aesthetic: off-white, black, red, blue and yellow planes with heavy seams
  * Typography: Host Grotesk (Display/Body) + JetBrains Mono (Telemetry/Data)
  * ============================================================================
  */
 
 :root {
-  /* Temel Mimari Yüzeyler (Logonun karanlık teması) */
-  --dp-color-ground: #0D0E12;          /* Derin Gece Siyahı - Ana arka plan */
-  --dp-color-surface: #181A20;         /* Koyu Antrasit - Aktif çalışma kartları ve paneller */
-  --dp-color-quiet: #242730;           /* Pasif/İkincil paneller */
-  
-  /* Logodan Alınan Vurgu Renkleri */
-  --dp-color-accent: #E89D1F;          /* Altın/Kehribar - Ana butonlar, aktif vurgular */
-  --dp-color-field: #54311C;           /* Koyu Kahve/Amber - İkincil başlıklar ve destek alanları */
-  --dp-color-field-support: #FCE179;   /* Açık Sayfa Sarısı - Seçili şıklar, streak vurguları */
-  
-  /* Metin ve Sınır Renkleri */
-  --dp-color-ink: #F4F1EA;             /* Kırık Beyaz - Ana metinler (Okunabilirlik için) */
-  --dp-color-ink-muted: #8B8E98;       /* Gri - İkincil metinler, etiketler (WCAG AA >= 4.55:1 on #242730) */
-  --dp-color-border: #2A2D37;          /* Paneller için standart çerçeve rengi */
-  --dp-color-border-accent: #E89D1F;   /* Aktif/Hover durumları için Altın çerçeve */
-  
-  /* Geri Bildirim Renkleri */
-  --dp-color-success: #2E7D32;         /* Doğru cevap çerçeve/vurgu */
-  --dp-color-success-bg: rgba(46, 125, 50, 0.15);
-  --dp-color-error: #D32F2F;           /* Yanlış cevap çerçeve/vurgu */
-  --dp-color-error-bg: rgba(211, 47, 47, 0.15);
+  /* Bauhaus: off-white, black, red, blue and yellow planes */
+  --dp-color-ground: #F5F4EE;          /* Off-white ground */
+  --dp-color-surface: #FFFFFF;         /* Paper plane for working cards */
+  --dp-color-quiet: #E8E8E8;           /* Quiet secondary plane */
 
-  /* Tipografi */
-  --dp-typography-face: 'Host Grotesk', -apple-system, BlinkMacSystemFont, sans-serif;
+  --dp-color-accent: #FF0000;          /* Red action plane */
+  --dp-color-field: #0000FF;           /* Blue field */
+  --dp-color-field-support: #FFFF00;   /* Yellow plane / text on blue */
+  --dp-color-on-field: #FFFFFF;
+  --dp-color-on-accent: #000000;
+  --dp-color-accent-ink: #C40000;      /* Red that stays legible as small text */
+  --dp-color-emphasis: #0000FF;        /* Emphasis text on ground/surface */
+
+  --dp-color-ink: #000000;
+  --dp-color-ink-muted: #3F3F3F;
+  --dp-color-border: #000000;
+  --dp-color-border-accent: #0000FF;
+
+  --dp-color-success: #00743A;
+  --dp-color-success-bg: rgba(0, 116, 58, 0.14);
+  --dp-color-error: #C40000;
+  --dp-color-error-bg: rgba(196, 0, 0, 0.12);
+
+  /* Typography */
+  --dp-typography-face: 'Host Grotesk', 'Bauhaus Host', -apple-system, BlinkMacSystemFont, sans-serif;
   --dp-typography-mono: 'JetBrains Mono', monospace;
-  --dp-typography-body: 1.0625rem;     
-  --dp-typography-label: 0.9375rem;    
-  --dp-typography-caption: 0.8125rem;  
+  --dp-typography-body: 1.125rem;
+  --dp-typography-reading: 1.0625rem;
+  --dp-typography-label: 0.9375rem;
+  --dp-typography-caption: 0.875rem;
   --dp-typography-weight-display: 800;
-  --dp-typography-weight-action: 700;
+  --dp-typography-weight-action: 750;
+  --dp-typography-weight-label: 650;
+  --dp-typography-weight-reading: 450;
+  --dp-typography-reading-leading: 1.5;
 
-  /* Geometri ve Mekanik Gölgeler */
+  /* Geometry & hard shadows */
   --dp-radius-square: 0px;
-  --dp-border-heavy: 2px solid var(--dp-color-border);
+  --dp-radius-circle: 50%;
+  --dp-border-rule: 4px;
+  --dp-border-rule-compact: 3px;
+  --dp-border-heavy: 3px solid var(--dp-color-border);
   --dp-shadow-hard-lg: 6px 6px 0px #000000;
   --dp-shadow-hard-md: 4px 4px 0px #000000;
   --dp-shadow-none: 0px 0px 0px transparent;
-  --dp-motion-snap: 80ms cubic-bezier(0.2, 0, 0, 1);
+  --dp-motion-snap: 0s;
 
-  /* Legacy Alias Bridges (Mapped strictly to Dark Geometric tokens) */
+  /* Legacy Alias Bridges */
   --bg-primary: var(--dp-color-ground);
   --bg-surface: var(--dp-color-surface);
   --bg-quiet: var(--dp-color-quiet);
@@ -83,36 +92,34 @@
   --border-subtle: var(--dp-color-border);
   --border-highlight: var(--dp-color-border-accent);
   --accent-amber: var(--dp-color-accent);
-  --accent-emerald: var(--dp-color-field-support);
-  --accent-blue: var(--dp-color-accent);
-  --accent-cyan: var(--dp-color-field-support);
+  --accent-emerald: var(--dp-color-success);
+  --accent-blue: var(--dp-color-field);
+  --accent-cyan: var(--dp-color-field);
   --accent-rose: var(--dp-color-error);
   --maarif-accent: var(--dp-color-accent);
-  --yds-accent: var(--dp-color-field-support);
+  --yds-accent: var(--dp-color-field);
   --oxford-accent: var(--dp-color-accent);
   --font-heading: var(--dp-typography-face);
   --font-body: var(--dp-typography-face);
   --font-mono: var(--dp-typography-mono);
 }
 
-/* Archival Paper Mode (Optional Light Contrast Parity) */
-[data-theme="light"] {
-  --dp-color-ground: #F4F1EA;
-  --dp-color-surface: #FFFFFF;
-  --dp-color-quiet: #E6E1D6;
-  --dp-color-accent: #C47D0E;
-  --dp-color-field: #F5E6C8;
-  --dp-color-field-support: #54311C;
-  --dp-color-ink: #0D0E12;
-  --dp-color-ink-muted: #4A4D57;
-  --dp-color-border: #0D0E12;
-  --dp-color-border-accent: #C47D0E;
-  --dp-color-success: #1B5E20;
-  --dp-color-success-bg: rgba(27, 94, 32, 0.12);
-  --dp-color-error: #B71C1C;
-  --dp-color-error-bg: rgba(183, 28, 28, 0.12);
-  --dp-shadow-hard-lg: 6px 6px 0px #0D0E12;
-  --dp-shadow-hard-md: 4px 4px 0px #0D0E12;
+/* Bauhaus Night: same planes on a black ground */
+[data-theme="dark"] {
+  --dp-color-ground: #0A0A0A;
+  --dp-color-surface: #161616;
+  --dp-color-quiet: #262626;
+  --dp-color-accent: #FF2A2A;
+  --dp-color-accent-ink: #FF5A5A;
+  --dp-color-emphasis: #FFFF00;
+  --dp-color-ink: #F5F4EE;
+  --dp-color-ink-muted: #BDBDB5;
+  --dp-color-border: #F5F4EE;
+  --dp-color-border-accent: #FFFF00;
+  --dp-color-success: #2BD070;
+  --dp-color-success-bg: rgba(43, 208, 112, 0.16);
+  --dp-color-error: #FF5A5A;
+  --dp-color-error-bg: rgba(255, 90, 90, 0.16);
 }
 
 /* ==========================================================================
@@ -131,11 +138,11 @@ html {
   scroll-padding-top: 140px;
   background-color: var(--dp-color-ground);
   color: var(--dp-color-ink);
-  color-scheme: dark;
+  color-scheme: light;
 }
 
-[data-theme="light"] {
-  color-scheme: light;
+[data-theme="dark"] {
+  color-scheme: dark;
 }
 
 body {
@@ -192,31 +199,133 @@ body {
 }
 
 /* ==========================================================================
-   1. TOP MODULE SWITCHER BAR
+   1. APP LAYOUT CONTAINER & LEFT SIDEBAR (.app-layout & .sidebar-plane)
    ========================================================================== */
-.module-bar {
+.app-layout {
+  display: flex;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
   background-color: var(--dp-color-ground);
-  border-bottom: var(--dp-border-heavy);
-  padding: 10px 20px;
 }
 
-.module-bar-container {
-  max-width: 1360px;
-  margin: 0 auto;
+.sidebar-plane {
+  width: 280px;
+  flex-shrink: 0;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  border-right: 2px solid var(--dp-color-border);
+  background-color: var(--dp-color-ground);
+  overflow-y: auto;
+  overflow-x: hidden;
+  z-index: 100;
+}
+
+.sidebar-section-label {
+  font-family: var(--dp-typography-mono);
+  font-size: 0.75rem;
+  font-weight: 800;
+  color: var(--dp-color-ink-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-bottom: 6px;
+}
+
+/* 1.1 Brand / Logo Cell */
+.sidebar-brand-cell {
+  padding: 12px 14px;
+  border-bottom: 2px solid var(--dp-color-border);
+  background-color: var(--dp-color-ground);
+}
+
+.brand-group,
+.brand-group-btn {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  background-color: var(--dp-color-surface);
+  border: var(--dp-border-heavy);
+  padding: 8px 12px;
+  min-height: 54px;
+  cursor: pointer;
+  text-align: left;
+  box-shadow: var(--dp-shadow-hard-md);
+  transition: transform var(--dp-motion-snap), box-shadow var(--dp-motion-snap), border-color var(--dp-motion-snap);
+}
+
+.brand-group-btn:hover {
+  border-color: var(--dp-color-border-accent);
+  transform: translate(-1px, -1px);
+  box-shadow: 5px 5px 0px #000000;
+}
+
+.brand-group-btn:active {
+  transform: translate(4px, 4px);
+  box-shadow: var(--dp-shadow-none);
+}
+
+.brand-icon-wrapper {
+  position: relative;
+  display: inline-flex;
+  flex-shrink: 0;
+}
+
+.brand-icon {
+  width: 36px;
+  height: 36px;
+  border: 2px solid var(--dp-color-border-accent);
+  object-fit: contain;
+  flex-shrink: 0;
+  background-color: var(--dp-color-ground);
+}
+
+.brand-info {
+  min-width: 0;
+}
+
+.brand-info h1 {
+  font-family: var(--dp-typography-face);
+  font-size: 1.15rem;
+  font-weight: var(--dp-typography-weight-display);
+  letter-spacing: -0.02em;
+  color: var(--dp-color-ink);
+  line-height: 1.1;
+  text-transform: uppercase;
+}
+
+.brand-info p {
+  font-family: var(--dp-typography-mono);
+  font-size: 0.75rem;
+  color: var(--dp-color-ink-muted);
+  font-weight: 600;
+  margin-top: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* 1.2 Curriculum / Module Selector (.module-bar) */
+.module-bar {
+  background-color: var(--dp-color-ground);
+  border-bottom: 2px solid var(--dp-color-border);
+  padding: 12px 14px;
 }
 
 .module-tabs {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 
 .module-btn {
   display: flex;
   align-items: center;
-  gap: 12px;
-  min-height: 56px;
-  padding: 10px 14px;
+  gap: 10px;
+  width: 100%;
+  min-height: 50px;
+  padding: 8px 10px;
   background-color: var(--dp-color-surface);
   border: var(--dp-border-heavy);
   color: var(--dp-color-ink);
@@ -242,6 +351,7 @@ body {
 .module-btn.active {
   background-color: var(--dp-color-surface);
   border: 2px solid var(--dp-color-border-accent);
+  border-left: 6px solid var(--dp-color-accent);
   box-shadow: var(--dp-shadow-hard-md);
 }
 
@@ -249,8 +359,8 @@ body {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 36px;
-  height: 36px;
+  width: 32px;
+  height: 32px;
   background-color: var(--dp-color-quiet);
   border: 2px solid var(--dp-color-border);
   color: var(--dp-color-ink);
@@ -271,7 +381,7 @@ body {
 }
 
 .mod-title {
-  font-size: var(--dp-typography-label);
+  font-size: 0.875rem;
   font-weight: var(--dp-typography-weight-display);
   color: var(--dp-color-ink);
   line-height: 1.2;
@@ -284,9 +394,6 @@ body {
   color: var(--dp-color-field-support);
 }
 
-[data-theme="light"] .module-btn.active .mod-title {
-  color: var(--dp-color-ink);
-}
 
 .mod-meta {
   font-family: var(--dp-typography-mono);
@@ -299,163 +406,30 @@ body {
   text-overflow: ellipsis;
 }
 
-/* ==========================================================================
-   2. STICKY APP SUB-HEADER
-   ========================================================================== */
-.app-header {
-  position: sticky;
-  top: 0;
-  z-index: 100;
-  background-color: var(--dp-color-ground);
-  border-bottom: var(--dp-border-heavy);
-  padding: 12px 20px;
-}
-
-.header-container {
-  max-width: 1360px;
-  margin: 0 auto;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 14px;
-  flex-wrap: wrap;
-}
-
-.brand-group,
-.brand-group-btn {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  background-color: var(--dp-color-surface);
-  border: var(--dp-border-heavy);
-  padding: 6px 12px;
-  min-height: 48px;
-  cursor: pointer;
-  flex-shrink: 0;
-  text-align: left;
-  box-shadow: var(--dp-shadow-hard-md);
-  transition: transform var(--dp-motion-snap), box-shadow var(--dp-motion-snap), border-color var(--dp-motion-snap);
-}
-
-.brand-group-btn:hover {
-  border-color: var(--dp-color-border-accent);
-  transform: translate(-1px, -1px);
-  box-shadow: 5px 5px 0px #000000;
-}
-
-.brand-group-btn:active {
-  transform: translate(4px, 4px);
-  box-shadow: var(--dp-shadow-none);
-}
-
-.brand-icon-wrapper {
-  position: relative;
-  display: inline-flex;
-  flex-shrink: 0;
-}
-
-.brand-icon {
-  width: 38px;
-  height: 38px;
-  border: 2px solid var(--dp-color-border-accent);
-  object-fit: contain;
-  flex-shrink: 0;
-  background-color: var(--dp-color-ground);
-}
-
-.brand-home-pill {
-  position: absolute;
-  bottom: -4px;
-  right: -6px;
-  background-color: var(--dp-color-accent);
-  color: #0D0E12;
-  font-family: var(--dp-typography-mono);
-  font-size: 0.75rem;
-  font-weight: 800;
-  padding: 0px 4px;
-  border: 1px solid #0D0E12;
-  line-height: 1.2;
-  pointer-events: none;
-}
-
-.brand-info h1 {
-  font-family: var(--dp-typography-face);
-  font-size: 1.15rem;
-  font-weight: var(--dp-typography-weight-display);
-  letter-spacing: -0.02em;
-  color: var(--dp-color-ink);
-  line-height: 1.1;
-  text-transform: uppercase;
-}
-
-.brand-info p {
-  font-family: var(--dp-typography-mono);
-  font-size: 0.75rem;
-  color: var(--dp-color-ink-muted);
-  font-weight: 600;
-  margin-top: 2px;
-}
-
-/* Prominent Home Button */
-.nav-home-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  min-height: 44px;
-  padding: 0 14px;
-  border: var(--dp-border-heavy);
-  background-color: var(--dp-color-surface);
-  color: var(--dp-color-ink);
-  font-family: var(--dp-typography-mono);
-  font-size: var(--dp-typography-caption);
-  font-weight: var(--dp-typography-weight-action);
-  text-transform: uppercase;
-  cursor: pointer;
-  box-shadow: var(--dp-shadow-hard-md);
-  transition: transform var(--dp-motion-snap), box-shadow var(--dp-motion-snap), border-color var(--dp-motion-snap), background-color var(--dp-motion-snap);
-  flex-shrink: 0;
-}
-
-.nav-home-btn:hover {
-  background-color: var(--dp-color-quiet);
-  border-color: var(--dp-color-border-accent);
-  color: var(--dp-color-field-support);
-  transform: translate(-1px, -1px);
-  box-shadow: 5px 5px 0px #000000;
-}
-
-.nav-home-btn:active {
-  transform: translate(4px, 4px);
-  box-shadow: var(--dp-shadow-none);
-}
-
-.nav-home-btn .home-icon {
-  display: inline-flex;
-  align-items: center;
-  color: var(--dp-color-accent);
-}
-
-/* Navigation Tabs */
+/* 1.3 Navigation Links (.nav-tabs) */
 .nav-tabs {
   display: flex;
+  flex-direction: column;
   background-color: var(--dp-color-ground);
   gap: 8px;
-  align-items: center;
-  flex-wrap: wrap;
+  padding: 12px 14px;
 }
 
 .nav-btn {
-  display: inline-flex;
+  display: flex;
   align-items: center;
-  gap: 8px;
+  justify-content: flex-start;
+  width: 100%;
+  gap: 10px;
   min-height: 44px;
-  padding: 0 16px;
+  padding: 0 12px;
   background-color: var(--dp-color-surface);
   border: var(--dp-border-heavy);
   color: var(--dp-color-ink-muted);
   font-family: var(--dp-typography-face);
   font-size: var(--dp-typography-label);
   font-weight: var(--dp-typography-weight-action);
+  text-align: left;
   cursor: pointer;
   box-shadow: var(--dp-shadow-hard-md);
   transition: transform var(--dp-motion-snap), box-shadow var(--dp-motion-snap), border-color var(--dp-motion-snap), background-color var(--dp-motion-snap), color var(--dp-motion-snap);
@@ -475,38 +449,86 @@ body {
 }
 
 .nav-btn.active {
-  background-color: var(--dp-color-accent);
-  border-color: var(--dp-color-accent);
-  color: #0D0E12;
+  background-color: var(--dp-color-surface);
+  border-color: var(--dp-color-border-accent);
+  border-left: 6px solid var(--dp-color-accent);
+  color: var(--dp-color-field-support);
   font-weight: var(--dp-typography-weight-display);
   box-shadow: var(--dp-shadow-hard-md);
+}
+
+
+.nav-index {
+  font-family: var(--dp-typography-mono);
+  font-size: 0.78rem;
+  font-weight: 800;
+  color: var(--dp-color-ink-muted);
+  flex-shrink: 0;
+}
+
+.nav-btn.active .nav-index {
+  color: var(--dp-color-accent);
 }
 
 .nav-btn-icon {
   display: inline-flex;
   align-items: center;
+  flex-shrink: 0;
 }
 
-/* Header Settings Controls */
-.header-actions {
+.nav-btn.active .nav-btn-icon {
+  color: var(--dp-color-accent);
+}
+
+.nav-btn-label {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* 1.4 Spacer */
+.sidebar-spacer {
+  flex-grow: 1;
+  min-height: 12px;
+}
+
+/* 1.5 Telemetry & Goal Footer */
+.sidebar-telemetry-footer {
+  border-top: 2px solid var(--dp-color-border);
+  background-color: var(--dp-color-ground);
+  padding: 12px 14px;
   display: flex;
-  align-items: center;
-  gap: 8px;
-  flex-wrap: wrap;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.sidebar-telemetry-slot {
+  width: 100%;
+}
+
+.sidebar-telemetry-slot .badge-live-progress {
+  width: 100%;
+  min-width: 0;
+}
+
+.header-actions {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 6px;
 }
 
 .ctrl-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
-  min-height: 44px;
-  padding: 0 14px;
+  gap: 6px;
+  min-height: 40px;
+  padding: 0 10px;
   background-color: var(--dp-color-surface);
   border: var(--dp-border-heavy);
   color: var(--dp-color-ink);
   font-family: var(--dp-typography-mono);
-  font-size: var(--dp-typography-caption);
+  font-size: 0.75rem;
   font-weight: var(--dp-typography-weight-action);
   cursor: pointer;
   box-shadow: var(--dp-shadow-hard-md);
@@ -516,14 +538,11 @@ body {
 .ctrl-btn:hover {
   background-color: var(--dp-color-quiet);
   border-color: var(--dp-color-border-accent);
-  color: var(--dp-color-field-support);
+  color: var(--dp-color-emphasis);
   transform: translate(-1px, -1px);
   box-shadow: 5px 5px 0px #000000;
 }
 
-[data-theme="light"] .ctrl-btn:hover {
-  color: var(--dp-color-ink);
-}
 
 .ctrl-btn:active {
   transform: translate(4px, 4px);
@@ -531,12 +550,114 @@ body {
 }
 
 /* ==========================================================================
-   3. MAIN WRAPPER & BREADCRUMB COMPASS
+   2. MAIN WORKSPACE PLANE (.workspace-plane) & BREADCRUMB COMPASS
    ========================================================================== */
-.main-wrapper {
-  max-width: 1360px;
-  margin: 0 auto;
-  padding: 24px 20px 64px;
+.workspace-plane {
+  flex-grow: 1;
+  height: 100vh;
+  overflow-y: auto;
+  background-color: var(--dp-color-surface);
+  padding: 24px 28px 64px;
+}
+
+/* Welcome Module Hub Banner on #daily */
+.welcome-module-hub {
+  background-color: var(--dp-color-ground);
+  border: var(--dp-border-heavy);
+  box-shadow: var(--dp-shadow-hard-lg);
+  padding: 18px 20px;
+  margin-bottom: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.welcome-hub-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.welcome-hub-title {
+  font-family: var(--dp-typography-face);
+  font-size: 1.05rem;
+  font-weight: var(--dp-typography-weight-display);
+  color: var(--dp-color-ink);
+  text-transform: uppercase;
+  letter-spacing: -0.01em;
+}
+
+.welcome-hub-sub {
+  font-family: var(--dp-typography-mono);
+  font-size: 0.78rem;
+  color: var(--dp-color-ink-muted);
+}
+
+.welcome-hub-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+}
+
+.welcome-mod-card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 6px;
+  padding: 12px 14px;
+  min-height: 76px;
+  background-color: var(--dp-color-surface);
+  border: var(--dp-border-heavy);
+  color: var(--dp-color-ink);
+  text-align: left;
+  cursor: pointer;
+  box-shadow: var(--dp-shadow-hard-md);
+  transition: transform var(--dp-motion-snap), box-shadow var(--dp-motion-snap), border-color var(--dp-motion-snap), background-color var(--dp-motion-snap);
+}
+
+.welcome-mod-card:hover {
+  background-color: var(--dp-color-quiet);
+  border-color: var(--dp-color-border-accent);
+  transform: translate(-1px, -1px);
+  box-shadow: 5px 5px 0px #000000;
+}
+
+.welcome-mod-card:active {
+  transform: translate(4px, 4px);
+  box-shadow: var(--dp-shadow-none);
+}
+
+.welcome-mod-card.active {
+  border-color: var(--dp-color-border-accent);
+  border-left: 6px solid var(--dp-color-accent);
+  background-color: var(--dp-color-field);
+}
+
+.welcome-mod-name {
+  font-family: var(--dp-typography-face);
+  font-size: 0.9rem;
+  font-weight: var(--dp-typography-weight-display);
+  color: var(--dp-color-ink);
+  line-height: 1.25;
+}
+
+.welcome-mod-card.active .welcome-mod-name {
+  color: var(--dp-color-field-support);
+}
+
+
+.welcome-mod-badge {
+  font-family: var(--dp-typography-mono);
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--dp-color-ink-muted);
+}
+
+.welcome-mod-card.active .welcome-mod-badge {
+  color: var(--dp-color-ink);
 }
 
 .view-section {
@@ -588,7 +709,7 @@ body {
 
 .breadcrumb-back-btn:hover {
   border-color: var(--dp-color-border-accent);
-  color: var(--dp-color-field-support);
+  color: var(--dp-color-emphasis);
   transform: translate(-1px, -1px);
   box-shadow: 5px 5px 0px #000000;
 }
@@ -626,7 +747,7 @@ body {
 
 .breadcrumb-home-chip:hover {
   border-color: var(--dp-color-border-accent);
-  color: var(--dp-color-field-support);
+  color: var(--dp-color-emphasis);
   transform: translate(-1px, -1px);
   box-shadow: 5px 5px 0px #000000;
 }
@@ -639,7 +760,7 @@ body {
 .breadcrumb-home-chip .chip-home-icon {
   display: inline-flex;
   align-items: center;
-  color: var(--dp-color-accent);
+  color: var(--dp-color-accent-ink);
 }
 
 .breadcrumb-item.active {
@@ -655,9 +776,6 @@ body {
   font-weight: var(--dp-typography-weight-action);
 }
 
-[data-theme="light"] .breadcrumb-item.active {
-  color: var(--dp-color-ink);
-}
 
 .breadcrumb-sep {
   font-family: var(--dp-typography-mono);
@@ -713,21 +831,18 @@ body {
 }
 
 .badge-live-counter {
-  color: var(--dp-color-field-support);
+  color: var(--dp-color-emphasis);
   white-space: nowrap;
   font-family: var(--dp-typography-mono);
 }
 
-[data-theme="light"] .badge-live-counter {
-  color: var(--dp-color-ink);
-}
 
 .badge-live-stars,
 .badge-streak-flame {
   font-family: var(--dp-typography-mono);
   font-size: 0.75rem;
   font-weight: 800;
-  color: var(--dp-color-accent);
+  color: var(--dp-color-accent-ink);
   text-transform: uppercase;
 }
 
@@ -759,7 +874,7 @@ body {
   min-height: 38px;
   padding: 6px 14px;
   background-color: var(--dp-color-ground);
-  color: var(--dp-color-field-support);
+  color: var(--dp-color-emphasis);
   border: 2px solid var(--dp-color-border-accent);
   font-family: var(--dp-typography-mono);
   font-size: var(--dp-typography-caption);
@@ -798,13 +913,10 @@ body {
 }
 
 .hero-info p strong {
-  color: var(--dp-color-field-support);
+  color: var(--dp-color-emphasis);
   font-family: var(--dp-typography-mono);
 }
 
-[data-theme="light"] .hero-info p strong {
-  color: var(--dp-color-ink);
-}
 
 .day-picker-control {
   display: flex;
@@ -829,7 +941,7 @@ body {
 
 .day-step-btn:hover:not(:disabled) {
   border-color: var(--dp-color-border-accent);
-  color: var(--dp-color-field-support);
+  color: var(--dp-color-emphasis);
   transform: translate(-1px, -1px);
   box-shadow: 5px 5px 0px #000000;
 }
@@ -884,7 +996,7 @@ body {
 }
 
 .progress-header strong {
-  color: var(--dp-color-field-support);
+  color: var(--dp-color-emphasis);
 }
 
 .progress-track {
@@ -942,9 +1054,6 @@ body {
   margin-bottom: 4px;
 }
 
-[data-theme="light"] .celebration-body h3 {
-  color: var(--dp-color-ink);
-}
 
 .celebration-body p {
   font-size: var(--dp-typography-label);
@@ -1038,9 +1147,6 @@ body {
   background-color: var(--dp-color-field);
 }
 
-[data-theme="light"] .cefr-pill {
-  color: var(--dp-color-ink);
-}
 
 .yds-prep-tag {
   background-color: var(--dp-color-accent);
@@ -1126,13 +1232,10 @@ body {
   font-family: var(--dp-typography-face);
   font-size: 1.15rem;
   font-weight: var(--dp-typography-weight-action);
-  color: var(--dp-color-field-support);
+  color: var(--dp-color-emphasis);
   line-height: 1.35;
 }
 
-[data-theme="light"] .word-tr {
-  color: var(--dp-color-accent);
-}
 
 .word-pos {
   font-family: var(--dp-typography-mono);
@@ -1159,9 +1262,6 @@ body {
   padding: 6px 10px;
 }
 
-[data-theme="light"] .yds-syn-tag {
-  color: var(--dp-color-ink);
-}
 
 .word-example {
   font-size: var(--dp-typography-label);
@@ -1232,9 +1332,6 @@ body {
   color: var(--dp-color-field-support);
 }
 
-[data-theme="light"] .status-badge-btn.review {
-  color: var(--dp-color-ink);
-}
 
 .star-btn {
   display: inline-flex;
@@ -1253,7 +1350,7 @@ body {
 
 .star-btn:hover {
   border-color: var(--dp-color-border-accent);
-  color: var(--dp-color-accent);
+  color: var(--dp-color-accent-ink);
   transform: translate(-1px, -1px);
   box-shadow: 5px 5px 0px #000000;
 }
@@ -1319,9 +1416,6 @@ body {
   align-items: center;
 }
 
-[data-theme="light"] .flashcard-counter {
-  color: var(--dp-color-ink);
-}
 
 .card-scene {
   width: 100%;
@@ -1399,12 +1493,9 @@ body {
   font-family: var(--dp-typography-face);
   font-size: 2rem;
   font-weight: var(--dp-typography-weight-display);
-  color: var(--dp-color-field-support);
+  color: var(--dp-color-emphasis);
 }
 
-[data-theme="light"] .fc-word-tr {
-  color: var(--dp-color-accent);
-}
 
 .fc-category-desc {
   font-family: var(--dp-typography-mono);
@@ -1491,15 +1582,12 @@ body {
   padding: 2px 6px;
   background-color: var(--dp-color-ground);
   border: 1px solid var(--dp-color-border-accent);
-  color: var(--dp-color-field-support);
+  color: var(--dp-color-emphasis);
   font-family: var(--dp-typography-mono);
   font-size: 0.75rem;
   font-weight: var(--dp-typography-weight-action);
 }
 
-[data-theme="light"] .kbd-badge {
-  color: var(--dp-color-ink);
-}
 
 /* ==========================================================================
    6. VIEW 3: QUIZ & SIMULATOR (#quiz)
@@ -1544,13 +1632,10 @@ body {
 .resume-quiz-meta {
   font-family: var(--dp-typography-mono);
   font-size: var(--dp-typography-caption);
-  color: var(--dp-color-field-support);
+  color: var(--dp-color-emphasis);
   margin-top: 4px;
 }
 
-[data-theme="light"] .resume-quiz-meta {
-  color: var(--dp-color-ink);
-}
 
 .resume-quiz-actions {
   display: flex;
@@ -1689,7 +1774,7 @@ body {
 
 .cloze-blank {
   font-family: var(--dp-typography-mono);
-  color: var(--dp-color-accent);
+  color: var(--dp-color-accent-ink);
   font-weight: 800;
   text-decoration: underline;
   text-underline-offset: 4px;
@@ -1798,12 +1883,9 @@ body {
   font-family: var(--dp-typography-face);
   font-size: 1.5rem;
   font-weight: var(--dp-typography-weight-display);
-  color: var(--dp-color-field-support);
+  color: var(--dp-color-emphasis);
 }
 
-[data-theme="light"] .feedback-word-en {
-  color: var(--dp-color-ink);
-}
 
 .feedback-word-pos {
   font-family: var(--dp-typography-mono);
@@ -1958,6 +2040,60 @@ body {
   border-top: 1px solid var(--dp-color-border);
 }
 
+/* Bauhaus Directory Pagination */
+.dir-pagination-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin: 24px 0 32px 0;
+  padding: 14px 18px;
+  background: var(--dp-color-surface);
+  border: var(--dp-border-rule) solid var(--dp-color-border);
+  box-shadow: 4px 4px 0 #000000;
+}
+
+.dir-page-btn {
+  font-family: var(--dp-typography-face);
+  font-weight: 800;
+  font-size: 0.85rem;
+  letter-spacing: 0.02em;
+  padding: 8px 16px;
+  background: var(--dp-color-ground);
+  color: var(--dp-color-ink);
+  border: var(--dp-border-rule-compact) solid var(--dp-color-border);
+  box-shadow: 2px 2px 0 #000000;
+  cursor: pointer;
+  transition: none;
+}
+
+.dir-page-btn:hover:not(:disabled) {
+  background: var(--dp-color-field-support);
+  color: #000000;
+}
+
+.dir-page-btn:active:not(:disabled) {
+  transform: translate(2px, 2px);
+  box-shadow: none;
+}
+
+.dir-page-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+.dir-page-indicator {
+  font-family: var(--dp-typography-mono);
+  font-size: 0.85rem;
+  font-weight: 800;
+  padding: 6px 14px;
+  background: var(--dp-color-surface);
+  color: var(--dp-color-ink);
+  border: var(--dp-border-rule-compact) solid var(--dp-color-border);
+}
+
 /* ==========================================================================
    8. VIEW 5: TELEMETRY & ANALYTICS (#stats)
    ========================================================================== */
@@ -1979,14 +2115,11 @@ body {
   font-family: var(--dp-typography-mono);
   font-size: 2rem;
   font-weight: var(--dp-typography-weight-display);
-  color: var(--dp-color-field-support);
+  color: var(--dp-color-emphasis);
   line-height: 1.1;
   margin-bottom: 6px;
 }
 
-[data-theme="light"] .metric-val {
-  color: var(--dp-color-ink);
-}
 
 .metric-title {
   font-family: var(--dp-typography-mono);
@@ -2066,23 +2199,485 @@ body {
 }
 
 /* ==========================================================================
+   8B. IDE COMMAND CENTER / #HOME DASHBOARD MATRIX
+   ========================================================================== */
+.dashboard-matrix {
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  gap: 24px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+/* ROW 1: PROGRESS & TARGET BANNER (Col-span: 12) */
+.dash-target-banner {
+  grid-column: span 12;
+  border: 2px solid var(--dp-color-border);
+  background: var(--dp-color-surface);
+  padding: 32px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 24px;
+  flex-wrap: wrap;
+  box-shadow: 6px 6px 0px #000000;
+}
+
+.dash-target-left {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  flex: 1;
+  min-width: 260px;
+}
+
+.dash-target-subtitle {
+  font-family: var(--dp-typography-mono);
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--dp-color-accent-ink);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.dash-target-title {
+  font-family: var(--dp-typography-face);
+  font-size: 2rem;
+  font-weight: 800;
+  color: var(--dp-color-ink);
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+}
+
+.dash-target-progress-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 6px;
+  max-width: 460px;
+}
+
+.dash-target-progress-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-family: var(--dp-typography-mono);
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--dp-color-ink-muted);
+}
+
+.dash-target-progress-meta strong {
+  color: var(--dp-color-ink);
+}
+
+.dash-target-track {
+  width: 100%;
+  height: 12px;
+  background: var(--dp-color-ground);
+  border: 2px solid var(--dp-color-border);
+  overflow: hidden;
+}
+
+.dash-target-fill {
+  height: 100%;
+  background: var(--dp-color-accent);
+  transition: width 80ms cubic-bezier(0.2, 0, 0, 1);
+}
+
+.dash-target-right {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.dash-primary-cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  min-height: 58px;
+  padding: 16px 32px;
+  background: var(--dp-color-accent);
+  color: #0D0E12;
+  border: 2px solid var(--dp-color-border);
+  box-shadow: 4px 4px 0px #000000;
+  font-family: var(--dp-typography-face);
+  font-size: 1rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  transition: transform 80ms cubic-bezier(0.2, 0, 0, 1), box-shadow 80ms cubic-bezier(0.2, 0, 0, 1), background-color 80ms cubic-bezier(0.2, 0, 0, 1);
+}
+
+.dash-primary-cta:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: 6px 6px 0px #000000;
+}
+
+.dash-primary-cta:active {
+  transform: translate(4px, 4px);
+  box-shadow: 0px 0px 0px #000000;
+}
+
+/* ROW 2: TELEMETRY GRID (Col-span: 12 -> 3 equal columns inside) */
+.dash-telemetry-row {
+  grid-column: span 12;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+}
+
+.dash-telemetry-card {
+  border: 2px solid var(--dp-color-border);
+  background: var(--dp-color-ground);
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 14px;
+  box-shadow: 4px 4px 0px #000000;
+}
+
+.dash-telemetry-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.dash-telemetry-label {
+  font-family: var(--dp-typography-mono);
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--dp-color-ink-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.dash-telemetry-index {
+  font-family: var(--dp-typography-mono);
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--dp-color-accent-ink);
+}
+
+.dash-telemetry-value-wrap {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.dash-telemetry-value {
+  font-family: var(--dp-typography-mono);
+  font-size: 2.25rem;
+  font-weight: 800;
+  line-height: 1.05;
+  color: var(--dp-color-ink);
+  letter-spacing: -0.03em;
+}
+
+.dash-success-square {
+  width: 14px;
+  height: 14px;
+  background: var(--dp-color-success);
+  border: 2px solid var(--dp-color-border);
+  display: inline-block;
+  flex-shrink: 0;
+}
+
+.dash-telemetry-foot {
+  font-family: var(--dp-typography-mono);
+  font-size: 0.75rem;
+  color: var(--dp-color-ink-muted);
+}
+
+/* ROW 3: DEBUG QUEUE & HEATMAP (Col-span: 6 + 6) */
+.dash-debug-panel,
+.dash-heatmap-panel {
+  grid-column: span 6;
+  border: 2px solid var(--dp-color-border);
+  background: var(--dp-color-ground);
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  box-shadow: 4px 4px 0px #000000;
+}
+
+.dash-module-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding-bottom: 12px;
+  border-bottom: 2px solid var(--dp-color-border);
+}
+
+.dash-module-title {
+  font-family: var(--dp-typography-face);
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: var(--dp-color-ink);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.dash-module-tag {
+  font-family: var(--dp-typography-mono);
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--dp-color-ink-muted);
+}
+
+/* Block A: Debug Queue List */
+.dash-debug-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.dash-debug-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--dp-color-border);
+}
+
+.dash-debug-row:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.dash-debug-word-group {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.dash-debug-en {
+  font-family: var(--dp-typography-face);
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--dp-color-ink);
+}
+
+.dash-debug-tr {
+  font-family: var(--dp-typography-mono);
+  font-size: 0.8125rem;
+  color: var(--dp-color-ink-muted);
+}
+
+.dash-retest-btn {
+  font-family: var(--dp-typography-mono);
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 6px 10px;
+  background: var(--dp-color-surface);
+  color: var(--dp-color-ink);
+  border: 2px solid var(--dp-color-border);
+  box-shadow: 2px 2px 0px #000000;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: transform 80ms cubic-bezier(0.2, 0, 0, 1), box-shadow 80ms cubic-bezier(0.2, 0, 0, 1), border-color 80ms cubic-bezier(0.2, 0, 0, 1), color 80ms cubic-bezier(0.2, 0, 0, 1);
+}
+
+.dash-retest-btn:hover {
+  border-color: var(--dp-color-accent);
+  color: var(--dp-color-accent-ink);
+  transform: translate(-1px, -1px);
+  box-shadow: 3px 3px 0px #000000;
+}
+
+.dash-retest-btn:active {
+  transform: translate(2px, 2px);
+  box-shadow: 0px 0px 0px #000000;
+}
+
+/* Block B: Mastery Heatmap */
+.dash-heatmap-body {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 16px;
+  flex: 1;
+}
+
+.dash-heatmap-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-content: flex-start;
+}
+
+.heatmap-cell {
+  width: 16px;
+  height: 16px;
+  background: var(--dp-color-quiet);
+  border: 1px solid var(--dp-color-border);
+  padding: 0;
+  cursor: pointer;
+  transition: transform 80ms cubic-bezier(0.2, 0, 0, 1), border-color 80ms cubic-bezier(0.2, 0, 0, 1);
+}
+
+.heatmap-cell.mastered {
+  background: var(--dp-color-accent);
+  border-color: var(--dp-color-border);
+}
+
+.heatmap-cell:hover {
+  transform: translate(-1px, -1px);
+  border-color: var(--dp-color-ink);
+}
+
+.dash-heatmap-legend {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding-top: 10px;
+  border-top: 1px solid var(--dp-color-border);
+  font-family: var(--dp-typography-mono);
+  font-size: 0.75rem;
+  color: var(--dp-color-ink-muted);
+}
+
+.dash-legend-items {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.dash-legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.dash-legend-swatch {
+  width: 12px;
+  height: 12px;
+  display: inline-block;
+  border: 1px solid var(--dp-color-border);
+}
+
+.dash-legend-swatch.unlearned {
+  background: var(--dp-color-quiet);
+}
+
+.dash-legend-swatch.mastered {
+  background: var(--dp-color-accent);
+  border-color: var(--dp-color-border);
+}
+
+/* ROW 4: TERMINAL LOG / RECENT ACTIVITY (Col-span: 12) */
+.dash-terminal-panel {
+  grid-column: span 12;
+  border: 2px solid var(--dp-color-border);
+  background: var(--dp-color-ground);
+  padding: 24px;
+  box-shadow: 4px 4px 0px #000000;
+}
+
+.dash-terminal-table-wrap {
+  width: 100%;
+  overflow-x: auto;
+  margin-top: 12px;
+}
+
+.dash-terminal-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.dash-terminal-table thead th {
+  font-family: var(--dp-typography-face);
+  font-size: 0.75rem;
+  font-weight: 800;
+  color: var(--dp-color-ink);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  text-align: left;
+  padding: 10px 12px;
+  border-bottom: 2px solid var(--dp-color-border);
+}
+
+.dash-terminal-table tbody tr {
+  transition: background-color 80ms cubic-bezier(0.2, 0, 0, 1);
+}
+
+.dash-terminal-table tbody tr:hover {
+  background: var(--dp-color-surface);
+}
+
+.dash-terminal-table tbody td {
+  font-family: var(--dp-typography-mono);
+  font-size: 13px;
+  color: var(--dp-color-ink-muted);
+  padding: 12px;
+  border-bottom: 1px solid var(--dp-color-border);
+  vertical-align: middle;
+}
+
+.dash-terminal-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.dash-terminal-result {
+  color: var(--dp-color-ink);
+  font-weight: 700;
+}
+
+/* ==========================================================================
    9. RESPONSIVE BREAKPOINTS & REDUCED MOTION
    ========================================================================== */
-@media (max-width: 1024px) {
-  .module-tabs {
+@media (max-width: 1120px) {
+  .welcome-hub-grid {
     grid-template-columns: repeat(2, 1fr);
   }
 }
 
-@media (max-width: 768px) {
-  .header-container {
+@media (max-width: 900px) {
+  .app-layout {
     flex-direction: column;
-    align-items: stretch;
+    height: auto;
+    min-height: 100vh;
+    overflow-y: auto;
+  }
+
+  .sidebar-plane {
+    width: 100%;
+    height: auto;
+    border-right: none;
+    border-bottom: 2px solid var(--dp-color-border);
+    overflow-y: visible;
+  }
+
+  .sidebar-spacer {
+    display: none;
+  }
+
+  .module-tabs {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
   }
 
   .nav-tabs {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
+  }
+
+  .nav-tabs .sidebar-section-label {
+    grid-column: 1 / -1;
+  }
+
+  .workspace-plane {
+    height: auto;
+    overflow-y: visible;
+    padding: 20px 16px 48px;
   }
 
   .fc-controls {
@@ -2094,11 +2689,27 @@ body {
   }
 }
 
-@media (max-width: 600px) {
-  .module-tabs {
+@media (max-width: 768px) {
+  .dashboard-matrix > * {
+    grid-column: span 12;
+  }
+
+  .dash-telemetry-row {
     grid-template-columns: 1fr;
   }
 
+  .dash-target-banner {
+    padding: 20px;
+  }
+
+  .dash-primary-cta {
+    width: 100%;
+  }
+}
+
+@media (max-width: 600px) {
+  .module-tabs,
+  .welcome-hub-grid,
   .words-grid {
     grid-template-columns: 1fr;
   }
@@ -2122,192 +2733,1481 @@ body {
   }
 }
 
+
+/* ==========================================================================
+   10. BAUHAUS COMPOSITION LAYER
+   Heavy seams, flat colour planes, one circle action and one triangle.
+   ========================================================================== */
+
+/* Focus: thick, always visible, readable on every plane */
+:focus-visible {
+  outline: 4px solid var(--dp-color-field);
+  outline-offset: 3px;
+  box-shadow: 0 0 0 7px var(--dp-color-field-support);
+}
+
+[data-theme="dark"] :focus-visible {
+  outline-color: var(--dp-color-field-support);
+  box-shadow: 0 0 0 7px var(--dp-color-field);
+}
+
+body {
+  line-height: var(--dp-typography-reading-leading);
+}
+
+/* Sidebar: heavy black seam on the right */
+.sidebar-plane {
+  border-right: var(--dp-border-rule) solid var(--dp-color-border);
+}
+
+.sidebar-brand-cell,
+.module-bar {
+  border-bottom: var(--dp-border-rule) solid var(--dp-color-border);
+}
+
+/* Brand cell is a yellow plane with a blue triangle; the logo asset is untouched */
+.sidebar-brand-cell {
+  position: relative;
+  background-color: var(--dp-color-field-support);
+  overflow: hidden;
+}
+
+.sidebar-brand-cell::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 34px;
+  height: 34px;
+  background: var(--dp-color-field);
+  clip-path: polygon(100% 0, 0 0, 100% 100%);
+  pointer-events: none;
+}
+
+.brand-group,
+.brand-group-btn {
+  background-color: var(--dp-color-surface);
+  color: var(--dp-color-ink);
+  border: var(--dp-border-rule-compact) solid var(--dp-color-border);
+  box-shadow: 4px 4px 0 #000000;
+}
+
+.brand-group-btn:hover {
+  background-color: var(--dp-color-accent);
+  border-color: var(--dp-color-border);
+  transform: none;
+  box-shadow: 2px 2px 0 #000000;
+}
+
+.brand-group-btn:active {
+  transform: translate(4px, 4px);
+  box-shadow: none;
+}
+
+.brand-info h1 {
+  color: var(--dp-color-ink);
+}
+
+.brand-info p {
+  color: var(--dp-color-ink-muted);
+}
+
+.brand-icon {
+  border: none;
+  background: transparent;
+}
+
+/* Sidebar controls: crisp pressed state, no travel on hover */
+.module-btn,
+.nav-btn {
+  border: var(--dp-border-rule-compact) solid var(--dp-color-border);
+}
+
+.module-btn:hover,
+.nav-btn:hover {
+  background-color: var(--dp-color-field-support);
+  color: #000000;
+  border-color: var(--dp-color-border);
+  transform: none;
+  box-shadow: 2px 2px 0 #000000;
+}
+
+.module-btn:hover .mod-title,
+.module-btn:hover .mod-meta,
+.nav-btn:hover .nav-index {
+  color: #000000;
+}
+
+.module-btn:active,
+.nav-btn:active {
+  transform: translate(4px, 4px);
+  box-shadow: none;
+}
+
+/* Active state: blue plane + yellow text + red edge + bold weight (not colour alone) */
+.module-btn.active,
+.nav-btn.active {
+  background-color: var(--dp-color-field);
+  border: var(--dp-border-rule-compact) solid var(--dp-color-border);
+  border-left: 10px solid var(--dp-color-accent);
+  color: var(--dp-color-field-support);
+}
+
+.module-btn.active:hover,
+.nav-btn.active:hover {
+  background-color: var(--dp-color-field);
+}
+
+.module-btn.active .mod-title,
+.module-btn.active:hover .mod-title,
+.nav-btn.active .nav-btn-label,
+.nav-btn.active:hover {
+  color: var(--dp-color-field-support);
+}
+
+.module-btn.active .mod-meta,
+.module-btn.active:hover .mod-meta {
+  color: var(--dp-color-on-field);
+}
+
+.module-btn.active .mod-icon {
+  background-color: var(--dp-color-field-support);
+  border-color: #000000;
+  color: #000000;
+}
+
+.nav-btn.active .nav-index,
+.nav-btn.active .nav-btn-icon,
+.nav-btn.active:hover .nav-index {
+  color: var(--dp-color-on-field);
+}
+
+.nav-btn.active::after {
+  content: "";
+  margin-left: auto;
+  width: 0;
+  height: 0;
+  border-top: 7px solid transparent;
+  border-bottom: 7px solid transparent;
+  border-left: 10px solid var(--dp-color-field-support);
+  flex-shrink: 0;
+}
+
+.sidebar-section-label {
+  color: var(--dp-color-ink);
+  font-weight: 800;
+}
+
+/* Telemetry footer */
+.sidebar-telemetry-footer {
+  border-top: var(--dp-border-rule) solid var(--dp-color-border);
+}
+
+/* Workspace plane */
+.workspace-plane {
+  background-color: var(--dp-color-ground);
+}
+
+/* Dashboard banner: broad off-white plane beside a narrower red action plane */
+.dash-target-banner {
+  padding: 0;
+  gap: 0;
+  display: grid;
+  grid-template-columns: 1.7fr 1fr;
+  align-items: stretch;
+  border: var(--dp-border-rule) solid var(--dp-color-border);
+  background: var(--dp-color-surface);
+  box-shadow: 8px 8px 0 #000000;
+}
+
+.dash-target-left {
+  padding: clamp(22px, 4.45cqi, 40px);
+  min-width: 0;
+  justify-content: center;
+}
+
+.dash-target-right {
+  background: var(--dp-color-accent);
+  border-left: var(--dp-border-rule) solid var(--dp-color-border);
+  justify-content: center;
+  padding: 28px;
+}
+
+.dash-target-title {
+  font-size: clamp(1.9rem, 3.4vw, 2.75rem);
+  letter-spacing: -0.035em;
+  line-height: 1.02;
+}
+
+.dash-target-subtitle {
+  color: var(--dp-color-ink);
+}
+
+/* Guide Banner & Recommended Steps */
+.dash-guide-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+  margin: 16px 0 14px 0;
+}
+
+.dash-guide-step {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  background: var(--dp-color-ground);
+  border: var(--dp-border-rule-compact) solid var(--dp-color-border);
+  padding: 10px 12px;
+  box-shadow: 3px 3px 0 #000000;
+}
+
+.guide-step-num {
+  font-family: var(--dp-typography-mono);
+  font-size: 0.85rem;
+  font-weight: 900;
+  background: var(--dp-color-field-support);
+  color: #000000;
+  border: 1.5px solid var(--dp-color-border);
+  padding: 2px 6px;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.guide-step-content {
+  font-size: 0.84rem;
+  line-height: 1.35;
+  color: var(--dp-color-ink);
+}
+
+.guide-step-content strong {
+  font-weight: 800;
+  color: var(--dp-color-ink);
+  display: inline;
+}
+
+.dash-guide-footer-tip {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  font-size: 0.8rem;
+  color: var(--dp-color-ink-muted);
+  border-top: 1px dashed var(--dp-color-border);
+  padding-top: 10px;
+  margin-top: 4px;
+}
+
+.guide-tip-tag {
+  font-family: var(--dp-typography-mono);
+  font-weight: 800;
+  font-size: 0.72rem;
+  background: var(--dp-color-field);
+  color: #ffffff;
+  padding: 2px 6px;
+  letter-spacing: 0.05em;
+}
+
+.kbd-mini {
+  display: inline-block;
+  padding: 1px 5px;
+  font-family: var(--dp-typography-mono);
+  font-size: 0.72rem;
+  font-weight: 700;
+  background: var(--dp-color-surface);
+  color: var(--dp-color-ink);
+  border: 1.5px solid var(--dp-color-border);
+  box-shadow: 1.5px 1.5px 0 #000000;
+}
+
+.dash-target-track {
+  height: 18px;
+  border: var(--dp-border-rule-compact) solid var(--dp-color-border);
+  background: var(--dp-color-surface);
+}
+
+.dash-target-fill {
+  background: var(--dp-color-field);
+  transition: none;
+}
+
+/* The one large circular action */
+.dash-primary-cta {
+  width: 188px;
+  height: 188px;
+  min-height: 0;
+  padding: 20px;
+  border-radius: var(--dp-radius-circle);
+  background: #FFFFFF;
+  color: #000000;
+  border: var(--dp-border-rule) solid var(--dp-color-border);
+  box-shadow: 8px 8px 0 #000000;
+  flex-direction: column;
+  text-align: center;
+  font-size: 1.05rem;
+  font-weight: var(--dp-typography-weight-display);
+  line-height: 1.15;
+  letter-spacing: 0.01em;
+  transition: none;
+}
+
+.dash-primary-cta::after {
+  content: "→";
+  font-size: 1.75rem;
+  line-height: 1;
+}
+
+.dash-primary-cta:hover {
+  transform: none;
+  background: var(--dp-color-field-support);
+  box-shadow: 4px 4px 0 #000000;
+}
+
+.dash-primary-cta:active {
+  transform: translate(8px, 8px);
+  box-shadow: none;
+}
+
+/* Telemetry and panels: black seams, three flat colour accents */
+.dash-telemetry-card,
+.dash-debug-panel,
+.dash-heatmap-panel,
+.dash-terminal-panel {
+  border: var(--dp-border-rule) solid var(--dp-color-border);
+  background: var(--dp-color-surface);
+  box-shadow: 6px 6px 0 #000000;
+}
+
+.dash-telemetry-row .dash-telemetry-card:nth-child(1) { background: var(--dp-color-field-support); color: #000000; }
+.dash-telemetry-row .dash-telemetry-card:nth-child(2) { background: var(--dp-color-field); }
+.dash-telemetry-row .dash-telemetry-card:nth-child(3) { background: var(--dp-color-surface); }
+
+.dash-telemetry-row .dash-telemetry-card:nth-child(1) .dash-telemetry-label,
+.dash-telemetry-row .dash-telemetry-card:nth-child(1) .dash-telemetry-index,
+.dash-telemetry-row .dash-telemetry-card:nth-child(1) .dash-telemetry-value,
+.dash-telemetry-row .dash-telemetry-card:nth-child(1) .dash-telemetry-foot {
+  color: #000000;
+}
+
+.dash-telemetry-row .dash-telemetry-card:nth-child(2) .dash-telemetry-label,
+.dash-telemetry-row .dash-telemetry-card:nth-child(2) .dash-telemetry-index,
+.dash-telemetry-row .dash-telemetry-card:nth-child(2) .dash-telemetry-value,
+.dash-telemetry-row .dash-telemetry-card:nth-child(2) .dash-telemetry-foot {
+  color: var(--dp-color-on-field);
+}
+
+.dash-telemetry-value {
+  font-size: 2.75rem;
+  font-weight: 800;
+}
+
+.dash-telemetry-index {
+  color: var(--dp-color-ink);
+}
+
+.dash-module-header {
+  border-bottom: var(--dp-border-rule-compact) solid var(--dp-color-border);
+}
+
+.dash-debug-row,
+.dash-terminal-table tbody td {
+  border-bottom: 2px solid var(--dp-color-border);
+}
+
+.dash-terminal-table thead th {
+  border-bottom: var(--dp-border-rule-compact) solid var(--dp-color-border);
+}
+
+.dash-terminal-table tbody tr:hover {
+  background: var(--dp-color-field-support);
+  color: #000000;
+}
+
+.dash-terminal-table tbody tr:hover td {
+  color: #000000;
+}
+
+.dash-retest-btn {
+  border: var(--dp-border-rule-compact) solid var(--dp-color-border);
+  box-shadow: 3px 3px 0 #000000;
+  transition: none;
+}
+
+.dash-retest-btn:hover {
+  background: var(--dp-color-field-support);
+  border-color: #000000;
+  color: #000000;
+  transform: none;
+  box-shadow: 1px 1px 0 #000000;
+}
+
+.dash-retest-btn:active {
+  transform: translate(3px, 3px);
+  box-shadow: none;
+}
+
+.heatmap-cell {
+  border: 2px solid var(--dp-color-border);
+  transition: none;
+}
+
+.heatmap-cell.mastered,
+.dash-legend-swatch.mastered {
+  background: var(--dp-color-field);
+  border-color: #000000;
+}
+
+/* Immediate feedback everywhere: no animated travel */
+.progress-fill {
+  transition: none;
+}
+
+@media (max-width: 1050px) {
+  .dash-target-banner {
+    grid-template-columns: 1.4fr 1fr;
+  }
+
+  .dash-primary-cta {
+    width: 164px;
+    height: 164px;
+    font-size: 0.95rem;
+  }
+}
+
+@media (max-width: 900px) {
+  .sidebar-plane {
+    border-right: none;
+    border-bottom: var(--dp-border-rule) solid var(--dp-color-border);
+  }
+}
+
+@media (max-width: 720px) {
+  .dash-target-banner {
+    grid-template-columns: 1fr;
+  }
+
+  .dash-target-right {
+    border-left: none;
+    border-top: var(--dp-border-rule) solid var(--dp-color-border);
+    padding: 28px 16px;
+  }
+
+  .dash-primary-cta {
+    width: min(220px, 70vw);
+    height: min(220px, 70vw);
+  }
+
+  .dash-telemetry-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Welcome hub: active module card is a blue plane */
+.welcome-mod-card:hover {
+  background-color: var(--dp-color-field-support);
+  color: #000000;
+  transform: none;
+  box-shadow: 2px 2px 0 #000000;
+}
+
+.welcome-mod-card:hover .welcome-mod-badge {
+  color: #000000;
+}
+
+.welcome-mod-card.active,
+.welcome-mod-card.active:hover {
+  background-color: var(--dp-color-field);
+  border: var(--dp-border-rule-compact) solid var(--dp-color-border);
+  border-left: 10px solid var(--dp-color-accent);
+}
+
+.welcome-mod-card.active .welcome-mod-name,
+.welcome-mod-card.active:hover .welcome-mod-name {
+  color: var(--dp-color-field-support);
+}
+
+.welcome-mod-card.active .welcome-mod-badge,
+.welcome-mod-card.active:hover .welcome-mod-badge {
+  color: var(--dp-color-on-field);
+}
+
+@media (max-width: 900px) {
+  .module-tabs,
+  .nav-tabs {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .nav-btn {
+    padding: 0 8px;
+    gap: 6px;
+  }
+}
+
+@media (max-width: 600px) {
+  .module-tabs {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* Sidebar planes keep their height; the sidebar itself scrolls */
+.sidebar-plane > * {
+  flex-shrink: 0;
+}
+
+.sidebar-plane > .sidebar-spacer {
+  flex-shrink: 1;
+  min-height: 0;
+}
+
+/* ==========================================================================
+   11. BAUHAUS MOBİL PENCERELERİ (MODAL DIALOGS & WINDOW SYSTEM)
+   ========================================================================== */
+
+/* Masaüstünde mobil tetikleyiciler ve pencereler gizlidir */
+.mobile-window-triggers,
+.bauhaus-modal-backdrop,
+.bauhaus-window-dialog,
+.mobile-curriculum-banner {
+  display: none;
+}
+
+/* Modal Açıkken Arka Planı Sabitle */
+body.modal-open {
+  overflow: hidden !important;
+}
+
+/* ==========================================================================
+   MOBİL VE TABLET UYARLAMASI (<= 900px)
+   ========================================================================== */
+@media (max-width: 900px) {
+  /* 1. Sidebar'ı Kompakt Tek Satırlık Mobil Üst Çubuğa Dönüştür */
+  .sidebar-plane {
+    width: 100% !important;
+    height: auto !important;
+    min-height: 56px !important;
+    border-right: none !important;
+    border-bottom: 4px solid var(--dp-color-border) !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    overflow: visible !important;
+    padding: 0 !important;
+    position: sticky !important;
+    top: 0 !important;
+    z-index: 500 !important;
+    background: var(--dp-color-field-support) !important;
+  }
+
+  .sidebar-brand-cell {
+    width: 100% !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    padding: 6px 12px !important;
+    border-bottom: none !important;
+    background: transparent !important;
+  }
+
+  .sidebar-brand-cell::after {
+    display: none !important; /* Mobilde üçgen alanı kapatmasın */
+  }
+
+  .brand-group,
+  .brand-group-btn {
+    width: auto !important;
+    min-height: 42px !important;
+    padding: 4px 8px !important;
+    box-shadow: 3px 3px 0 #000000 !important;
+    gap: 8px !important;
+  }
+
+  .brand-icon {
+    width: 28px !important;
+    height: 28px !important;
+  }
+
+  .brand-info h1 {
+    font-size: 0.95rem !important;
+  }
+
+  .brand-info p {
+    display: none !important; /* Mobilde yer kazanmak için logoda alt metni gizle */
+  }
+
+  /* 2. Mobilde Başlık Olarak Açık Durup Göz Yoran Alanları Gizle */
+  .sidebar-plane > .module-bar,
+  .sidebar-plane > .nav-tabs,
+  .sidebar-plane > .sidebar-spacer,
+  .sidebar-plane > .sidebar-telemetry-footer {
+    display: none !important;
+  }
+
+  /* 3. Mobil Pencere Tetikleyici Butonları Göster */
+  .mobile-window-triggers {
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+  }
+
+  .mobile-trigger-btn {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+    min-height: 40px !important;
+    padding: 6px 10px !important;
+    background: var(--dp-color-surface) !important;
+    color: var(--dp-color-ink) !important;
+    border: 3px solid var(--dp-color-border) !important;
+    box-shadow: 3px 3px 0 var(--dp-color-border) !important;
+    font-family: var(--dp-typography-face) !important;
+    font-size: 0.78rem !important;
+    font-weight: 800 !important;
+    text-transform: uppercase !important;
+    cursor: pointer !important;
+    transition: none !important;
+  }
+
+  .mobile-trigger-btn:hover {
+    background: var(--dp-color-field-support) !important;
+    color: #000000 !important;
+    border-color: var(--dp-color-border) !important;
+  }
+
+  .mobile-trigger-btn:active {
+    transform: translate(3px, 3px) !important;
+    box-shadow: none !important;
+  }
+
+  .m-trig-icon {
+    font-size: 0.95rem;
+    line-height: 1;
+  }
+
+  .m-trig-text {
+    letter-spacing: 0.02em;
+  }
+
+  /* 4. Daily Görünümündeki 4 Koca Kartı Mobilde Gizle, Tek Şık Pencere Şeridi Göster */
+  .welcome-module-hub .welcome-hub-top,
+  .welcome-module-hub .welcome-hub-grid {
+    display: none !important;
+  }
+
+  .mobile-curriculum-banner {
+    display: block !important;
+    margin-bottom: 16px !important;
+  }
+
+  .mobile-curriculum-open-btn {
+    width: 100% !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    padding: 12px 14px !important;
+    background: var(--dp-color-surface) !important;
+    border: 3px solid var(--dp-color-border) !important;
+    box-shadow: 4px 4px 0 #000000 !important;
+    font-family: var(--dp-typography-face) !important;
+    text-align: left !important;
+    cursor: pointer !important;
+  }
+
+  .mobile-curriculum-open-btn:active {
+    transform: translate(4px, 4px) !important;
+    box-shadow: none !important;
+  }
+
+  .mcb-badge {
+    font-family: var(--dp-typography-mono) !important;
+    font-size: 0.72rem !important;
+    font-weight: 800 !important;
+    background: var(--dp-color-field-support) !important;
+    color: #000000 !important;
+    padding: 2px 6px !important;
+    border: 2px solid var(--dp-color-border) !important;
+  }
+
+  .mcb-title {
+    font-size: 0.88rem !important;
+    font-weight: 800 !important;
+    color: var(--dp-color-ink) !important;
+    flex: 1 !important;
+    margin: 0 10px !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+  }
+
+  .mcb-action {
+    font-family: var(--dp-typography-mono) !important;
+    font-size: 0.72rem !important;
+    font-weight: 800 !important;
+    color: var(--dp-color-emphasis) !important;
+    white-space: nowrap !important;
+  }
+
+  /* 5. Bauhaus Modal Backdrop */
+  .bauhaus-modal-backdrop.active {
+    display: block !important;
+    position: fixed !important;
+    inset: 0 !important;
+    background: rgba(0, 0, 0, 0.7) !important;
+    z-index: 9998 !important;
+  }
+
+  /* 6. Bauhaus Pencere / Dialog Kapsayıcısı (Daha Kompakt & Nefes Alan Oranlar) */
+  .bauhaus-window-dialog.active {
+    display: flex !important;
+    flex-direction: column !important;
+    position: fixed !important;
+    top: 50% !important;
+    left: 50% !important;
+    transform: translate(-50%, -50%) !important;
+    width: 86% !important;
+    max-width: 360px !important;
+    max-height: 78vh !important;
+    background: var(--dp-color-surface) !important;
+    border: 3.5px solid var(--dp-color-border) !important;
+    box-shadow: 6px 6px 0 #000000 !important;
+    z-index: 9999 !important;
+    overflow: hidden !important;
+  }
+
+  /* Pencere Başlık Çubuğu */
+  .window-titlebar {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    padding: 7px 11px !important;
+    background: var(--dp-color-field-support) !important;
+    border-bottom: 2.5px solid var(--dp-color-border) !important;
+    flex-shrink: 0 !important;
+  }
+
+  .window-title-left {
+    display: flex !important;
+    align-items: center !important;
+    gap: 7px !important;
+  }
+
+  .window-title-square {
+    width: 10px !important;
+    height: 10px !important;
+    background: var(--dp-color-accent) !important;
+    border: 1.5px solid var(--dp-color-border) !important;
+    display: inline-block !important;
+  }
+
+  .window-title-text {
+    font-family: var(--dp-typography-face) !important;
+    font-size: 0.76rem !important;
+    font-weight: 800 !important;
+    color: #000000 !important;
+    letter-spacing: 0.03em !important;
+    text-transform: uppercase !important;
+  }
+
+  .window-close-btn {
+    font-family: var(--dp-typography-mono) !important;
+    font-size: 0.68rem !important;
+    font-weight: 800 !important;
+    padding: 3px 6px !important;
+    background: var(--dp-color-accent) !important;
+    color: var(--dp-color-on-accent) !important;
+    border: 1.5px solid var(--dp-color-border) !important;
+    box-shadow: 1.5px 1.5px 0 #000000 !important;
+    cursor: pointer !important;
+  }
+
+  .window-close-btn:active {
+    transform: translate(1.5px, 1.5px) !important;
+    box-shadow: none !important;
+  }
+
+  /* Pencere Gövdesi */
+  .window-body {
+    padding: 11px 12px !important;
+    overflow-y: auto !important;
+    flex: 1 !important;
+  }
+
+  .window-body-desc {
+    font-family: var(--dp-typography-mono) !important;
+    font-size: 0.68rem !important;
+    color: var(--dp-color-ink-muted) !important;
+    margin-bottom: 9px !important;
+    font-weight: 600 !important;
+  }
+
+  /* Pencere İçi Butonlar */
+  .window-module-list,
+  .window-modes-grid {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 6px !important;
+  }
+
+  .window-item-btn {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 8px !important;
+    width: 100% !important;
+    min-height: 40px !important;
+    padding: 7px 10px !important;
+    background: var(--dp-color-surface) !important;
+    border: 2.5px solid var(--dp-color-border) !important;
+    box-shadow: 2.5px 2.5px 0 #000000 !important;
+    text-align: left !important;
+    cursor: pointer !important;
+    color: var(--dp-color-ink) !important;
+    font-family: var(--dp-typography-face) !important;
+  }
+
+  .window-item-btn:active {
+    transform: translate(2px, 2px) !important;
+    box-shadow: none !important;
+  }
+
+  /* Aktif Modül / View Pencere İçinde */
+  .window-item-btn.active {
+    background: var(--dp-color-field) !important;
+    color: var(--dp-color-field-support) !important;
+    border-left: 8px solid var(--dp-color-accent) !important;
+  }
+
+  .window-item-btn.active .w-item-title,
+  .window-item-btn.active .w-item-arrow,
+  .window-item-btn.active .w-num {
+    color: var(--dp-color-field-support) !important;
+    font-weight: 800 !important;
+  }
+
+  .window-item-btn.active .w-item-meta {
+    color: #FFFFFF !important;
+  }
+
+  .w-item-icon {
+    font-size: 0.95rem;
+    flex-shrink: 0;
+  }
+
+  .w-item-info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    min-width: 0;
+  }
+
+  .w-item-title {
+    font-size: 0.82rem;
+    font-weight: 800;
+    line-height: 1.15;
+    color: inherit;
+  }
+
+  .w-item-meta {
+    font-family: var(--dp-typography-mono);
+    font-size: 0.67rem;
+    color: var(--dp-color-ink-muted);
+    font-weight: 600;
+  }
+
+  .w-item-arrow {
+    font-size: 0.95rem;
+    font-weight: 800;
+    flex-shrink: 0;
+  }
+
+  .w-num {
+    font-family: var(--dp-typography-mono);
+    font-size: 0.72rem;
+    font-weight: 800;
+    color: var(--dp-color-ink-muted);
+    flex-shrink: 0;
+  }
+
+  /* Pencere İçi Ayarlar */
+  .window-sub-section {
+    margin-top: 10px !important;
+    padding-top: 9px !important;
+    border-top: 2px solid var(--dp-color-border) !important;
+  }
+
+  .window-sub-label {
+    font-family: var(--dp-typography-mono) !important;
+    font-size: 0.68rem !important;
+    font-weight: 800 !important;
+    color: var(--dp-color-ink) !important;
+    margin-bottom: 6px !important;
+  }
+
+  .window-settings-row {
+    display: grid !important;
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 6px !important;
+  }
+
+  .window-settings-row .ctrl-btn {
+    width: 100% !important;
+    min-height: 34px !important;
+    padding: 0 6px !important;
+    justify-content: center !important;
+    font-size: 0.72rem !important;
+  }
+}
+
+/* ==========================================================================
+   12. MOBİL BUTON & BREADCRUMB BOYUT KÜÇÜLTME (FERAH & KOMPAKT ORANLAR)
+   ========================================================================== */
+@media (max-width: 900px) {
+  /* 1. Üst Bar: Learnish, Maarif ve Kontrol Merkezi Tetikleyici Tuşları */
+  .sidebar-plane {
+    min-height: 44px !important;
+    border-bottom: 3px solid var(--dp-color-border) !important;
+  }
+
+  .sidebar-brand-cell {
+    padding: 4px 8px !important;
+    gap: 6px !important;
+  }
+
+  .brand-group,
+  .brand-group-btn {
+    min-height: 32px !important;
+    padding: 2px 6px !important;
+    border: 2px solid var(--dp-color-border) !important;
+    box-shadow: 2px 2px 0 #000000 !important;
+    gap: 5px !important;
+  }
+
+  .brand-icon-wrapper {
+    width: 22px !important;
+    height: 22px !important;
+  }
+
+  .brand-icon {
+    width: 22px !important;
+    height: 22px !important;
+  }
+
+    .brand-info h1 {
+    font-size: 0.82rem !important;
+    letter-spacing: -0.01em !important;
+  }
+
+  .mobile-window-triggers {
+    gap: 5px !important;
+  }
+
+  .mobile-trigger-btn {
+    min-height: 32px !important;
+    padding: 3px 8px !important;
+    border: 2px solid var(--dp-color-border) !important;
+    box-shadow: 2px 2px 0 var(--dp-color-border) !important;
+    font-size: 0.68rem !important;
+    gap: 4px !important;
+  }
+
+  .mobile-trigger-btn:active {
+    transform: translate(2px, 2px) !important;
+    box-shadow: none !important;
+  }
+
+  .m-trig-icon {
+    font-size: 0.80rem !important;
+  }
+
+  /* 2. Ana Ekran Breadcrumb Tuşları: Geri Dön, Maarif Modeli, Kontrol Merkezi */
+  .workspace-plane {
+    padding: 10px 10px 40px !important;
+  }
+
+  .breadcrumb-container {
+    padding: 6px 8px !important;
+    margin-bottom: 12px !important;
+    border: 2px solid var(--dp-color-border) !important;
+    box-shadow: 3px 3px 0 #000000 !important;
+    gap: 6px !important;
+  }
+
+  .breadcrumb-left {
+    gap: 5px !important;
+    align-items: center !important;
+  }
+
+  .breadcrumb-back-btn {
+    min-height: 28px !important;
+    min-width: 28px !important;
+    padding: 0 8px !important;
+    font-size: 0.65rem !important;
+    border: 1.5px solid var(--dp-color-border) !important;
+    box-shadow: 1.5px 1.5px 0 #000000 !important;
+    gap: 4px !important;
+  }
+
+  .breadcrumb-back-btn:active {
+    transform: translate(1.5px, 1.5px) !important;
+    box-shadow: none !important;
+  }
+
+  .breadcrumb-list {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 5px !important;
+  }
+
+  .breadcrumb-home-chip {
+    min-height: 28px !important;
+    padding: 0 8px !important;
+    font-size: 0.68rem !important;
+    border: 1.5px solid var(--dp-color-border) !important;
+    box-shadow: 1.5px 1.5px 0 #000000 !important;
+    gap: 4px !important;
+  }
+
+  .breadcrumb-home-chip:active {
+    transform: translate(1.5px, 1.5px) !important;
+    box-shadow: none !important;
+  }
+
+  .breadcrumb-home-chip .chip-home-icon svg {
+    width: 11px !important;
+    height: 11px !important;
+  }
+
+  .breadcrumb-sep {
+    font-size: 0.70rem !important;
+    color: var(--dp-color-ink-muted) !important;
+  }
+
+  .breadcrumb-item.active {
+    min-height: 28px !important;
+    padding: 0 8px !important;
+    font-size: 0.68rem !important;
+    border: 1.5px solid var(--dp-color-border) !important;
+    box-shadow: 1.5px 1.5px 0 #000000 !important;
+  }
+
+  .badge-live-container {
+    padding: 2px 6px !important;
+    min-height: 28px !important;
+  }
+
+  .breadcrumb-right .badge-day {
+    padding: 2px 6px !important;
+    font-size: 0.65rem !important;
+    border: 1.5px solid var(--dp-color-border) !important;
+  }
+
+  /* 3. Ana Ekranda (Kontrol Merkezi) Üst Banner ve Buton Boyutunu da Dengele */
+  .dash-target-banner {
+    padding: 14px !important;
+    gap: 12px !important;
+    box-shadow: 5px 5px 0 #000000 !important;
+  }
+
+  .dash-target-left {
+    padding: 4px !important;
+    gap: 6px !important;
+  }
+
+  .dash-target-subtitle {
+    font-size: 0.68rem !important;
+  }
+
+  .dash-target-title {
+    font-size: 1.35rem !important;
+    line-height: 1.1 !important;
+  }
+
+  .dash-guide-grid {
+    grid-template-columns: 1fr !important;
+    gap: 8px !important;
+    margin: 12px 0 10px 0 !important;
+  }
+
+  .dash-guide-step {
+    padding: 8px 10px !important;
+    box-shadow: 2px 2px 0 #000000 !important;
+  }
+
+  .guide-step-content {
+    font-size: 0.78rem !important;
+    line-height: 1.3 !important;
+  }
+
+  .guide-step-num {
+    font-size: 0.75rem !important;
+    padding: 2px 4px !important;
+  }
+
+  .dash-guide-footer-tip {
+    font-size: 0.72rem !important;
+    gap: 6px !important;
+    padding-top: 8px !important;
+  }
+
+  .kbd-mini {
+    font-size: 0.65rem !important;
+    padding: 0 4px !important;
+  }
+
+  .dash-target-right {
+    padding: 14px 8px !important;
+  }
+
+  .dash-primary-cta {
+    width: 140px !important;
+    height: 140px !important;
+    font-size: 0.78rem !important;
+    padding: 12px !important;
+    border: 3px solid var(--dp-color-border) !important;
+    box-shadow: 4px 4px 0 #000000 !important;
+  }
+
+  .dash-primary-cta::after {
+    font-size: 1.25rem !important;
+  }
+}
+
 </style>
 </head>
-<body data-impeccable-ignore="hard-offset-shadow">
+<body data-impeccable-ignore="hard-offset-shadow side-tab">
 
-  <!-- 1. TOP MODULE SWITCHER BAR -->
-  <div class="module-bar">
-    <div class="module-bar-container">
-      <div class="module-tabs" role="tablist" aria-label="Öğrenim Modülü Seçici">
-        
-        <button type="button" class="module-btn active" data-module="maarif" id="mod-tab-maarif" onclick="window.APP.switchModule('maarif')">
-          <span class="mod-icon" aria-hidden="true">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square" stroke-linejoin="miter"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/></svg>
-          </span>
-          <div class="mod-text-group">
-            <span class="mod-title">5. Sınıf Maarif Modeli</span>
-            <span class="mod-meta">8 TEMA • 82 GÜN • 817 KELİME</span>
+  <!-- APP LAYOUT CONTAINER (100vw / 100vh Flex Shell) -->
+  <div class="app-layout">
+
+    <!-- 1. LEFT SIDEBAR PLANE (.sidebar-plane) -->
+    <aside class="sidebar-plane" aria-label="Ana Kontrol ve Müfredat Kenar Çubuğu">
+
+      <!-- 1.1 Brand / Logo Cell (.brand-group) -->
+      <div class="sidebar-brand-cell">
+        <button type="button" class="brand-group brand-group-btn" onclick="window.APP.goHome()" aria-label="Learnish Ana Çalışma Alanına Dön">
+          <div class="brand-icon-wrapper">
+            <img src="logo.svg?v=codex2" alt="Learnish Logo" class="brand-icon">
+          </div>
+          <div class="brand-info">
+            <h1>Learnish</h1>
+            <p id="app-brand-subtitle">5. Sınıf Maarif • Hedef: 10 Kelime</p>
           </div>
         </button>
 
-        <button type="button" class="module-btn" data-module="yds" id="mod-tab-yds" onclick="window.APP.switchModule('yds')">
-          <span class="mod-icon" aria-hidden="true">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square" stroke-linejoin="miter"><circle cx="12" cy="12" r="10"/><line x1="22" y1="12" x2="18" y2="12"/><line x1="6" y1="12" x2="2" y2="12"/><line x1="12" y1="6" x2="12" y2="2"/><line x1="12" y1="22" x2="12" y2="18"/></svg>
+        <!-- Mobil Açılır Pencere Tetikleyicileri (<= 900px ekranlarda görünür) -->
+        <div class="mobile-window-triggers" aria-label="Mobil Pencere Menüleri">
+          <button type="button" class="mobile-trigger-btn" id="mobile-curr-trigger-btn" onclick="window.APP.openCurriculumModal()" aria-label="Müfredat Seçim Penceresi">
+            <span class="m-trig-icon">🎓</span>
+            <span class="m-trig-text" id="mobile-curr-label">MÜFREDAT ▾</span>
+          </button>
+          <button type="button" class="mobile-trigger-btn" id="mobile-mode-trigger-btn" onclick="window.APP.openModesModal()" aria-label="Çalışma Modları Penceresi">
+            <span class="m-trig-icon">☰</span>
+            <span class="m-trig-text" id="mobile-mode-label">MODLAR ▾</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- 1.2 Curriculum / Module Selector (.module-bar) -->
+      <div class="module-bar">
+        <div class="sidebar-section-label">MÜFREDAT SEÇİMİ</div>
+        <div class="module-tabs" role="tablist" aria-label="Öğrenim Modülü Seçici">
+          
+          <button type="button" class="module-btn active" data-module="maarif" id="mod-tab-maarif" onclick="window.APP.switchModule('maarif')">
+            <span class="mod-icon" aria-hidden="true">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square" stroke-linejoin="miter"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/></svg>
+            </span>
+            <div class="mod-text-group">
+              <span class="mod-title">5. Sınıf Maarif Modeli</span>
+              <span class="mod-meta">8 TEMA • 817 KELİME</span>
+            </div>
+          </button>
+
+          <button type="button" class="module-btn" data-module="yds" id="mod-tab-yds" onclick="window.APP.switchModule('yds')">
+            <span class="mod-icon" aria-hidden="true">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square" stroke-linejoin="miter"><circle cx="12" cy="12" r="10"/><line x1="22" y1="12" x2="18" y2="12"/><line x1="6" y1="12" x2="2" y2="12"/><line x1="12" y1="6" x2="12" y2="2"/><line x1="12" y1="22" x2="12" y2="18"/></svg>
+            </span>
+            <div class="mod-text-group">
+              <span class="mod-title">YDS &amp; YÖKDİL Akademik</span>
+              <span class="mod-meta">B2/C1 • 2.894 KELİME</span>
+            </div>
+          </button>
+
+          <button type="button" class="module-btn" data-module="oxford" id="mod-tab-oxford" onclick="window.APP.switchModule('oxford')">
+            <span class="mod-icon" aria-hidden="true">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square" stroke-linejoin="miter"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+            </span>
+            <div class="mod-text-group">
+              <span class="mod-title">The Oxford 5000</span>
+              <span class="mod-meta">A1–C1 • 5.841 KELİME</span>
+            </div>
+          </button>
+
+          <button type="button" class="module-btn" data-module="all" id="mod-tab-all" onclick="window.APP.switchModule('all')">
+            <span class="mod-icon" aria-hidden="true">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square" stroke-linejoin="miter"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>
+            </span>
+            <div class="mod-text-group">
+              <span class="mod-title">Tüm Kütüphane</span>
+              <span class="mod-meta">6.658 KELİME HAVUZU</span>
+            </div>
+          </button>
+
+        </div>
+      </div>
+
+      <!-- 1.3 Navigation Links (.nav-tabs) -->
+      <nav class="nav-tabs" aria-label="Çalışma Modları">
+        <div class="sidebar-section-label">ÇALIŞMA MODLARI</div>
+
+        <button type="button" class="nav-btn active" data-view="home" id="tab-home">
+          <span class="nav-index">[1]</span>
+          <span class="nav-btn-icon" aria-hidden="true">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square" stroke-linejoin="miter"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
           </span>
-          <div class="mod-text-group">
-            <span class="mod-title">YDS &amp; YÖKDİL Akademik</span>
-            <span class="mod-meta">B2 / C1 SINAV • 2.894 KELİME</span>
-          </div>
+          <span class="nav-btn-label" id="tab-home-text">Kontrol Merkezi</span>
         </button>
 
-        <button type="button" class="module-btn" data-module="oxford" id="mod-tab-oxford" onclick="window.APP.switchModule('oxford')">
-          <span class="mod-icon" aria-hidden="true">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square" stroke-linejoin="miter"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+        <button type="button" class="nav-btn" data-view="daily" id="tab-daily">
+          <span class="nav-index">[2]</span>
+          <span class="nav-btn-icon" id="tab-daily-icon" aria-hidden="true">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square" stroke-linejoin="miter"><rect x="3" y="4" width="18" height="18"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
           </span>
-          <div class="mod-text-group">
-            <span class="mod-title">The Oxford 5000</span>
-            <span class="mod-meta">A1–C1 STANDARDI • 5.841 KELİME</span>
-          </div>
+          <span class="nav-btn-label" id="tab-daily-text">Günün 10'lusu</span>
         </button>
 
-        <button type="button" class="module-btn" data-module="all" id="mod-tab-all" onclick="window.APP.switchModule('all')">
-          <span class="mod-icon" aria-hidden="true">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square" stroke-linejoin="miter"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>
+        <button type="button" class="nav-btn" data-view="flashcard" id="tab-flashcard">
+          <span class="nav-index">[3]</span>
+          <span class="nav-btn-icon" aria-hidden="true">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square" stroke-linejoin="miter"><rect x="2" y="4" width="20" height="16"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
           </span>
-          <div class="mod-text-group">
-            <span class="mod-title">Tüm Kütüphane</span>
-            <span class="mod-meta">6.658 KELİME BİRLEŞİK HAVUZ</span>
-          </div>
+          <span class="nav-btn-label" id="tab-flashcard-text">Flashcard</span>
         </button>
 
+        <button type="button" class="nav-btn" data-view="quiz" id="tab-quiz">
+          <span class="nav-index">[4]</span>
+          <span class="nav-btn-icon" aria-hidden="true">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square" stroke-linejoin="miter"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+          </span>
+          <span class="nav-btn-label" id="tab-quiz-text">Quiz &amp; Test</span>
+        </button>
+
+        <button type="button" class="nav-btn" data-view="directory" id="tab-directory">
+          <span class="nav-index">[5]</span>
+          <span class="nav-btn-icon" aria-hidden="true">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square" stroke-linejoin="miter"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          </span>
+          <span class="nav-btn-label" id="tab-directory-text">Kelime Havuzu</span>
+        </button>
+
+        <button type="button" class="nav-btn" data-view="stats" id="tab-stats">
+          <span class="nav-index">[6]</span>
+          <span class="nav-btn-icon" aria-hidden="true">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square" stroke-linejoin="miter"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+          </span>
+          <span class="nav-btn-label" id="tab-stats-text">İstatistik</span>
+        </button>
+      </nav>
+
+      <!-- 1.4 Flexible Spacer -->
+      <div class="sidebar-spacer"></div>
+
+      <!-- 1.5 Telemetry & Goal Footer (Fixed at bottom of sidebar) -->
+      <footer class="sidebar-telemetry-footer">
+        <div class="sidebar-section-label">CANLI HEDEF TELEMETRİSİ</div>
+        <div id="sidebar-telemetry-badge" class="sidebar-telemetry-slot">
+          <!-- Populated dynamically by app.js -->
+        </div>
+
+        <div class="header-actions" aria-label="Sistem Ayarları">
+          <button type="button" class="ctrl-btn" id="accent-toggle-btn" title="İngilizce Telaffuz Aksanı (İngiliz / Amerikan)">
+            UK
+          </button>
+          <button type="button" class="ctrl-btn" id="speed-toggle-btn" title="Okuma Hızı">
+            1.0x
+          </button>
+          <button type="button" class="ctrl-btn" id="sound-toggle-btn" title="Ses Efektleri">
+            SES: AÇIK
+          </button>
+          <button type="button" class="ctrl-btn" id="theme-toggle-btn" title="Karanlık / Aydınlık Mod">
+            TEMA: KOYU
+          </button>
+        </div>
+      </footer>
+
+    </aside>
+
+    <!-- 2. MAIN WORKSPACE PLANE (.workspace-plane) -->
+    <main class="workspace-plane main-wrapper">
+
+      <!-- Active Navigation Breadcrumb & Back Navigator -->
+      <nav class="breadcrumb-container" id="app-breadcrumb-nav" aria-label="Konum ve Geri Navigasyonu">
+        <div class="breadcrumb-left">
+          <button type="button" class="breadcrumb-back-btn" id="breadcrumb-back-btn" onclick="window.APP.goBack()" aria-label="Bir Önceki Sayfaya Dön" title="Bir Önceki Sayfaya Dön">
+            <span class="back-arrow" aria-hidden="true">←</span>
+            <span class="back-text">Geri Dön</span>
+          </button>
+          <ol class="breadcrumb-list" id="app-breadcrumb">
+            <li class="breadcrumb-item">
+              <button type="button" class="breadcrumb-home-chip" id="breadcrumb-module-btn" onclick="window.APP.goHome()" aria-label="Ana Sayfaya Dön" title="Ana Sayfaya Dön">
+                <span class="chip-home-icon" aria-hidden="true">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square" stroke-linejoin="miter"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
+                </span>
+                <span id="breadcrumb-module-text">5. SINIF MAARİF MODELİ</span>
+              </button>
+            </li>
+            <li class="breadcrumb-sep" aria-hidden="true">/</li>
+            <li class="breadcrumb-item active" id="breadcrumb-view-label">KONTROL MERKEZİ</li>
+          </ol>
+        </div>
+        <div class="breadcrumb-right" id="breadcrumb-context-badge">
+          <div id="breadcrumb-dynamic-badge" class="badge-live-container">
+            <!-- Dynamically populated with live telemetry progress -->
+          </div>
+        </div>
+      </nav>
+      
+      <!-- View 0: Kontrol Merkezi / IDE Dashboard (#home) -->
+      <section id="view-home" class="view-section active" aria-labelledby="tab-home">
+        <!-- Injected by app.js -->
+      </section>
+
+      <!-- View 1: Günlük Çalışma / Workout -->
+      <section id="view-daily" class="view-section" aria-labelledby="tab-daily">
+        <!-- Injected by app.js -->
+      </section>
+
+      <!-- View 2: Flashcard Modu -->
+      <section id="view-flashcard" class="view-section" aria-labelledby="tab-flashcard">
+        <!-- Injected by app.js -->
+      </section>
+
+      <!-- View 3: Quiz & Test Modu -->
+      <section id="view-quiz" class="view-section" aria-labelledby="tab-quiz">
+        <!-- Injected by app.js -->
+      </section>
+
+      <!-- View 4: Kelime Havuzu & Arama -->
+      <section id="view-directory" class="view-section" aria-labelledby="tab-directory">
+        <!-- Injected by app.js -->
+      </section>
+
+      <!-- View 5: İstatistikler & Analiz -->
+      <section id="view-stats" class="view-section" aria-labelledby="tab-stats">
+        <!-- Injected by app.js -->
+      </section>
+
+    </main>
+
+  </div>
+
+
+  <!-- =========================================================================
+       BAUHAUS MODAL PENCERELERİ (MOBİL MODÜL & MÜFREDAT PENCERELERİ)
+       ========================================================================= -->
+  <div class="bauhaus-modal-backdrop" id="bauhaus-modal-backdrop" onclick="window.APP.closeModals()" aria-hidden="true"></div>
+
+  <!-- 1. Müfredat Seçim Penceresi -->
+  <div class="bauhaus-window-dialog" id="modal-curriculum" role="dialog" aria-modal="true" aria-labelledby="modal-curr-title">
+    <div class="window-titlebar">
+      <div class="window-title-left">
+        <span class="window-title-square"></span>
+        <span class="window-title-text" id="modal-curr-title">MÜFREDAT SEÇİM PENCERESİ</span>
+      </div>
+      <button type="button" class="window-close-btn" onclick="window.APP.closeModals()" aria-label="Pencereyi Kapat">✕ KAPAT</button>
+    </div>
+    <div class="window-body">
+      <p class="window-body-desc">Çalışmak istediğiniz hedef müfredat modülünü seçiniz:</p>
+      <div class="window-module-list">
+        <button type="button" class="window-item-btn active" data-mod-id="maarif" onclick="window.APP.switchModuleAndClose('maarif')">
+          <span class="w-item-icon">🎓</span>
+          <div class="w-item-info">
+            <span class="w-item-title">5. Sınıf Maarif Modeli</span>
+            <span class="w-item-meta">8 TEMA • 817 KELİME</span>
+          </div>
+          <span class="w-item-arrow">→</span>
+        </button>
+        <button type="button" class="window-item-btn" data-mod-id="yds" onclick="window.APP.switchModuleAndClose('yds')">
+          <span class="w-item-icon">🎯</span>
+          <div class="w-item-info">
+            <span class="w-item-title">YDS &amp; YÖKDİL Akademik</span>
+            <span class="w-item-meta">B2/C1 SINAV • 2.894 KELİME</span>
+          </div>
+          <span class="w-item-arrow">→</span>
+        </button>
+        <button type="button" class="window-item-btn" data-mod-id="oxford" onclick="window.APP.switchModuleAndClose('oxford')">
+          <span class="w-item-icon">📖</span>
+          <div class="w-item-info">
+            <span class="w-item-title">The Oxford 5000</span>
+            <span class="w-item-meta">A1–C1 SEVİYELER • 5.841 KELİME</span>
+          </div>
+          <span class="w-item-arrow">→</span>
+        </button>
+        <button type="button" class="window-item-btn" data-mod-id="all" onclick="window.APP.switchModuleAndClose('all')">
+          <span class="w-item-icon">📚</span>
+          <div class="w-item-info">
+            <span class="w-item-title">Tüm Kütüphane</span>
+            <span class="w-item-meta">6.658 KELİME BİRLEŞİK HAVUZ</span>
+          </div>
+          <span class="w-item-arrow">→</span>
+        </button>
       </div>
     </div>
   </div>
 
-  <!-- 2. STICKY APP SUB-HEADER -->
-  <header class="app-header">
-    <div class="header-container">
-      
-      <!-- Brand & Home Group -->
-      <button type="button" class="brand-group-btn" onclick="window.APP.goHome()" aria-label="Learnish Ana Sayfasına Dön">
-        <div class="brand-icon-wrapper">
-          <img src="logo.svg?v=codex2" alt="Learnish Logo" class="brand-icon">
-          <span class="brand-home-pill" aria-hidden="true">EV</span>
-        </div>
-        <div class="brand-info">
-          <h1>Learnish</h1>
-          <p id="app-brand-subtitle">5. Sınıf Maarif Modeli • Günlük Görev: 10 Kelime</p>
-        </div>
-      </button>
-
-      <!-- Prominent Home Action -->
-      <button type="button" class="nav-home-btn" id="header-home-btn" onclick="window.APP.goHome()" title="Ana Sayfaya / Günün Çalışmasına Dön">
-        <span class="home-icon" aria-hidden="true">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square" stroke-linejoin="miter"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
-        </span>
-        <span class="home-label">Ana Sayfa</span>
-      </button>
-
-      <!-- Navigation Tabs -->
-      <nav class="nav-tabs" aria-label="Uygulama Modları">
-        <button type="button" class="nav-btn active" data-view="daily" id="tab-daily">
-          <span class="nav-btn-icon" id="tab-daily-icon" aria-hidden="true">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square" stroke-linejoin="miter"><rect x="3" y="4" width="18" height="18"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-          </span>
-          <span id="tab-daily-text">Günün 10'lusu</span>
-        </button>
-        <button type="button" class="nav-btn" data-view="flashcard" id="tab-flashcard">
-          <span class="nav-btn-icon" aria-hidden="true">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square" stroke-linejoin="miter"><rect x="2" y="4" width="20" height="16"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
-          </span>
-          <span id="tab-flashcard-text">Flashcard</span>
-        </button>
-        <button type="button" class="nav-btn" data-view="quiz" id="tab-quiz">
-          <span class="nav-btn-icon" aria-hidden="true">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square" stroke-linejoin="miter"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
-          </span>
-          <span id="tab-quiz-text">Quiz &amp; Test</span>
-        </button>
-        <button type="button" class="nav-btn" data-view="directory" id="tab-directory">
-          <span class="nav-btn-icon" aria-hidden="true">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square" stroke-linejoin="miter"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-          </span>
-          <span id="tab-directory-text">Kelime Havuzu</span>
-        </button>
-        <button type="button" class="nav-btn" data-view="stats" id="tab-stats">
-          <span class="nav-btn-icon" aria-hidden="true">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square" stroke-linejoin="miter"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
-          </span>
-          <span id="tab-stats-text">İstatistik</span>
-        </button>
-      </nav>
-
-      <!-- Global Settings & Actions -->
-      <div class="header-actions">
-        <button type="button" class="ctrl-btn" id="accent-toggle-btn" title="İngilizce Telaffuz Aksanı (İngiliz / Amerikan)">
-          UK
-        </button>
-        <button type="button" class="ctrl-btn" id="speed-toggle-btn" title="Okuma Hızı">
-          1.0x
-        </button>
-        <button type="button" class="ctrl-btn" id="sound-toggle-btn" title="Ses Efektleri">
-          SES: AÇIK
-        </button>
-        <button type="button" class="ctrl-btn" id="theme-toggle-btn" title="Karanlık / Aydınlık Mod">
-          KOYU
-        </button>
+  <!-- 2. Çalışma Modları & Ayarlar Penceresi -->
+  <div class="bauhaus-window-dialog" id="modal-modes" role="dialog" aria-modal="true" aria-labelledby="modal-modes-title">
+    <div class="window-titlebar">
+      <div class="window-title-left">
+        <span class="window-title-square"></span>
+        <span class="window-title-text" id="modal-modes-title">ÇALIŞMA MODLARI &amp; AYARLAR</span>
       </div>
-
+      <button type="button" class="window-close-btn" onclick="window.APP.closeModals()" aria-label="Pencereyi Kapat">✕ KAPAT</button>
     </div>
-  </header>
-
-  <!-- 3. MAIN VIEWS CONTAINER -->
-  <main class="main-wrapper">
-
-    <!-- Active Navigation Breadcrumb & Back Navigator -->
-    <nav class="breadcrumb-container" id="app-breadcrumb-nav" aria-label="Konum ve Geri Navigasyonu">
-      <div class="breadcrumb-left">
-        <button type="button" class="breadcrumb-back-btn" id="breadcrumb-back-btn" onclick="window.APP.goBack()" aria-label="Bir Önceki Sayfaya Dön" title="Bir Önceki Sayfaya Dön">
-          <span class="back-arrow" aria-hidden="true">←</span>
-          <span class="back-text">Geri Dön</span>
+    <div class="window-body">
+      <p class="window-body-desc">Geçmek istediğiniz çalışma alanını seçiniz:</p>
+      <div class="window-modes-grid">
+        <button type="button" class="window-item-btn active" data-view-id="home" onclick="window.APP.switchViewAndClose('home')">
+          <span class="w-num">[1]</span>
+          <span class="w-item-title">Kontrol Merkezi</span>
+          <span class="w-item-arrow">→</span>
         </button>
-        <ol class="breadcrumb-list" id="app-breadcrumb">
-          <li class="breadcrumb-item">
-            <button type="button" class="breadcrumb-home-chip" id="breadcrumb-module-btn" onclick="window.APP.goHome()" aria-label="Ana Sayfaya Dön" title="Ana Sayfaya Dön">
-              <span class="chip-home-icon" aria-hidden="true">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square" stroke-linejoin="miter"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
-              </span>
-              <span id="breadcrumb-module-text">5. Sınıf Maarif Modeli</span>
-            </button>
-          </li>
-          <li class="breadcrumb-sep" aria-hidden="true">/</li>
-          <li class="breadcrumb-item active" id="breadcrumb-view-label">Günün 10'lusu</li>
-        </ol>
+        <button type="button" class="window-item-btn" data-view-id="daily" onclick="window.APP.switchViewAndClose('daily')">
+          <span class="w-num">[2]</span>
+          <span class="w-item-title" id="m-modal-daily-text">Günün 10'lusu</span>
+          <span class="w-item-arrow">→</span>
+        </button>
+        <button type="button" class="window-item-btn" data-view-id="flashcard" onclick="window.APP.switchViewAndClose('flashcard')">
+          <span class="w-num">[3]</span>
+          <span class="w-item-title" id="m-modal-fc-text">Flashcard Kartları</span>
+          <span class="w-item-arrow">→</span>
+        </button>
+        <button type="button" class="window-item-btn" data-view-id="quiz" onclick="window.APP.switchViewAndClose('quiz')">
+          <span class="w-num">[4]</span>
+          <span class="w-item-title" id="m-modal-quiz-text">Quiz &amp; Test</span>
+          <span class="w-item-arrow">→</span>
+        </button>
+        <button type="button" class="window-item-btn" data-view-id="directory" onclick="window.APP.switchViewAndClose('directory')">
+          <span class="w-num">[5]</span>
+          <span class="w-item-title">Kelime Havuzu</span>
+          <span class="w-item-arrow">→</span>
+        </button>
+        <button type="button" class="window-item-btn" data-view-id="stats" onclick="window.APP.switchViewAndClose('stats')">
+          <span class="w-num">[6]</span>
+          <span class="w-item-title">İstatistik &amp; Analiz</span>
+          <span class="w-item-arrow">→</span>
+        </button>
       </div>
-      <div class="breadcrumb-right" id="breadcrumb-context-badge">
-        <div id="breadcrumb-dynamic-badge" class="badge-live-container">
-          <!-- Dynamically populated with live telemetry progress -->
+
+      <!-- Mobil Hızlı Ayarlar -->
+      <div class="window-sub-section">
+        <div class="window-sub-label">SİSTEM AYARLARI</div>
+        <div class="window-settings-row">
+          <button type="button" class="ctrl-btn" id="m-accent-toggle-btn" title="İngilizce Telaffuz Aksanı">UK</button>
+          <button type="button" class="ctrl-btn" id="m-speed-toggle-btn" title="Okuma Hızı">1.0x</button>
+          <button type="button" class="ctrl-btn" id="m-sound-toggle-btn" title="Ses Efektleri">SES: AÇIK</button>
+          <button type="button" class="ctrl-btn" id="m-theme-toggle-btn" title="Karanlık/Aydınlık Mod">TEMA: AÇIK</button>
         </div>
       </div>
-    </nav>
-    
-    <!-- View 1: Günlük Çalışma / Workout -->
-    <section id="view-daily" class="view-section active" aria-labelledby="tab-daily">
-      <!-- Injected by app.js -->
-    </section>
-
-    <!-- View 2: Flashcard Modu -->
-    <section id="view-flashcard" class="view-section" aria-labelledby="tab-flashcard">
-      <!-- Injected by app.js -->
-    </section>
-
-    <!-- View 3: Quiz & Test Modu -->
-    <section id="view-quiz" class="view-section" aria-labelledby="tab-quiz">
-      <!-- Injected by app.js -->
-    </section>
-
-    <!-- View 4: Kelime Havuzu & Arama -->
-    <section id="view-directory" class="view-section" aria-labelledby="tab-directory">
-      <!-- Injected by app.js -->
-    </section>
-
-    <!-- View 5: İstatistikler & Analiz -->
-    <section id="view-stats" class="view-section" aria-labelledby="tab-stats">
-      <!-- Injected by app.js -->
-    </section>
-
-  </main>
+    </div>
+  </div>
 
   <!-- Data & Application Logic -->
   <script>
@@ -132026,13 +133926,14 @@ const WORDS_DATA = [
   // State Management
   const STATE = {
     activeModule: localStorage.getItem('learnish_active_module') || 'maarif', // 'maarif' | 'yds' | 'oxford' | 'all'
-    currentView: 'daily', // 'daily', 'flashcard', 'quiz', 'directory', 'stats'
-    viewHistory: ['daily'],
+    currentView: 'home', // 'home', 'daily', 'flashcard', 'quiz', 'directory', 'stats'
+    viewHistory: ['home'],
     currentDay: 1, // Maarif: 1-82, YDS: 1-145
     activeFlashcardIndex: 0,
     filteredFlashcards: [],
     flashcardFlipped: false,
     flashcardSource: 'daily',
+    flashcardIsShuffled: false,
     quizState: {
       active: false,
       questions: [],
@@ -132051,17 +133952,20 @@ const WORDS_DATA = [
       status: 'all',
       pos: 'all' // 'all', 'verb', 'noun', 'adj_adv' (especially for YDS)
     },
+    directoryPage: 1,
+    directoryPageSize: 60,
     settings: {
       accent: localStorage.getItem('mk_accent') || 'en-GB', // 'en-GB' or 'en-US'
       speed: parseFloat(localStorage.getItem('mk_speed') || '1.0'),
       soundEffects: localStorage.getItem('mk_sound') !== 'false',
-      theme: localStorage.getItem('mk_theme') || 'dark'
+      theme: localStorage.getItem('mk_theme') || 'light'
     },
     userData: {
       learned: new Set(JSON.parse(localStorage.getItem('mk_learned') || '[]')),
       review: new Set(JSON.parse(localStorage.getItem('mk_review') || '[]')),
       starred: new Set(JSON.parse(localStorage.getItem('mk_starred') || '[]')),
-      stats: JSON.parse(localStorage.getItem('mk_stats') || '{"quizzesPlayed":0,"correctAnswers":0,"totalQuestions":0,"bestStreak":0}')
+      stats: JSON.parse(localStorage.getItem('mk_stats') || '{"quizzesPlayed":0,"correctAnswers":0,"totalQuestions":0,"bestStreak":0}'),
+      activityLog: JSON.parse(localStorage.getItem('mk_activity_log') || '[]')
     }
   };
 
@@ -132074,6 +133978,19 @@ const WORDS_DATA = [
   // ==========================================================================
   // Web Audio API Synthesizer (Zero External Audio Files)
   // ==========================================================================
+  
+  // Fisher-Yates (Knuth) Shuffle Algorithm (True Random Distribution)
+  function shuffleArray(arr) {
+    const copy = [...arr];
+    for (let i = copy.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      const temp = copy[i];
+      copy[i] = copy[j];
+      copy[j] = temp;
+    }
+    return copy;
+  }
+
   let audioCtx = null;
 
   function initAudioContext() {
@@ -132161,7 +134078,7 @@ const WORDS_DATA = [
     }
 
     window.speechSynthesis.cancel();
-    const cleanWord = text.replace(/\[.*?\]/g, '').replace(/[\/\\()]/g, '').trim();
+    const cleanWord = text.replace(/\[.*?\]/g, '').replace(/[\/\()]/g, '').trim();
     const utterance = new SpeechSynthesisUtterance(cleanWord);
     utterance.lang = STATE.settings.accent || 'en-GB';
     utterance.rate = STATE.settings.speed || 1.0;
@@ -132191,19 +134108,46 @@ const WORDS_DATA = [
       localStorage.setItem('mk_review', JSON.stringify(Array.from(STATE.userData.review)));
       localStorage.setItem('mk_starred', JSON.stringify(Array.from(STATE.userData.starred)));
       localStorage.setItem('mk_stats', JSON.stringify(STATE.userData.stats));
+      localStorage.setItem('mk_activity_log', JSON.stringify(STATE.userData.activityLog || []));
       localStorage.setItem('mk_current_day', STATE.currentDay.toString());
     } catch (e) {
       console.warn('LocalStorage save error:', e);
     }
   }
 
+  function logActivity(moduleTitle, resultText) {
+    if (!STATE.userData.activityLog) STATE.userData.activityLog = [];
+    const now = new Date();
+    const pad = (n) => String(n).padStart(2, '0');
+    const dateStr = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())} ${pad(now.getHours())}:${pad(now.getMinutes())}`;
+    STATE.userData.activityLog.unshift({
+      date: dateStr,
+      module: moduleTitle,
+      result: resultText
+    });
+    if (STATE.userData.activityLog.length > 8) {
+      STATE.userData.activityLog = STATE.userData.activityLog.slice(0, 8);
+    }
+    saveUserData();
+  }
+
   function toggleLearned(wordId) {
     wordId = parseInt(wordId, 10);
+    const wordObj = WORDS_DATA.find(w => w.id === wordId);
     if (STATE.userData.learned.has(wordId)) {
       STATE.userData.learned.delete(wordId);
     } else {
       STATE.userData.learned.add(wordId);
       STATE.userData.review.delete(wordId);
+      const modMap = {
+        maarif: '5. SINIF MAARİF MODELİ',
+        yds: 'YDS & YÖKDİL AKADEMİK',
+        oxford: 'THE OXFORD 5000',
+        all: 'TÜM KÜTÜPHANE'
+      };
+      const modTitle = modMap[STATE.activeModule] || '5. SINIF MAARİF MODELİ';
+      const wEn = wordObj ? wordObj.en.toUpperCase() : `#${wordId}`;
+      logActivity(`${modTitle} • GÜN ${STATE.currentDay}`, `KELİME DOĞRULANDI [${wEn}] • TOPLAM: ${STATE.userData.learned.size}`);
     }
     saveUserData();
     updateUI();
@@ -132254,7 +134198,7 @@ const WORDS_DATA = [
     const word = w.en.toLowerCase();
     const preps = ['to', 'with', 'from', 'of', 'in', 'on', 'for', 'by', 'into', 'against', 'at', 'about', 'upon'];
     for (const prep of preps) {
-      const regex = new RegExp(`\\b${word}\\s+(?:(?:somebody|someone|something|sb|sth|the|a|an|his|her|their|its)\\s+)?${prep}\\b`, 'i');
+      const regex = new RegExp(`\b${word}\s+(?:(?:somebody|someone|something|sb|sth|the|a|an|his|her|their|its)\s+)?${prep}\b`, 'i');
       if (regex.test(text)) {
         return `+ ${prep.toUpperCase()}`;
       }
@@ -132281,6 +134225,87 @@ const WORDS_DATA = [
   // ==========================================================================
   // TOP MODULE SWITCHER
   // ==========================================================================
+
+  // ==========================================================================
+  // BAUHAUS MOBİL PENCERELERİ (MODÜL & MÜFREDAT MODAL DIALOGLARI)
+  // ==========================================================================
+  function openCurriculumModal() {
+    closeModals();
+    const backdrop = document.getElementById('bauhaus-modal-backdrop');
+    const modal = document.getElementById('modal-curriculum');
+    if (backdrop && modal) {
+      backdrop.classList.add('active');
+      modal.classList.add('active');
+      document.body.classList.add('modal-open');
+    }
+  }
+
+  function openModesModal() {
+    closeModals();
+    const backdrop = document.getElementById('bauhaus-modal-backdrop');
+    const modal = document.getElementById('modal-modes');
+    if (backdrop && modal) {
+      backdrop.classList.add('active');
+      modal.classList.add('active');
+      document.body.classList.add('modal-open');
+    }
+  }
+
+  function closeModals() {
+    const backdrop = document.getElementById('bauhaus-modal-backdrop');
+    const currModal = document.getElementById('modal-curriculum');
+    const modesModal = document.getElementById('modal-modes');
+    if (backdrop) backdrop.classList.remove('active');
+    if (currModal) currModal.classList.remove('active');
+    if (modesModal) modesModal.classList.remove('active');
+    document.body.classList.remove('modal-open');
+  }
+
+  function switchModuleAndClose(moduleKey) {
+    switchModule(moduleKey);
+    closeModals();
+  }
+
+  function switchViewAndClose(viewKey) {
+    switchView(viewKey);
+    closeModals();
+  }
+
+  function updateMobileTriggerLabels() {
+    const currLabel = document.getElementById('mobile-curr-label');
+    const modeLabel = document.getElementById('mobile-mode-label');
+
+    const modTitles = {
+      maarif: '5. Sınıf Maarif',
+      yds: 'YDS/YÖKDİL',
+      oxford: 'Oxford 5000',
+      all: 'Tüm Havuz'
+    };
+    if (currLabel) {
+      currLabel.textContent = (modTitles[STATE.activeModule] || 'Müfredat') + ' ▾';
+    }
+
+    const viewTitles = {
+      home: 'Kontrol Merkezi',
+      daily: STATE.activeModule === 'yds' ? "Günün 20'si" : "Günün 10'lusu",
+      flashcard: 'Flashcard',
+      quiz: 'Quiz & Test',
+      directory: 'Kelime Havuzu',
+      stats: 'İstatistik'
+    };
+    if (modeLabel) {
+      modeLabel.textContent = (viewTitles[STATE.currentView] || 'Menü') + ' ▾';
+    }
+
+    // Modal içindeki aktif sınıflar
+    document.querySelectorAll('.window-item-btn[data-mod-id]').forEach(btn => {
+      btn.classList.toggle('active', btn.getAttribute('data-mod-id') === STATE.activeModule);
+    });
+    document.querySelectorAll('.window-item-btn[data-view-id]').forEach(btn => {
+      btn.classList.toggle('active', btn.getAttribute('data-view-id') === STATE.currentView);
+    });
+  }
+
   function switchModule(moduleName) {
     STATE.activeModule = moduleName;
     localStorage.setItem('learnish_active_module', moduleName);
@@ -132314,6 +134339,8 @@ const WORDS_DATA = [
       if (statsText) statsText.innerText = "YDS Analizi";
       STATE.directoryFilters.dataset = 'oxford';
       STATE.directoryFilters.cefr = 'all';
+      STATE.directoryFilters.search = '';
+      STATE.directoryPage = 1;
       STATE.flashcardSource = 'yds_all';
     } else if (moduleName === 'maarif') {
       if (dailyText) dailyText.innerText = "Günün 10'lusu";
@@ -132323,6 +134350,8 @@ const WORDS_DATA = [
       if (statsText) statsText.innerText = "Kazanım Analizi";
       STATE.directoryFilters.dataset = 'maarif';
       STATE.directoryFilters.cefr = 'all';
+      STATE.directoryFilters.search = '';
+      STATE.directoryPage = 1;
       STATE.flashcardSource = 'daily';
     } else if (moduleName === 'oxford') {
       if (dailyText) dailyText.innerText = "Günün Kelimeleri";
@@ -132332,7 +134361,9 @@ const WORDS_DATA = [
       if (statsText) statsText.innerText = "CEFR Analizi";
       STATE.directoryFilters.dataset = 'oxford';
       STATE.directoryFilters.cefr = 'all';
-      STATE.flashcardSource = 'oxford_all';
+      STATE.directoryFilters.search = '';
+      STATE.directoryPage = 1;
+      STATE.flashcardSource = 'daily';
     } else {
       if (dailyText) dailyText.innerText = "Günün 10'lusu";
       if (flashText) flashText.innerText = "Flashcard";
@@ -132341,10 +134372,326 @@ const WORDS_DATA = [
       if (statsText) statsText.innerText = "İstatistik";
       STATE.directoryFilters.dataset = 'all';
       STATE.directoryFilters.cefr = 'all';
+      STATE.directoryFilters.search = '';
+      STATE.directoryPage = 1;
       STATE.flashcardSource = 'all';
     }
 
     updateUI();
+  }
+
+  // ==========================================================================
+  // VIEW 0: KONTROL MERKEZİ / IDE COMMAND CENTER (#home)
+  // ==========================================================================
+  function retestDebugWord(wordEn) {
+    speakWord(wordEn);
+    const target = WORDS_DATA.find(w => w.en.toLowerCase() === wordEn.toLowerCase()) || {
+      id: 999999,
+      en: wordEn,
+      tr: 'Bilinmeyen Kelime',
+      desc: 'kelime',
+      cefr: 'B1'
+    };
+
+    // İlgili kelimeyi tekrar listesine ekle
+    STATE.userData.review.add(target.id);
+    saveUserData();
+
+    // 5 soruluk odaklı hızlı test oluştur: Tıklanan kelime 1. soru olarak garantilenir
+    const reviewPool = WORDS_DATA.filter(w => STATE.userData.review.has(w.id) && w.id !== target.id);
+    const fillerPool = WORDS_DATA.filter(w => w.id !== target.id);
+    const extraQuestions = [...shuffleArray(reviewPool), ...shuffleArray(fillerPool)].slice(0, 4);
+    const quizTargets = [target, ...extraQuestions];
+
+    const questions = quizTargets.map(t => {
+      const distractors = WORDS_DATA
+        .filter(w => w.id !== t.id)
+        .sort(() => Math.random() - 0.5)
+        .slice(0, 3);
+
+      const options = [t, ...distractors]
+        .sort(() => Math.random() - 0.5)
+        .map(w => ({
+          id: w.id,
+          text: w.tr || w.en,
+          isCorrect: w.id === t.id
+        }));
+
+      return {
+        targetWord: t,
+        clozeSentence: null,
+        options: options
+      };
+    });
+
+    STATE.quizState = {
+      active: true,
+      questions: questions,
+      currentIndex: 0,
+      score: 0,
+      streak: 0,
+      mode: 'en-tr',
+      source: 'debug_retest',
+      answered: false,
+      waitingFeedback: false
+    };
+
+    saveQuizState();
+    switchView('quiz');
+  }
+
+  function selectHeatmapUnit(dayNum) {
+    STATE.currentDay = parseInt(dayNum, 10) || 1;
+    saveUserData();
+    switchView('daily');
+  }
+
+  function renderHomeView() {
+    const container = document.getElementById('view-home');
+    if (!container) return;
+
+    const module = STATE.activeModule;
+    const curriculumSubtitles = {
+      maarif: '[ HEDEF MÜFREDAT ] 5. SINIF MAARİF MODELİ',
+      yds: '[ HEDEF MÜFREDAT ] YDS & YÖKDİL AKADEMİK',
+      oxford: '[ HEDEF MÜFREDAT ] THE OXFORD 5000',
+      all: '[ HEDEF MÜFREDAT ] TÜM AKADEMİK KÜTÜPHANE'
+    };
+    const activeCurriculumSubtitle = curriculumSubtitles[module] || '[ HEDEF MÜFREDAT ] 5. SINIF MAARİF MODELİ';
+
+    const unitTitles = {
+      maarif: 'Unit 4: My Daily Routine',
+      yds: 'Module 4: Academic Verbs & Clauses',
+      oxford: 'CEFR B2: Core Academic Lexicon',
+      all: 'Unit 4: My Daily Routine'
+    };
+    const activeUnitTitle = unitTitles[module] || 'Unit 4: My Daily Routine';
+
+    // Telemetry Metrics (Live Data)
+    const learnedCount = STATE.userData.learned.size;
+    const quizStats = STATE.userData.stats || { quizzesPlayed: 0, correctAnswers: 0, totalQuestions: 0, bestStreak: 0 };
+    const streakDays = Math.max(STATE.quizState.streak || 0, quizStats.bestStreak || 0);
+    const streakFormatted = String(streakDays).padStart(2, '0') + ' GÜN';
+    const accuracyVal = quizStats.totalQuestions > 0
+      ? Math.round((quizStats.correctAnswers / quizStats.totalQuestions) * 100)
+      : 0;
+    const accuracyText = quizStats.totalQuestions > 0 ? `%${accuracyVal} DOĞRULUK` : '%0 DOĞRULUK';
+
+    // Row 3 Block A: Debug Queue (Zayıf Halkalar - Gerçek Tekrar Verileri)
+    const reviewWords = WORDS_DATA.filter(w => STATE.userData.review.has(w.id)).slice(0, 3);
+    let debugListHtml = '';
+    if (reviewWords.length === 0) {
+      debugListHtml = `
+        <div style="padding: 24px 12px; color: var(--dp-color-ink-muted); font-size: 0.82rem; font-family: var(--dp-typography-mono); text-align: center;">
+          [ 0 HATA ] Şu an tekrar kuyruğunuz temiz. Testlerde yanlış cevaplanan kelimeler anında buraya eklenir.
+        </div>
+      `;
+    } else {
+      debugListHtml = reviewWords.map(item => `
+        <div class="dash-debug-row">
+          <div class="dash-debug-word-group">
+            <span class="dash-debug-en">${item.en}</span>
+            <span class="dash-debug-tr">${item.tr}</span>
+          </div>
+          <button type="button" class="dash-retest-btn" onclick="window.APP.retestDebugWord('${item.en.replace(/'/g, "\'")}')">
+            [ Yeniden Test Et ]
+          </button>
+        </div>
+      `).join('');
+    }
+
+    // Row 3 Block B: Mastery Heatmap (Gerçek Tema & Kazanım İlerlemesi)
+    const heatmapCategories = ['Nouns', 'Verbs', 'Adjectives', 'Phrases', 'Collocations', 'Review'];
+    const totalSquares = 48; // 8 tema x 6 kazanım hücresi
+    let heatmapSquaresHtml = '';
+    for (let i = 0; i < totalSquares; i++) {
+      const unitNum = Math.floor(i / 6) + 1;
+      const catName = heatmapCategories[i % heatmapCategories.length];
+      const themeWords = WORDS_DATA.filter(w => w.themeNum === unitNum);
+      const learnedInTheme = themeWords.filter(w => STATE.userData.learned.has(w.id)).length;
+      const stepThreshold = Math.max(1, Math.ceil((themeWords.length / 6) * ((i % 6) + 1)));
+      const isMastered = learnedInTheme >= stepThreshold && learnedInTheme > 0;
+      const statusLabel = isMastered ? 'Kazanıldı' : 'Bekliyor';
+      const themeName = THEMES_DATA[unitNum]?.titleTr || `Tema ${unitNum}`;
+      const titleText = `Tema ${unitNum} (${themeName}) - ${catName}: ${statusLabel} (${learnedInTheme}/${themeWords.length} kelime)`;
+      heatmapSquaresHtml += `<button type="button" class="heatmap-cell ${isMastered ? 'mastered' : ''}" title="${titleText}" aria-label="${titleText}" onclick="window.APP.selectHeatmapUnit(${unitNum})"></button>`;
+    }
+
+    // Row 4: Terminal Log / Recent Activity (Gerçek Aktivite Günlüğü)
+    const savedLogs = Array.isArray(STATE.userData.activityLog) && STATE.userData.activityLog.length > 0
+      ? STATE.userData.activityLog.slice(0, 5)
+      : [];
+
+    let terminalRowsHtml = '';
+    if (savedLogs.length === 0) {
+      terminalRowsHtml = `
+        <tr>
+          <td colspan="4" style="text-align: center; padding: 24px; color: var(--dp-color-ink-muted); font-family: var(--dp-typography-mono); font-size: 0.82rem;">
+            [ BOŞ ] Henüz bir aktivite kaydı bulunmuyor. Günün kelimelerini veya test modüllerini tamamladıkça kayıtlar buraya işlenir.
+          </td>
+        </tr>
+      `;
+    } else {
+      terminalRowsHtml = savedLogs.map(row => `
+        <tr>
+          <td>${row.date}</td>
+          <td>${row.module}</td>
+          <td>${row.action || 'Öğrenme Oturumu'}</td>
+          <td class="dash-terminal-result">${row.result}</td>
+        </tr>
+      `).join('');
+    }
+
+    container.innerHTML = `
+      <div class="dashboard-matrix">
+
+        <!-- 1. LEARNISH ÇALIŞMA REHBERİ & TAVSİYELER (Row 1 / Col-span: 12) -->
+        <header class="dash-target-banner dash-guide-banner">
+          <div class="dash-target-left">
+            <div class="dash-target-subtitle">[ REHBER &amp; METODOLOJİ ] ÖNERİLEN ÇALIŞMA ADIMLARI</div>
+            <h1 class="dash-target-title">Learnish ile Nasıl İlerlemelisin?</h1>
+            
+            <div class="dash-guide-grid">
+              <div class="dash-guide-step">
+                <span class="guide-step-num">01</span>
+                <div class="guide-step-content">
+                  <strong>Günün Hedefi:</strong> Her gün belirlenen mikro kelime havuzunu tamamla, bilişsel yorgunluğu önle.
+                </div>
+              </div>
+              <div class="dash-guide-step">
+                <span class="guide-step-num">02</span>
+                <div class="guide-step-content">
+                  <strong>Flashcard &amp; Telaffuz:</strong> Kartları çevirip sesini dinle; zorlandıklarını "Tekrar Et"e al.
+                </div>
+              </div>
+              <div class="dash-guide-step">
+                <span class="guide-step-num">03</span>
+                <div class="guide-step-content">
+                  <strong>Quiz &amp; Aktif Hatırlama:</strong> Test modlarıyla kendini sına; yanlışların zayıf halkalara kaydedilir.
+                </div>
+              </div>
+              <div class="dash-guide-step">
+                <span class="guide-step-num">04</span>
+                <div class="guide-step-content">
+                  <strong>Aralıklı Tekrar:</strong> Hata ayıklama listendeki kelimeleri düzenli test ederek belleğini kalıcı kıl.
+                </div>
+              </div>
+            </div>
+
+            <div class="dash-guide-footer-tip">
+              <span class="guide-tip-tag">İPUCU:</span> Klavye kısayolları ile hızlanın: <kbd class="kbd-mini">SPACE</kbd> Çevir, <kbd class="kbd-mini">P</kbd> Dinle, <kbd class="kbd-mini">1</kbd> Tekrar, <kbd class="kbd-mini">2</kbd> Öğrendim.
+            </div>
+          </div>
+          <div class="dash-target-right">
+            <button type="button" class="dash-primary-cta" onclick="window.APP.switchView('daily')">
+              GÜNÜN 10'LUSUNU BAŞLAT
+            </button>
+          </div>
+        </header>
+
+        <!-- 2. TELEMETRY GRID (Row 2 / Col-span: 12 -> 3 equal columns inside) -->
+        <section class="dash-telemetry-row" aria-label="Sistem Telemetri Metrikleri">
+          <!-- Card 1 (Streak) -->
+          <article class="dash-telemetry-card">
+            <div class="dash-telemetry-header">
+              <span class="dash-telemetry-label">SİSTEM AKTİFLİĞİ</span>
+              <span class="dash-telemetry-index">[01]</span>
+            </div>
+            <div class="dash-telemetry-value-wrap">
+              <span class="dash-telemetry-value">${streakFormatted}</span>
+            </div>
+            <div class="dash-telemetry-foot">KESİNTİSİZ OTURUM SERİSİ</div>
+          </article>
+
+          <!-- Card 2 (Total Words) -->
+          <article class="dash-telemetry-card">
+            <div class="dash-telemetry-header">
+              <span class="dash-telemetry-label">ÖĞRENİLEN KELİME</span>
+              <span class="dash-telemetry-index">[02]</span>
+            </div>
+            <div class="dash-telemetry-value-wrap">
+              <span class="dash-telemetry-value">${learnedCount} KELİME</span>
+            </div>
+            <div class="dash-telemetry-foot">DOĞRULANMIŞ KALICI BELLEK</div>
+          </article>
+
+          <!-- Card 3 (Accuracy) -->
+          <article class="dash-telemetry-card">
+            <div class="dash-telemetry-header">
+              <span class="dash-telemetry-label">İSABET ORANI</span>
+              <span class="dash-telemetry-index">[03]</span>
+            </div>
+            <div class="dash-telemetry-value-wrap">
+              <span class="dash-success-square" aria-hidden="true"></span>
+              <span class="dash-telemetry-value">${accuracyText}</span>
+            </div>
+            <div class="dash-telemetry-foot">SİMÜLATÖR &amp; TEST PERFORMANSI</div>
+          </article>
+        </section>
+
+        <!-- 3. DEBUG QUEUE & HEATMAP (Row 3 / Col-span: 6 + 6) -->
+        <!-- Block A (Debug Queue - 6 cols) -->
+        <section class="dash-debug-panel" aria-labelledby="dash-debug-heading">
+          <div class="dash-module-header">
+            <h2 class="dash-module-title" id="dash-debug-heading">HATA AYIKLAMA (ZAYIF HALKALAR)</h2>
+            <span class="dash-module-tag">[DEBUG_QUEUE]</span>
+          </div>
+          <div class="dash-debug-list">
+            ${debugListHtml}
+          </div>
+        </section>
+
+        <!-- Block B (Mastery Heatmap - 6 cols) -->
+        <section class="dash-heatmap-panel" aria-labelledby="dash-heatmap-heading">
+          <div class="dash-module-header">
+            <h2 class="dash-module-title" id="dash-heatmap-heading">KAZANIM MATRİSİ</h2>
+            <span class="dash-module-tag">[UNIT_MATRIX]</span>
+          </div>
+          <div class="dash-heatmap-body">
+            <div class="dash-heatmap-grid" role="group" aria-label="Ünite Kazanım Matrisi">
+              ${heatmapSquaresHtml}
+            </div>
+            <div class="dash-heatmap-legend">
+              <span>8 ÜNİTE • 48 KAZANIM HÜCRESİ</span>
+              <div class="dash-legend-items">
+                <span class="dash-legend-item">
+                  <span class="dash-legend-swatch unlearned"></span>
+                  <span>BEKLEYEN</span>
+                </span>
+                <span class="dash-legend-item">
+                  <span class="dash-legend-swatch mastered"></span>
+                  <span>TAMAMLANAN</span>
+                </span>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- 4. TERMINAL LOG / RECENT ACTIVITY (Row 4 / Col-span: 12) -->
+        <section class="dash-terminal-panel" aria-labelledby="dash-terminal-heading">
+          <div class="dash-module-header">
+            <h2 class="dash-module-title" id="dash-terminal-heading">AKTİVİTE LOG DEFTERİ</h2>
+            <span class="dash-module-tag">[SYS_LOG]</span>
+          </div>
+          <div class="dash-terminal-table-wrap">
+            <table class="dash-terminal-table">
+              <thead>
+                <tr>
+                  <th scope="col">TARİH</th>
+                  <th scope="col">MODÜL</th>
+                  <th scope="col">İŞLEM</th>
+                  <th scope="col">SONUÇ</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${terminalRowsHtml}
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+      </div>
+    `;
   }
 
   // ==========================================================================
@@ -132381,12 +134728,7 @@ const WORDS_DATA = [
       batchSize = 10;
       heroClass = 'module-hero-maarif';
       progressFillClass = 'progress-fill-maarif';
-      const curThemeNum = Math.ceil(STATE.currentDay / 10);
-      const curTheme = (typeof THEMES_DATA !== 'undefined' && THEMES_DATA[curThemeNum]) ? THEMES_DATA[curThemeNum] : { titleTr: 'Okul Yaşamı' };
-      bannerTitle = `GÜN ${STATE.currentDay} • TEMA ${curThemeNum}: ${(curTheme.titleTr || curTheme.title || 'Okul Yaşamı').toUpperCase()}`;
-      bannerDesc = `Günlük <strong>10 hedef kelime</strong> • Odaklı öğrenim ve kalıcı kelime kazanımı`;
     }
-
     const totalDays = Math.ceil(targetPool.length / batchSize) || 1;
     if (STATE.currentDay > totalDays) STATE.currentDay = 1;
 
@@ -132395,13 +134737,22 @@ const WORDS_DATA = [
     const dayLearnedCount = dayWords.filter(w => STATE.userData.learned.has(w.id)).length;
     const dayPercent = Math.round((dayLearnedCount / (dayWords.length || 1)) * 100);
 
-    // Build Day options dropdown with Themes
+    if (module === 'maarif') {
+      const curThemeNum = (dayWords[0] && dayWords[0].themeNum) ? dayWords[0].themeNum : Math.min(8, Math.max(1, Math.ceil(STATE.currentDay / 10)));
+      const curTheme = (typeof THEMES_DATA !== 'undefined' && THEMES_DATA[curThemeNum]) ? THEMES_DATA[curThemeNum] : { titleTr: 'Okul Yaşamı' };
+      bannerTitle = `GÜN ${STATE.currentDay} • TEMA ${curThemeNum}: ${(curTheme.titleTr || curTheme.title || 'Okul Yaşamı').toUpperCase()}`;
+      bannerDesc = `Günlük <strong>10 hedef kelime</strong> • Odaklı öğrenim ve kalıcı kelime kazanımı`;
+    }
+
+    // Build Day options dropdown with accurate Themes
     let dayOptionsHtml = '';
     for (let d = 1; d <= totalDays; d++) {
       let dayThemeTitle = '';
       if (module === 'maarif') {
-        const themeNum = Math.ceil(d / 10);
-        const t = (typeof THEMES_DATA !== 'undefined' && THEMES_DATA[themeNum]) ? THEMES_DATA[themeNum].titleTr : '';
+        const dStart = (d - 1) * batchSize;
+        const dWords = targetPool.slice(dStart, dStart + batchSize);
+        const tNum = (dWords[0] && dWords[0].themeNum) ? dWords[0].themeNum : Math.min(8, Math.max(1, Math.ceil(d / 10)));
+        const t = (typeof THEMES_DATA !== 'undefined' && THEMES_DATA[tNum]) ? THEMES_DATA[tNum].titleTr : '';
         dayThemeTitle = t ? ` (${t})` : '';
       }
       dayOptionsHtml += `<option value="${d}" ${d === STATE.currentDay ? 'selected' : ''}>Gün ${d}${dayThemeTitle}</option>`;
@@ -132484,7 +134835,52 @@ const WORDS_DATA = [
       `;
     });
 
+    const modDisplayNames = {
+      maarif: '5. Sınıf Maarif Modeli (817 Kelime)',
+      yds: 'YDS & YÖKDİL Akademik (2.894 Kelime)',
+      oxford: 'The Oxford 5000 (5.841 Kelime)',
+      all: 'Tüm Kütüphane (6.658 Kelime)'
+    };
+    const activeModName = modDisplayNames[module] || 'Müfredat Seçimi';
+
+    const welcomeHubHtml = `
+      <div class="welcome-module-hub">
+        <!-- Mobil Kompakt Pencere Tetikleyici (Masaüstünde gizli) -->
+        <div class="mobile-curriculum-banner">
+          <button type="button" class="mobile-curriculum-open-btn" onclick="window.APP.openCurriculumModal()">
+            <span class="mcb-badge">AKTİF MÜFREDAT</span>
+            <span class="mcb-title">${activeModName}</span>
+            <span class="mcb-action">PENCEREYİ AÇ ▾</span>
+          </button>
+        </div>
+
+        <div class="welcome-hub-top">
+          <div class="welcome-hub-title">LEARNISH AKADEMİK ÇALIŞMA İSTASYONU • MÜFREDAT SEÇİMİ</div>
+          <div class="welcome-hub-sub">SOL PANEL VEYA AŞAĞIDAKİ KARTLARDAN AKTİF MODÜLÜ DEĞİŞTİREBİLİRSİNİZ</div>
+        </div>
+        <div class="welcome-hub-grid">
+          <button type="button" class="welcome-mod-card ${module === 'maarif' ? 'active' : ''}" onclick="window.APP.switchModule('maarif')">
+            <span class="welcome-mod-name">5. Sınıf Maarif Modeli</span>
+            <span class="welcome-mod-badge">8 TEMA • GÜNLÜK 10 KELİME</span>
+          </button>
+          <button type="button" class="welcome-mod-card ${module === 'yds' ? 'active' : ''}" onclick="window.APP.switchModule('yds')">
+            <span class="welcome-mod-name">YDS &amp; YÖKDİL Akademik</span>
+            <span class="welcome-mod-badge">B2/C1 SINAV • GÜNLÜK 20 KELİME</span>
+          </button>
+          <button type="button" class="welcome-mod-card ${module === 'oxford' ? 'active' : ''}" onclick="window.APP.switchModule('oxford')">
+            <span class="welcome-mod-name">The Oxford 5000</span>
+            <span class="welcome-mod-badge">A1–C1 • GÜNLÜK 25 KELİME</span>
+          </button>
+          <button type="button" class="welcome-mod-card ${module === 'all' ? 'active' : ''}" onclick="window.APP.switchModule('all')">
+            <span class="welcome-mod-name">Tüm Kütüphane</span>
+            <span class="welcome-mod-badge">6.658 KELİME BİRLEŞİK HAVUZ</span>
+          </button>
+        </div>
+      </div>
+    `;
+
     container.innerHTML = `
+      ${welcomeHubHtml}
       ${celebrationHtml}
       <div class="module-hero-card ${heroClass} glass-panel">
         <div class="hero-info">
@@ -132503,14 +134899,17 @@ const WORDS_DATA = [
       <div class="daily-progress-box glass-panel">
         <div class="progress-header">
           <span>GÜNLÜK İLERLEME: <strong>${dayLearnedCount} / ${dayWords.length}</strong> KELİME</span>
-          <span style="color: var(--dp-color-field-support); font-weight:700;">%${dayPercent} TAMAMLANDI</span>
+          <span style="color: var(--dp-color-emphasis); font-weight:700;">%${dayPercent} TAMAMLANDI</span>
         </div>
         <div class="progress-track">
           <div class="progress-fill ${progressFillClass}" style="width: ${dayPercent}%;"></div>
         </div>
         <div style="display: flex; gap: 10px; margin-top: 14px; flex-wrap: wrap;">
-          <button class="ctrl-btn" onclick="window.APP.startDailyFlashcards()">
+          <button class="ctrl-btn" onclick="window.APP.startDailyFlashcards(false)">
             GÜNÜN KARTLARIYLA ÇALIŞ
+          </button>
+          <button class="ctrl-btn" onclick="window.APP.startDailyFlashcards(true)" title="Kelimeleri rastgele karıştırarak başlat">
+            ${ICONS.shuffle} <span>KARIŞIK BAŞLAT</span>
           </button>
           <button class="ctrl-btn" onclick="window.APP.startDailyQuiz()">
             GÜNÜN TESTİNİ BAŞLAT
@@ -132559,54 +134958,66 @@ const WORDS_DATA = [
   // ==========================================================================
   // VIEW 2: 3D FLASHCARD MODU
   // ==========================================================================
-  function renderFlashcardView() {
+  function renderFlashcardView(preservePool = false) {
     const container = document.getElementById('view-flashcard');
     if (!container) return;
 
     const sourceSelect = document.getElementById('fc-source-select');
     const sourceVal = sourceSelect ? sourceSelect.value : (STATE.flashcardSource || 'daily');
+    const sourceChanged = (STATE.flashcardSource !== sourceVal);
     STATE.flashcardSource = sourceVal;
 
     let pool = [];
-    if (sourceVal === 'daily') {
-      const isYDS = STATE.activeModule === 'yds';
-      const targetPool = isYDS ? WORDS_DATA.filter(isYDSWord) : WORDS_DATA.filter(w => w.dataset === 'maarif' || !w.dataset);
-      const bSize = isYDS ? 20 : 10;
-      const start = (STATE.currentDay - 1) * bSize;
-      pool = targetPool.slice(start, start + bSize);
-    } else if (sourceVal === 'yds_all') {
-      pool = WORDS_DATA.filter(isYDSWord);
-    } else if (sourceVal === 'yds_verbs') {
-      pool = WORDS_DATA.filter(w => isYDSWord(w) && getWordPOS(w) === 'verb');
-    } else if (sourceVal === 'yds_nouns') {
-      pool = WORDS_DATA.filter(w => isYDSWord(w) && getWordPOS(w) === 'noun');
-    } else if (sourceVal === 'yds_adj_adv') {
-      pool = WORDS_DATA.filter(w => isYDSWord(w) && getWordPOS(w) === 'adj_adv');
-    } else if (sourceVal === 'yds_c1') {
-      pool = WORDS_DATA.filter(w => isYDSWord(w) && w.cefr === 'C1');
-    } else if (sourceVal === 'yds_b2') {
-      pool = WORDS_DATA.filter(w => isYDSWord(w) && w.cefr === 'B2');
-    } else if (sourceVal === 'maarif_all') {
-      pool = WORDS_DATA.filter(w => w.dataset === 'maarif' || !w.dataset);
-    } else if (sourceVal === 'oxford_all') {
-      pool = WORDS_DATA.filter(w => w.dataset === 'oxford');
-    } else if (sourceVal === 'oxford_a1') {
-      pool = WORDS_DATA.filter(w => w.dataset === 'oxford' && w.cefr === 'A1');
-    } else if (sourceVal === 'oxford_a2') {
-      pool = WORDS_DATA.filter(w => w.dataset === 'oxford' && w.cefr === 'A2');
-    } else if (sourceVal === 'oxford_b1') {
-      pool = WORDS_DATA.filter(w => w.dataset === 'oxford' && w.cefr === 'B1');
-    } else if (sourceVal === 'review') {
-      pool = WORDS_DATA.filter(w => STATE.userData.review.has(w.id));
-    } else if (sourceVal === 'starred') {
-      pool = WORDS_DATA.filter(w => STATE.userData.starred.has(w.id));
-    } else if (sourceVal === 'learned') {
-      pool = WORDS_DATA.filter(w => STATE.userData.learned.has(w.id));
+    if (!sourceChanged && (preservePool || STATE.flashcardIsShuffled) && STATE.filteredFlashcards && STATE.filteredFlashcards.length > 0) {
+      pool = STATE.filteredFlashcards;
     } else {
-      pool = WORDS_DATA;
+      if (sourceVal === 'daily') {
+        const isYDS = STATE.activeModule === 'yds';
+        const isOxford = STATE.activeModule === 'oxford';
+        const targetPool = isYDS 
+          ? WORDS_DATA.filter(isYDSWord) 
+          : (isOxford ? WORDS_DATA.filter(w => w.dataset === 'oxford') : WORDS_DATA.filter(w => w.dataset === 'maarif' || !w.dataset));
+        const bSize = isYDS ? 20 : (isOxford ? 25 : 10);
+        const start = (STATE.currentDay - 1) * bSize;
+        pool = targetPool.slice(start, start + bSize);
+      } else if (sourceVal === 'yds_all') {
+        pool = WORDS_DATA.filter(isYDSWord);
+      } else if (sourceVal === 'yds_verbs') {
+        pool = WORDS_DATA.filter(w => isYDSWord(w) && getWordPOS(w) === 'verb');
+      } else if (sourceVal === 'yds_nouns') {
+        pool = WORDS_DATA.filter(w => isYDSWord(w) && getWordPOS(w) === 'noun');
+      } else if (sourceVal === 'yds_adj_adv') {
+        pool = WORDS_DATA.filter(w => isYDSWord(w) && getWordPOS(w) === 'adj_adv');
+      } else if (sourceVal === 'yds_c1') {
+        pool = WORDS_DATA.filter(w => isYDSWord(w) && w.cefr === 'C1');
+      } else if (sourceVal === 'yds_b2') {
+        pool = WORDS_DATA.filter(w => isYDSWord(w) && w.cefr === 'B2');
+      } else if (sourceVal === 'maarif_all') {
+        pool = WORDS_DATA.filter(w => w.dataset === 'maarif' || !w.dataset);
+      } else if (sourceVal === 'oxford_all') {
+        pool = WORDS_DATA.filter(w => w.dataset === 'oxford');
+      } else if (sourceVal === 'oxford_a1') {
+        pool = WORDS_DATA.filter(w => w.dataset === 'oxford' && w.cefr === 'A1');
+      } else if (sourceVal === 'oxford_a2') {
+        pool = WORDS_DATA.filter(w => w.dataset === 'oxford' && w.cefr === 'A2');
+      } else if (sourceVal === 'oxford_b1') {
+        pool = WORDS_DATA.filter(w => w.dataset === 'oxford' && w.cefr === 'B1');
+      } else if (sourceVal === 'review') {
+        pool = WORDS_DATA.filter(w => STATE.userData.review.has(w.id));
+      } else if (sourceVal === 'starred') {
+        pool = WORDS_DATA.filter(w => STATE.userData.starred.has(w.id));
+      } else if (sourceVal === 'learned') {
+        pool = WORDS_DATA.filter(w => STATE.userData.learned.has(w.id));
+      } else {
+        pool = WORDS_DATA;
+      }
+      STATE.filteredFlashcards = pool;
+      if (sourceChanged) {
+        STATE.flashcardIsShuffled = false;
+        STATE.activeFlashcardIndex = 0;
+      }
     }
 
-    STATE.filteredFlashcards = pool;
     if (STATE.activeFlashcardIndex >= pool.length) {
       STATE.activeFlashcardIndex = Math.max(0, pool.length - 1);
     }
@@ -132645,7 +135056,7 @@ const WORDS_DATA = [
             </select>
           </div>
           <div class="glass-panel" style="padding: 48px 24px; text-align: center; width: 100%;">
-            <div style="font-family: var(--dp-typography-mono); font-size: 1.5rem; color: var(--dp-color-accent); margin-bottom: 12px;">[ 0 KART ]</div>
+            <div style="font-family: var(--dp-typography-mono); font-size: 1.5rem; color: var(--dp-color-accent-ink); margin-bottom: 12px;">[ 0 KART ]</div>
             <h3>Bu filtre grubunda henüz kelime bulunmuyor.</h3>
             <p style="color: var(--dp-color-ink-muted); margin-top: 6px;">Lütfen yukarıdaki menüden başka bir kelime havuzu seçin.</p>
           </div>
@@ -132671,9 +135082,16 @@ const WORDS_DATA = [
             ${STATE.activeFlashcardIndex + 1} / ${pool.length}
           </div>
 
-          <button class="ctrl-btn" onclick="window.APP.shuffleFlashcards()" title="Kartları Karıştır">
-            ${ICONS.shuffle} <span>KARIŞTIR</span>
-          </button>
+          <div class="fc-shuffle-group" style="display:inline-flex; align-items:center; gap:6px;">
+            <button class="ctrl-btn ${STATE.flashcardIsShuffled ? 'active' : ''}" onclick="window.APP.shuffleFlashcards()" title="${STATE.flashcardIsShuffled ? 'Yeniden Karıştır' : 'Destedeki Kartları Karıştır'}">
+              ${ICONS.shuffle} <span>${STATE.flashcardIsShuffled ? 'YENİDEN KARIŞTIR' : 'KARIŞTIR'}</span>
+            </button>
+            ${STATE.flashcardIsShuffled ? `
+              <button class="ctrl-btn" onclick="window.APP.unshuffleFlashcards()" title="Orijinal Alfabetik Sıraya Dön" style="padding:0 8px; font-size:0.75rem;">
+                A→Z
+              </button>
+            ` : ''}
+          </div>
         </div>
 
         <div class="card-scene" id="flashcard-scene" tabindex="0" role="button" aria-label="Kartı çevirmek için tıklayın veya Space tuşuna basın">
@@ -132737,11 +135155,11 @@ const WORDS_DATA = [
             &larr; ÖNCEKİ
           </button>
           
-          <button class="fc-action-btn ${isReview ? 'btn-review' : ''}" onclick="window.APP.toggleReview(${currentWord.id})">
+          <button class="fc-action-btn ${isReview ? 'btn-review' : ''}" onclick="window.APP.markFlashcardReview(${currentWord.id})">
             ${ICONS.repeat} <span>TEKRAR ET</span> <span class="kbd-badge">1</span>
           </button>
 
-          <button class="fc-action-btn ${isLearned ? 'btn-learned' : ''}" onclick="window.APP.toggleLearned(${currentWord.id})">
+          <button class="fc-action-btn ${isLearned ? 'btn-learned' : ''}" onclick="window.APP.markFlashcardKnown(${currentWord.id})">
             ${ICONS.check} <span>ÖĞRENDİM</span> <span class="kbd-badge">2</span>
           </button>
 
@@ -132883,18 +135301,25 @@ const WORDS_DATA = [
     // Active Quiz View
     const qState = STATE.quizState;
     if (qState.currentIndex >= qState.questions.length) {
-      localStorage.removeItem('learnish_active_quiz');
       const totalQ = qState.questions.length;
       const accuracy = Math.round((qState.score / (totalQ || 1)) * 100);
       const earnedXP = qState.score * 15;
 
-      STATE.userData.stats.quizzesPlayed++;
-      STATE.userData.stats.correctAnswers += qState.score;
-      STATE.userData.stats.totalQuestions += totalQ;
-      if (qState.streak > STATE.userData.stats.bestStreak) {
-        STATE.userData.stats.bestStreak = qState.streak;
+      if (qState.active) {
+        qState.active = false;
+        localStorage.removeItem('learnish_active_quiz');
+        STATE.userData.stats.quizzesPlayed++;
+        STATE.userData.stats.correctAnswers += qState.score;
+        STATE.userData.stats.totalQuestions += totalQ;
+        if (qState.streak > STATE.userData.stats.bestStreak) {
+          STATE.userData.stats.bestStreak = qState.streak;
+        }
+        logActivity(
+          STATE.activeModule === 'yds' ? 'YDS SİMÜLATÖR TESTİ' : 'DEĞERLENDİRME TESTİ',
+          `OTURUM TAMAMLANDI — ${qState.score}/${totalQ} DOĞRU (%${accuracy})`
+        );
+        saveUserData();
       }
-      saveUserData();
 
       let statusCode = '[ OTURUM TAMAMLANDI ]';
       let titleMessage = 'DEĞERLENDİRME TAMAMLANDI';
@@ -132912,7 +135337,7 @@ const WORDS_DATA = [
       container.innerHTML = `
         <div class="quiz-wrapper">
           <div class="quiz-setup-card glass-panel" style="text-align: center;">
-            <div style="font-family: var(--dp-typography-mono); font-size: 0.9rem; font-weight: 700; color: var(--dp-color-accent); margin-bottom: 10px; letter-spacing: 0.06em;">${statusCode}</div>
+            <div style="font-family: var(--dp-typography-mono); font-size: 0.9rem; font-weight: 700; color: var(--dp-color-accent-ink); margin-bottom: 10px; letter-spacing: 0.06em;">${statusCode}</div>
             <h2>${titleMessage}</h2>
             <p>${subMessage}</p>
 
@@ -132922,11 +135347,11 @@ const WORDS_DATA = [
                 <div class="metric-title">DOĞRU SAYISI</div>
               </div>
               <div class="stat-metric-card glass-panel">
-                <div class="metric-val" style="color: var(--dp-color-accent);">%${accuracy}</div>
+                <div class="metric-val" style="color: var(--dp-color-accent-ink);">%${accuracy}</div>
                 <div class="metric-title">BAŞARI ORANI</div>
               </div>
               <div class="stat-metric-card glass-panel">
-                <div class="metric-val" style="color: var(--dp-color-field-support);">+${earnedXP}</div>
+                <div class="metric-val" style="color: var(--dp-color-emphasis);">+${earnedXP}</div>
                 <div class="metric-title">KAZANIM PUANI</div>
               </div>
             </div>
@@ -132962,7 +135387,7 @@ const WORDS_DATA = [
 
     let questionContentHtml = '';
     if (qState.mode === 'cloze') {
-      const regex = new RegExp(`\\b${targetWord.en}[a-z]*\\b`, 'i');
+      const regex = new RegExp(`\b${targetWord.en}[a-z]*\b`, 'i');
       const clozeText = currentQ.clozeSentence || (targetWord.example ? targetWord.example.replace(regex, '<span class="cloze-blank">_______</span>') : `${targetWord.tr} anlamına gelen kelimeyi seçiniz: <span class="cloze-blank">_______</span>`);
       questionContentHtml = `
         <div class="quiz-cloze-sentence">“${clozeText}”</div>
@@ -133007,7 +135432,7 @@ const WORDS_DATA = [
               SORU ${qState.currentIndex + 1} / ${qState.questions.length} • ${activeModeTitle}
             </span>
             <div style="display: flex; gap: 8px; align-items: center;">
-              <span class="theme-pill" style="color:var(--dp-color-field-support);">SKOR: ${qState.score}</span>
+              <span class="theme-pill" style="color:var(--dp-color-emphasis);">SKOR: ${qState.score}</span>
               <button class="ctrl-btn" style="min-height: 36px; padding: 0 12px; font-size:0.75rem;" onclick="window.APP.quitQuiz()">ÇIKIŞ</button>
             </div>
           </div>
@@ -133035,12 +135460,9 @@ const WORDS_DATA = [
   }
 
   // ==========================================================================
-  // VIEW 4: KELİME HAVUZU & ARAMA
+  // VIEW 4: KELİME HAVUZU & ARAMA (Akıllı Arama, Sıfır Odak Kaybı & Sayfalama)
   // ==========================================================================
-  function renderDirectoryView() {
-    const container = document.getElementById('view-directory');
-    if (!container) return;
-
+  function getFilteredDirectoryWords() {
     const filters = STATE.directoryFilters;
     const isYdsModule = STATE.activeModule === 'yds';
 
@@ -133083,19 +135505,27 @@ const WORDS_DATA = [
         (w.definition && w.definition.toLowerCase().includes(q))
       );
     }
+    return pool;
+  }
 
-    const filtered = pool;
-    const paginatedWords = filtered.slice(0, 100);
-
-    let cardsHtml = '';
-    paginatedWords.forEach(w => {
+  function generateWordCardsHtml(words) {
+    if (!words || words.length === 0) {
+      return `
+        <div class="empty-state-box glass-panel" style="grid-column: 1 / -1; margin: 32px 0; text-align: center; padding: 32px; border: 2px solid var(--dp-color-border); background: var(--dp-color-surface);">
+          <div class="empty-icon" style="font-size: 2rem; margin-bottom: 8px;">[ 0 ]</div>
+          <div class="empty-title" style="font-weight: 800; font-size: 1.1rem;">Arama kriterlerine uygun kelime bulunamadı</div>
+          <div class="empty-desc" style="color: var(--dp-color-ink-muted); font-size: 0.85rem; margin-top: 6px;">Filtreleri değiştirerek veya farklı bir kelime aratarak tekrar deneyin.</div>
+        </div>
+      `;
+    }
+    return words.map(w => {
       const isLearned = STATE.userData.learned.has(w.id);
       const isReview = STATE.userData.review.has(w.id);
       const isStarred = STATE.userData.starred.has(w.id);
       const prepBadge = extractPreposition(w);
       const syn = getWordSynonym(w);
 
-      cardsHtml += `
+      return `
         <div class="word-card glass-panel" data-id="${w.id}">
           <div class="card-top">
             <div class="card-tags">
@@ -133134,10 +135564,95 @@ const WORDS_DATA = [
           </div>
         </div>
       `;
+    }).join('');
+  }
+
+  function generateDirectoryPaginationHtml(totalCount, currentPage, pageSize) {
+    const totalPages = Math.ceil(totalCount / pageSize) || 1;
+    if (totalPages <= 1) return '';
+
+    return `
+      <div class="dir-pagination-container">
+        <button type="button" class="dir-page-btn" ${currentPage <= 1 ? 'disabled' : ''} onclick="window.APP.setDirectoryPage(1)" title="İlk Sayfa">
+          &laquo; İLK
+        </button>
+        <button type="button" class="dir-page-btn" ${currentPage <= 1 ? 'disabled' : ''} onclick="window.APP.setDirectoryPage(${currentPage - 1})" title="Önceki Sayfa">
+          &larr; ÖNCEKİ
+        </button>
+        <span class="dir-page-indicator">SAYFA ${currentPage} / ${totalPages}</span>
+        <button type="button" class="dir-page-btn" ${currentPage >= totalPages ? 'disabled' : ''} onclick="window.APP.setDirectoryPage(${currentPage + 1})" title="Sonraki Sayfa">
+          SONRAKİ &rarr;
+        </button>
+        <button type="button" class="dir-page-btn" ${currentPage >= totalPages ? 'disabled' : ''} onclick="window.APP.setDirectoryPage(${totalPages})" title="Son Sayfa">
+          SON &raquo;
+        </button>
+      </div>
+    `;
+  }
+
+  function bindDirectoryCardAudio(scopeEl) {
+    scopeEl.querySelectorAll('.speak-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const word = btn.getAttribute('data-word');
+        btn.classList.add('speaking');
+        speakWord(word, () => btn.classList.remove('speaking'));
+      });
     });
+  }
+
+  function syncDirectoryStatusChips() {
+    const chipLearned = document.querySelector('#status-chips button[data-val="learned"]');
+    const chipReview = document.querySelector('#status-chips button[data-val="review"]');
+    const chipStarred = document.querySelector('#status-chips button[data-val="starred"]');
+    if (chipLearned) chipLearned.innerText = `ÖĞRENİLENLER (${STATE.userData.learned.size})`;
+    if (chipReview) chipReview.innerText = `TEKRAR EDİLECEKLER (${STATE.userData.review.size})`;
+    if (chipStarred) chipStarred.innerText = `FAVORİLER (${STATE.userData.starred.size})`;
+  }
+
+  function setDirectoryPage(pageNum) {
+    STATE.directoryPage = parseInt(pageNum, 10) || 1;
+    renderDirectoryView(true);
+    const grid = document.getElementById('dir-words-grid');
+    if (grid) {
+      grid.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  }
+
+  function renderDirectoryView(cardsOnly = false) {
+    const container = document.getElementById('view-directory');
+    if (!container) return;
+
+    const filters = STATE.directoryFilters;
+    const isYdsModule = STATE.activeModule === 'yds';
+
+    const filtered = getFilteredDirectoryWords();
+    const pageSize = STATE.directoryPageSize || 60;
+    const totalPages = Math.ceil(filtered.length / pageSize) || 1;
+    if (STATE.directoryPage > totalPages) STATE.directoryPage = totalPages;
+    if (STATE.directoryPage < 1) STATE.directoryPage = 1;
+
+    const startIdx = (STATE.directoryPage - 1) * pageSize;
+    const paginatedWords = filtered.slice(startIdx, startIdx + pageSize);
+    const resultText = `${filtered.length} KAYIT BULUNDU • SAYFA ${STATE.directoryPage} / ${totalPages} (${filtered.length > 0 ? (startIdx + 1) : 0} - ${Math.min(startIdx + pageSize, filtered.length)})`;
+
+    const controlsBox = document.getElementById('dir-controls-box');
+    const wordsGrid = document.getElementById('dir-words-grid');
+    const resultsInfo = document.getElementById('dir-results-info');
+    const paginationContainer = document.getElementById('dir-pagination-container');
+
+    // Akıllı kısmi güncelleme: Arama kutusu yok edilmez, klavye odağı ASLA kaybolmaz!
+    if (cardsOnly && controlsBox && wordsGrid && resultsInfo && paginationContainer) {
+      resultsInfo.innerText = resultText;
+      wordsGrid.innerHTML = generateWordCardsHtml(paginatedWords);
+      paginationContainer.innerHTML = generateDirectoryPaginationHtml(filtered.length, STATE.directoryPage, pageSize);
+      bindDirectoryCardAudio(wordsGrid);
+      syncDirectoryStatusChips();
+      return;
+    }
 
     container.innerHTML = `
-      <div class="directory-controls glass-panel">
+      <div class="directory-controls glass-panel" id="dir-controls-box">
         <div class="search-input-box">
           <span class="search-icon">${ICONS.search}</span>
           <input type="text" class="search-input" id="dir-search-input" placeholder="İngilizce, Türkçe veya eş anlam ara... (ör: abandon, advocate, relieve)" value="${filters.search}" aria-label="Kelime Ara">
@@ -133185,57 +135700,70 @@ const WORDS_DATA = [
           </div>
         </div>
 
-        <div class="dir-results-info">
-          ${filtered.length} KAYIT LİSTELENİYOR ${filtered.length > 100 ? '(İLK 100 GÖSTERİLİYOR)' : ''}
+        <div class="dir-results-info" id="dir-results-info">
+          ${resultText}
         </div>
       </div>
 
-      <div class="words-grid">
-        ${cardsHtml}
+      <div class="words-grid" id="dir-words-grid">
+        ${generateWordCardsHtml(paginatedWords)}
+      </div>
+
+      <div id="dir-pagination-container">
+        ${generateDirectoryPaginationHtml(filtered.length, STATE.directoryPage, pageSize)}
       </div>
     `;
 
-    document.getElementById('dir-search-input')?.addEventListener('input', (e) => {
-      STATE.directoryFilters.search = e.target.value;
-      renderDirectoryView();
-    });
+    const searchInput = document.getElementById('dir-search-input');
+    if (searchInput) {
+      searchInput.addEventListener('input', (e) => {
+        STATE.directoryFilters.search = e.target.value;
+        STATE.directoryPage = 1;
+        renderDirectoryView(true);
+      });
+    }
 
     container.querySelectorAll('#yds-pos-chips .filter-chip').forEach(btn => {
       btn.addEventListener('click', () => {
+        container.querySelectorAll('#yds-pos-chips .filter-chip').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
         STATE.directoryFilters.pos = btn.getAttribute('data-val');
-        renderDirectoryView();
+        STATE.directoryPage = 1;
+        renderDirectoryView(true);
       });
     });
 
     container.querySelectorAll('#dataset-chips .filter-chip').forEach(btn => {
       btn.addEventListener('click', () => {
+        container.querySelectorAll('#dataset-chips .filter-chip').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
         STATE.directoryFilters.dataset = btn.getAttribute('data-val');
-        renderDirectoryView();
+        STATE.directoryPage = 1;
+        renderDirectoryView(true);
       });
     });
 
     container.querySelectorAll('#cefr-chips .filter-chip').forEach(btn => {
       btn.addEventListener('click', () => {
+        container.querySelectorAll('#cefr-chips .filter-chip').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
         STATE.directoryFilters.cefr = btn.getAttribute('data-val');
-        renderDirectoryView();
+        STATE.directoryPage = 1;
+        renderDirectoryView(true);
       });
     });
 
     container.querySelectorAll('#status-chips .filter-chip').forEach(btn => {
       btn.addEventListener('click', () => {
+        container.querySelectorAll('#status-chips .filter-chip').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
         STATE.directoryFilters.status = btn.getAttribute('data-val');
-        renderDirectoryView();
+        STATE.directoryPage = 1;
+        renderDirectoryView(true);
       });
     });
 
-    container.querySelectorAll('.speak-btn').forEach(btn => {
-      btn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        const word = btn.getAttribute('data-word');
-        btn.classList.add('speaking');
-        speakWord(word, () => btn.classList.remove('speaking'));
-      });
-    });
+    bindDirectoryCardAudio(container.querySelector('#dir-words-grid') || container);
   }
 
   // ==========================================================================
@@ -133336,7 +135864,7 @@ const WORDS_DATA = [
       oxfordBreakdownHtml += `
         <div class="theme-stat-row">
           <div style="width: 240px;">
-            <div class="theme-stat-name" style="color: var(--dp-color-field-support); font-weight: 700;">CEFR ${item.level}</div>
+            <div class="theme-stat-name" style="color: var(--dp-color-emphasis); font-weight: 700;">CEFR ${item.level}</div>
             <div style="font-family: var(--dp-typography-mono); font-size: 0.78rem; color: var(--dp-color-ink-muted);">${item.name}</div>
           </div>
           <div class="theme-stat-bar-container">
@@ -133349,14 +135877,81 @@ const WORDS_DATA = [
       `;
     });
 
+    // Aktif Müfredat Verileri (Home'dan taşınan hedef kontrolü)
+    const curMaarifThemeNum = Math.min(8, Math.max(1, Math.ceil(STATE.currentDay / 10)));
+    let activeCurriculumTitle = '5. Sınıf Maarif Modeli';
+    let activeFocusName = THEMES_DATA[curMaarifThemeNum]?.titleTr ? `Tema ${curMaarifThemeNum}: ${THEMES_DATA[curMaarifThemeNum].titleTr}` : 'Tüm Temalar';
+    let activeWords = maarifWords;
+    let activeLearned = maarifLearned;
+    let activePct = maarifPct;
+
+    if (STATE.activeModule === 'yds') {
+      activeCurriculumTitle = 'YDS & YÖKDİL Akademik Kelime Havuzu';
+      activeFocusName = 'B2 - C1 İleri Akademik Kelimeler';
+      activeWords = ydsWords;
+      activeLearned = ydsLearned;
+      activePct = ydsPct;
+    } else if (STATE.activeModule === 'oxford') {
+      activeCurriculumTitle = 'The Oxford 5000™ Kelime Standartları';
+      activeFocusName = 'A1 - C1 Düzey CEFR Kelimeleri';
+      activeWords = oxfordWords;
+      activeLearned = oxfordLearned;
+      activePct = oxfordPct;
+    } else if (STATE.activeModule === 'all') {
+      activeCurriculumTitle = 'Tüm Kelime Kütüphanesi';
+      activeFocusName = '6.658 Birleşik Kelime Arşivi';
+      activeWords = WORDS_DATA;
+      activeLearned = STATE.userData.learned.size;
+      activePct = Math.round((activeLearned / (WORDS_DATA.length || 1)) * 100);
+    }
+
     container.innerHTML = `
+      <!-- AKTİF HEDEF MÜFREDAT & KAZANIM İSTASYONU (Home'dan Taşınan Modül) -->
+      <div class="stats-curriculum-station" style="border: var(--dp-border-rule) solid var(--dp-color-border); background: var(--dp-color-surface); padding: 24px; box-shadow: 6px 6px 0 #000000; margin-bottom: 24px;">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 16px; margin-bottom: 16px;">
+          <div>
+            <div style="font-family: var(--dp-typography-mono); font-size: 0.78rem; font-weight: 800; color: var(--dp-color-field); text-transform: uppercase; margin-bottom: 4px; letter-spacing: 0.04em;">
+              🎯 [ AKTİF HEDEF MÜFREDAT KAZANIM İSTASYONU ]
+            </div>
+            <h2 style="font-size: 1.5rem; font-weight: 800; margin: 0; letter-spacing: -0.02em;">
+              ${activeCurriculumTitle}
+            </h2>
+            <div style="font-family: var(--dp-typography-mono); font-size: 0.82rem; color: var(--dp-color-ink-muted); margin-top: 4px;">
+              Mevcut Odak: <strong style="color: var(--dp-color-ink);">${activeFocusName}</strong>
+            </div>
+          </div>
+          <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+            <button class="ctrl-btn" onclick="window.APP.switchView('directory')" style="font-size: 0.78rem; padding: 6px 12px; background: var(--dp-color-ground); border: 2px solid var(--dp-color-border); box-shadow: 3px 3px 0 #000000;">
+              📚 KELİME DİZİNİ
+            </button>
+            <button class="ctrl-btn" onclick="window.APP.switchView('quiz')" style="font-size: 0.78rem; padding: 6px 12px; background: var(--dp-color-field-support); color: #000000; border: 2px solid var(--dp-color-border); box-shadow: 3px 3px 0 #000000;">
+              ⚡ KAZANIM TESTİ
+            </button>
+          </div>
+        </div>
+
+        <div style="background: var(--dp-color-ground); border: 2px solid var(--dp-color-border); padding: 16px; box-shadow: 3px 3px 0 #000000;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; flex-wrap: wrap; gap: 8px;">
+            <span style="font-family: var(--dp-typography-mono); font-size: 0.76rem; font-weight: 800; text-transform: uppercase;">
+              MÜFREDAT TAMAMLANMA ORANI
+            </span>
+            <span style="font-family: var(--dp-typography-mono); font-size: 0.95rem; font-weight: 900; color: var(--dp-color-accent);">
+              %${activePct} (${activeLearned} / ${activeWords.length} KELİME)
+            </span>
+          </div>
+          <div style="height: 16px; border: 2px solid var(--dp-color-border); background: var(--dp-color-surface); overflow: hidden;">
+            <div style="height: 100%; width: ${activePct}%; background: var(--dp-color-field); transition: width 0.3s cubic-bezier(0.2, 0, 0, 1);"></div>
+          </div>
+        </div>
+      </div>
+
       <div class="stats-summary-grid">
         <div class="stat-metric-card glass-panel">
           <div class="metric-val">${maarifLearned} <span style="font-size: 0.9rem; color: var(--dp-color-ink-muted);">/ ${maarifWords.length}</span></div>
           <div class="metric-title">5. SINIF MAARİF MODELİ (%${maarifPct})</div>
         </div>
         <div class="stat-metric-card glass-panel">
-          <div class="metric-val" style="color: var(--dp-color-accent);">${ydsLearned} <span style="font-size: 0.9rem; color: var(--dp-color-ink-muted);">/ ${ydsWords.length}</span></div>
+          <div class="metric-val" style="color: var(--dp-color-accent-ink);">${ydsLearned} <span style="font-size: 0.9rem; color: var(--dp-color-ink-muted);">/ ${ydsWords.length}</span></div>
           <div class="metric-title">YDS &amp; YÖKDİL AKADEMİK (%${ydsPct})</div>
         </div>
         <div class="stat-metric-card glass-panel">
@@ -133364,7 +135959,7 @@ const WORDS_DATA = [
           <div class="metric-title">THE OXFORD 5000 (%${oxfordPct})</div>
         </div>
         <div class="stat-metric-card glass-panel">
-          <div class="metric-val" style="color: var(--dp-color-field-support);">${quizAccuracy}%</div>
+          <div class="metric-val" style="color: var(--dp-color-emphasis);">${quizAccuracy}%</div>
           <div class="metric-title">TEST DOĞRULUĞU (MAKS SERİ: ${quizStats.bestStreak})</div>
         </div>
       </div>
@@ -133419,6 +136014,7 @@ const WORDS_DATA = [
     };
 
     const viewNames = {
+      home: "KONTROL MERKEZİ",
       daily: STATE.activeModule === 'yds' ? "YDS WORKOUT" : "GÜNÜN 10'LUSU",
       flashcard: "FLASHCARD KARTLARI",
       quiz: STATE.activeModule === 'yds' ? "YDS SİMÜLATÖR" : "DEĞERLENDİRME TESTİ",
@@ -133433,37 +136029,45 @@ const WORDS_DATA = [
       viewLabel.innerText = viewNames[viewName] || viewName;
     }
 
+    const sidebarTelemetry = document.getElementById('sidebar-telemetry-badge');
+
+    // Compute Daily Goal telemetry for both sidebar footer & daily view badge
+    const isYds = STATE.activeModule === 'yds';
+    const isOxford = STATE.activeModule === 'oxford';
+    const targetPool = isYds 
+      ? WORDS_DATA.filter(isYDSWord) 
+      : (isOxford ? WORDS_DATA.filter(w => w.dataset === 'oxford') : WORDS_DATA.filter(w => w.dataset === 'maarif' || !w.dataset));
+    
+    const bSize = isYds ? 20 : (isOxford ? 25 : 10);
+    const start = (STATE.currentDay - 1) * bSize;
+    const dayWords = targetPool.slice(start, start + bSize);
+    const dayLearned = dayWords.filter(w => STATE.userData.learned.has(w.id)).length;
+    const totalDay = dayWords.length || bSize;
+    const dayPct = Math.round((dayLearned / (totalDay || 1)) * 100);
+    const themeNum = (dayWords[0] && dayWords[0].themeNum) ? dayWords[0].themeNum : Math.min(8, Math.max(1, Math.ceil(STATE.currentDay / 10)));
+    const dayTitle = isYds ? `GÜN ${STATE.currentDay}` : (isOxford ? `GÜN ${STATE.currentDay}` : `GÜN ${STATE.currentDay} • TEMA ${themeNum}`);
+    const isDone = dayLearned >= totalDay && totalDay > 0;
+
+    const dailyTelemetryHtml = `
+      <div class="badge-live-progress ${isDone ? 'celebrating' : ''}" title="Günlük Hedef İlerlemesi (%${dayPct})">
+        <div class="badge-live-header">
+          <span class="badge-day-label">${dayTitle}</span>
+          <span class="badge-live-counter"><strong>${dayLearned}</strong>/${totalDay} KELİME</span>
+          <span class="badge-live-stars">%${dayPct}</span>
+        </div>
+        <div class="badge-mini-track" role="progressbar" aria-valuenow="${dayPct}" aria-valuemin="0" aria-valuemax="100">
+          <div class="badge-mini-fill ${isDone ? 'completed' : ''}" style="width: ${dayPct}%;"></div>
+        </div>
+      </div>
+    `;
+
+    if (sidebarTelemetry) {
+      sidebarTelemetry.innerHTML = dailyTelemetryHtml;
+    }
+
     if (badgeContainer) {
-      if (viewName === 'daily') {
-        const isYds = STATE.activeModule === 'yds';
-        const isOxford = STATE.activeModule === 'oxford';
-        const targetPool = isYds 
-          ? WORDS_DATA.filter(isYDSWord) 
-          : (isOxford ? WORDS_DATA.filter(w => w.dataset === 'oxford') : WORDS_DATA.filter(w => w.dataset === 'maarif' || !w.dataset));
-        
-        const bSize = isYds ? 20 : (isOxford ? 25 : 10);
-        const start = (STATE.currentDay - 1) * bSize;
-        const dayWords = targetPool.slice(start, start + bSize);
-        const dayLearned = dayWords.filter(w => STATE.userData.learned.has(w.id)).length;
-        const totalDay = dayWords.length || bSize;
-        const dayPct = Math.round((dayLearned / (totalDay || 1)) * 100);
-
-        const themeNum = Math.ceil(STATE.currentDay / 10);
-        const dayTitle = isYds ? `GÜN ${STATE.currentDay}` : (isOxford ? `GÜN ${STATE.currentDay}` : `GÜN ${STATE.currentDay} • TEMA ${themeNum}`);
-        const isDone = dayLearned >= totalDay && totalDay > 0;
-
-        badgeContainer.innerHTML = `
-          <div class="badge-live-progress ${isDone ? 'celebrating' : ''}" title="Günlük Hedef İlerlemesi (%${dayPct})">
-            <div class="badge-live-header">
-              <span class="badge-day-label">${dayTitle}</span>
-              <span class="badge-live-counter"><strong>${dayLearned}</strong>/${totalDay} KELİME</span>
-              <span class="badge-live-stars">%${dayPct}</span>
-            </div>
-            <div class="badge-mini-track" role="progressbar" aria-valuenow="${dayPct}" aria-valuemin="0" aria-valuemax="100">
-              <div class="badge-mini-fill ${isDone ? 'completed' : ''}" style="width: ${dayPct}%;"></div>
-            </div>
-          </div>
-        `;
+      if (viewName === 'daily' || viewName === 'home') {
+        badgeContainer.innerHTML = dailyTelemetryHtml;
         badgeContainer.style.display = 'inline-flex';
 
       } else if (viewName === 'quiz') {
@@ -133528,9 +136132,9 @@ const WORDS_DATA = [
     }
 
     if (backBtn) {
-      if (viewName === 'daily') {
+      if (viewName === 'home') {
         backBtn.style.opacity = '0.55';
-        backBtn.title = 'Zaten Ana Çalışma Alanındasınız';
+        backBtn.title = 'Zaten Kontrol Merkezindesiniz';
       } else {
         backBtn.style.opacity = '1';
         backBtn.title = 'Önceki Görünüme Dön';
@@ -133539,16 +136143,16 @@ const WORDS_DATA = [
   }
 
   function goHome() {
-    switchView('daily');
+    switchView('home');
   }
 
   function goBack() {
     if (STATE.viewHistory && STATE.viewHistory.length > 1) {
       STATE.viewHistory.pop();
       const prev = STATE.viewHistory.pop();
-      switchView(prev || 'daily');
+      switchView(prev || 'home');
     } else {
-      switchView('daily');
+      switchView('home');
     }
   }
 
@@ -133557,7 +136161,7 @@ const WORDS_DATA = [
   // ==========================================================================
   function switchView(viewName, pushHash = true) {
     STATE.currentView = viewName;
-    if (!STATE.viewHistory) STATE.viewHistory = ['daily'];
+    if (!STATE.viewHistory) STATE.viewHistory = ['home'];
     if (STATE.viewHistory[STATE.viewHistory.length - 1] !== viewName) {
       STATE.viewHistory.push(viewName);
     }
@@ -133580,6 +136184,7 @@ const WORDS_DATA = [
 
     updateBreadcrumb(viewName);
 
+    if (viewName === 'home') renderHomeView();
     if (viewName === 'daily') renderDailyView();
     if (viewName === 'flashcard') renderFlashcardView();
     if (viewName === 'quiz') renderQuizView();
@@ -133656,8 +136261,11 @@ const WORDS_DATA = [
     let pool = [];
     if (source === 'daily') {
       const isYds = STATE.activeModule === 'yds';
-      const targetPool = isYds ? WORDS_DATA.filter(isYDSWord) : WORDS_DATA.filter(w => w.dataset === 'maarif' || !w.dataset);
-      const bSize = isYds ? 20 : 10;
+      const isOxford = STATE.activeModule === 'oxford';
+      const targetPool = isYds 
+        ? WORDS_DATA.filter(isYDSWord) 
+        : (isOxford ? WORDS_DATA.filter(w => w.dataset === 'oxford') : WORDS_DATA.filter(w => w.dataset === 'maarif' || !w.dataset));
+      const bSize = isYds ? 20 : (isOxford ? 25 : 10);
       const start = (STATE.currentDay - 1) * bSize;
       pool = targetPool.slice(start, start + bSize);
     } else if (source === 'review') {
@@ -133687,7 +136295,7 @@ const WORDS_DATA = [
       return;
     }
 
-    const shuffled = [...pool].sort(() => Math.random() - 0.5);
+    const shuffled = shuffleArray(pool);
     const qCount = countVal === 'all' ? shuffled.length : Math.min(parseInt(countVal, 10), shuffled.length);
     const selectedTargets = shuffled.slice(0, qCount);
     const distractorPool = pool.length >= 10 ? pool : WORDS_DATA;
@@ -133700,7 +136308,7 @@ const WORDS_DATA = [
 
       let clozeSentence = null;
       if (mode === 'cloze' && target.example) {
-        const regex = new RegExp(`\\b${target.en}[a-z]*\\b`, 'i');
+        const regex = new RegExp(`\b${target.en}[a-z]*\b`, 'i');
         clozeSentence = target.example.replace(regex, '<span class="cloze-blank">_______</span>');
       }
 
@@ -133853,7 +136461,7 @@ const WORDS_DATA = [
     if (STATE.filteredFlashcards.length === 0) return;
     STATE.activeFlashcardIndex = (STATE.activeFlashcardIndex + 1) % STATE.filteredFlashcards.length;
     STATE.flashcardFlipped = false;
-    renderFlashcardView();
+    renderFlashcardView(true);
     updateBreadcrumb('flashcard');
   }
 
@@ -133861,22 +136469,71 @@ const WORDS_DATA = [
     if (STATE.filteredFlashcards.length === 0) return;
     STATE.activeFlashcardIndex = (STATE.activeFlashcardIndex - 1 + STATE.filteredFlashcards.length) % STATE.filteredFlashcards.length;
     STATE.flashcardFlipped = false;
-    renderFlashcardView();
+    renderFlashcardView(true);
     updateBreadcrumb('flashcard');
   }
 
-  function shuffleFlashcards() {
-    STATE.filteredFlashcards.sort(() => Math.random() - 0.5);
-    STATE.activeFlashcardIndex = 0;
-    STATE.flashcardFlipped = false;
-    renderFlashcardView();
+  function markFlashcardKnown(wordId) {
+    wordId = parseInt(wordId, 10);
+    const wordObj = WORDS_DATA.find(w => w.id === wordId);
+    STATE.userData.learned.add(wordId);
+    STATE.userData.review.delete(wordId);
+    const modMap = {
+      maarif: '5. SINIF MAARİF MODELİ',
+      yds: 'YDS & YÖKDİL AKADEMİK',
+      oxford: 'THE OXFORD 5000',
+      all: 'TÜM KÜTÜPHANE'
+    };
+    const modTitle = modMap[STATE.activeModule] || '5. SINIF MAARİF MODELİ';
+    const wEn = wordObj ? wordObj.en.toUpperCase() : `#${wordId}`;
+    logActivity(`${modTitle} • FLASHCARD`, `KART ÖĞRENİLDİ [${wEn}]`);
+    saveUserData();
+    playSound('correct');
+    nextFlashcard();
   }
 
-  function startDailyFlashcards() {
+  function markFlashcardReview(wordId) {
+    wordId = parseInt(wordId, 10);
+    STATE.userData.review.add(wordId);
+    STATE.userData.learned.delete(wordId);
+    saveUserData();
+    playSound('flip');
+    nextFlashcard();
+  }
+
+  function shuffleFlashcards() {
+    if (!STATE.filteredFlashcards || STATE.filteredFlashcards.length <= 1) return;
+    STATE.filteredFlashcards = shuffleArray(STATE.filteredFlashcards);
+    STATE.activeFlashcardIndex = 0;
+    STATE.flashcardFlipped = false;
+    STATE.flashcardIsShuffled = true;
+    playSound('flip');
+    renderFlashcardView(true);
+  }
+
+  function unshuffleFlashcards() {
+    STATE.flashcardIsShuffled = false;
+    STATE.activeFlashcardIndex = 0;
+    STATE.flashcardFlipped = false;
+    renderFlashcardView(false);
+  }
+
+  function startDailyFlashcards(andShuffle = false) {
     STATE.flashcardSource = 'daily';
     STATE.activeFlashcardIndex = 0;
     STATE.flashcardFlipped = false;
+    if (andShuffle) {
+      STATE.flashcardIsShuffled = true;
+      STATE.filteredFlashcards = [];
+    } else {
+      STATE.flashcardIsShuffled = false;
+    }
     switchView('flashcard');
+    if (andShuffle) {
+      setTimeout(() => {
+        shuffleFlashcards();
+      }, 50);
+    }
   }
 
   function startDailyQuiz() {
@@ -133899,6 +136556,7 @@ const WORDS_DATA = [
       STATE.userData.review.clear();
       STATE.userData.starred.clear();
       STATE.userData.stats = { quizzesPlayed: 0, correctAnswers: 0, totalQuestions: 0, bestStreak: 0 };
+      STATE.userData.activityLog = [];
       STATE.currentDay = 1;
       saveUserData();
       updateUI();
@@ -133906,10 +136564,25 @@ const WORDS_DATA = [
   }
 
   // ==========================================================================
-  // KEYBOARD SHORTCUTS (Flashcard & Quiz Mechanical Ergonomics)
+  // KEYBOARD SHORTCUTS (Home, Flashcard & Quiz Mechanical Ergonomics)
   // ==========================================================================
   window.addEventListener('keydown', (e) => {
     if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT' || e.target.tagName === 'TEXTAREA') {
+      return;
+    }
+
+    if (STATE.currentView === 'home') {
+      const keyUpper = (e.key || '').toUpperCase();
+      if (keyUpper === 'F') {
+        e.preventDefault();
+        switchView('flashcard');
+      } else if (keyUpper === 'Q') {
+        e.preventDefault();
+        switchView('quiz');
+      } else if (e.code === 'Enter') {
+        e.preventDefault();
+        switchView('daily');
+      }
       return;
     }
 
@@ -133931,12 +136604,10 @@ const WORDS_DATA = [
         speakWord(currentWord.en);
       } else if (e.key === '1') {
         e.preventDefault();
-        toggleReview(currentWord.id);
-        nextFlashcard();
+        markFlashcardReview(currentWord.id);
       } else if (e.key === '2') {
         e.preventDefault();
-        toggleLearned(currentWord.id);
-        nextFlashcard();
+        markFlashcardKnown(currentWord.id);
       }
     } else if (STATE.currentView === 'quiz' && STATE.quizState.active) {
       if (STATE.quizState.waitingFeedback && (e.code === 'Enter' || e.code === 'Space')) {
@@ -133969,6 +136640,10 @@ const WORDS_DATA = [
   // ==========================================================================
   function initApp() {
     document.documentElement.setAttribute('data-theme', STATE.settings.theme);
+    const metaThemeColor = document.querySelector('meta[name="theme-color"]');
+    if (metaThemeColor) {
+      metaThemeColor.setAttribute('content', STATE.settings.theme === 'dark' ? '#0A0A0A' : '#F5F4EE');
+    }
 
     // Apply saved module
     switchModule(STATE.activeModule);
@@ -133981,63 +136656,89 @@ const WORDS_DATA = [
       });
     });
 
-    // Accent Switcher (UK / US)
-    const accentBtn = document.getElementById('accent-toggle-btn');
-    if (accentBtn) {
-      accentBtn.innerText = STATE.settings.accent === 'en-GB' ? 'UK' : 'US';
-      accentBtn.addEventListener('click', () => {
-        STATE.settings.accent = STATE.settings.accent === 'en-GB' ? 'en-US' : 'en-GB';
-        localStorage.setItem('mk_accent', STATE.settings.accent);
-        accentBtn.innerText = STATE.settings.accent === 'en-GB' ? 'UK' : 'US';
-      });
+    function syncAllSettingsButtons() {
+      const accentText = STATE.settings.accent === 'en-GB' ? 'UK' : 'US';
+      const speedText = `${STATE.settings.speed.toFixed(1)}x`;
+      const soundText = STATE.settings.soundEffects ? 'SES: AÇIK' : 'SES: KAPALI';
+      const themeText = STATE.settings.theme === 'dark' ? 'TEMA: KOYU' : 'TEMA: AÇIK';
+
+      const dAccent = document.getElementById('accent-toggle-btn');
+      const mAccent = document.getElementById('m-accent-toggle-btn');
+      if (dAccent) dAccent.innerText = accentText;
+      if (mAccent) mAccent.innerText = accentText;
+
+      const dSpeed = document.getElementById('speed-toggle-btn');
+      const mSpeed = document.getElementById('m-speed-toggle-btn');
+      if (dSpeed) dSpeed.innerText = speedText;
+      if (mSpeed) mSpeed.innerText = speedText;
+
+      const dSound = document.getElementById('sound-toggle-btn');
+      const mSound = document.getElementById('m-sound-toggle-btn');
+      if (dSound) dSound.innerText = soundText;
+      if (mSound) mSound.innerText = soundText;
+
+      const dTheme = document.getElementById('theme-toggle-btn');
+      const mTheme = document.getElementById('m-theme-toggle-btn');
+      if (dTheme) dTheme.innerText = themeText;
+      if (mTheme) mTheme.innerText = themeText;
     }
 
-    // Speed Switcher
-    const speedBtn = document.getElementById('speed-toggle-btn');
-    if (speedBtn) {
-      speedBtn.innerText = `${STATE.settings.speed.toFixed(1)}x`;
-      speedBtn.addEventListener('click', () => {
-        STATE.settings.speed = STATE.settings.speed === 1.0 ? 0.8 : 1.0;
-        localStorage.setItem('mk_speed', STATE.settings.speed.toString());
-        speedBtn.innerText = `${STATE.settings.speed.toFixed(1)}x`;
-      });
+    function toggleAccentSetting() {
+      STATE.settings.accent = STATE.settings.accent === 'en-GB' ? 'en-US' : 'en-GB';
+      localStorage.setItem('mk_accent', STATE.settings.accent);
+      syncAllSettingsButtons();
     }
 
-    // Sound effects toggle
-    const soundBtn = document.getElementById('sound-toggle-btn');
-    if (soundBtn) {
-      soundBtn.innerText = STATE.settings.soundEffects ? 'SES: AÇIK' : 'SES: KAPALI';
-      soundBtn.addEventListener('click', () => {
-        STATE.settings.soundEffects = !STATE.settings.soundEffects;
-        localStorage.setItem('mk_sound', STATE.settings.soundEffects.toString());
-        soundBtn.innerText = STATE.settings.soundEffects ? 'SES: AÇIK' : 'SES: KAPALI';
-      });
+    function toggleSpeedSetting() {
+      STATE.settings.speed = STATE.settings.speed === 1.0 ? 0.8 : (STATE.settings.speed === 0.8 ? 1.2 : 1.0);
+      localStorage.setItem('mk_speed', STATE.settings.speed.toString());
+      syncAllSettingsButtons();
     }
 
-    // Theme toggle
-    const themeBtn = document.getElementById('theme-toggle-btn');
-    if (themeBtn) {
-      themeBtn.innerText = STATE.settings.theme === 'dark' ? 'TEMA: KOYU' : 'TEMA: AÇIK';
-      themeBtn.addEventListener('click', () => {
-        STATE.settings.theme = STATE.settings.theme === 'dark' ? 'light' : 'dark';
-        document.documentElement.setAttribute('data-theme', STATE.settings.theme);
-        localStorage.setItem('mk_theme', STATE.settings.theme);
-        themeBtn.innerText = STATE.settings.theme === 'dark' ? 'TEMA: KOYU' : 'TEMA: AÇIK';
-      });
+    function toggleSoundSetting() {
+      STATE.settings.soundEffects = !STATE.settings.soundEffects;
+      localStorage.setItem('mk_sound', STATE.settings.soundEffects.toString());
+      syncAllSettingsButtons();
     }
 
-    // Hash routing
-    const validViews = ['daily', 'flashcard', 'quiz', 'directory', 'stats'];
+    function toggleThemeSetting() {
+      STATE.settings.theme = STATE.settings.theme === 'dark' ? 'light' : 'dark';
+      document.documentElement.setAttribute('data-theme', STATE.settings.theme);
+      localStorage.setItem('mk_theme', STATE.settings.theme);
+      const metaThemeColor = document.querySelector('meta[name="theme-color"]');
+      if (metaThemeColor) {
+        metaThemeColor.setAttribute('content', STATE.settings.theme === 'dark' ? '#0A0A0A' : '#F5F4EE');
+      }
+      syncAllSettingsButtons();
+    }
+
+    document.getElementById('accent-toggle-btn')?.addEventListener('click', toggleAccentSetting);
+    document.getElementById('m-accent-toggle-btn')?.addEventListener('click', toggleAccentSetting);
+
+    document.getElementById('speed-toggle-btn')?.addEventListener('click', toggleSpeedSetting);
+    document.getElementById('m-speed-toggle-btn')?.addEventListener('click', toggleSpeedSetting);
+
+    document.getElementById('sound-toggle-btn')?.addEventListener('click', toggleSoundSetting);
+    document.getElementById('m-sound-toggle-btn')?.addEventListener('click', toggleSoundSetting);
+
+    document.getElementById('theme-toggle-btn')?.addEventListener('click', toggleThemeSetting);
+    document.getElementById('m-theme-toggle-btn')?.addEventListener('click', toggleThemeSetting);
+
+    syncAllSettingsButtons();
+    updateMobileTriggerLabels();
+
+    // Hash routing — default landing page is #home (Kontrol Merkezi)
+    const validViews = ['home', 'daily', 'flashcard', 'quiz', 'directory', 'stats'];
     const initialHash = window.location.hash.replace('#', '');
-    const initialView = validViews.includes(initialHash) ? initialHash : 'daily';
-    switchView(initialView, false);
+    const initialView = validViews.includes(initialHash) ? initialHash : 'home';
+    switchView(initialView, !initialHash);
 
     window.addEventListener('hashchange', () => {
       const hView = window.location.hash.replace('#', '');
       if (validViews.includes(hView) && hView !== STATE.currentView) {
         switchView(hView, false);
-      } else if (!hView && STATE.currentView !== 'daily') {
-        switchView('daily', false);
+      } else if (!hView && STATE.currentView !== 'home') {
+        switchView('home', false);
       }
     });
 
@@ -134050,12 +136751,20 @@ const WORDS_DATA = [
 
   // Export to Global Scope
   window.APP = {
+    openCurriculumModal,
+    openModesModal,
+    closeModals,
+    switchModuleAndClose,
+    switchViewAndClose,
     toggleLearned,
     toggleReview,
     toggleStarred,
+    markFlashcardKnown,
+    markFlashcardReview,
     nextFlashcard,
     prevFlashcard,
     shuffleFlashcards,
+    unshuffleFlashcards,
     startDailyFlashcards,
     startDailyQuiz,
     startQuiz,
@@ -134066,10 +136775,14 @@ const WORDS_DATA = [
     quitQuiz,
     replayQuizAudio,
     renderFlashcardView,
+    renderDirectoryView,
+    setDirectoryPage,
     resetAllProgress,
     switchView,
     switchModule,
     speakCurrentWord,
+    retestDebugWord,
+    selectHeatmapUnit,
     goHome,
     goBack
   };

@@ -2,12 +2,13 @@
 <html lang="tr" data-theme="light">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>Learnish • İngilizce Kelime Platformu (Maarif, YDS &amp; Oxford 5000)</title>
   
   <!-- Meta & SEO -->
   <meta name="description" content="Learnish: 5. Sınıf Maarif Modeli, YDS/YÖKDİL Akademik Hazırlık ve The Oxford 5000 (A1-C1) 6.658 kelimelik interaktif İngilizce kelime çalışma platformu.">
-  <meta name="theme-color" content="#F5F4EE">
+  <meta name="theme-color" content="#eeebe3">
+  <meta name="color-scheme" content="light dark">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <meta name="apple-mobile-web-app-title" content="Learnish">
@@ -17,346 +18,221 @@
   <link rel="apple-touch-icon" href="icon-192.png?v=codex2">
   <link rel="manifest" href="manifest.json">
   
-  <!-- Typography: Host Grotesk & JetBrains Mono -->
+  <!-- Typography: Nunito (400 to 900) -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Host+Grotesk:ital,wght@0,400..800;1,400..800&family=JetBrains+Mono:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:ital,wght@0,400;0,600;0,700;0,800;0,900;1,400;1,700;1,900&display=swap" rel="stylesheet">
 
   <!-- Stylesheets -->
-  <link rel="stylesheet" href="app.css?v=bauhaus3">
+  <link rel="stylesheet" href="app.css?v=modern1">
 </head>
-<body data-impeccable-ignore="hard-offset-shadow side-tab">
+<body>
 
-  <!-- APP LAYOUT CONTAINER (100vw / 100vh Flex Shell) -->
-  <div class="app-layout">
+  <!-- SINGLE-COLUMN APP SHELL -->
+  <div class="app-shell">
 
-    <!-- 1. LEFT SIDEBAR PLANE (.sidebar-plane) -->
-    <aside class="sidebar-plane" aria-label="Ana Kontrol ve Müfredat Kenar Çubuğu">
-
-      <!-- 1.1 Brand / Logo Cell (.brand-group) -->
-      <div class="sidebar-brand-cell">
-        <button type="button" class="brand-group brand-group-btn" onclick="window.APP.goHome()" aria-label="Learnish Ana Çalışma Alanına Dön">
-          <div class="brand-icon-wrapper">
-            <img src="logo.svg?v=codex2" alt="Learnish Logo" class="brand-icon">
-          </div>
-          <div class="brand-info">
-            <h1>Learnish</h1>
-            <p id="app-brand-subtitle">5. Sınıf Maarif • Hedef: 10 Kelime</p>
-          </div>
-        </button>
-
-        <!-- Mobil Açılır Pencere Tetikleyicileri (<= 900px ekranlarda görünür) -->
-        <div class="mobile-window-triggers" aria-label="Mobil Pencere Menüleri">
-          <button type="button" class="mobile-trigger-btn" id="mobile-curr-trigger-btn" onclick="window.APP.openCurriculumModal()" aria-label="Müfredat Seçim Penceresi">
-            <span class="m-trig-icon">🎓</span>
-            <span class="m-trig-text" id="mobile-curr-label">MÜFREDAT ▾</span>
-          </button>
-          <button type="button" class="mobile-trigger-btn" id="mobile-mode-trigger-btn" onclick="window.APP.openModesModal()" aria-label="Çalışma Modları Penceresi">
-            <span class="m-trig-icon">☰</span>
-            <span class="m-trig-text" id="mobile-mode-label">MODLAR ▾</span>
-          </button>
-        </div>
+    <!-- 1. TOP-ALIGNED HEADER (56px Top Padding) -->
+    <header class="app-top-header" role="banner">
+      <div class="header-greeting-wrap">
+        <span class="header-greeting-label" id="header-greeting-label">GÜNLÜK HEDEF • LEARNISH</span>
+        <h1 class="header-greeting-title" id="header-user-title">5. Sınıf Maarif Modeli</h1>
       </div>
-
-      <!-- 1.2 Curriculum / Module Selector (.module-bar) -->
-      <div class="module-bar">
-        <div class="sidebar-section-label">MÜFREDAT SEÇİMİ</div>
-        <div class="module-tabs" role="tablist" aria-label="Öğrenim Modülü Seçici">
-          
-          <button type="button" class="module-btn active" data-module="maarif" id="mod-tab-maarif" onclick="window.APP.switchModule('maarif')">
-            <span class="mod-icon" aria-hidden="true">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square" stroke-linejoin="miter"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/></svg>
-            </span>
-            <div class="mod-text-group">
-              <span class="mod-title">5. Sınıf Maarif Modeli</span>
-              <span class="mod-meta">8 TEMA • 817 KELİME</span>
-            </div>
-          </button>
-
-          <button type="button" class="module-btn" data-module="yds" id="mod-tab-yds" onclick="window.APP.switchModule('yds')">
-            <span class="mod-icon" aria-hidden="true">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square" stroke-linejoin="miter"><circle cx="12" cy="12" r="10"/><line x1="22" y1="12" x2="18" y2="12"/><line x1="6" y1="12" x2="2" y2="12"/><line x1="12" y1="6" x2="12" y2="2"/><line x1="12" y1="22" x2="12" y2="18"/></svg>
-            </span>
-            <div class="mod-text-group">
-              <span class="mod-title">YDS &amp; YÖKDİL Akademik</span>
-              <span class="mod-meta">B2/C1 • 2.894 KELİME</span>
-            </div>
-          </button>
-
-          <button type="button" class="module-btn" data-module="oxford" id="mod-tab-oxford" onclick="window.APP.switchModule('oxford')">
-            <span class="mod-icon" aria-hidden="true">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square" stroke-linejoin="miter"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
-            </span>
-            <div class="mod-text-group">
-              <span class="mod-title">The Oxford 5000</span>
-              <span class="mod-meta">A1–C1 • 5.841 KELİME</span>
-            </div>
-          </button>
-
-          <button type="button" class="module-btn" data-module="all" id="mod-tab-all" onclick="window.APP.switchModule('all')">
-            <span class="mod-icon" aria-hidden="true">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square" stroke-linejoin="miter"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>
-            </span>
-            <div class="mod-text-group">
-              <span class="mod-title">Tüm Kütüphane</span>
-              <span class="mod-meta">6.658 KELİME HAVUZU</span>
-            </div>
-          </button>
-
+      <button type="button" class="header-profile-btn" id="header-profile-trigger" onclick="window.APP.openSettingsModal()" aria-label="Ayarlar ve Profil">
+        <div class="header-avatar-circle">
+          <img src="icon-192.png" alt="Learnish Profil" class="header-avatar-img">
+          <span class="header-notification-badge" aria-label="Aktif bildirim"></span>
         </div>
-      </div>
+      </button>
+    </header>
 
-      <!-- 1.3 Navigation Links (.nav-tabs) -->
-      <nav class="nav-tabs" aria-label="Çalışma Modları">
-        <div class="sidebar-section-label">ÇALIŞMA MODLARI</div>
-
-        <button type="button" class="nav-btn active" data-view="home" id="tab-home">
-          <span class="nav-index">[1]</span>
-          <span class="nav-btn-icon" aria-hidden="true">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square" stroke-linejoin="miter"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
-          </span>
-          <span class="nav-btn-label" id="tab-home-text">Kontrol Merkezi</span>
-        </button>
-
-        <button type="button" class="nav-btn" data-view="daily" id="tab-daily">
-          <span class="nav-index">[2]</span>
-          <span class="nav-btn-icon" id="tab-daily-icon" aria-hidden="true">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square" stroke-linejoin="miter"><rect x="3" y="4" width="18" height="18"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-          </span>
-          <span class="nav-btn-label" id="tab-daily-text">Günün 10'lusu</span>
-        </button>
-
-        <button type="button" class="nav-btn" data-view="flashcard" id="tab-flashcard">
-          <span class="nav-index">[3]</span>
-          <span class="nav-btn-icon" aria-hidden="true">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square" stroke-linejoin="miter"><rect x="2" y="4" width="20" height="16"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
-          </span>
-          <span class="nav-btn-label" id="tab-flashcard-text">Flashcard</span>
-        </button>
-
-        <button type="button" class="nav-btn" data-view="quiz" id="tab-quiz">
-          <span class="nav-index">[4]</span>
-          <span class="nav-btn-icon" aria-hidden="true">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square" stroke-linejoin="miter"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
-          </span>
-          <span class="nav-btn-label" id="tab-quiz-text">Quiz &amp; Test</span>
-        </button>
-
-        <button type="button" class="nav-btn" data-view="directory" id="tab-directory">
-          <span class="nav-index">[5]</span>
-          <span class="nav-btn-icon" aria-hidden="true">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square" stroke-linejoin="miter"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-          </span>
-          <span class="nav-btn-label" id="tab-directory-text">Kelime Havuzu</span>
-        </button>
-
-        <button type="button" class="nav-btn" data-view="stats" id="tab-stats">
-          <span class="nav-index">[6]</span>
-          <span class="nav-btn-icon" aria-hidden="true">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square" stroke-linejoin="miter"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
-          </span>
-          <span class="nav-btn-label" id="tab-stats-text">İstatistik</span>
-        </button>
-      </nav>
-
-      <!-- 1.4 Flexible Spacer -->
-      <div class="sidebar-spacer"></div>
-
-      <!-- 1.5 Telemetry & Goal Footer (Fixed at bottom of sidebar) -->
-      <footer class="sidebar-telemetry-footer">
-        <div class="sidebar-section-label">CANLI HEDEF TELEMETRİSİ</div>
-        <div id="sidebar-telemetry-badge" class="sidebar-telemetry-slot">
-          <!-- Populated dynamically by app.js -->
-        </div>
-
-        <div class="header-actions" aria-label="Sistem Ayarları">
-          <button type="button" class="ctrl-btn" id="accent-toggle-btn" title="İngilizce Telaffuz Aksanı (İngiliz / Amerikan)">
-            UK
-          </button>
-          <button type="button" class="ctrl-btn" id="speed-toggle-btn" title="Okuma Hızı">
-            1.0x
-          </button>
-          <button type="button" class="ctrl-btn" id="sound-toggle-btn" title="Ses Efektleri">
-            SES: AÇIK
-          </button>
-          <button type="button" class="ctrl-btn" id="theme-toggle-btn" title="Karanlık / Aydınlık Mod">
-            TEMA: KOYU
-          </button>
-        </div>
-      </footer>
-
-    </aside>
-
-    <!-- 2. MAIN WORKSPACE PLANE (.workspace-plane) -->
-    <main class="workspace-plane main-wrapper">
-
-      <!-- Active Navigation Breadcrumb & Back Navigator -->
-      <nav class="breadcrumb-container" id="app-breadcrumb-nav" aria-label="Konum ve Geri Navigasyonu">
-        <div class="breadcrumb-left">
-          <button type="button" class="breadcrumb-back-btn" id="breadcrumb-back-btn" onclick="window.APP.goBack()" aria-label="Bir Önceki Sayfaya Dön" title="Bir Önceki Sayfaya Dön">
-            <span class="back-arrow" aria-hidden="true">←</span>
-            <span class="back-text">Geri Dön</span>
-          </button>
-          <ol class="breadcrumb-list" id="app-breadcrumb">
-            <li class="breadcrumb-item">
-              <button type="button" class="breadcrumb-home-chip" id="breadcrumb-module-btn" onclick="window.APP.goHome()" aria-label="Ana Sayfaya Dön" title="Ana Sayfaya Dön">
-                <span class="chip-home-icon" aria-hidden="true">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square" stroke-linejoin="miter"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
-                </span>
-                <span id="breadcrumb-module-text">5. SINIF MAARİF MODELİ</span>
-              </button>
-            </li>
-            <li class="breadcrumb-sep" aria-hidden="true">/</li>
-            <li class="breadcrumb-item active" id="breadcrumb-view-label">KONTROL MERKEZİ</li>
-          </ol>
-        </div>
-        <div class="breadcrumb-right" id="breadcrumb-context-badge">
-          <div id="breadcrumb-dynamic-badge" class="badge-live-container">
-            <!-- Dynamically populated with live telemetry progress -->
+    <!-- 2. HORIZONTAL SNAP-SCROLL SELECTOR (Müfredat Seçici) -->
+    <section class="horizontal-scroll-selector" aria-label="Müfredat ve Kategori Seçimi">
+      <div class="h-scroll-track" id="horizontal-module-track" role="tablist">
+        
+        <!-- Module 1: Maarif -->
+        <button type="button" class="h-category-btn module-btn active" data-module="maarif" id="mod-tab-maarif" onclick="window.APP.switchModule('maarif')" role="tab" aria-selected="true">
+          <div class="h-cat-badge">5M</div>
+          <div class="h-cat-content">
+            <span class="h-cat-title">5. Sınıf Maarif</span>
+            <span class="h-cat-meta">817 KELİME</span>
           </div>
-        </div>
-      </nav>
+        </button>
+
+        <!-- Module 2: YDS -->
+        <button type="button" class="h-category-btn module-btn" data-module="yds" id="mod-tab-yds" onclick="window.APP.switchModule('yds')" role="tab" aria-selected="false">
+          <div class="h-cat-badge">YDS</div>
+          <div class="h-cat-content">
+            <span class="h-cat-title">YDS / YÖKDİL</span>
+            <span class="h-cat-meta">2.894 KELİME</span>
+          </div>
+        </button>
+
+        <!-- Module 3: Oxford 5000 -->
+        <button type="button" class="h-category-btn module-btn" data-module="oxford" id="mod-tab-oxford" onclick="window.APP.switchModule('oxford')" role="tab" aria-selected="false">
+          <div class="h-cat-badge">OXF</div>
+          <div class="h-cat-content">
+            <span class="h-cat-title">Oxford 5000</span>
+            <span class="h-cat-meta">5.841 KELİME</span>
+          </div>
+        </button>
+
+        <!-- Module 4: All Library -->
+        <button type="button" class="h-category-btn module-btn" data-module="all" id="mod-tab-all" onclick="window.APP.switchModule('all')" role="tab" aria-selected="false">
+          <div class="h-cat-badge">ALL</div>
+          <div class="h-cat-content">
+            <span class="h-cat-title">Tüm Kütüphane</span>
+            <span class="h-cat-meta">6.658 KELİME</span>
+          </div>
+        </button>
+
+      </div>
+    </section>
+
+    <!-- 3. VIEWS CONTAINER (Single-Column Content) -->
+    <main class="views-wrapper" id="views-wrapper" role="main">
       
-      <!-- View 0: Kontrol Merkezi / IDE Dashboard (#home) -->
+      <!-- View 0: Kontrol Merkezi / Dashboard (#home) -->
       <section id="view-home" class="view-section active" aria-labelledby="tab-home">
-        <!-- Injected by app.js -->
+        <!-- Rendered by app.js (Hero Feature Card + Bento Metrics + Secondary Feed Items) -->
       </section>
 
-      <!-- View 1: Günlük Çalışma / Workout -->
+      <!-- View 1: Günlük Çalışma (#daily) -->
       <section id="view-daily" class="view-section" aria-labelledby="tab-daily">
-        <!-- Injected by app.js -->
+        <!-- Rendered by app.js (Daily Hero Progress + Secondary Feed Word Cards) -->
       </section>
 
-      <!-- View 2: Flashcard Modu -->
+      <!-- View 2: Flashcard (#flashcard) -->
       <section id="view-flashcard" class="view-section" aria-labelledby="tab-flashcard">
-        <!-- Injected by app.js -->
+        <!-- Rendered by app.js -->
       </section>
 
-      <!-- View 3: Quiz & Test Modu -->
+      <!-- View 3: Quiz & Test (#quiz) -->
       <section id="view-quiz" class="view-section" aria-labelledby="tab-quiz">
-        <!-- Injected by app.js -->
+        <!-- Rendered by app.js -->
       </section>
 
-      <!-- View 4: Kelime Havuzu & Arama -->
+      <!-- View 4: Kelime Havuzu (#directory) -->
       <section id="view-directory" class="view-section" aria-labelledby="tab-directory">
-        <!-- Injected by app.js -->
+        <!-- Rendered by app.js -->
       </section>
 
-      <!-- View 5: İstatistikler & Analiz -->
+      <!-- View 5: İstatistik (#stats) -->
       <section id="view-stats" class="view-section" aria-labelledby="tab-stats">
-        <!-- Injected by app.js -->
+        <!-- Rendered by app.js -->
       </section>
 
     </main>
 
   </div>
 
+  <!-- 4. FIXED FLOATING NAVIGATION BAR (Fixed pill, 64px, Center Cutout FAB) -->
+  <nav class="floating-nav-bar" aria-label="Alt Gezinme Çubuğu">
+    <!-- Item 1: Home -->
+    <button type="button" class="floating-nav-btn nav-btn active" data-view="home" id="tab-home" aria-label="Kontrol Merkezi" title="Kontrol Merkezi">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+      <span class="nav-dot"></span>
+    </button>
 
-  <!-- =========================================================================
-       BAUHAUS MODAL PENCERELERİ (MOBİL MODÜL & MÜFREDAT PENCERELERİ)
-       ========================================================================= -->
-  <div class="bauhaus-modal-backdrop" id="bauhaus-modal-backdrop" onclick="window.APP.closeModals()" aria-hidden="true"></div>
+    <!-- Item 2: Daily Workout -->
+    <button type="button" class="floating-nav-btn nav-btn" data-view="daily" id="tab-daily" aria-label="Günün Çalışması" title="Günün Çalışması">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="3" ry="3"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+      <span class="nav-dot"></span>
+    </button>
 
-  <!-- 1. Müfredat Seçim Penceresi -->
-  <div class="bauhaus-window-dialog" id="modal-curriculum" role="dialog" aria-modal="true" aria-labelledby="modal-curr-title">
-    <div class="window-titlebar">
-      <div class="window-title-left">
-        <span class="window-title-square"></span>
-        <span class="window-title-text" id="modal-curr-title">MÜFREDAT SEÇİM PENCERESİ</span>
-      </div>
-      <button type="button" class="window-close-btn" onclick="window.APP.closeModals()" aria-label="Pencereyi Kapat">✕ KAPAT</button>
+    <!-- Center Action: 56px Red Circle Button Floating 32px Above with 4px Cutout Border -->
+    <div class="floating-fab-container">
+      <button type="button" class="floating-center-action-btn" id="floating-center-fab" onclick="window.APP.handleFabAction()" aria-label="Çalışmayı Başlat" title="Çalışmayı Başlat">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><polygon points="6 4 20 12 6 20 6 4"/></svg>
+      </button>
     </div>
-    <div class="window-body">
-      <p class="window-body-desc">Çalışmak istediğiniz hedef müfredat modülünü seçiniz:</p>
-      <div class="window-module-list">
-        <button type="button" class="window-item-btn active" data-mod-id="maarif" onclick="window.APP.switchModuleAndClose('maarif')">
-          <span class="w-item-icon">🎓</span>
-          <div class="w-item-info">
-            <span class="w-item-title">5. Sınıf Maarif Modeli</span>
-            <span class="w-item-meta">8 TEMA • 817 KELİME</span>
-          </div>
-          <span class="w-item-arrow">→</span>
-        </button>
-        <button type="button" class="window-item-btn" data-mod-id="yds" onclick="window.APP.switchModuleAndClose('yds')">
-          <span class="w-item-icon">🎯</span>
-          <div class="w-item-info">
-            <span class="w-item-title">YDS &amp; YÖKDİL Akademik</span>
-            <span class="w-item-meta">B2/C1 SINAV • 2.894 KELİME</span>
-          </div>
-          <span class="w-item-arrow">→</span>
-        </button>
-        <button type="button" class="window-item-btn" data-mod-id="oxford" onclick="window.APP.switchModuleAndClose('oxford')">
-          <span class="w-item-icon">📖</span>
-          <div class="w-item-info">
-            <span class="w-item-title">The Oxford 5000</span>
-            <span class="w-item-meta">A1–C1 SEVİYELER • 5.841 KELİME</span>
-          </div>
-          <span class="w-item-arrow">→</span>
-        </button>
-        <button type="button" class="window-item-btn" data-mod-id="all" onclick="window.APP.switchModuleAndClose('all')">
-          <span class="w-item-icon">📚</span>
-          <div class="w-item-info">
-            <span class="w-item-title">Tüm Kütüphane</span>
-            <span class="w-item-meta">6.658 KELİME BİRLEŞİK HAVUZ</span>
-          </div>
-          <span class="w-item-arrow">→</span>
-        </button>
-      </div>
-    </div>
-  </div>
 
-  <!-- 2. Çalışma Modları & Ayarlar Penceresi -->
-  <div class="bauhaus-window-dialog" id="modal-modes" role="dialog" aria-modal="true" aria-labelledby="modal-modes-title">
-    <div class="window-titlebar">
-      <div class="window-title-left">
-        <span class="window-title-square"></span>
-        <span class="window-title-text" id="modal-modes-title">ÇALIŞMA MODLARI &amp; AYARLAR</span>
+    <!-- Item 3: Flashcard -->
+    <button type="button" class="floating-nav-btn nav-btn" data-view="flashcard" id="tab-flashcard" aria-label="Flashcard" title="Flashcard">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="3"/><path d="M7 15h10"/><path d="M7 9h6"/></svg>
+      <span class="nav-dot"></span>
+    </button>
+
+    <!-- Item 4: Quiz -->
+    <button type="button" class="floating-nav-btn nav-btn" data-view="quiz" id="tab-quiz" aria-label="Quiz &amp; Test" title="Quiz &amp; Test">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+      <span class="nav-dot"></span>
+    </button>
+  </nav>
+
+  <!-- 5. SETTINGS & PROFILE DIALOG (Sophisticated Playful Modal) -->
+  <div class="settings-modal-backdrop" id="settings-modal-backdrop" onclick="window.APP.closeSettingsModal()" aria-hidden="true"></div>
+  <div class="settings-dialog-card" id="settings-dialog" role="dialog" aria-modal="true" aria-labelledby="settings-dialog-title">
+    <div class="settings-dialog-header">
+      <div class="settings-user-info">
+        <div class="settings-avatar-circle">
+          <img src="icon-192.png" alt="Learnish Profil" class="settings-avatar-img">
+        </div>
+        <div>
+          <h2 id="settings-dialog-title" class="settings-name">Profil &amp; Ayarlar</h2>
+          <p class="settings-subtitle">Learnish Öğrenim Parametreleri</p>
+        </div>
       </div>
-      <button type="button" class="window-close-btn" onclick="window.APP.closeModals()" aria-label="Pencereyi Kapat">✕ KAPAT</button>
+      <button type="button" class="settings-close-circle-btn" onclick="window.APP.closeSettingsModal()" aria-label="Pencereyi Kapat">✕</button>
     </div>
-    <div class="window-body">
-      <p class="window-body-desc">Geçmek istediğiniz çalışma alanını seçiniz:</p>
-      <div class="window-modes-grid">
-        <button type="button" class="window-item-btn active" data-view-id="home" onclick="window.APP.switchViewAndClose('home')">
-          <span class="w-num">[1]</span>
-          <span class="w-item-title">Kontrol Merkezi</span>
-          <span class="w-item-arrow">→</span>
+
+    <div class="settings-dialog-body">
+      <!-- Quick Shortcuts -->
+      <div class="settings-nav-shortcuts">
+        <button type="button" class="settings-shortcut-btn" onclick="window.APP.switchViewAndClose('directory')">
+          <span class="s-icon">📚</span>
+          <div class="s-text">
+            <strong>Kelime Havuzu &amp; Arama</strong>
+            <span>6.658 kelimelik tam kütüphane</span>
+          </div>
+          <span class="s-arrow">→</span>
         </button>
-        <button type="button" class="window-item-btn" data-view-id="daily" onclick="window.APP.switchViewAndClose('daily')">
-          <span class="w-num">[2]</span>
-          <span class="w-item-title" id="m-modal-daily-text">Günün 10'lusu</span>
-          <span class="w-item-arrow">→</span>
-        </button>
-        <button type="button" class="window-item-btn" data-view-id="flashcard" onclick="window.APP.switchViewAndClose('flashcard')">
-          <span class="w-num">[3]</span>
-          <span class="w-item-title" id="m-modal-fc-text">Flashcard Kartları</span>
-          <span class="w-item-arrow">→</span>
-        </button>
-        <button type="button" class="window-item-btn" data-view-id="quiz" onclick="window.APP.switchViewAndClose('quiz')">
-          <span class="w-num">[4]</span>
-          <span class="w-item-title" id="m-modal-quiz-text">Quiz &amp; Test</span>
-          <span class="w-item-arrow">→</span>
-        </button>
-        <button type="button" class="window-item-btn" data-view-id="directory" onclick="window.APP.switchViewAndClose('directory')">
-          <span class="w-num">[5]</span>
-          <span class="w-item-title">Kelime Havuzu</span>
-          <span class="w-item-arrow">→</span>
-        </button>
-        <button type="button" class="window-item-btn" data-view-id="stats" onclick="window.APP.switchViewAndClose('stats')">
-          <span class="w-num">[6]</span>
-          <span class="w-item-title">İstatistik &amp; Analiz</span>
-          <span class="w-item-arrow">→</span>
+        <button type="button" class="settings-shortcut-btn" onclick="window.APP.switchViewAndClose('stats')">
+          <span class="s-icon">📊</span>
+          <div class="s-text">
+            <strong>İstatistik &amp; Analiz</strong>
+            <span>Öğrenim telemetrisi ve kazanım analizi</span>
+          </div>
+          <span class="s-arrow">→</span>
         </button>
       </div>
 
-      <!-- Mobil Hızlı Ayarlar -->
-      <div class="window-sub-section">
-        <div class="window-sub-label">SİSTEM AYARLARI</div>
-        <div class="window-settings-row">
-          <button type="button" class="ctrl-btn" id="m-accent-toggle-btn" title="İngilizce Telaffuz Aksanı">UK</button>
-          <button type="button" class="ctrl-btn" id="m-speed-toggle-btn" title="Okuma Hızı">1.0x</button>
-          <button type="button" class="ctrl-btn" id="m-sound-toggle-btn" title="Ses Efektleri">SES: AÇIK</button>
-          <button type="button" class="ctrl-btn" id="m-theme-toggle-btn" title="Karanlık/Aydınlık Mod">TEMA: AÇIK</button>
+      <!-- System Toggles -->
+      <div class="settings-toggles-section">
+        <div class="settings-section-title">SİSTEM TERCİHLERİ</div>
+        <div class="settings-grid">
+          
+          <div class="setting-item-row">
+            <div class="setting-item-label">
+              <strong>Telaffuz Aksanı</strong>
+              <span>İngiliz (UK) veya Amerikan (US)</span>
+            </div>
+            <button type="button" class="setting-pill-btn" id="accent-toggle-btn">UK</button>
+          </div>
+
+          <div class="setting-item-row">
+            <div class="setting-item-label">
+              <strong>Okuma Hızı</strong>
+              <span>Telaffuz ses hızı çarpanı</span>
+            </div>
+            <button type="button" class="setting-pill-btn" id="speed-toggle-btn">1.0x</button>
+          </div>
+
+          <div class="setting-item-row">
+            <div class="setting-item-label">
+              <strong>Ses Efektleri</strong>
+              <span>Etkileşim ve sınav bildirimleri</span>
+            </div>
+            <button type="button" class="setting-pill-btn" id="sound-toggle-btn">SES: AÇIK</button>
+          </div>
+
+          <div class="setting-item-row">
+            <div class="setting-item-label">
+              <strong>Karanlık Mod</strong>
+              <span>Charcoal (#171e19) gece teması</span>
+            </div>
+            <button type="button" class="setting-pill-btn" id="theme-toggle-btn">TEMA: AÇIK</button>
+          </div>
+
         </div>
       </div>
     </div>
@@ -364,6 +240,6 @@
 
   <!-- Data & Application Logic -->
   <script src="words-data.js?v=817"></script>
-  <script src="app.js?v=817c"></script>
+  <script src="app.js?v=modern1"></script>
 </body>
 </html>
