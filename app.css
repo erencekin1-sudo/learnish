@@ -844,6 +844,175 @@ body {
   transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
+/* MEB ANNUAL FRAMEWORK CALENDAR ANCHOR BANNER */
+.daily-meb-calendar-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding: 16px 22px;
+  border-radius: var(--dp-radius-nested);
+  margin-bottom: 20px;
+  background: var(--dp-color-surface);
+  border: 1px solid var(--dp-color-border);
+  box-shadow: var(--dp-shadow-soft-sm);
+  transition: var(--dp-transition-smooth);
+}
+
+.daily-meb-calendar-banner.is-today {
+  border-left: 6px solid #008744;
+  background: var(--dp-color-surface);
+}
+
+.daily-meb-calendar-banner.not-today {
+  border-left: 6px solid var(--dp-color-red);
+  background: rgba(202, 0, 19, 0.05);
+}
+
+.dmc-left {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.dmc-icon-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: var(--dp-radius-bento);
+  background: var(--dp-color-ground);
+  font-size: 22px;
+  box-shadow: var(--dp-shadow-soft-sm);
+}
+
+.dmc-info {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.dmc-tag {
+  font-family: var(--dp-typography-face);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--dp-color-ink-muted);
+}
+
+.dmc-title {
+  font-size: 15px;
+  font-weight: 900;
+  color: var(--dp-color-ink);
+}
+
+.dmc-return-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 18px;
+  border-radius: var(--dp-radius-pill);
+  background: var(--dp-color-red);
+  color: #ffffff;
+  font-family: var(--dp-typography-face);
+  font-size: 13px;
+  font-weight: 800;
+  border: none;
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  box-shadow: var(--dp-shadow-red);
+}
+
+.dmc-return-btn:hover {
+  transform: translateY(-2px);
+  background: var(--dp-color-red-hover);
+}
+
+/* CUMULATIVE PAST DAYS REVIEW & QUIZ CARD */
+.daily-cumulative-card {
+  border-radius: var(--dp-radius-nested);
+  background: var(--dp-color-surface);
+  border: 1px solid var(--dp-color-border);
+  box-shadow: var(--dp-shadow-soft-md);
+  padding: 24px 24px;
+  margin-bottom: 24px;
+  position: relative;
+  overflow: hidden;
+}
+
+.daily-cumulative-card::after {
+  content: '';
+  position: absolute;
+  top: -30px;
+  right: -30px;
+  width: 140px;
+  height: 140px;
+  border-radius: 50%;
+  background: var(--dp-color-sage);
+  opacity: 0.15;
+  pointer-events: none;
+}
+
+.dcr-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+}
+
+.dcr-tag-badge {
+  font-family: var(--dp-typography-face);
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  color: var(--dp-color-red);
+  text-transform: uppercase;
+}
+
+.dcr-meta-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 12px;
+  border-radius: var(--dp-radius-pill);
+  background: var(--dp-color-sage-bg);
+  border: 1px solid var(--dp-color-border-subtle);
+  font-size: 12px;
+  font-weight: 800;
+  color: var(--dp-color-ink);
+}
+
+.dcr-title {
+  font-size: 20px;
+  font-weight: 900;
+  color: var(--dp-color-ink);
+  margin: 0 0 6px 0;
+}
+
+.dcr-desc {
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--dp-color-ink-muted);
+  margin: 0 0 18px 0;
+}
+
+.dcr-actions-row {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.dcr-action-btn {
+  font-size: 13px !important;
+  font-weight: 800 !important;
+}
+
 /* FLASHCARD VIEW */
 .flashcard-stage {
   perspective: 1200px;

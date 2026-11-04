@@ -395,10 +395,91 @@
     }
   };
 
-  // Ensure current day is restored or defaults to 1
+  // ==========================================================================
+  // MEB Yıllık Çerçeve Planı Takvim Eşleştirme Motoru (36 Hafta, 82 Gün)
+  // ==========================================================================
+  function getMEBCalendarInfo(date = new Date()) {
+    const month = date.getMonth() + 1; // 1-12
+    const day = date.getDate();
+    const trMonths = ['', 'Ocak', 'Şubat', 'Mart', 'Nisan', 'Mayıs', 'Haziran', 'Temmuz', 'Ağustos', 'Eylül', 'Ekim', 'Kasım', 'Aralık'];
+    const trDays = ['Pazar', 'Pazartesi', 'Salı', 'Çarşamba', 'Perşembe', 'Cuma', 'Cumartesi'];
+    const dateFormatted = `${day} ${trMonths[month]} ${trDays[date.getDay()]}`;
+
+    let targetDay = 18;
+    let weekNum = 8;
+    let themeNum = 2;
+    let themeName = 'Theme 2: Classroom Life (Sınıf Yaşamı)';
+
+    // MEB 2026-2027 İngilizce 5. Sınıf Maarif Modeli Taslak Yıllık Çerçeve Planı (TYMM 5)
+    if (month === 9) { // Eylül
+      if (day < 21) { targetDay = 1; weekNum = 1; themeNum = 1; themeName = 'Orientation & Uyum'; }
+      else if (day < 28) { targetDay = 2; weekNum = 2; themeNum = 1; themeName = 'Revision & Hazırlık'; }
+      else { targetDay = 4; weekNum = 3; themeNum = 1; themeName = 'Revision & Hazırlık'; }
+    } else if (month === 10) { // Ekim (Theme 1: School Life)
+      themeNum = 1; themeName = 'Theme 1: School Life (Okul Yaşamı)';
+      if (day < 11) { targetDay = 7; weekNum = 4; }
+      else if (day < 18) { targetDay = 10; weekNum = 5; }
+      else if (day < 25) { targetDay = 13; weekNum = 6; }
+      else { targetDay = 16; weekNum = 7; }
+    } else if (month === 11) { // Kasım (Theme 2: Classroom Life)
+      themeNum = 2; themeName = 'Theme 2: Classroom Life (Sınıf Yaşamı)';
+      if (day <= 7) { targetDay = 18; weekNum = 8; }
+      else if (day <= 15) { targetDay = 18; weekNum = 9; themeName = '1. Ara Tatil & Pekiştirme'; }
+      else if (day <= 22) { targetDay = 20; weekNum = 9; }
+      else if (day <= 28) { targetDay = 22; weekNum = 10; }
+      else { targetDay = 24; weekNum = 11; }
+    } else if (month === 12) { // Aralık
+      if (day <= 12) { targetDay = 25; weekNum = 12; themeNum = 2; themeName = 'Theme 2: Classroom Life'; }
+      else if (day <= 19) { targetDay = 28; weekNum = 13; themeNum = 3; themeName = 'Theme 3: Personal Life'; }
+      else if (day <= 26) { targetDay = 31; weekNum = 14; themeNum = 3; themeName = 'Theme 3: Personal Life'; }
+      else { targetDay = 34; weekNum = 15; themeNum = 3; themeName = 'Theme 3: Personal Life'; }
+    } else if (month === 1) { // Ocak
+      if (day <= 9) { targetDay = 35; weekNum = 16; themeNum = 3; themeName = 'Theme 3: Personal Life'; }
+      else if (day <= 16) { targetDay = 38; weekNum = 17; themeNum = 4; themeName = 'Theme 4: Family Life'; }
+      else if (day <= 23) { targetDay = 41; weekNum = 18; themeNum = 4; themeName = 'Theme 4: Family Life'; }
+      else { targetDay = 41; weekNum = 18; themeNum = 4; themeName = 'Yarıyıl Tatili'; }
+    } else if (month === 2) { // Şubat
+      if (day <= 7) { targetDay = 41; weekNum = 18; themeNum = 4; themeName = 'Yarıyıl Tatili'; }
+      else if (day <= 13) { targetDay = 43; weekNum = 19; themeNum = 4; themeName = 'Theme 4: Family Life'; }
+      else if (day <= 20) { targetDay = 45; weekNum = 20; themeNum = 4; themeName = 'Theme 4: Family Life'; }
+      else { targetDay = 48; weekNum = 21; themeNum = 5; themeName = 'Theme 5: Life in the City'; }
+    } else if (month === 3) { // Mart
+      themeNum = 5; themeName = 'Theme 5: Life in the City';
+      if (day <= 6) { targetDay = 51; weekNum = 22; }
+      else if (day <= 13) { targetDay = 53; weekNum = 23; }
+      else if (day <= 20) { targetDay = 55; weekNum = 24; }
+      else if (day <= 27) { targetDay = 58; weekNum = 25; themeNum = 6; themeName = 'Theme 6: Life in the World'; }
+      else { targetDay = 61; weekNum = 26; themeNum = 6; themeName = 'Theme 6: Life in the World'; }
+    } else if (month === 4) { // Nisan
+      if (day <= 10) { targetDay = 63; weekNum = 27; themeNum = 6; themeName = 'Theme 6: Life in the World'; }
+      else if (day <= 17) { targetDay = 63; weekNum = 27; themeNum = 6; themeName = '2. Ara Tatil & Tekrar'; }
+      else if (day <= 24) { targetDay = 65; weekNum = 28; themeNum = 6; themeName = 'Theme 6: Life in the World'; }
+      else { targetDay = 68; weekNum = 29; themeNum = 7; themeName = 'Theme 7: Life in Nature'; }
+    } else if (month === 5) { // Mayıs
+      themeNum = 7; themeName = 'Theme 7: Life in Nature';
+      if (day <= 8) { targetDay = 71; weekNum = 30; }
+      else if (day <= 15) { targetDay = 73; weekNum = 31; }
+      else if (day <= 22) { targetDay = 75; weekNum = 32; }
+      else if (day <= 29) { targetDay = 77; weekNum = 33; themeNum = 8; themeName = 'Theme 8: Life in the Universe'; }
+      else { targetDay = 79; weekNum = 34; themeNum = 8; themeName = 'Theme 8: Life in the Universe'; }
+    } else if (month === 6) { // Haziran
+      themeNum = 8; themeName = 'Theme 8: Life in the Universe & Future';
+      if (day <= 11) { targetDay = 81; weekNum = 35; }
+      else { targetDay = 82; weekNum = 36; }
+    } else {
+      targetDay = 18; weekNum = 8; themeNum = 2; themeName = 'Yıllık Plan İnceleme';
+    }
+
+    return { day: targetDay, weekNum, themeNum, themeName, dateFormatted };
+  }
+
+  // Ensure current day is restored or defaults to MEB calendar day
+  const todayMEBInitial = getMEBCalendarInfo();
   const savedDay = parseInt(localStorage.getItem('mk_current_day'), 10);
   if (savedDay && savedDay >= 1 && savedDay <= 150) {
     STATE.currentDay = savedDay;
+  } else if (STATE.activeModule === 'maarif') {
+    STATE.currentDay = todayMEBInitial.day;
   }
 
   // ==========================================================================
@@ -1173,6 +1254,75 @@
     const totalDays = Math.ceil(targetPool.length / batchSize) || 1;
     if (STATE.currentDay > totalDays) STATE.currentDay = 1;
 
+    // MEB Annual Calendar Anchor Banner
+    let mebCalendarHtml = '';
+    const todayMEB = getMEBCalendarInfo();
+    if (module === 'maarif') {
+      const isViewingToday = (STATE.currentDay === todayMEB.day);
+      if (isViewingToday) {
+        mebCalendarHtml = `
+          <div class="daily-meb-calendar-banner is-today">
+            <div class="dmc-left">
+              <span class="dmc-icon-badge">📅</span>
+              <div class="dmc-info">
+                <span class="dmc-tag">MEB 2026-2027 YILLIK ÇERÇEVE PLANI • BUGÜNÜN DERSİ</span>
+                <span class="dmc-title">${todayMEB.dateFormatted} • Hafta ${todayMEB.weekNum} • ${todayMEB.themeName} (Gün ${todayMEB.day})</span>
+              </div>
+            </div>
+            <div style="font-size:12px; font-weight:800; color:var(--dp-color-accent, #008744); display:flex; align-items:center; gap:6px;">
+              <span>●</span> Bugünün Planı Aktif
+            </div>
+          </div>
+        `;
+      } else {
+        mebCalendarHtml = `
+          <div class="daily-meb-calendar-banner not-today">
+            <div class="dmc-left">
+              <span class="dmc-icon-badge">📌</span>
+              <div class="dmc-info">
+                <span class="dmc-tag">ÖZEL SEÇİM İNCELENİYOR (GÜN ${STATE.currentDay})</span>
+                <span class="dmc-title">Şu an seçtiğiniz günün kelimelerini inceliyorsunuz. MEB takvimine göre bugünün dersi: Gün ${todayMEB.day} (${todayMEB.dateFormatted})</span>
+              </div>
+            </div>
+            <button type="button" class="dmc-return-btn" onclick="window.APP.goToTodayMEBDay()">
+              📍 <span>Bugünün MEB Planına Dön (Gün ${todayMEB.day})</span>
+            </button>
+          </div>
+        `;
+      }
+    }
+
+    // Cumulative Past Days Review & Quiz Card
+    let cumulativeCardHtml = '';
+    const cumulativeCount = Math.min(STATE.currentDay * batchSize, targetPool.length);
+    if (STATE.currentDay > 1) {
+      cumulativeCardHtml = `
+        <section class="daily-cumulative-card">
+          <div class="dcr-header-row">
+            <span class="dcr-tag-badge">📚 KÜMÜLATİF TEKRAR & PEKİŞTİRME</span>
+            <span class="dcr-meta-badge">1. GÜN &rarr; ${STATE.currentDay}. GÜN TOPLAMI (${cumulativeCount} KELİME)</span>
+          </div>
+          <div class="dcr-body">
+            <h3 class="dcr-title">Geçmiş Günlerin Kelimelerini Tekrar Et & Test Ol</h3>
+            <p class="dcr-desc">
+              1. günden ${STATE.currentDay}. güne kadar işlenen tüm geçmiş kelimeleri (${cumulativeCount} kelime) hafızada kalıcı hale getirmek için kartları baştan sona gözden geçirebilir veya kümülatif değerlendirme testine katılabilirsiniz.
+            </p>
+            <div class="dcr-actions-row">
+              <button type="button" class="fc-action-btn dcr-action-btn" onclick="window.APP.startPastDaysFlashcards(false)">
+                🗂️ <span>Geçmiş Kartları Tekrar Et (${cumulativeCount})</span>
+              </button>
+              <button type="button" class="fc-action-btn dcr-action-btn" onclick="window.APP.startPastDaysFlashcards(true)" title="Geçmiş günlerin tüm kelimelerini rastgele karıştırarak kart çalışması başlat">
+                🔀 <span>Karışık Kart Tekrarı</span>
+              </button>
+              <button type="button" class="fc-action-btn learned-btn dcr-action-btn" onclick="window.APP.startPastDaysQuiz()">
+                ⚡ <span>Geçmiş Günlerin Testi (Kümülatif Sınav) &rarr;</span>
+              </button>
+            </div>
+          </div>
+        </section>
+      `;
+    }
+
     const startIndex = (STATE.currentDay - 1) * batchSize;
     const dayWords = targetPool.slice(startIndex, startIndex + batchSize);
     const dayLearnedCount = dayWords.filter(w => STATE.userData.learned.has(w.id)).length;
@@ -1257,6 +1407,7 @@
 
     container.innerHTML = `
       ${celebrationHtml}
+      ${mebCalendarHtml}
 
       <!-- DAILY HEADER CARD (40px Radius & Soft Atmospheric Depth) -->
       <section class="daily-header-card">
@@ -1332,6 +1483,8 @@
         </div>
       </section>
 
+      ${cumulativeCardHtml}
+
       <!-- SECONDARY FEED LIST (WORDS) -->
       <section class="secondary-feed-section" aria-label="Günün Kelimeleri Listesi">
         <div class="feed-section-heading">
@@ -1401,6 +1554,16 @@
         const bSize = isYDS ? 20 : (isOxford || isAll ? 25 : 10);
         const start = (STATE.currentDay - 1) * bSize;
         pool = targetPool.slice(start, start + bSize);
+      } else if (sourceVal === 'past_cumulative') {
+        const isYDS = STATE.activeModule === 'yds';
+        const isOxford = STATE.activeModule === 'oxford';
+        const isAll = STATE.activeModule === 'all';
+        const targetPool = isYDS 
+          ? WORDS_DATA.filter(isYDSWord) 
+          : (isOxford ? WORDS_DATA.filter(w => w.dataset === 'oxford') : (isAll ? WORDS_DATA : WORDS_DATA.filter(w => w.dataset === 'maarif' || !w.dataset)));
+        const bSize = isYDS ? 20 : (isOxford || isAll ? 25 : 10);
+        const end = Math.min(STATE.currentDay * bSize, targetPool.length);
+        pool = targetPool.slice(0, end);
       } else if (sourceVal === 'yds_all') {
         pool = WORDS_DATA.filter(isYDSWord);
       } else if (sourceVal === 'yds_verbs') {
@@ -1448,6 +1611,7 @@
     const flashcardSourceOptions = `
       ${isYdsMod ? `
         <option value="daily" ${sourceVal === 'daily' ? 'selected' : ''}>Günün 20 Hedefi (YDS Gün ${STATE.currentDay})</option>
+        <option value="past_cumulative" ${sourceVal === 'past_cumulative' ? 'selected' : ''}>Geçmiş Günler Havuzu (1–${STATE.currentDay}. Gün)</option>
         <option value="yds_all" ${sourceVal === 'yds_all' ? 'selected' : ''}>Tüm YDS/YÖKDİL Kelimeleri (2.894)</option>
         <option value="yds_verbs" ${sourceVal === 'yds_verbs' ? 'selected' : ''}>Akademik Fiiller (1.100+ Kelime)</option>
         <option value="yds_nouns" ${sourceVal === 'yds_nouns' ? 'selected' : ''}>Akademik İsimler (900+ Kelime)</option>
@@ -1456,6 +1620,7 @@
         <option value="yds_b2" ${sourceVal === 'yds_b2' ? 'selected' : ''}>B2 Orta-İleri (1.537 Kelime)</option>
       ` : `
         <option value="daily" ${sourceVal === 'daily' ? 'selected' : ''}>Günün Kelimeleri (Gün ${STATE.currentDay})</option>
+        <option value="past_cumulative" ${sourceVal === 'past_cumulative' ? 'selected' : ''}>Geçmiş Günler Havuzu (1–${STATE.currentDay}. Gün)</option>
         <option value="maarif_all" ${sourceVal === 'maarif_all' ? 'selected' : ''}>MEB: 5. Sınıf Maarif Modeli (817 Kelime)</option>
         <option value="yds_all" ${sourceVal === 'yds_all' ? 'selected' : ''}>YDS & YÖKDİL Akademik (2.894 Kelime)</option>
         <option value="oxford_all" ${sourceVal === 'oxford_all' ? 'selected' : ''}>The Oxford 5000 (Tümü - 5.841)</option>
@@ -1678,8 +1843,10 @@
                     <option value="yds_nouns">Akademik İsimler (Nouns)</option>
                     <option value="yds_adj_adv">Sıfatlar &amp; Zarflar</option>
                     <option value="daily">Günün 20 Hedefi (YDS Gün ${STATE.currentDay})</option>
+                    <option value="past_cumulative">Geçmiş Günler Havuzu (1–${STATE.currentDay}. Gün)</option>
                   ` : `
                     <option value="daily">Günün 10 Kelimesi (Gün ${STATE.currentDay})</option>
+                    <option value="past_cumulative">Geçmiş Günler Havuzu (1–${STATE.currentDay}. Gün)</option>
                     <option value="maarif">MEB: 5. Sınıf Maarif Modeli</option>
                     <option value="oxford_all">The Oxford 5000 (Tüm Havuz)</option>
                     <option value="all">Tüm Kelime Havuzu (${WORDS_DATA.length})</option>
@@ -2724,6 +2891,16 @@
       const bSize = isYds ? 20 : (isOxford || isAll ? 25 : 10);
       const start = (STATE.currentDay - 1) * bSize;
       pool = targetPool.slice(start, start + bSize);
+    } else if (source === 'past_cumulative') {
+      const isYds = STATE.activeModule === 'yds';
+      const isOxford = STATE.activeModule === 'oxford';
+      const isAll = STATE.activeModule === 'all';
+      const targetPool = isYds 
+        ? WORDS_DATA.filter(isYDSWord) 
+        : (isOxford ? WORDS_DATA.filter(w => w.dataset === 'oxford') : (isAll ? WORDS_DATA : WORDS_DATA.filter(w => w.dataset === 'maarif' || !w.dataset)));
+      const bSize = isYds ? 20 : (isOxford || isAll ? 25 : 10);
+      const end = Math.min(STATE.currentDay * bSize, targetPool.length);
+      pool = targetPool.slice(0, end);
     } else if (source === 'review') {
       pool = WORDS_DATA.filter(w => STATE.userData.review.has(w.id));
     } else if (source === 'maarif') {
@@ -3002,6 +3179,41 @@
     }, 100);
   }
 
+  function startPastDaysFlashcards(andShuffle = false) {
+    STATE.flashcardSource = 'past_cumulative';
+    STATE.activeFlashcardIndex = 0;
+    STATE.flashcardFlipped = false;
+    if (andShuffle) {
+      STATE.flashcardIsShuffled = true;
+      STATE.filteredFlashcards = [];
+    } else {
+      STATE.flashcardIsShuffled = false;
+    }
+    switchView('flashcard');
+    if (andShuffle) {
+      setTimeout(() => {
+        shuffleFlashcards();
+      }, 50);
+    }
+  }
+
+  function startPastDaysQuiz() {
+    STATE.quizState.active = false;
+    switchView('quiz');
+    setTimeout(() => {
+      const srcSelect = document.getElementById('quiz-source-select');
+      if (srcSelect) srcSelect.value = 'past_cumulative';
+      startQuiz();
+    }, 100);
+  }
+
+  function goToTodayMEBDay() {
+    const todayInfo = getMEBCalendarInfo();
+    STATE.currentDay = todayInfo.day;
+    saveUserData();
+    updateUI();
+  }
+
   function speakCurrentWord(word) {
     speakWord(word);
   }
@@ -3227,6 +3439,9 @@
     unshuffleFlashcards,
     startDailyFlashcards,
     startDailyQuiz,
+    startPastDaysFlashcards,
+    startPastDaysQuiz,
+    goToTodayMEBDay,
     startQuiz,
     handleQuizAnswer,
     nextQuizQuestion,
