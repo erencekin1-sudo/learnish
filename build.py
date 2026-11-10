@@ -376,17 +376,12 @@ const WORDS_DATA = %s;
 
     bundle_html = re.sub(
         r'<link rel="stylesheet" href="app\.css.*?">',
-        f'<style>\n{app_css}\n</style>',
+        lambda _: f'<style>\n{app_css}\n</style>',
         index_html
     )
-    bundle_html = bundle_html.replace(
-        '<script src="words-data.js?v=817"></script>\n  <script src="app.js?v=817"></script>',
-        f'<script>\n{themes_js}\n</script>\n<script>\n{app_js}\n</script>'
-    )
-    # Also handle standard script tag without version query
     bundle_html = re.sub(
         r'<script src="words-data\.js.*?"></script>\s*<script src="app\.js.*?"></script>',
-        f'<script>\n{themes_js}\n</script>\n<script>\n{app_js}\n</script>',
+        lambda _: f'<script>\n{themes_js}\n</script>\n<script>\n{app_js}\n</script>',
         bundle_html
     )
 

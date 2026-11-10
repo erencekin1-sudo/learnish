@@ -266,8 +266,14 @@
     </div>
   </div>
 
+  <!-- 6. SPEAKING & PRONUNCIATION COACH DIALOG (Interactive Voice & Phonetic Engine) -->
+  <div class="speech-coach-backdrop" id="speech-coach-backdrop" onclick="window.APP.closeSpeechCoach()" aria-hidden="true"></div>
+  <div class="speech-coach-dialog" id="speech-coach-dialog" role="dialog" aria-modal="true" aria-labelledby="speech-coach-title">
+    <!-- Populated dynamically by window.APP.openSpeechCoach -->
+  </div>
+
   <!-- Data & Application Logic -->
-  <script src="words-data.js?v=817"></script>
-  <script src="app.js?v=modern1"></script>
+  <script src="words-data.js?v=speaking1"></script>
+  <script src="app.js?v=speaking1"></script>
 </body>
 </html>
