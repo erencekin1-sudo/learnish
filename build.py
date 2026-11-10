@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Learnish - Maarif Modeli (817 Kelime) + The Oxford 5000 (5,841 Kelime)
-Birleşik Veritabanı Derleyicisi
+Learnish - Maarif Modeli + The Oxford 5000 + YDS/YÖKDİL (2020–2026)
+Tekilleştirilmiş (Deduplicated) Birleşik Kelime Havuzu Derleyicisi
 """
 
 import os
@@ -11,6 +11,7 @@ import re
 import json
 import zipfile
 import xml.etree.ElementTree as ET
+import fitz
 
 BASE_DIR = '/Users/erencekin/Desktop/İntegral/Learnish'
 DOCX_PATH = os.path.join(BASE_DIR, 'belgeler', 'The Oxford 5000 - word.docx')
@@ -19,52 +20,61 @@ WORDS_DATA_JS_PATH = os.path.join(BASE_DIR, 'words-data.js')
 KELIMELER_HAVUZU_PATH = os.path.join(BASE_DIR, 'belgeler', 'kelimeler_havuzu.json')
 SERVICE_WORKER_PATH = os.path.join(BASE_DIR, 'service-worker.js')
 SINGLE_HTML_PATH = os.path.join(BASE_DIR, 'Learnish_Tek_Dosya_Web_App.html')
+YDS_PDF_PATH = os.path.join(BASE_DIR, 'belgeler', 'YDS İngilizce 2020–2026 Kelime ve Kalıp Tabloları.pdf')
 
 def log(msg):
     print(f"[Learnish Builder] {msg}")
 
-# 1. Load existing Maarif words from words-data.js or Notion
+def merge_tr(existing_tr, new_tr):
+    """Combine Turkish translations cleanly without repetition."""
+    if not new_tr:
+        return existing_tr or ''
+    if not existing_tr:
+        return new_tr.strip()
+    
+    parts = [p.strip() for p in re.split(r'[;,/]\s*', existing_tr) if p.strip()]
+    new_parts = [p.strip() for p in re.split(r'[;,/]\s*', new_tr) if p.strip()]
+    
+    merged = list(parts)
+    for np in new_parts:
+        if not any(np.lower() == p.lower() for p in merged):
+            merged.append(np)
+    return '; '.join(merged[:4])
+
+def merge_desc(existing_desc, new_desc):
+    """Combine POS/description tags without repetition."""
+    if not new_desc or new_desc.lower() in (existing_desc or '').lower():
+        return existing_desc or new_desc or ''
+    if not existing_desc:
+        return new_desc
+    return f"{existing_desc} / {new_desc}"
+
+# 1. Load Maarif words from existing words-data.js or kelimeler_havuzu.json
 def load_maarif_words():
     log("Mevcut 5. Sınıf Maarif Modeli kelimeleri okunuyor...")
-    with open(WORDS_DATA_JS_PATH, 'r', encoding='utf-8') as f:
-        content = f.read()
-    
-    # Extract existing WORDS_DATA array
-    m = re.search(r'const WORDS_DATA = (\[[\s\S]*?\]);\s*$', content)
-    if not m:
+    maarif_raw = []
+    if os.path.exists(WORDS_DATA_JS_PATH):
+        with open(WORDS_DATA_JS_PATH, 'r', encoding='utf-8') as f:
+            content = f.read()
         m = re.search(r'const WORDS_DATA = (\[[\s\S]*?\]);', content)
-    
-    if m:
-        try:
-            data = json.loads(m.group(1))
-            # Keep only original maarif words (id <= 817 or dataset == 'maarif')
-            maarif = [w for w in data if w.get('id', 0) <= 817 or w.get('dataset') == 'maarif']
-            for w in maarif:
-                w['dataset'] = 'maarif'
-            log(f"✅ {len(maarif)} adet Maarif kelimesi korundu.")
-            return maarif
-        except Exception as e:
-            log(f"Uyarı: JSON parse hatası ({e}), regex ile yükleme deneniyor...")
+        if m:
+            try:
+                data = json.loads(m.group(1))
+                maarif_raw = [w for w in data if w.get('id', 0) <= 817 or w.get('dataset') == 'maarif' or w.get('isMaarif')]
+            except Exception as e:
+                log(f"Uyarı: words-data.js okunamadı ({e})")
 
-    # Fallback to kelimeler_havuzu.json
-    if os.path.exists(KELIMELER_HAVUZU_PATH):
+    if not maarif_raw and os.path.exists(KELIMELER_HAVUZU_PATH):
         with open(KELIMELER_HAVUZU_PATH, 'r', encoding='utf-8') as f:
             pool = json.load(f)
-            maarif = []
-            for w in pool[:817]:
-                w['dataset'] = 'maarif'
-                w['id'] = w.get('no', len(maarif) + 1)
-                w['day'] = ((w['id'] - 1) // 10) + 1
-                maarif.append(w)
-            return maarif
+            maarif_raw = [w for w in pool if w.get('dataset') == 'maarif' or w.get('no', 0) <= 817]
 
-    return []
+    log(f"✅ {len(maarif_raw)} adet ham Maarif kaydı bulundu.")
+    return maarif_raw
 
 # 2. Parse The Oxford 5000 docx
 def parse_oxford_docx():
     log(f"Oxford 5000 Word belgesi işleniyor: {DOCX_PATH}")
-    
-    # Load CEFR reference
     cefr_by_word_type = {}
     cefr_by_word = {}
     if os.path.exists(CEFR_JSON_PATH):
@@ -82,8 +92,6 @@ def parse_oxford_docx():
         root = ET.fromstring(xml_content)
         namespaces = {'w': 'http://schemas.openxmlformats.org/wordprocessingml/2006/main'}
         paras = root.findall('.//w:p', namespaces)
-
-    log(f"Toplam {len(paras)} paragraf okundu. Başlıklar ve anlamlar ayrıştırılıyor...")
 
     def para_info(p):
         runs = p.findall('.//w:r', namespaces)
@@ -111,7 +119,6 @@ def parse_oxford_docx():
         pPr = p.find('.//w:pPr', namespaces)
         pStyle = pPr.find('.//w:pStyle', namespaces) if pPr is not None else None
         style = pStyle.attrib.get('{http://schemas.openxmlformats.org/wordprocessingml/2006/main}val', '') if pStyle is not None else ''
-        
         return style, ''.join(full_text).strip(), ''.join(maroon_text).strip(), colors, has_italic
 
     entries = []
@@ -147,7 +154,6 @@ def parse_oxford_docx():
     }
 
     oxford_words = []
-    
     for idx, (hw, p_list) in enumerate(entries, 1):
         m = re.match(r'^(.+?)\s*\((.*?)\)$', hw)
         word_raw = m.group(1).strip() if m else hw.strip()
@@ -159,18 +165,15 @@ def parse_oxford_docx():
         examples = []
         phonetic = ''
 
-        for i, (full_t, m_t, colors, italic) in enumerate(p_list):
+        for full_t, m_t, colors, italic in p_list:
             if not phonetic and full_t.startswith('/'):
                 pm = re.match(r'^(/[^/]+/)\s*(.*)', full_t)
                 phonetic = pm.group(1).strip() if pm else full_t.split('/')[1]
                 continue
             
-            # Maroon text indicates Turkish definition or translation
             if m_t:
                 is_pure_maroon = len(m_t) >= len(full_t) * 0.75
-                # Filter out obvious full example sentences
                 is_example_tr = bool(re.match(r'^(O |Sen |Ben |Biz |Siz |Onlar |‘|\")', full_t)) or (full_t.endswith('.') and len(full_t) > 35)
-                
                 if is_pure_maroon and not is_example_tr:
                     clean_d = re.sub(r'^\d+\s*', '', m_t).strip(' .,;')
                     if clean_d and clean_d not in tr_definitions:
@@ -178,30 +181,21 @@ def parse_oxford_docx():
                 elif not tr_definitions and is_pure_maroon:
                     tr_definitions.append(m_t)
             
-            # Example sentence
             if italic and not m_t and len(full_t) > 15 and not full_t.startswith('/'):
                 if not examples:
                     examples.append(full_t)
 
-        # CEFR lookup
         cefr_obj = cefr_by_word_type.get((clean_w.lower(), pos_raw)) or cefr_by_word.get(clean_w.lower(), {})
         cefr_level = cefr_obj.get('cefr', '').upper() or 'B1'
         def_en = cefr_obj.get('definition', '')
         ex_en = cefr_obj.get('example', '') or (examples[0] if examples else '')
 
-        # Clean Turkish meanings
         final_tr = '; '.join(tr_definitions[:3])
         if not final_tr:
-            # Fallback to any maroon text
             all_m = [p[1] for p in p_list if p[1]]
             final_tr = '; '.join(all_m[:2]) if all_m else clean_w
 
-        # Assign Day (10 words per day: 1 to 585)
-        day_num = ((idx - 1) // 10) + 1
-
         oxford_words.append({
-            'id': 1000 + idx,
-            'no': 817 + idx,
             'en': clean_w,
             'tr': final_tr,
             'desc': desc,
@@ -212,7 +206,6 @@ def parse_oxford_docx():
             'themeCode': 'OXFORD 5000',
             'themeTitle': 'THE OXFORD 5000',
             'themeTitleTr': 'Oxford 5000 Kelime Hazinesi',
-            'day': day_num,
             'dataset': 'oxford',
             'phonetic': phonetic,
             'definition': def_en,
@@ -220,20 +213,246 @@ def parse_oxford_docx():
             'synonym': ''
         })
 
-    log(f"✅ {len(oxford_words)} adet Oxford 5000 kelimesi başarıyla ayrıştırıldı.")
+    log(f"✅ {len(oxford_words)} adet Oxford 5000 girdisi ayrıştırıldı.")
     return oxford_words
 
+# 3. Parse YDS/YÖKDİL 2020-2026 PDF (all 9 tables)
+def parse_yds_pdf():
+    log(f"YDS & YÖKDİL Tabloları PDF işleniyor: {YDS_PDF_PATH}")
+    if not os.path.exists(YDS_PDF_PATH):
+        log(f"Hata: {YDS_PDF_PATH} bulunamadı!")
+        return []
+
+    doc = fitz.open(YDS_PDF_PATH)
+    sections_def = [
+        (1, 'İsim, Sıfat ve Zarf', 4, 191),
+        (2, 'Fiiller', 191, 246),
+        (3, 'Edatlı Fiiller', 246, 254),
+        (4, 'Phrasal Verbs', 254, 259),
+        (5, 'Edat Alan Sıfat ve İsimler', 259, 266),
+        (6, 'Edatlar', 266, 272),
+        (7, 'Bağlaçlar ve Geçiş İfadeleri', 272, 277),
+        (8, 'Eşdizimler (Collocations)', 277, 286),
+        (9, 'Fiil Tamamlama Kalıpları', 286, 292),
+    ]
+
+    sec_desc_map = {
+        1: 'Akademik Sözcük',
+        2: 'Akademik Fiil (Verb)',
+        3: 'Edatlı Fiil (Prep. Verb)',
+        4: 'Phrasal Verb (Deyimsel Fiil)',
+        5: 'Edat Alan Sözcük (Collocation)',
+        6: 'Edat (Preposition)',
+        7: 'Bağlaç & Geçiş İfadesi',
+        8: 'Akademik Eşdizim (Collocation)',
+        9: 'Fiil Tamamlama Kalıbı'
+    }
+
+    yds_items = []
+    for sec_id, sec_name, start_p, end_p in sections_def:
+        count_sec = 0
+        for pno in range(start_p, end_p):
+            page = doc[pno]
+            words = page.get_text('words')
+            min_y = 112 if pno == start_p else 70
+            body_words = [w for w in words if min_y <= w[1] <= 555]
+            
+            sira_anchors = [(int(w[4]), w[1], w[3]) for w in body_words if w[2] <= 63 and w[4].isdigit()]
+            sira_anchors.sort(key=lambda a: a[1])
+
+            for i, (num, y0, y1) in enumerate(sira_anchors):
+                next_y0 = sira_anchors[i+1][1] if i + 1 < len(sira_anchors) else 555
+                row_words = [w for w in body_words if y0 - 2 <= w[1] < next_y0 - 2]
+                
+                if sec_id == 1:
+                    en_words = [w[4] for w in row_words if 63 <= w[0] < 155]
+                    pos_words = [w[4] for w in row_words if 155 <= w[0] < 189]
+                    tr_words = [w[4] for w in row_words if 189 <= w[0] < 340]
+                    stats_words = [w[4] for w in row_words if 340 <= w[0] < 570]
+                    ex_words = [w[4] for w in row_words if w[0] >= 570]
+                    pos_raw = ' '.join(pos_words).strip()
+                elif sec_id == 7:
+                    en_words = [w[4] for w in row_words if 63 <= w[0] < 163]
+                    tr_words = [w[4] for w in row_words if 163 <= w[0] < 283]
+                    pos_words = [w[4] for w in row_words if 283 <= w[0] < 367]
+                    stats_words = [w[4] for w in row_words if 367 <= w[0] < 597]
+                    ex_words = [w[4] for w in row_words if w[0] >= 597]
+                    pos_raw = ' '.join(pos_words).strip()
+                else:
+                    en_words = [w[4] for w in row_words if 63 <= w[0] < 181]
+                    tr_words = [w[4] for w in row_words if 181 <= w[0] < 353]
+                    stats_words = [w[4] for w in row_words if 353 <= w[0] < 583]
+                    ex_words = [w[4] for w in row_words if w[0] >= 583]
+                    pos_raw = 'fiil' if sec_id == 2 else ('edat' if sec_id == 6 else 'kalıp')
+
+                en = ' '.join(en_words).strip()
+                tr = ' '.join(tr_words).strip()
+                ex = ' '.join(ex_words).strip()
+                stats = ' '.join(stats_words).strip()
+
+                if not en:
+                    continue
+
+                desc = f"{pos_raw.capitalize() if pos_raw else sec_desc_map[sec_id]}"
+                cefr = 'C1' if sec_id in [4, 7, 8, 9] else 'B2'
+
+                yds_items.append({
+                    'en': en,
+                    'tr': tr,
+                    'desc': desc,
+                    'pos': pos_raw or 'kalıp',
+                    'cefr': cefr,
+                    'cat': f'YDS & YÖKDİL ({sec_name})',
+                    'themeNum': 10,
+                    'themeCode': 'YDS/YÖKDİL',
+                    'themeTitle': 'YDS & YÖKDİL AKADEMİK',
+                    'themeTitleTr': 'YDS & YÖKDİL Akademik Sınav Hazırlık (2020–2026)',
+                    'dataset': 'yds',
+                    'datasets': ['yds'],
+                    'isMaarif': False,
+                    'isOxford': False,
+                    'isYds': True,
+                    'ydsStats': stats,
+                    'ydsExample': ex,
+                    'ydsSection': sec_id,
+                    'ydsSira': num,
+                    'phonetic': '',
+                    'definition': tr,
+                    'example': ex,
+                    'synonym': ''
+                })
+                count_sec += 1
+        log(f"  Tablo {sec_id} ({sec_name}): {count_sec} madde okundu.")
+
+    log(f"✅ Toplam {len(yds_items)} YDS & YÖKDİL maddesi başarıyla ayrıştırıldı.")
+    return yds_items
+
+# 4. Build deduplicated master database
 def build_combined_database():
     maarif_words = load_maarif_words()
     oxford_words = parse_oxford_docx()
-    
-    combined_words = maarif_words + oxford_words
-    log(f"🌟 Birleşik kelime havuzu: {len(combined_words)} kelime (Maarif: {len(maarif_words)}, Oxford: {len(oxford_words)})")
+    yds_words = parse_yds_pdf()
 
-    # 3. Create updated words-data.js
+    pool_dict = {}
+
+    # Step 1: Add Maarif words
+    for w in maarif_words:
+        clean_en = w['en'].strip().lower()
+        if clean_en in pool_dict:
+            entry = pool_dict[clean_en]
+            entry['tr'] = merge_tr(entry.get('tr', ''), w.get('tr', ''))
+            entry['desc'] = merge_desc(entry.get('desc', ''), w.get('desc', ''))
+        else:
+            entry = dict(w)
+            entry['dataset'] = 'maarif'
+            entry['isMaarif'] = True
+            entry['isOxford'] = False
+            entry['isYds'] = False
+            entry['datasets'] = ['maarif']
+            pool_dict[clean_en] = entry
+
+    log(f"✅ Maarif tekilleştirildi: {len(pool_dict)} benzersiz kelime.")
+
+    # Step 2: Merge Oxford words
+    for w in oxford_words:
+        clean_en = w['en'].strip().lower()
+        if clean_en in pool_dict:
+            entry = pool_dict[clean_en]
+            entry['isOxford'] = True
+            if 'oxford' not in entry['datasets']:
+                entry['datasets'].append('oxford')
+            entry['tr'] = merge_tr(entry.get('tr', ''), w.get('tr', ''))
+            entry['desc'] = merge_desc(entry.get('desc', ''), w.get('desc', ''))
+            if not entry.get('phonetic') and w.get('phonetic'):
+                entry['phonetic'] = w['phonetic']
+            if not entry.get('definition') and w.get('definition'):
+                entry['definition'] = w['definition']
+            if not entry.get('example') and w.get('example'):
+                entry['example'] = w['example']
+            if not entry.get('cefr') and w.get('cefr'):
+                entry['cefr'] = w['cefr']
+        else:
+            entry = dict(w)
+            entry['dataset'] = 'oxford'
+            entry['isMaarif'] = False
+            entry['isOxford'] = True
+            entry['isYds'] = False
+            entry['datasets'] = ['oxford']
+            pool_dict[clean_en] = entry
+
+    log(f"✅ Oxford birleştirildi: Toplam {len(pool_dict)} benzersiz kelime.")
+
+    # Step 3: Merge YDS words
+    for w in yds_words:
+        clean_en = w['en'].strip().lower()
+        if clean_en in pool_dict:
+            entry = pool_dict[clean_en]
+            entry['isYds'] = True
+            if 'yds' not in entry['datasets']:
+                entry['datasets'].append('yds')
+            entry['tr'] = merge_tr(entry.get('tr', ''), w.get('tr', ''))
+            if not entry.get('ydsStats') and w.get('ydsStats'):
+                entry['ydsStats'] = w['ydsStats']
+            if not entry.get('ydsExample') and w.get('ydsExample'):
+                entry['ydsExample'] = w['ydsExample']
+            if not entry.get('example') and w.get('ydsExample'):
+                entry['example'] = w['ydsExample']
+            if not entry.get('cefr'):
+                entry['cefr'] = w.get('cefr', 'B2')
+        else:
+            entry = dict(w)
+            pool_dict[clean_en] = entry
+
+    log(f"✅ YDS birleştirildi: Havuzda toplam {len(pool_dict)} benzersiz kelime/kalıp!")
+
+    # Assign sequential IDs and Days
+    combined_words = list(pool_dict.values())
+    
+    # Sort order: Maarif words first, then Oxford words, then new YDS expressions
+    def sort_key(item):
+        is_m = 0 if item.get('isMaarif') else 1
+        is_o = 0 if item.get('isOxford') else 1
+        theme = item.get('themeNum', 99)
+        orig_no = item.get('no', 999999)
+        return (is_m, is_o, theme, orig_no, item.get('en', '').lower())
+
+    combined_words.sort(key=sort_key)
+
+    # Assign days for Maarif, Oxford, YDS tracks
+    m_idx = 0
+    o_idx = 0
+    y_idx = 0
+    for idx, w in enumerate(combined_words, 1):
+        w['id'] = idx
+        w['no'] = idx
+        
+        # Primary day assignment
+        if w.get('isMaarif'):
+            m_idx += 1
+            w['day'] = ((m_idx - 1) // 10) + 1
+        elif w.get('isYds') and not w.get('isOxford'):
+            y_idx += 1
+            w['day'] = ((y_idx - 1) // 20) + 1
+        else:
+            o_idx += 1
+            w['day'] = ((o_idx - 1) // 25) + 1
+
+    # Verify no duplicates
+    all_en = [w['en'].strip().lower() for w in combined_words]
+    assert len(all_en) == len(set(all_en)), "Kritik Hata: Havuzda mükerrer kelimeler tespit edildi!"
+    log(f"🌟 Sıfır Tekrar Doğrulandı: Tüm {len(combined_words)} kelime ve kalıp tekilleştirildi.")
+
+    maarif_total = sum(1 for w in combined_words if w.get('isMaarif'))
+    oxford_total = sum(1 for w in combined_words if w.get('isOxford'))
+    yds_total = sum(1 for w in combined_words if w.get('isYds'))
+
+    log(f"📊 Dağılım: Maarif={maarif_total:,} | Oxford={oxford_total:,} | YDS={yds_total:,} | Genel Toplam={len(combined_words):,}")
+
+    # Write words-data.js
     themes_js = """/**
- * Learnish - 5. Sınıf Maarif Modeli & The Oxford 5000 Birleşik Kelime Veritabanı
- * Toplam: %d Kelime (817 Maarif + %d Oxford 5000)
+ * Learnish - Maarif Modeli, The Oxford 5000 ve YDS/YÖKDİL Birleşik Kelime Veritabanı
+ * Toplam: %d Benzersiz Kelime ve Kalıp (Maarif: %d, Oxford: %d, YDS: %d)
+ * Sıfır Tekrar: Her ifade sözlükte tam olarak tek bir zenginleştirilmiş kayıt olarak yer alır.
  */
 const THEMES_DATA = {
   "1": {
@@ -325,47 +544,67 @@ const THEMES_DATA = {
     "color": "#0284c7",
     "badgeBg": "#0284c7",
     "border": "#38bdf8"
+  },
+  "10": {
+    "num": 10,
+    "code": "YDS/YÖKDİL",
+    "title": "YDS & YÖKDİL AKADEMİK",
+    "titleTr": "YDS & YÖKDİL Akademik Sınav Hazırlık (2020–2026)",
+    "full": "YDS & YÖKDİL AKADEMİK (B2-C1)",
+    "color": "#7c3aed",
+    "badgeBg": "#8b5cf6",
+    "border": "#a78bfa"
   }
 };
 
 const WORDS_DATA = %s;
-""" % (len(combined_words), len(oxford_words), json.dumps(combined_words, ensure_ascii=False, indent=2))
+""" % (len(combined_words), maarif_total, oxford_total, yds_total, json.dumps(combined_words, ensure_ascii=False, indent=2))
 
     with open(WORDS_DATA_JS_PATH, 'w', encoding='utf-8') as f:
         f.write(themes_js)
     log(f"✅ {WORDS_DATA_JS_PATH} dosyası güncellendi ({len(combined_words)} kelime).")
 
-    # 4. Create updated otomasyon/kelimeler_havuzu.json
+    # Write kelimeler_havuzu.json
     pool_records = []
     for w in combined_words:
         pool_records.append({
             'no': w.get('no'),
-            'cat': w.get('cat', ''),
+            'id': w.get('id'),
             'en': w.get('en', ''),
             'tr': w.get('tr', ''),
             'desc': w.get('desc', ''),
+            'pos': w.get('pos', ''),
             'cefr': w.get('cefr', ''),
+            'cat': w.get('cat', ''),
             'themeNum': w.get('themeNum', 1),
             'themeCode': w.get('themeCode', ''),
             'dataset': w.get('dataset', 'maarif'),
+            'datasets': w.get('datasets', []),
+            'isMaarif': w.get('isMaarif', False),
+            'isOxford': w.get('isOxford', False),
+            'isYds': w.get('isYds', False),
             'phonetic': w.get('phonetic', ''),
-            'example': w.get('example', '')
+            'example': w.get('example', ''),
+            'definition': w.get('definition', ''),
+            'ydsStats': w.get('ydsStats', ''),
+            'ydsExample': w.get('ydsExample', ''),
+            'day': w.get('day', 1)
         })
 
     with open(KELIMELER_HAVUZU_PATH, 'w', encoding='utf-8') as f:
         json.dump(pool_records, f, ensure_ascii=False, indent=2)
     log(f"✅ {KELIMELER_HAVUZU_PATH} dosyası güncellendi ({len(pool_records)} kelime).")
 
-    # 5. Update service-worker.js version
+    # Update service-worker.js version
     if os.path.exists(SERVICE_WORKER_PATH):
         with open(SERVICE_WORKER_PATH, 'r', encoding='utf-8') as f:
             sw_text = f.read()
-        sw_text = re.sub(r"const CACHE_NAME = ['\"][^'\"]+['\"];", "const CACHE_NAME = 'learnish-v5-swiss-yds';", sw_text)
+        sw_text = re.sub(r"const CACHE_NAME = ['\"][^'\"]+['\"];", "const CACHE_NAME = 'learnish-v6-unified-pool';", sw_text)
         with open(SERVICE_WORKER_PATH, 'w', encoding='utf-8') as f:
             f.write(sw_text)
-        log("✅ service-worker.js önbellek sürümü v5-swiss-yds olarak güncellendi.")
+        log("✅ service-worker.js önbellek sürümü v6-unified-pool olarak güncellendi.")
 
-    # 6. Rebuild Learnish_Tek_Dosya_Web_App.html
+    # Rebuild Learnish_Tek_Dosya_Web_App.html
     log("Learnish_Tek_Dosya_Web_App.html tek dosya uygulaması derleniyor...")
     with open(os.path.join(BASE_DIR, 'index.html'), 'r', encoding='utf-8') as f:
         index_html = f.read()

@@ -1358,9 +1358,9 @@
     const activeMod = moduleFilter || STATE.activeModule;
 
     let pool = WORDS_DATA;
-    if (activeMod === 'maarif') pool = WORDS_DATA.filter(w => w.dataset === 'maarif' || !w.dataset);
+    if (activeMod === 'maarif') pool = WORDS_DATA.filter(isMaarifWord);
     else if (activeMod === 'yds') pool = WORDS_DATA.filter(isYDSWord);
-    else if (activeMod === 'oxford') pool = WORDS_DATA.filter(w => w.dataset === 'oxford');
+    else if (activeMod === 'oxford') pool = WORDS_DATA.filter(isOxfordWord);
 
     return pool.filter(w => {
       const srs = STATE.userData.srs[w.id];
@@ -1378,9 +1378,9 @@
     const activeMod = moduleFilter || STATE.activeModule;
 
     let pool = WORDS_DATA;
-    if (activeMod === 'maarif') pool = WORDS_DATA.filter(w => w.dataset === 'maarif' || !w.dataset);
+    if (activeMod === 'maarif') pool = WORDS_DATA.filter(isMaarifWord);
     else if (activeMod === 'yds') pool = WORDS_DATA.filter(isYDSWord);
-    else if (activeMod === 'oxford') pool = WORDS_DATA.filter(w => w.dataset === 'oxford');
+    else if (activeMod === 'oxford') pool = WORDS_DATA.filter(isOxfordWord);
 
     const mistakeEntries = Object.entries(STATE.userData.mistakes)
       .filter(([id, m]) => !m.cleared && m.wrongCount > 0)
@@ -1406,9 +1406,9 @@
     const activeMod = moduleFilter || STATE.activeModule;
 
     let pool = WORDS_DATA;
-    if (activeMod === 'maarif') pool = WORDS_DATA.filter(w => w.dataset === 'maarif' || !w.dataset);
+    if (activeMod === 'maarif') pool = WORDS_DATA.filter(isMaarifWord);
     else if (activeMod === 'yds') pool = WORDS_DATA.filter(isYDSWord);
-    else if (activeMod === 'oxford') pool = WORDS_DATA.filter(w => w.dataset === 'oxford');
+    else if (activeMod === 'oxford') pool = WORDS_DATA.filter(isOxfordWord);
 
     let dueCount = 0;
     let newCount = 0;
@@ -1460,9 +1460,9 @@
   function getMistakeStats(moduleFilter = null) {
     const activeMod = moduleFilter || STATE.activeModule;
     let pool = WORDS_DATA;
-    if (activeMod === 'maarif') pool = WORDS_DATA.filter(w => w.dataset === 'maarif' || !w.dataset);
+    if (activeMod === 'maarif') pool = WORDS_DATA.filter(isMaarifWord);
     else if (activeMod === 'yds') pool = WORDS_DATA.filter(isYDSWord);
-    else if (activeMod === 'oxford') pool = WORDS_DATA.filter(w => w.dataset === 'oxford');
+    else if (activeMod === 'oxford') pool = WORDS_DATA.filter(isOxfordWord);
 
     const poolIds = new Set(pool.map(w => w.id));
 
@@ -1527,11 +1527,18 @@
   }
 
   // ==========================================================================
-  // Data Filtering & Helpers for YDS & Maarif
+  // Data Filtering & Helpers for YDS, Maarif & Oxford (Unified Pool)
   // ==========================================================================
+  function isMaarifWord(w) {
+    return Boolean(w.isMaarif || w.dataset === 'maarif' || (w.datasets && w.datasets.includes('maarif')) || (w.id && w.id <= 815));
+  }
+
+  function isOxfordWord(w) {
+    return Boolean(w.isOxford || w.dataset === 'oxford' || (w.datasets && w.datasets.includes('oxford')));
+  }
+
   function isYDSWord(w) {
-    if (w.dataset !== 'oxford') return false;
-    return w.cefr === 'B2' || w.cefr === 'C1';
+    return Boolean(w.isYds || w.dataset === 'yds' || (w.datasets && w.datasets.includes('yds')) || (w.dataset === 'oxford' && (w.cefr === 'B2' || w.cefr === 'C1')));
   }
 
   function getWordPOS(w) {
@@ -1688,7 +1695,7 @@
       if (quizText) quizText.innerText = "YDS Simülatör";
       if (dirText) dirText.innerText = "Akademik Havuz";
       if (statsText) statsText.innerText = "YDS Analizi";
-      STATE.directoryFilters.dataset = 'oxford';
+      STATE.directoryFilters.dataset = 'yds';
       STATE.directoryFilters.cefr = 'all';
       STATE.directoryFilters.search = '';
       STATE.directoryPage = 1;
@@ -1810,19 +1817,23 @@
     };
     const activeCurriculumSubtitle = curriculumSubtitles[module] || '[ MEB MÜFREDATI ] 5. SINIF MAARİF MODELİ';
 
+    const maarifPool = WORDS_DATA.filter(isMaarifWord);
+    const ydsPool = WORDS_DATA.filter(isYDSWord);
+    const oxfordPool = WORDS_DATA.filter(isOxfordWord);
+
     const unitTitles = {
       maarif: 'MEB 5. Sınıf Maarif • Unit 4: My Daily Routine',
-      yds: 'YDS/YÖKDİL • Module 4: Academic Verbs & Clauses',
-      oxford: 'Oxford 5000 • CEFR B2: Core Academic Lexicon',
-      all: 'Learnish Arşiv: 6.658 Kelimelik Birleşik Kütüphane'
+      yds: 'YDS/YÖKDİL • 2020–2026 Akademik Sınav Soruları & Kalıpları',
+      oxford: 'Oxford 5000 • CEFR A1–C1 Uluslararası Standart',
+      all: `Learnish Arşiv: ${WORDS_DATA.length.toLocaleString('tr-TR')} Kelimelik Birleşik Kütüphane`
     };
     const activeUnitTitle = unitTitles[module] || 'Unit 4: My Daily Routine';
 
     const moduleTotalDays = {
-      maarif: Math.ceil(817 / 10),
-      yds: Math.ceil(2894 / 20),
-      oxford: Math.ceil(5841 / 25),
-      all: Math.ceil(6658 / 25)
+      maarif: Math.ceil(maarifPool.length / 10),
+      yds: Math.ceil(ydsPool.length / 20),
+      oxford: Math.ceil(oxfordPool.length / 25),
+      all: Math.ceil(WORDS_DATA.length / 25)
     };
     const totalDayCount = moduleTotalDays[module] || 82;
 
@@ -2090,7 +2101,7 @@
           <div class="feed-icon-box">📚</div>
           <div class="feed-content-wrap">
             <h4 class="feed-card-title">Kelime Kütüphanesi &amp; Arama</h4>
-            <p class="feed-card-desc">6.658 kelimelik birleşik sözlük veritabanında anında arama ve filtreleme.</p>
+            <p class="feed-card-desc">${WORDS_DATA.length.toLocaleString('tr-TR')} kelimelik birleşik sözlük veritabanında anında arama ve filtreleme.</p>
           </div>
           <button type="button" class="feed-trailing-btn" onclick="window.APP.switchView('directory')" aria-label="Kütüphaneye Git" title="Kütüphaneye Git">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
@@ -2131,7 +2142,7 @@
       bannerTitle = `GÜN ${STATE.currentDay} • YDS & YÖKDİL AKADEMİK WORKOUT`;
       bannerDesc = `Günde ${batchSize} hedef akademik kelime ile B2–C1 seviye sınav hazırlığı.`;
     } else if (module === 'oxford') {
-      targetPool = WORDS_DATA.filter(w => w.dataset === 'oxford');
+      targetPool = WORDS_DATA.filter(isOxfordWord);
       batchSize = 25;
       bannerTitle = `GÜN ${STATE.currentDay} • THE OXFORD 5000`;
       bannerDesc = `Günde ${batchSize} hedef kelime ile uluslararası A1–C1 kelime standardı.`;
@@ -2139,9 +2150,9 @@
       targetPool = WORDS_DATA;
       batchSize = 25;
       bannerTitle = `GÜN ${STATE.currentDay} • TÜM KÜTÜPHANE BİRLEŞİK HAVUZ`;
-      bannerDesc = `Günde ${batchSize} hedef kelime ile 6.658 kelimelik kapsamlı çalışma.`;
+      bannerDesc = `Günde ${batchSize} hedef kelime ile ${WORDS_DATA.length.toLocaleString('tr-TR')} kelimelik kapsamlı çalışma.`;
     } else {
-      targetPool = WORDS_DATA.filter(w => w.dataset === 'maarif' || !w.dataset);
+      targetPool = WORDS_DATA.filter(isMaarifWord);
       batchSize = 10;
       const curThemeNum = (targetPool[(STATE.currentDay - 1) * batchSize] && targetPool[(STATE.currentDay - 1) * batchSize].themeNum) || Math.min(8, Math.max(1, Math.ceil(STATE.currentDay / 10)));
       const curTheme = (typeof THEMES_DATA !== 'undefined' && THEMES_DATA[curThemeNum]) ? THEMES_DATA[curThemeNum] : { titleTr: 'Okul Yaşamı' };
@@ -2456,7 +2467,7 @@
         const isAll = STATE.activeModule === 'all';
         const targetPool = isYDS 
           ? WORDS_DATA.filter(isYDSWord) 
-          : (isOxford ? WORDS_DATA.filter(w => w.dataset === 'oxford') : (isAll ? WORDS_DATA : WORDS_DATA.filter(w => w.dataset === 'maarif' || !w.dataset)));
+          : (isOxford ? WORDS_DATA.filter(isOxfordWord) : (isAll ? WORDS_DATA : WORDS_DATA.filter(isMaarifWord)));
         const bSize = isYDS ? 20 : (isOxford || isAll ? 25 : 10);
         const start = (STATE.currentDay - 1) * bSize;
         pool = targetPool.slice(start, start + bSize);
@@ -2466,7 +2477,7 @@
         const isAll = STATE.activeModule === 'all';
         const targetPool = isYDS 
           ? WORDS_DATA.filter(isYDSWord) 
-          : (isOxford ? WORDS_DATA.filter(w => w.dataset === 'oxford') : (isAll ? WORDS_DATA : WORDS_DATA.filter(w => w.dataset === 'maarif' || !w.dataset)));
+          : (isOxford ? WORDS_DATA.filter(isOxfordWord) : (isAll ? WORDS_DATA : WORDS_DATA.filter(isMaarifWord)));
         const bSize = isYDS ? 20 : (isOxford || isAll ? 25 : 10);
         const end = Math.min(STATE.currentDay * bSize, targetPool.length);
         pool = targetPool.slice(0, end);
@@ -2483,15 +2494,15 @@
       } else if (sourceVal === 'yds_b2') {
         pool = WORDS_DATA.filter(w => isYDSWord(w) && w.cefr === 'B2');
       } else if (sourceVal === 'maarif_all') {
-        pool = WORDS_DATA.filter(w => w.dataset === 'maarif' || !w.dataset);
+        pool = WORDS_DATA.filter(isMaarifWord);
       } else if (sourceVal === 'oxford_all') {
-        pool = WORDS_DATA.filter(w => w.dataset === 'oxford');
+        pool = WORDS_DATA.filter(isOxfordWord);
       } else if (sourceVal === 'oxford_a1') {
-        pool = WORDS_DATA.filter(w => w.dataset === 'oxford' && w.cefr === 'A1');
+        pool = WORDS_DATA.filter(w => isOxfordWord(w) && w.cefr === 'A1');
       } else if (sourceVal === 'oxford_a2') {
-        pool = WORDS_DATA.filter(w => w.dataset === 'oxford' && w.cefr === 'A2');
+        pool = WORDS_DATA.filter(w => isOxfordWord(w) && w.cefr === 'A2');
       } else if (sourceVal === 'oxford_b1') {
-        pool = WORDS_DATA.filter(w => w.dataset === 'oxford' && w.cefr === 'B1');
+        pool = WORDS_DATA.filter(w => isOxfordWord(w) && w.cefr === 'B1');
       } else if (sourceVal === 'review') {
         pool = WORDS_DATA.filter(w => STATE.userData.review.has(w.id));
       } else if (sourceVal === 'starred') {
@@ -2528,23 +2539,23 @@
       ${isYdsMod ? `
         <option value="daily" ${sourceVal === 'daily' ? 'selected' : ''}>Günün 20 Hedefi (YDS Gün ${STATE.currentDay})</option>
         <option value="past_cumulative" ${sourceVal === 'past_cumulative' ? 'selected' : ''}>Geçmiş Günler Havuzu (1–${STATE.currentDay}. Gün)</option>
-        <option value="yds_all" ${sourceVal === 'yds_all' ? 'selected' : ''}>Tüm YDS/YÖKDİL Kelimeleri (2.894)</option>
-        <option value="yds_verbs" ${sourceVal === 'yds_verbs' ? 'selected' : ''}>Akademik Fiiller (1.100+ Kelime)</option>
-        <option value="yds_nouns" ${sourceVal === 'yds_nouns' ? 'selected' : ''}>Akademik İsimler (900+ Kelime)</option>
-        <option value="yds_adj_adv" ${sourceVal === 'yds_adj_adv' ? 'selected' : ''}>Sıfatlar & Zarflar (800+ Kelime)</option>
-        <option value="yds_c1" ${sourceVal === 'yds_c1' ? 'selected' : ''}>C1 İleri Akademik (1.357 Kelime)</option>
-        <option value="yds_b2" ${sourceVal === 'yds_b2' ? 'selected' : ''}>B2 Orta-İleri (1.537 Kelime)</option>
+        <option value="yds_all" ${sourceVal === 'yds_all' ? 'selected' : ''}>Tüm YDS/YÖKDİL Kelimeleri (${WORDS_DATA.filter(isYDSWord).length.toLocaleString('tr-TR')})</option>
+        <option value="yds_verbs" ${sourceVal === 'yds_verbs' ? 'selected' : ''}>Akademik Fiiller</option>
+        <option value="yds_nouns" ${sourceVal === 'yds_nouns' ? 'selected' : ''}>Akademik İsimler</option>
+        <option value="yds_adj_adv" ${sourceVal === 'yds_adj_adv' ? 'selected' : ''}>Sıfatlar &amp; Zarflar</option>
+        <option value="yds_c1" ${sourceVal === 'yds_c1' ? 'selected' : ''}>C1 İleri Akademik</option>
+        <option value="yds_b2" ${sourceVal === 'yds_b2' ? 'selected' : ''}>B2 Orta-İleri</option>
       ` : `
         <option value="daily" ${sourceVal === 'daily' ? 'selected' : ''}>Günün Kelimeleri (Gün ${STATE.currentDay})</option>
         <option value="past_cumulative" ${sourceVal === 'past_cumulative' ? 'selected' : ''}>Geçmiş Günler Havuzu (1–${STATE.currentDay}. Gün)</option>
-        <option value="maarif_all" ${sourceVal === 'maarif_all' ? 'selected' : ''}>MEB: 5. Sınıf Maarif Modeli (817 Kelime)</option>
-        <option value="yds_all" ${sourceVal === 'yds_all' ? 'selected' : ''}>YDS & YÖKDİL Akademik (2.894 Kelime)</option>
-        <option value="oxford_all" ${sourceVal === 'oxford_all' ? 'selected' : ''}>The Oxford 5000 (Tümü - 5.841)</option>
+        <option value="maarif_all" ${sourceVal === 'maarif_all' ? 'selected' : ''}>MEB: 5. Sınıf Maarif Modeli (${WORDS_DATA.filter(isMaarifWord).length.toLocaleString('tr-TR')} Kelime)</option>
+        <option value="yds_all" ${sourceVal === 'yds_all' ? 'selected' : ''}>YDS &amp; YÖKDİL Akademik (${WORDS_DATA.filter(isYDSWord).length.toLocaleString('tr-TR')} Kelime)</option>
+        <option value="oxford_all" ${sourceVal === 'oxford_all' ? 'selected' : ''}>The Oxford 5000 (Tümü - ${WORDS_DATA.filter(isOxfordWord).length.toLocaleString('tr-TR')})</option>
         <option value="oxford_a1" ${sourceVal === 'oxford_a1' ? 'selected' : ''}>Oxford 5000: A1 Başlangıç</option>
         <option value="oxford_a2" ${sourceVal === 'oxford_a2' ? 'selected' : ''}>Oxford 5000: A2 Temel</option>
         <option value="oxford_b1" ${sourceVal === 'oxford_b1' ? 'selected' : ''}>Oxford 5000: B1 Orta</option>
       `}
-      <option value="all" ${sourceVal === 'all' ? 'selected' : ''}>Tüm Kelime Havuzu (${WORDS_DATA.length})</option>
+      <option value="all" ${sourceVal === 'all' ? 'selected' : ''}>Tüm Kelime Havuzu (${WORDS_DATA.length.toLocaleString('tr-TR')})</option>
       <option value="review" ${sourceVal === 'review' ? 'selected' : ''}>Tekrar Edilecekler (${STATE.userData.review.size})</option>
       <option value="starred" ${sourceVal === 'starred' ? 'selected' : ''}>Favorilerim (${STATE.userData.starred.size})</option>
     `;
@@ -2807,7 +2818,7 @@
                     <option value="mistakes">Akıllı Hata Defteri: Kurtarma Kampı (${getActiveMistakeWords().length} Kelime)</option>
                   </optgroup>
                   ${isYds ? `
-                    <option value="yds_all">Tüm YDS/YÖKDİL Havuzu (2.894 Kelime)</option>
+                    <option value="yds_all">Tüm YDS/YÖKDİL Havuzu (${WORDS_DATA.filter(isYDSWord).length.toLocaleString('tr-TR')} Kelime)</option>
                     <option value="yds_verbs">Akademik Fiiller (Verbs)</option>
                     <option value="yds_nouns">Akademik İsimler (Nouns)</option>
                     <option value="yds_adj_adv">Sıfatlar &amp; Zarflar</option>
@@ -3074,12 +3085,12 @@
 
     let pool = WORDS_DATA;
 
-    if (isYdsModule) {
+    if (isYdsModule || filters.dataset === 'yds') {
       pool = WORDS_DATA.filter(isYDSWord);
     } else if (filters.dataset === 'oxford') {
-      pool = WORDS_DATA.filter(w => w.dataset === 'oxford');
+      pool = WORDS_DATA.filter(isOxfordWord);
     } else if (filters.dataset === 'maarif') {
-      pool = WORDS_DATA.filter(w => w.dataset === 'maarif' || !w.dataset);
+      pool = WORDS_DATA.filter(isMaarifWord);
     }
 
     if (filters.pos && filters.pos !== 'all') {
@@ -3275,7 +3286,7 @@
           <div style="margin-bottom: 12px;">
             <div style="font-family: var(--dp-typography-mono); font-size: 0.78rem; font-weight: 700; text-transform: uppercase; color: var(--dp-color-ink-muted); margin-bottom: 6px;">YDS KELİME TÜRLERİ</div>
             <div class="filter-chips-group" id="yds-pos-chips">
-              <button class="filter-chip ${filters.pos === 'all' ? 'active' : ''}" data-val="all">TÜM YDS (2.894)</button>
+              <button class="filter-chip ${filters.pos === 'all' ? 'active' : ''}" data-val="all">TÜM YDS (${WORDS_DATA.filter(isYDSWord).length.toLocaleString('tr-TR')})</button>
               <button class="filter-chip ${filters.pos === 'verb' ? 'active' : ''}" data-val="verb">AKADEMİK FİİLLER (VERBS)</button>
               <button class="filter-chip ${filters.pos === 'noun' ? 'active' : ''}" data-val="noun">AKADEMİK İSİMLER (NOUNS)</button>
               <button class="filter-chip ${filters.pos === 'adj_adv' ? 'active' : ''}" data-val="adj_adv">SIFATLAR &amp; ZARFLAR</button>
@@ -3285,9 +3296,10 @@
           <div style="margin-bottom: 12px;">
             <div style="font-family: var(--dp-typography-mono); font-size: 0.78rem; font-weight: 700; text-transform: uppercase; color: var(--dp-color-ink-muted); margin-bottom: 6px;">KELİME KÜTÜPHANESİ</div>
             <div class="filter-chips-group" id="dataset-chips">
-              <button class="filter-chip ${filters.dataset === 'all' ? 'active' : ''}" data-val="all">TÜM KÜTÜPHANELER (${WORDS_DATA.length})</button>
-              <button class="filter-chip ${filters.dataset === 'oxford' ? 'active' : ''}" data-val="oxford">THE OXFORD 5000 (5.841)</button>
-              <button class="filter-chip ${filters.dataset === 'maarif' ? 'active' : ''}" data-val="maarif">MEB: 5. SINIF MAARİF (817)</button>
+              <button class="filter-chip ${filters.dataset === 'all' ? 'active' : ''}" data-val="all">TÜM KÜTÜPHANELER (${WORDS_DATA.length.toLocaleString('tr-TR')})</button>
+              <button class="filter-chip ${filters.dataset === 'yds' ? 'active' : ''}" data-val="yds">YDS &amp; YÖKDİL (${WORDS_DATA.filter(isYDSWord).length.toLocaleString('tr-TR')})</button>
+              <button class="filter-chip ${filters.dataset === 'oxford' ? 'active' : ''}" data-val="oxford">THE OXFORD 5000 (${WORDS_DATA.filter(isOxfordWord).length.toLocaleString('tr-TR')})</button>
+              <button class="filter-chip ${filters.dataset === 'maarif' ? 'active' : ''}" data-val="maarif">MEB: 5. SINIF MAARİF (${WORDS_DATA.filter(isMaarifWord).length.toLocaleString('tr-TR')})</button>
             </div>
           </div>
         `}
@@ -3386,7 +3398,7 @@
     const container = document.getElementById('view-stats');
     if (!container) return;
 
-    const maarifWords = WORDS_DATA.filter(w => w.dataset === 'maarif' || !w.dataset);
+    const maarifWords = WORDS_DATA.filter(isMaarifWord);
     const maarifLearned = maarifWords.filter(w => STATE.userData.learned.has(w.id)).length;
     const maarifPct = Math.round((maarifLearned / (maarifWords.length || 1)) * 100);
 
@@ -3394,7 +3406,7 @@
     const ydsLearned = ydsWords.filter(w => STATE.userData.learned.has(w.id)).length;
     const ydsPct = Math.round((ydsLearned / (ydsWords.length || 1)) * 100);
 
-    const oxfordWords = WORDS_DATA.filter(w => w.dataset === 'oxford');
+    const oxfordWords = WORDS_DATA.filter(isOxfordWord);
     const oxfordLearned = oxfordWords.filter(w => STATE.userData.learned.has(w.id)).length;
     const oxfordPct = Math.round((oxfordLearned / (oxfordWords.length || 1)) * 100);
 
@@ -3516,7 +3528,7 @@
       activePct = oxfordPct;
     } else if (STATE.activeModule === 'all') {
       activeCurriculumTitle = 'Tüm Kelime Kütüphanesi';
-      activeFocusName = '6.658 Birleşik Kelime Arşivi';
+      activeFocusName = `${WORDS_DATA.length.toLocaleString('tr-TR')} Birleşik Kelime Arşivi`;
       activeWords = WORDS_DATA;
       activeLearned = STATE.userData.learned.size;
       activePct = Math.round((activeLearned / (WORDS_DATA.length || 1)) * 100);
@@ -3809,7 +3821,7 @@
     const isOxford = STATE.activeModule === 'oxford';
     const targetPool = isYds 
       ? WORDS_DATA.filter(isYDSWord) 
-      : (isOxford ? WORDS_DATA.filter(w => w.dataset === 'oxford') : WORDS_DATA.filter(w => w.dataset === 'maarif' || !w.dataset));
+      : (isOxford ? WORDS_DATA.filter(isOxfordWord) : WORDS_DATA.filter(isMaarifWord));
     
     const bSize = isYds ? 20 : (isOxford ? 25 : 10);
     const start = (STATE.currentDay - 1) * bSize;
@@ -4072,7 +4084,7 @@
       const isAll = STATE.activeModule === 'all';
       const targetPool = isYds 
         ? WORDS_DATA.filter(isYDSWord) 
-        : (isOxford ? WORDS_DATA.filter(w => w.dataset === 'oxford') : (isAll ? WORDS_DATA : WORDS_DATA.filter(w => w.dataset === 'maarif' || !w.dataset)));
+        : (isOxford ? WORDS_DATA.filter(isOxfordWord) : (isAll ? WORDS_DATA : WORDS_DATA.filter(isMaarifWord)));
       const bSize = isYds ? 20 : (isOxford || isAll ? 25 : 10);
       const start = (STATE.currentDay - 1) * bSize;
       pool = targetPool.slice(start, start + bSize);
@@ -4082,7 +4094,7 @@
       const isAll = STATE.activeModule === 'all';
       const targetPool = isYds 
         ? WORDS_DATA.filter(isYDSWord) 
-        : (isOxford ? WORDS_DATA.filter(w => w.dataset === 'oxford') : (isAll ? WORDS_DATA : WORDS_DATA.filter(w => w.dataset === 'maarif' || !w.dataset)));
+        : (isOxford ? WORDS_DATA.filter(isOxfordWord) : (isAll ? WORDS_DATA : WORDS_DATA.filter(isMaarifWord)));
       const bSize = isYds ? 20 : (isOxford || isAll ? 25 : 10);
       const end = Math.min(STATE.currentDay * bSize, targetPool.length);
       pool = targetPool.slice(0, end);
@@ -4101,7 +4113,7 @@
     } else if (source === 'review') {
       pool = WORDS_DATA.filter(w => STATE.userData.review.has(w.id));
     } else if (source === 'maarif') {
-      pool = WORDS_DATA.filter(w => w.dataset === 'maarif' || !w.dataset);
+      pool = WORDS_DATA.filter(isMaarifWord);
     } else if (source === 'yds_all') {
       pool = WORDS_DATA.filter(isYDSWord);
     } else if (source === 'yds_verbs') {
@@ -4111,7 +4123,7 @@
     } else if (source === 'yds_adj_adv') {
       pool = WORDS_DATA.filter(w => isYDSWord(w) && getWordPOS(w) === 'adj_adv');
     } else if (source === 'oxford_all') {
-      pool = WORDS_DATA.filter(w => w.dataset === 'oxford');
+      pool = WORDS_DATA.filter(isOxfordWord);
     } else {
       pool = WORDS_DATA;
     }
