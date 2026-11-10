@@ -636,12 +636,11 @@
   const COACH_STATE = {
     active: false,
     targetWord: null, // word object
-    recognizer: null,
     isListening: false,
     interimTranscript: '',
     finalTranscript: '',
     lastEvaluation: null,
-    autoStopTimer: null
+    errorMessage: ''
   };
 
   function isSpeechRecognitionSupported() {
@@ -656,6 +655,232 @@
       .replace(/[.,\/#!$%\^&\*;:{}=\-_`~()?"'’]/g, ' ')
       .replace(/\s+/g, ' ')
       .trim();
+  }
+
+  // ==========================================================================
+  // ORTAK KONUŞMA TANIMA MOTORU (Speaking Koçu + Quiz Speaking)
+  // - Aynı anda tek bir tanıyıcı; eski oturumun geç gelen olayları yok sayılır
+  // - Başlamadan önce TTS ve AudioContext serbest bırakılır (mobilde mikrofonu kilitliyordu)
+  // - Her hata kodu için açık Türkçe çözüm mesajı
+  // ==========================================================================
+  const SPEECH_ENGINE = {
+    rec: null,
+    session: 0,
+    startTimer: null,
+    safetyTimer: null
+  };
+
+  function getSpeechErrorMessage(code) {
+    const host = (window.location && window.location.origin) || '';
+    const messages = {
+      'unsupported': '⚠️ Bu tarayıcı konuşma tanımayı desteklemiyor (ör. Firefox). Lütfen Google Chrome, Microsoft Edge veya Safari kullanın.',
+      'insecure': `⚠️ Mikrofon bu adreste engellendi (${host}). Tarayıcılar mikrofonu yalnızca https:// veya localhost üzerinden açar. Telefonda http://192.168… yerine uygulamanın https (GitHub Pages) adresini kullanın.`,
+      'brave': '⚠️ Brave tarayıcısı konuşma tanıma servisini engeller. Lütfen Google Chrome, Edge veya Safari kullanın.',
+      'not-allowed': '⚠️ Mikrofon izni reddedildi. Adres çubuğundaki kilit 🔒 simgesinden Mikrofon → İzin Ver seçip sayfayı yenileyin. Mac’te ayrıca Sistem Ayarları → Gizlilik ve Güvenlik → Mikrofon’dan tarayıcıya izin verin.',
+      'service-not-allowed': '⚠️ Konuşma tanıma servisi kapalı. iPhone/Mac Safari’de Ayarlar → Klavye → Dikte (ve Siri) açık olmalı. Chrome’da sayfayı yenileyip tekrar deneyin.',
+      'audio-capture': '⚠️ Mikrofona erişilemedi. Mikrofonun bağlı/açık olduğundan ve sistem ayarlarında tarayıcıya izin verildiğinden emin olun.',
+      'no-mic': '⚠️ Bu cihazda mikrofon bulunamadı. Mikrofon/kulaklık bağlayıp tekrar deneyin.',
+      'mic-busy': '⚠️ Mikrofon başka bir uygulama veya sekme tarafından kullanılıyor (Zoom, Meet, WhatsApp vb.). Kapatıp tekrar deneyin.',
+      'network': '⚠️ Konuşma tanıma sunucusuna ulaşılamadı. Chrome/Edge konuşmayı tanımak için internet gerektirir. Bağlantınızı kontrol edin; VPN veya reklam engelleyici açıksa kapatmayı deneyin.',
+      'no-speech': 'Ses algılanamadı. Mikrofona yakın ve net şekilde kelimeyi söyleyip tekrar deneyin.',
+      'aborted': 'Dinleme yarıda kesildi. Tekrar denemek için mikrofona dokunun.',
+      'language-not-supported': '⚠️ Seçilen aksan bu cihazda desteklenmiyor. UK/US aksanını değiştirip tekrar deneyin.',
+      'start-timeout': '⚠️ Mikrofon başlatılamadı. İzin penceresini onaylayın veya sayfayı yenileyip tekrar deneyin.',
+      'start-failed': '⚠️ Mikrofon başlatılamadı. Sayfayı yenileyip tekrar deneyin.'
+    };
+    return messages[code] || `Mikrofon hatası (${code}). Tekrar denemek için mikrofona dokunun.`;
+  }
+
+  function getSpeechEnvironmentProblem() {
+    if (!isSpeechRecognitionSupported()) return 'unsupported';
+    if (window.isSecureContext === false) return 'insecure';
+    if (navigator.brave) return 'brave';
+    return null;
+  }
+
+  // Tanıma servisi izin/mikrofon hatası verdiğinde gerçek nedeni getUserMedia ile netleştirir
+  async function diagnoseMicError(code) {
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) return code;
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      stream.getTracks().forEach(t => t.stop());
+      // Mikrofon çalışıyor ama tanıma servisi reddediyor
+      return code === 'not-allowed' ? 'service-not-allowed' : code;
+    } catch (err) {
+      const name = (err && err.name) || '';
+      if (name === 'NotAllowedError' || name === 'SecurityError') return 'not-allowed';
+      if (name === 'NotFoundError' || name === 'OverconstrainedError') return 'no-mic';
+      if (name === 'NotReadableError' || name === 'AbortError') return 'mic-busy';
+      return code;
+    }
+  }
+
+  function clearSpeechTimers() {
+    if (SPEECH_ENGINE.startTimer) clearTimeout(SPEECH_ENGINE.startTimer);
+    if (SPEECH_ENGINE.safetyTimer) clearTimeout(SPEECH_ENGINE.safetyTimer);
+    SPEECH_ENGINE.startTimer = null;
+    SPEECH_ENGINE.safetyTimer = null;
+  }
+
+  /** Dinlemeyi nazikçe bitirir; o ana kadar duyulanlar değerlendirilir. */
+  function stopSpeechSession() {
+    clearSpeechTimers();
+    if (SPEECH_ENGINE.rec) {
+      try { SPEECH_ENGINE.rec.stop(); } catch (e) {}
+    }
+  }
+
+  /** Oturumu tamamen iptal eder; bekleyen olaylar yok sayılır. */
+  function cancelSpeechSession() {
+    SPEECH_ENGINE.session++;
+    clearSpeechTimers();
+    const rec = SPEECH_ENGINE.rec;
+    SPEECH_ENGINE.rec = null;
+    if (rec) {
+      rec.onstart = rec.onresult = rec.onerror = rec.onend = rec.onspeechend = null;
+      try { rec.abort(); } catch (e) {}
+    }
+  }
+
+  /**
+   * opts: { lang, onStart(), onInterim(text), onError(code, message), onEnd(alternatives[], errored) }
+   */
+  function startSpeechSession(opts) {
+    const problem = getSpeechEnvironmentProblem();
+    if (problem) {
+      if (opts.onError) opts.onError(problem, getSpeechErrorMessage(problem));
+      if (opts.onEnd) opts.onEnd([], true);
+      return false;
+    }
+
+    const hadPrevious = !!SPEECH_ENGINE.rec;
+    cancelSpeechSession();
+    const mySession = SPEECH_ENGINE.session;
+    const isStale = () => mySession !== SPEECH_ENGINE.session;
+
+    // Ses çıkışlarını serbest bırak: konuşan TTS veya açık AudioContext mobilde mikrofonu kilitliyor
+    let delay = hadPrevious ? 250 : 0;
+    if (window.speechSynthesis && (window.speechSynthesis.speaking || window.speechSynthesis.pending)) {
+      window.speechSynthesis.cancel();
+      delay = Math.max(delay, 300);
+    }
+    if (audioCtx && audioCtx.state === 'running') {
+      try { audioCtx.suspend(); } catch (e) {}
+    }
+
+    const begin = () => {
+      if (isStale()) return;
+      const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
+      let rec;
+      try {
+        rec = new SpeechRec();
+      } catch (e) {
+        if (opts.onError) opts.onError('start-failed', getSpeechErrorMessage('start-failed'));
+        if (opts.onEnd) opts.onEnd([], true);
+        return;
+      }
+      rec.continuous = false;
+      rec.interimResults = true;
+      rec.maxAlternatives = 5;
+      rec.lang = opts.lang || 'en-GB';
+      SPEECH_ENGINE.rec = rec;
+
+      let started = false;
+      let errored = false;
+      let finalAlternatives = [];
+      let interimText = '';
+
+      rec.onstart = () => {
+        if (isStale()) return;
+        started = true;
+        if (SPEECH_ENGINE.startTimer) clearTimeout(SPEECH_ENGINE.startTimer);
+        if (opts.onStart) opts.onStart();
+        SPEECH_ENGINE.safetyTimer = setTimeout(() => {
+          if (!isStale()) { try { rec.stop(); } catch (e) {} }
+        }, 8000);
+      };
+
+      rec.onresult = (evt) => {
+        if (isStale()) return;
+        let interim = '';
+        const finals = [];
+        for (let i = 0; i < evt.results.length; i++) {
+          const result = evt.results[i];
+          if (result.isFinal) {
+            for (let j = 0; j < result.length; j++) {
+              const t = (result[j].transcript || '').trim();
+              if (t && !finals.includes(t)) finals.push(t);
+            }
+          } else {
+            interim += result[0].transcript;
+          }
+        }
+        if (finals.length) finalAlternatives = finals;
+        interimText = interim.trim();
+        if (opts.onInterim) opts.onInterim(finals[0] || interimText);
+      };
+
+      // Konuşma bitince hemen sonuçlandır (bazı mobil cihazlar aksi halde zaman aşımına düşüyor)
+      rec.onspeechend = () => {
+        if (isStale()) return;
+        try { rec.stop(); } catch (e) {}
+      };
+
+      rec.onerror = (evt) => {
+        if (isStale()) return;
+        const code = (evt && evt.error) || 'unknown';
+        // Sonuç zaten geldiyse "no-speech/aborted" gibi geç hataları önemseme
+        if ((code === 'no-speech' || code === 'aborted') && (finalAlternatives.length || interimText)) return;
+        errored = true;
+        console.warn('Speech recognition error:', code, evt && evt.message);
+        if (code === 'not-allowed' || code === 'audio-capture') {
+          diagnoseMicError(code).then(realCode => {
+            if (opts.onError) opts.onError(realCode, getSpeechErrorMessage(realCode));
+          });
+        } else if (opts.onError) {
+          opts.onError(code, getSpeechErrorMessage(code));
+        }
+      };
+
+      rec.onend = () => {
+        if (isStale()) return;
+        clearSpeechTimers();
+        if (SPEECH_ENGINE.rec === rec) SPEECH_ENGINE.rec = null;
+        const alternatives = finalAlternatives.length ? finalAlternatives : (interimText ? [interimText] : []);
+        if (opts.onEnd) opts.onEnd(alternatives, errored);
+      };
+
+      // İzin penceresi onaylanmadan / servis hiç başlamazsa kullanıcıyı bekletme
+      SPEECH_ENGINE.startTimer = setTimeout(() => {
+        if (isStale() || started) return;
+        cancelSpeechSession();
+        if (opts.onError) opts.onError('start-timeout', getSpeechErrorMessage('start-timeout'));
+        if (opts.onEnd) opts.onEnd([], true);
+      }, 12000);
+
+      try {
+        rec.start();
+      } catch (e) {
+        console.error('Speech recognition start failed:', e);
+        cancelSpeechSession();
+        if (opts.onError) opts.onError('start-failed', getSpeechErrorMessage('start-failed'));
+        if (opts.onEnd) opts.onEnd([], true);
+      }
+    };
+
+    if (delay) setTimeout(begin, delay);
+    else begin();
+    return true;
+  }
+
+  /** Tanıyıcının verdiği alternatifler içinden hedefe en yakın olanı seçer. */
+  function pickBestSpokenAlternative(alternatives, targetEn) {
+    let best = null;
+    alternatives.forEach(alt => {
+      const evalResult = evaluatePronunciation(alt, targetEn);
+      if (!best || evalResult.score > best.evalResult.score) best = { spoken: alt, evalResult };
+    });
+    return best;
   }
 
   function calculateLevenshteinDistance(a, b) {
@@ -794,9 +1019,9 @@
     COACH_STATE.lastEvaluation = null;
     COACH_STATE.interimTranscript = '';
     COACH_STATE.finalTranscript = '';
-    if (COACH_STATE.isListening) {
-      stopCoachListening();
-    }
+    COACH_STATE.errorMessage = '';
+    cancelSpeechSession();
+    COACH_STATE.isListening = false;
 
     renderSpeechCoachDialog();
 
@@ -807,9 +1032,8 @@
   }
 
   function closeSpeechCoach() {
-    if (COACH_STATE.isListening) {
-      stopCoachListening();
-    }
+    cancelSpeechSession();
+    COACH_STATE.isListening = false;
     COACH_STATE.active = false;
     const backdrop = document.getElementById('speech-coach-backdrop');
     const dialog = document.getElementById('speech-coach-dialog');
@@ -961,10 +1185,10 @@
               <span class="wave-bar bar-7"></span>
             </div>
 
-            <div class="coach-status-text" id="coach-status-text">
+            <div class="coach-status-text" id="coach-status-text" ${(!COACH_STATE.isListening && COACH_STATE.errorMessage) ? 'role="alert" style="color: var(--dp-color-red); font-weight: 600;"' : ''}>
               ${COACH_STATE.isListening 
                 ? 'Sizi dinliyorum... Kelimeyi seslendirin 🎙️' 
-                : 'Mikrofona dokunun ve kelimeyi okuyun'}
+                : (COACH_STATE.errorMessage ? escapeHtml(COACH_STATE.errorMessage) : 'Mikrofona dokunun ve kelimeyi okuyun')}
             </div>
 
             <div class="coach-live-transcript ${COACH_STATE.interimTranscript ? 'has-text' : ''}" id="coach-live-transcript">
@@ -992,123 +1216,66 @@
   }
 
   function startCoachListening() {
-    if (!isSpeechRecognitionSupported()) {
-      alert('Tarayıcınız konuşma tanıma API\'sini desteklemiyor. Lütfen Chrome, Edge veya Safari ile deneyin.');
-      return;
-    }
+    if (!COACH_STATE.targetWord) return;
 
-    if (COACH_STATE.isListening) {
-      stopCoachListening();
-    }
+    COACH_STATE.interimTranscript = '';
+    COACH_STATE.finalTranscript = '';
+    COACH_STATE.errorMessage = '';
+    COACH_STATE.lastEvaluation = null;
+    COACH_STATE.isListening = true;
+    renderSpeechCoachDialog();
 
-    const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
-    try {
-      const rec = new SpeechRec();
-      rec.continuous = false;
-      rec.interimResults = true;
-      rec.maxAlternatives = 3;
+    const targetEn = COACH_STATE.targetWord.en;
+    const accentCode = (STATE.settings.accent || 'en-GB').includes('US') ? 'en-US' : 'en-GB';
 
-      const accentCode = (STATE.settings.accent || 'en-GB').includes('US') ? 'en-US' : 'en-GB';
-      rec.lang = accentCode;
-
-      COACH_STATE.recognizer = rec;
-      COACH_STATE.interimTranscript = '';
-      COACH_STATE.finalTranscript = '';
-      COACH_STATE.isListening = true;
-
-      renderSpeechCoachDialog();
-
-      rec.onstart = () => {
-        COACH_STATE.isListening = true;
+    startSpeechSession({
+      lang: accentCode,
+      onStart: () => {
         const statusEl = document.getElementById('coach-status-text');
         if (statusEl) statusEl.textContent = 'Dinleniyor... Lütfen konuşun 🎙️';
-        
-        if (COACH_STATE.autoStopTimer) clearTimeout(COACH_STATE.autoStopTimer);
-        COACH_STATE.autoStopTimer = setTimeout(() => {
-          if (COACH_STATE.isListening) stopCoachListening();
-        }, 7000);
-      };
-
-      rec.onresult = (evt) => {
-        let interim = '';
-        let final = '';
-        for (let i = evt.resultIndex; i < evt.results.length; i++) {
-          const transcript = evt.results[i][0].transcript;
-          if (evt.results[i].isFinal) {
-            final += transcript;
-          } else {
-            interim += transcript;
-          }
-        }
-
-        COACH_STATE.interimTranscript = final || interim;
+      },
+      onInterim: (text) => {
+        COACH_STATE.interimTranscript = text;
         const transcriptEl = document.getElementById('coach-live-transcript');
-        if (transcriptEl) {
-          transcriptEl.textContent = `“${COACH_STATE.interimTranscript}”`;
+        if (transcriptEl && text) {
+          transcriptEl.textContent = `“${text}”`;
           transcriptEl.classList.add('has-text');
         }
-
-        if (final) {
-          COACH_STATE.finalTranscript = final;
-        }
-      };
-
-      rec.onerror = (err) => {
-        console.warn('Speech recognition error:', err);
+      },
+      onError: (code, message) => {
         COACH_STATE.isListening = false;
-        if (COACH_STATE.autoStopTimer) clearTimeout(COACH_STATE.autoStopTimer);
-        
-        const statusEl = document.getElementById('coach-status-text');
-        if (statusEl) {
-          if (err.error === 'not-allowed') {
-            statusEl.textContent = '⚠️ Mikrofon izni verilmedi. Tarayıcı ayarlarından mikrofona izin verin.';
-          } else if (err.error === 'no-speech') {
-            statusEl.textContent = 'Ses algılanamadı. Tekrar denemek için mikrofona dokunun.';
-          } else {
-            statusEl.textContent = `Mikrofon bildirimi (${err.error}). Tekrar deneyin.`;
-          }
-        }
-        renderSpeechCoachDialog();
-      };
-
-      rec.onend = () => {
+        COACH_STATE.errorMessage = message;
+        if (COACH_STATE.active) renderSpeechCoachDialog();
+      },
+      onEnd: (alternatives, errored) => {
         COACH_STATE.isListening = false;
-        if (COACH_STATE.autoStopTimer) clearTimeout(COACH_STATE.autoStopTimer);
+        if (!COACH_STATE.active) return;
 
-        const spoken = COACH_STATE.finalTranscript || COACH_STATE.interimTranscript;
-        if (spoken && COACH_STATE.targetWord) {
-          const evalResult = evaluatePronunciation(spoken, COACH_STATE.targetWord.en);
-          COACH_STATE.lastEvaluation = evalResult;
+        if (!errored && alternatives.length) {
+          const best = pickBestSpokenAlternative(alternatives, targetEn);
+          COACH_STATE.finalTranscript = best.spoken;
+          COACH_STATE.interimTranscript = best.spoken;
+          COACH_STATE.lastEvaluation = best.evalResult;
 
-          // Record stats
           STATE.userData.stats.speakingAttempts = (STATE.userData.stats.speakingAttempts || 0) + 1;
-          if (evalResult.score >= 70) {
+          if (best.evalResult.score >= 70) {
             STATE.userData.stats.speakingSuccesses = (STATE.userData.stats.speakingSuccesses || 0) + 1;
             playSound('correct');
           } else {
             playSound('wrong');
           }
           saveUserData();
+        } else if (!errored) {
+          COACH_STATE.errorMessage = getSpeechErrorMessage('no-speech');
         }
 
         renderSpeechCoachDialog();
-      };
-
-      rec.start();
-    } catch (e) {
-      console.error('Speech recognition start failed:', e);
-      COACH_STATE.isListening = false;
-      renderSpeechCoachDialog();
-    }
+      }
+    });
   }
 
   function stopCoachListening() {
-    if (COACH_STATE.autoStopTimer) clearTimeout(COACH_STATE.autoStopTimer);
-    if (COACH_STATE.recognizer) {
-      try {
-        COACH_STATE.recognizer.stop();
-      } catch (e) {}
-    }
+    stopSpeechSession();
     COACH_STATE.isListening = false;
   }
 
@@ -1500,7 +1667,14 @@
    */
   function highlightWordInText(text, word) {
     if (!text || !word) return text || '';
-    const cleanWord = word.trim().toLowerCase();
+    let cleanWord = word
+      .replace(/\(.*?\)/g, '')
+      .replace(/\b(sb|sth|to do|doing)\b/gi, '')
+      .replace(/\/[a-z]+/gi, '')
+      .replace(/\s+/g, ' ')
+      .trim()
+      .toLowerCase();
+    if (!cleanWord) cleanWord = word.trim().toLowerCase();
     const escaped = cleanWord.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
     const regex = new RegExp(`\\b(${escaped}(?:s|es|ed|d|ing)?)\\b`, 'gi');
     return text.replace(regex, '<mark class="pedagogy-word-highlight">$1</mark>');
@@ -1810,12 +1984,12 @@
 
     const module = STATE.activeModule;
     const curriculumSubtitles = {
-      maarif: '[ MEB MÜFREDATI ] 5. SINIF MAARİF MODELİ',
-      yds: '[ HEDEF MÜFREDAT ] YDS & YÖKDİL AKADEMİK',
-      oxford: '[ HEDEF MÜFREDAT ] THE OXFORD 5000',
-      all: '[ HEDEF MÜFREDAT ] TÜM AKADEMİK KÜTÜPHANE'
+      maarif: 'MEB MÜFREDATI • 5. SINIF MAARİF MODELİ',
+      yds: 'HEDEF MÜFREDAT • YDS & YÖKDİL AKADEMİK',
+      oxford: 'HEDEF MÜFREDAT • THE OXFORD 5000',
+      all: 'HEDEF MÜFREDAT • TÜM AKADEMİK KÜTÜPHANE'
     };
-    const activeCurriculumSubtitle = curriculumSubtitles[module] || '[ MEB MÜFREDATI ] 5. SINIF MAARİF MODELİ';
+    const activeCurriculumSubtitle = curriculumSubtitles[module] || 'MEB MÜFREDATI • 5. SINIF MAARİF MODELİ';
 
     const maarifPool = WORDS_DATA.filter(isMaarifWord);
     const ydsPool = WORDS_DATA.filter(isYDSWord);
@@ -1856,8 +2030,8 @@
     let debugListHtml = '';
     if (reviewWords.length === 0) {
       debugListHtml = `
-        <div style="padding: 24px 12px; color: var(--dp-color-ink-muted); font-size: 0.82rem; font-family: var(--dp-typography-mono); text-align: center;">
-          [ 0 HATA ] Şu an tekrar kuyruğunuz temiz. Testlerde yanlış cevaplanan kelimeler anında buraya eklenir.
+        <div style="padding: 24px 12px; color: var(--dp-color-ink-muted); font-size: 0.85rem; text-align: center;">
+          ✨ Şu an tekrar kuyruğunuz temiz. Testlerde yanlış cevaplanan kelimeler anında buraya eklenir.
         </div>
       `;
     } else {
@@ -1868,7 +2042,7 @@
             <span class="dash-debug-tr">${item.tr}</span>
           </div>
           <button type="button" class="dash-retest-btn" onclick="window.APP.retestDebugWord('${item.en.replace(/'/g, "\\'")}')">
-            [ Yeniden Test Et ]
+            Yeniden Test Et ↺
           </button>
         </div>
       `).join('');
@@ -1900,8 +2074,8 @@
     if (savedLogs.length === 0) {
       terminalRowsHtml = `
         <tr>
-          <td colspan="4" style="text-align: center; padding: 24px; color: var(--dp-color-ink-muted); font-family: var(--dp-typography-mono); font-size: 0.82rem;">
-            [ BOŞ ] Henüz bir aktivite kaydı bulunmuyor. Günün kelimelerini veya test modüllerini tamamladıkça kayıtlar buraya işlenir.
+          <td colspan="4" style="text-align: center; padding: 24px; color: var(--dp-color-ink-muted); font-size: 0.85rem;">
+            Henüz bir aktivite kaydı bulunmuyor. Günün kelimelerini veya test modüllerini tamamladıkça kayıtlar buraya işlenir.
           </td>
         </tr>
       `;
@@ -1996,7 +2170,7 @@
           <!-- Kart 1: Aralıklı Tekrar -->
           <div class="pedagogy-card srs-card ${srsDueWords.length > 0 ? 'has-due' : ''}">
             <div class="ped-card-top">
-              <span class="ped-tag">[ BİLİŞSEL TEKRAR KUYRUĞU ]</span>
+              <span class="ped-tag">🔁 BİLİŞSEL TEKRAR KUYRUĞU</span>
               <div class="ped-count-badge ${srsDueWords.length > 0 ? 'active' : ''}">${srsDueWords.length} KELİME</div>
             </div>
             <h4 class="ped-card-title">Bugün Zamanı Gelen Aralıklı Tekrarlar</h4>
@@ -2018,7 +2192,7 @@
           <!-- Kart 2: Akıllı Hata Defteri -->
           <div class="pedagogy-card mistake-card ${activeMistakes.length > 0 ? 'has-mistakes' : ''}">
             <div class="ped-card-top">
-              <span class="ped-tag">[ ZAYIF NOKTALAR &amp; GELİŞİM ]</span>
+              <span class="ped-tag">🛑 ZAYIF NOKTALAR &amp; GELİŞİM</span>
               <div class="ped-count-badge mistake ${activeMistakes.length > 0 ? 'active' : ''}">${activeMistakes.length} KRİTİK</div>
             </div>
             <h4 class="ped-card-title">Akıllı Hata Defteri &amp; Kurtarma Kampı</h4>
@@ -2303,9 +2477,10 @@
               </div>
               <div class="feed-card-tr">${w.tr || '<span style="color:var(--dp-color-ink-muted); font-style:italic;">(Anlamı ekleniyor)</span>'}</div>
               <div class="feed-card-meta">${w.desc || ''} ${w.cat ? '• ' + w.cat : ''}</div>
-              ${w.definition ? `<div class="feed-card-desc">"${w.definition}"</div>` : ''}
+              ${w.definition && w.definition.toLowerCase().trim() !== (w.tr || '').toLowerCase().trim() ? `<div class="feed-card-desc">"${w.definition}"</div>` : ''}
               ${syn ? `<div class="feed-card-meta" style="color:var(--dp-color-red);"><strong>EŞ ANLAM:</strong> ${syn}</div>` : ''}
               ${w.example ? `<div class="feed-card-example">“${highlightWordInText(w.example.replace(/^["“”]|["“”]$/g, ''), w.en)}”</div>` : ''}
+              ${w.ydsExample ? `<div class="yds-exam-cite-tag">📝 <strong>ÖSYM Sınav Kaynağı:</strong> ${escapeHtml(w.ydsExample)}</div>` : ''}
             </div>
 
             <!-- Trailing Action Buttons -->
@@ -2330,7 +2505,7 @@
       <section class="daily-header-card">
         <div class="daily-header-top">
           <div>
-            <span class="hero-tag-label">[ ÇALIŞMA PLANI ] GÜN ${STATE.currentDay} / ${totalDays}</span>
+            <span class="hero-tag-label">ÇALIŞMA PLANI • GÜN ${STATE.currentDay} / ${totalDays}</span>
             <h2 class="hero-card-title" style="font-size: 26px; margin-top: 4px;">${bannerTitle}</h2>
             <p class="hero-card-desc">${bannerDesc}</p>
           </div>
@@ -2569,7 +2744,7 @@
             </select>
           </div>
           <div class="glass-panel" style="padding: 48px 24px; text-align: center; width: 100%;">
-            <div style="font-family: var(--dp-typography-mono); font-size: 1.5rem; color: var(--dp-color-accent-ink); margin-bottom: 12px;">[ 0 KART ]</div>
+            <div style="font-size: 2rem; margin-bottom: 12px;">🗂️</div>
             <h3>${sourceVal === 'srs_due' ? 'Bugün için bekleyen aralıklı tekrarınız yok. Harika!' : (sourceVal === 'mistakes' ? 'Hata Defteriniz tertemiz! Zayıf nokta bulunmuyor.' : 'Bu filtre grubunda henüz kelime bulunmuyor.')}</h3>
             <p style="color: var(--dp-color-ink-muted); margin-top: 6px;">Lütfen yukarıdaki menüden başka bir kelime havuzu seçin.</p>
           </div>
@@ -2653,7 +2828,10 @@
               </div>
 
               <div class="fc-footer">
-                <span class="fc-hint">ÇEVİRMEK İÇİN TIKLA VEYA <span class="kbd-badge">SPACE</span></span>
+                <span class="fc-hint">
+                  <span class="fc-hint-desktop">ÇEVİRMEK İÇİN TIKLA <span class="fc-kbd-inline">SPACE</span></span>
+                  <span class="fc-hint-mobile">ÇEVİRMEK İÇİN DOKUNUN</span>
+                </span>
                 <span>#${currentWord.no || currentWord.id}</span>
               </div>
             </div>
@@ -2687,12 +2865,16 @@
                   ` : ''}
                 </div>
 
-                ${currentWord.definition ? `<div class="word-def" style="max-width: 52ch;">“${currentWord.definition}”</div>` : ''}
+                ${currentWord.definition && currentWord.definition.toLowerCase().trim() !== (currentWord.tr || '').toLowerCase().trim() ? `<div class="word-def" style="max-width: 52ch;">“${currentWord.definition}”</div>` : ''}
                 ${currentWord.example ? `<div class="word-example" style="max-width: 52ch;">“${highlightWordInText(currentWord.example.replace(/^["“”]|["“”]$/g, ''), currentWord.en)}”</div>` : ''}
+                ${currentWord.ydsExample ? `<div class="yds-exam-cite-tag" style="margin-top:8px;">📝 <strong>ÖSYM Sınav Kaynağı:</strong> ${escapeHtml(currentWord.ydsExample)}</div>` : ''}
               </div>
 
               <div class="fc-footer">
-                <span class="fc-hint">İNGİLİZCE YÜZE DÖNMEK İÇİN <span class="kbd-badge">SPACE</span></span>
+                <span class="fc-hint">
+                  <span class="fc-hint-desktop">İNGİLİZCE YÜZE DÖN <span class="fc-kbd-inline">SPACE</span></span>
+                  <span class="fc-hint-mobile">İNGİLİZCE YÜZE DÖNÜN</span>
+                </span>
                 <span>${currentWord.cat || ''}</span>
               </div>
             </div>
@@ -2727,15 +2909,6 @@
             SONRAKİ &rarr;
           </button>
         </div>
-
-        <div class="fc-shortcuts-hint">
-          <span><span class="kbd-badge">SPACE</span> ÇEVİR</span>
-          <span><span class="kbd-badge">&larr; / &rarr;</span> GEÇİŞ</span>
-          <span><span class="kbd-badge">P</span> DİNLE</span>
-          <span><span class="kbd-badge">1</span> ZOR (1g)</span>
-          <span><span class="kbd-badge">2</span> İYİ (${nextGoodDays}g)</span>
-          <span><span class="kbd-badge">3</span> KOLAY (${nextEasyDays}g)</span>
-        </div>
       </div>
     `;
 
@@ -2766,7 +2939,7 @@
             resumeCardHtml = `
               <div class="resume-quiz-card glass-panel">
                 <div class="resume-quiz-info">
-                  <span class="resume-quiz-badge">[ OTURUM KAYDEDİLDİ ]</span>
+                  <span class="resume-quiz-badge">📌 OTURUM KAYDEDİLDİ</span>
                   <div class="resume-quiz-title">Yarım kalan bir test oturumunuz bulunuyor</div>
                   <div class="resume-quiz-meta">
                     SORU ${sq.currentIndex + 1} / ${sq.questions.length} • MEVCUT SKOR: ${sq.score}
@@ -2972,7 +3145,7 @@
         <button class="speak-btn" style="width: 56px; height: 56px; margin: 8px auto;" onclick="window.APP.replayQuizAudio()" aria-label="Sesi Tekrar Dinle">
           ${ICONS.speaker}
         </button>
-        <div style="font-family:var(--dp-typography-mono); font-size:0.82rem; color:var(--dp-color-ink-muted); margin-top:8px;">SESİ TEKRAR DİNLEMEK İÇİN TIKLAYIN VEYA [R] TUŞUNA BASIN</div>
+        <div style="font-family:var(--dp-typography-mono); font-size:0.82rem; color:var(--dp-color-ink-muted); margin-top:8px;">SESİ TEKRAR DİNLEMEK İÇİN TIKLAYIN <span class="quiz-kbd-hint">(VEYA <span class="fc-kbd-inline">R</span> TUŞU)</span></div>
       `;
     } else if (qState.mode === 'speaking') {
       questionContentHtml = `
@@ -3021,7 +3194,7 @@
           </div>
 
           <div class="quiz-speaking-status" id="quiz-speaking-status">
-            Mikrofona dokunun ve kelimeyi net seslendirin (veya <span class="kbd-badge">SPACE</span> tuşuna basın)
+            Mikrofona dokunun ve kelimeyi net seslendirin <span class="quiz-kbd-hint">(veya <span class="fc-kbd-inline">SPACE</span> tuşuna basın)</span>
           </div>
 
           <div class="quiz-speaking-heard" id="quiz-speaking-heard"></div>
@@ -3945,6 +4118,7 @@
   // VIEW SWITCHER & DISPATCHER (With 0.25s View-Transition Fade)
   // ==========================================================================
   function switchView(viewName, pushHash = true) {
+    cancelQuizSpeaking();
     if (document.startViewTransition) {
       document.startViewTransition(() => {
         executeSwitchView(viewName, pushHash);
@@ -4067,6 +4241,7 @@
   }
 
   function startQuiz() {
+    cancelQuizSpeaking();
     const modeSelect = document.getElementById('quiz-mode-select');
     const sourceSelect = document.getElementById('quiz-source-select');
     const countSelect = document.getElementById('quiz-count-select');
@@ -4326,91 +4501,95 @@
   // ==========================================================================
   let QUIZ_SPEECH_RECOGNIZER = null;
 
+  function cancelQuizSpeaking() {
+    if (QUIZ_SPEECH_RECOGNIZER) {
+      cancelSpeechSession();
+      QUIZ_SPEECH_RECOGNIZER = null;
+    }
+  }
+
   function triggerQuizSpeaking() {
     if (!STATE.quizState.active || STATE.quizState.answered || STATE.quizState.waitingFeedback) return;
-    if (!isSpeechRecognitionSupported()) {
-      alert('Tarayıcınız mikrofonla konuşma tanıma API\'sini desteklemiyor. Lütfen Chrome, Edge veya Safari kullanın.');
-      return;
-    }
 
     const currentQ = STATE.quizState.questions[STATE.quizState.currentIndex];
     const targetWord = currentQ.targetWord;
+    const questionIndex = STATE.quizState.currentIndex;
 
-    const micBtn = document.getElementById('quiz-mic-btn');
-    const label = document.getElementById('quiz-mic-btn-label');
-    const waveform = document.getElementById('quiz-speaking-waveform');
-    const statusEl = document.getElementById('quiz-speaking-status');
-    const heardEl = document.getElementById('quiz-speaking-heard');
+    const getEls = () => ({
+      micBtn: document.getElementById('quiz-mic-btn'),
+      label: document.getElementById('quiz-mic-btn-label'),
+      waveform: document.getElementById('quiz-speaking-waveform'),
+      statusEl: document.getElementById('quiz-speaking-status'),
+      heardEl: document.getElementById('quiz-speaking-heard')
+    });
 
+    // Zaten dinliyorsa ikinci dokunuş dinlemeyi bitirir (çift tetiklenmeyi önler)
     if (QUIZ_SPEECH_RECOGNIZER) {
-      try { QUIZ_SPEECH_RECOGNIZER.stop(); } catch (e) {}
-      QUIZ_SPEECH_RECOGNIZER = null;
+      stopSpeechSession();
+      return;
     }
 
-    const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
-    const rec = new SpeechRec();
-    rec.continuous = false;
-    rec.interimResults = true;
-    rec.maxAlternatives = 3;
-    rec.lang = (STATE.settings.accent || 'en-GB').includes('US') ? 'en-US' : 'en-GB';
-    QUIZ_SPEECH_RECOGNIZER = rec;
-
-    let interimTranscript = '';
-    let finalTranscript = '';
-
-    rec.onstart = () => {
-      if (micBtn) micBtn.classList.add('active');
-      if (label) label.textContent = 'DİNLENİYOR... ŞİMDİ KONUŞUN 🎙️';
-      if (waveform) waveform.classList.add('active');
-      if (statusEl) statusEl.textContent = 'Sizi dinliyorum, hedef kelimeyi seslendirin...';
-    };
-
-    rec.onresult = (evt) => {
-      let interim = '';
-      let final = '';
-      for (let i = evt.resultIndex; i < evt.results.length; i++) {
-        const transcript = evt.results[i][0].transcript;
-        if (evt.results[i].isFinal) final += transcript;
-        else interim += transcript;
-      }
-      interimTranscript = final || interim;
-      if (heardEl) heardEl.innerHTML = `<span class="heard-bubble">Duyulan: “${escapeHtml(interimTranscript)}”</span>`;
-      if (final) finalTranscript = final;
-    };
-
-    rec.onerror = (err) => {
-      console.warn('Quiz speech error:', err);
+    const resetMicUi = () => {
+      const { micBtn, waveform, label } = getEls();
       if (micBtn) micBtn.classList.remove('active');
       if (waveform) waveform.classList.remove('active');
       if (label) label.textContent = 'MİKROFONA DOKUN & OKU';
-      if (statusEl) {
-        if (err.error === 'not-allowed') {
-          statusEl.textContent = '⚠️ Mikrofon izni verilmedi. Lütfen tarayıcı izinlerini kontrol edin.';
-        } else {
-          statusEl.textContent = 'Ses algılanamadı. Tekrar denemek için mikrofona dokunun.';
+    };
+    const isSameQuestion = () => STATE.quizState.active && STATE.quizState.currentIndex === questionIndex;
+
+    QUIZ_SPEECH_RECOGNIZER = true;
+    const { statusEl: initialStatus, label: initialLabel } = getEls();
+    if (initialStatus) {
+      initialStatus.style.color = '';
+      initialStatus.textContent = 'Mikrofon hazırlanıyor...';
+    }
+    if (initialLabel) initialLabel.textContent = 'HAZIRLANIYOR...';
+
+    const started = startSpeechSession({
+      lang: (STATE.settings.accent || 'en-GB').includes('US') ? 'en-US' : 'en-GB',
+      onStart: () => {
+        if (!isSameQuestion()) return;
+        const { micBtn, label, waveform, statusEl } = getEls();
+        if (micBtn) micBtn.classList.add('active');
+        if (label) label.textContent = 'DİNLENİYOR... ŞİMDİ KONUŞUN 🎙️';
+        if (waveform) waveform.classList.add('active');
+        if (statusEl) statusEl.textContent = 'Sizi dinliyorum, hedef kelimeyi seslendirin...';
+      },
+      onInterim: (text) => {
+        if (!isSameQuestion() || !text) return;
+        const { heardEl } = getEls();
+        if (heardEl) heardEl.innerHTML = `<span class="heard-bubble">Duyulan: “${escapeHtml(text)}”</span>`;
+      },
+      onError: (code, message) => {
+        if (!isSameQuestion()) return;
+        resetMicUi();
+        const { statusEl } = getEls();
+        if (statusEl) {
+          statusEl.textContent = message;
+          statusEl.style.color = 'var(--dp-color-red)';
         }
+      },
+      onEnd: (alternatives, errored) => {
+        QUIZ_SPEECH_RECOGNIZER = null;
+        if (!isSameQuestion()) return;
+        resetMicUi();
+        if (errored) return;
+
+        if (!alternatives.length) {
+          const { statusEl } = getEls();
+          if (statusEl) {
+            statusEl.textContent = getSpeechErrorMessage('no-speech');
+            statusEl.style.color = 'var(--dp-color-red)';
+          }
+          return;
+        }
+
+        const best = pickBestSpokenAlternative(alternatives, targetWord.en);
+        handleQuizSpeakingEvaluation(best.spoken, targetWord);
       }
-    };
+    });
 
-    rec.onend = () => {
-      if (micBtn) micBtn.classList.remove('active');
-      if (waveform) waveform.classList.remove('active');
-      if (label) label.textContent = 'MİKROFONA DOKUN & OKU';
-
-      const spoken = finalTranscript || interimTranscript;
-      if (!spoken) {
-        if (statusEl) statusEl.textContent = 'Ses algılanamadı. Lütfen mikrofona yaklaşarak tekrar konuşun.';
-        return;
-      }
-
-      handleQuizSpeakingEvaluation(spoken, targetWord);
-    };
-
-    try {
-      rec.start();
-    } catch (e) {
-      console.error('Failed to start quiz speech recognition:', e);
-    }
+    if (!started) QUIZ_SPEECH_RECOGNIZER = null;
   }
 
   function handleQuizSpeakingEvaluation(spoken, targetWord) {
@@ -4499,6 +4678,7 @@
   }
 
   function skipQuizSpeaking() {
+    cancelQuizSpeaking();
     STATE.quizState.currentIndex++;
     STATE.quizState.answered = false;
     STATE.quizState.waitingFeedback = false;
@@ -4753,6 +4933,8 @@
       return;
     }
 
+    const onButton = !!(e.target && e.target.closest && e.target.closest('button'));
+
     if (COACH_STATE.active) {
       if (e.key === 'Escape') {
         e.preventDefault();
@@ -4760,6 +4942,7 @@
         return;
       }
       if (e.code === 'Space') {
+        if (onButton || e.repeat) return;
         e.preventDefault();
         toggleCoachListening();
         return;
@@ -4813,6 +4996,7 @@
     } else if (STATE.currentView === 'quiz' && STATE.quizState.active) {
       if (STATE.quizState.mode === 'speaking') {
         if (e.code === 'Space' || e.code === 'Enter') {
+          if (onButton || e.repeat) return;
           e.preventDefault();
           if (STATE.quizState.waitingFeedback) {
             retryQuizSpeaking();

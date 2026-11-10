@@ -3,7 +3,7 @@
  * Caches core assets for offline usage on mobile and desktop
  */
 
-const CACHE_NAME = 'learnish-v6-unified-pool';
+const CACHE_NAME = 'learnish-v8-layout-fix';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
@@ -38,18 +38,26 @@ self.addEventListener('activate', (event) => {
   );
 });
 
+// Network-first: güncel kod her zaman önce sunucudan alınır (mobilde eski app.js takılı kalmasın),
+// çevrimdışıyken önbellekteki sürüm kullanılır.
 self.addEventListener('fetch', (event) => {
+  const req = event.request;
+  if (req.method !== 'GET' || new URL(req.url).origin !== self.location.origin) return;
+
   event.respondWith(
-    caches.match(event.request).then((cachedResponse) => {
-      if (cachedResponse) {
-        return cachedResponse;
-      }
-      return fetch(event.request).catch(() => {
-        // Fallback for offline if not in cache
-        if (event.request.mode === 'navigate') {
-          return caches.match('./index.html');
+    fetch(req)
+      .then((response) => {
+        if (response && response.ok) {
+          const copy = response.clone();
+          caches.open(CACHE_NAME).then((cache) => cache.put(req, copy));
         }
-      });
-    })
+        return response;
+      })
+      .catch(() =>
+        caches.match(req).then((cached) => {
+          if (cached) return cached;
+          if (req.mode === 'navigate') return caches.match('./index.html');
+        })
+      )
   );
 });

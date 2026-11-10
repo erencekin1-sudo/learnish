@@ -599,10 +599,10 @@ const WORDS_DATA = %s;
     if os.path.exists(SERVICE_WORKER_PATH):
         with open(SERVICE_WORKER_PATH, 'r', encoding='utf-8') as f:
             sw_text = f.read()
-        sw_text = re.sub(r"const CACHE_NAME = ['\"][^'\"]+['\"];", "const CACHE_NAME = 'learnish-v6-unified-pool';", sw_text)
+        sw_text = re.sub(r"const CACHE_NAME = ['\"][^'\"]+['\"];", "const CACHE_NAME = 'learnish-v8-layout-fix';", sw_text)
         with open(SERVICE_WORKER_PATH, 'w', encoding='utf-8') as f:
             f.write(sw_text)
-        log("✅ service-worker.js önbellek sürümü v6-unified-pool olarak güncellendi.")
+        log("✅ service-worker.js önbellek sürümü v8-layout-fix olarak güncellendi.")
 
     # Rebuild Learnish_Tek_Dosya_Web_App.html
     log("Learnish_Tek_Dosya_Web_App.html tek dosya uygulaması derleniyor...")
