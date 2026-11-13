@@ -798,11 +798,25 @@ def run_enrichment():
         json.dump(words, f, ensure_ascii=False, indent=2)
     print(f"[Enricher] ✅ {KELIMELER_PATH} kaydedildi.")
 
-    # Save to words-data.js
+    # Save to words-data.js (preserve THEMES_DATA alongside WORDS_DATA)
+    themes_data = {
+        "1": {"num": 1, "code": "THEME 1", "title": "SCHOOL LIFE", "titleTr": "Okul Yaşamı", "full": "THEME 1: SCHOOL LIFE", "color": "#1e3a8a", "badgeBg": "#1d4ed8", "border": "#3b82f6"},
+        "2": {"num": 2, "code": "THEME 2", "title": "CLASSROOM LIFE", "titleTr": "Sınıf Yaşamı", "full": "THEME 2: CLASSROOM LIFE", "color": "#0f766e", "badgeBg": "#0d9488", "border": "#14b8a6"},
+        "3": {"num": 3, "code": "THEME 3", "title": "PERSONAL LIFE", "titleTr": "Kişisel Yaşam", "full": "THEME 3: PERSONAL LIFE", "color": "#b45309", "badgeBg": "#d97706", "border": "#f59e0b"},
+        "4": {"num": 4, "code": "THEME 4", "title": "FAMILY LIFE", "titleTr": "Aile Yaşamı", "full": "THEME 4: FAMILY LIFE", "color": "#be123c", "badgeBg": "#e11d48", "border": "#f43f5e"},
+        "5": {"num": 5, "code": "THEME 5", "title": "LIFE IN THE NEIGHBOURHOOD AND CITY", "titleTr": "Mahalle ve Şehirde Yaşam", "full": "THEME 5: LIFE IN THE NEIGHBOURHOOD AND CITY", "color": "#4338ca", "badgeBg": "#4f46e5", "border": "#6366f1"},
+        "6": {"num": 6, "code": "THEME 6", "title": "LIFE IN THE WORLD", "titleTr": "Dünyada Yaşam — Beslenme & Kültür", "full": "THEME 6: LIFE IN THE WORLD", "color": "#15803d", "badgeBg": "#16a34a", "border": "#22c55e"},
+        "7": {"num": 7, "code": "THEME 7", "title": "LIFE IN NATURE", "titleTr": "Doğada Yaşam — Hayvanlar, Bitkiler & Çevre", "full": "THEME 7: LIFE IN NATURE", "color": "#047857", "badgeBg": "#059669", "border": "#10b981"},
+        "8": {"num": 8, "code": "THEME 8", "title": "LIFE IN THE UNIVERSE AND FUTURE", "titleTr": "Evrende ve Gelecekte Yaşam & İleri Kavramlar", "full": "THEME 8: LIFE IN THE UNIVERSE AND FUTURE", "color": "#6b21a8", "badgeBg": "#9333ea", "border": "#a855f7"},
+        "9": {"num": 9, "code": "OXFORD 5000", "title": "THE OXFORD 5000", "titleTr": "The Oxford 5000 (A1-C1 Dünya Standardı)", "full": "THE OXFORD 5000 (A1-C1)", "color": "#0284c7", "badgeBg": "#0284c7", "border": "#38bdf8"},
+        "10": {"num": 10, "code": "YDS/YÖKDİL", "title": "YDS & YÖKDİL AKADEMİK", "titleTr": "YDS & YÖKDİL Akademik Sınav Hazırlık (2020–2026)", "full": "YDS & YÖKDİL AKADEMİK (B2-C1)", "color": "#7c3aed", "badgeBg": "#8b5cf6", "border": "#a78bfa"}
+    }
     with open(WORDS_DATA_JS, 'w', encoding='utf-8') as f:
         f.write("// Learnish Master Deduplicated Dataset (MEB + Oxford 5000 + YDS)\n")
         f.write("// Generated with Pedagogical Contextual Sentences\n")
-        f.write("const WORDS_DATA = ")
+        f.write("const THEMES_DATA = ")
+        json.dump(themes_data, f, ensure_ascii=False, indent=2)
+        f.write(";\n\nconst WORDS_DATA = ")
         json.dump(words, f, ensure_ascii=False, indent=2)
         f.write(";\n")
     print(f"[Enricher] ✅ {WORDS_DATA_JS} kaydedildi.")

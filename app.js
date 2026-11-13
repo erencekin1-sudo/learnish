@@ -10,6 +10,20 @@
 (function () {
   'use strict';
 
+  // Fallback tema metaverisi (words-data.js yeniden üretildiğinde THEMES_DATA eksik kalırsa devreye girer)
+  const THEMES_DATA = (typeof window !== 'undefined' && window.THEMES_DATA) ? window.THEMES_DATA : {
+    "1": { num: 1, code: "THEME 1", title: "SCHOOL LIFE", titleTr: "Okul Yaşamı", full: "THEME 1: SCHOOL LIFE", color: "#1e3a8a", badgeBg: "#1d4ed8", border: "#3b82f6" },
+    "2": { num: 2, code: "THEME 2", title: "CLASSROOM LIFE", titleTr: "Sınıf Yaşamı", full: "THEME 2: CLASSROOM LIFE", color: "#0f766e", badgeBg: "#0d9488", border: "#14b8a6" },
+    "3": { num: 3, code: "THEME 3", title: "PERSONAL LIFE", titleTr: "Kişisel Yaşam", full: "THEME 3: PERSONAL LIFE", color: "#b45309", badgeBg: "#d97706", border: "#f59e0b" },
+    "4": { num: 4, code: "THEME 4", title: "FAMILY LIFE", titleTr: "Aile Yaşamı", full: "THEME 4: FAMILY LIFE", color: "#be123c", badgeBg: "#e11d48", border: "#f43f5e" },
+    "5": { num: 5, code: "THEME 5", title: "LIFE IN THE NEIGHBOURHOOD AND CITY", titleTr: "Mahalle ve Şehirde Yaşam", full: "THEME 5: LIFE IN THE NEIGHBOURHOOD AND CITY", color: "#4338ca", badgeBg: "#4f46e5", border: "#6366f1" },
+    "6": { num: 6, code: "THEME 6", title: "LIFE IN THE WORLD", titleTr: "Dünyada Yaşam — Beslenme & Kültür", full: "THEME 6: LIFE IN THE WORLD", color: "#15803d", badgeBg: "#16a34a", border: "#22c55e" },
+    "7": { num: 7, code: "THEME 7", title: "LIFE IN NATURE", titleTr: "Doğada Yaşam — Hayvanlar, Bitkiler & Çevre", full: "THEME 7: LIFE IN NATURE", color: "#047857", badgeBg: "#059669", border: "#10b981" },
+    "8": { num: 8, code: "THEME 8", title: "LIFE IN THE UNIVERSE AND FUTURE", titleTr: "Evrende ve Gelecekte Yaşam & İleri Kavramlar", full: "THEME 8: LIFE IN THE UNIVERSE AND FUTURE", color: "#6b21a8", badgeBg: "#9333ea", border: "#a855f7" },
+    "9": { num: 9, code: "OXFORD 5000", title: "THE OXFORD 5000", titleTr: "The Oxford 5000 (A1-C1 Dünya Standardı)", full: "THE OXFORD 5000 (A1-C1)", color: "#0284c7", badgeBg: "#0284c7", border: "#38bdf8" },
+    "10": { num: 10, code: "YDS/YÖKDİL", title: "YDS & YÖKDİL AKADEMİK", titleTr: "YDS & YÖKDİL Akademik Sınav Hazırlık (2020–2026)", full: "YDS & YÖKDİL AKADEMİK (B2-C1)", color: "#7c3aed", badgeBg: "#8b5cf6", border: "#a78bfa" }
+  };
+
   // Geometric 2px-stroke square-cap SVG icons
   const ICONS = {
     speaker: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square" stroke-linejoin="miter" aria-hidden="true"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path><path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path></svg>`,
@@ -1995,13 +2009,16 @@
     const ydsPool = WORDS_DATA.filter(isYDSWord);
     const oxfordPool = WORDS_DATA.filter(isOxfordWord);
 
+    const curMaarifThemeNum = Math.min(8, Math.max(1, Math.ceil((STATE.currentDay || 1) / 10)));
+    const curMaarifTheme = THEMES_DATA[curMaarifThemeNum] || { code: `THEME ${curMaarifThemeNum}`, titleTr: 'Okul Yaşamı' };
+
     const unitTitles = {
-      maarif: 'MEB 5. Sınıf Maarif • Unit 4: My Daily Routine',
+      maarif: `MEB 5. Sınıf Maarif • ${curMaarifTheme.code}: ${curMaarifTheme.titleTr}`,
       yds: 'YDS/YÖKDİL • 2020–2026 Akademik Sınav Soruları & Kalıpları',
       oxford: 'Oxford 5000 • CEFR A1–C1 Uluslararası Standart',
       all: `Learnish Arşiv: ${WORDS_DATA.length.toLocaleString('tr-TR')} Kelimelik Birleşik Kütüphane`
     };
-    const activeUnitTitle = unitTitles[module] || 'Unit 4: My Daily Routine';
+    const activeUnitTitle = unitTitles[module] || unitTitles.maarif;
 
     const moduleTotalDays = {
       maarif: Math.ceil(maarifPool.length / 10),
@@ -3600,7 +3617,7 @@
 
       themesBreakdownHtml += `
         <div class="theme-stat-row">
-          <div style="width: 240px;">
+          <div class="theme-stat-label">
             <div class="theme-stat-name">${tMeta.code}: ${tMeta.title}</div>
             <div style="font-family: var(--dp-typography-mono); font-size: 0.78rem; color: var(--dp-color-ink-muted);">${tMeta.titleTr}</div>
           </div>
@@ -3635,7 +3652,7 @@
       const pct = Math.round((learned / (item.words.length || 1)) * 100);
       ydsBreakdownHtml += `
         <div class="theme-stat-row">
-          <div style="width: 240px;">
+          <div class="theme-stat-label">
             <div class="theme-stat-name">${item.name}</div>
           </div>
           <div class="theme-stat-bar-container">
@@ -3665,7 +3682,7 @@
 
       oxfordBreakdownHtml += `
         <div class="theme-stat-row">
-          <div style="width: 240px;">
+          <div class="theme-stat-label">
             <div class="theme-stat-name" style="color: var(--dp-color-emphasis); font-weight: 700;">CEFR ${item.level}</div>
             <div style="font-family: var(--dp-typography-mono); font-size: 0.78rem; color: var(--dp-color-ink-muted);">${item.name}</div>
           </div>
