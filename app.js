@@ -654,7 +654,19 @@
     interimTranscript: '',
     finalTranscript: '',
     lastEvaluation: null,
-    errorMessage: ''
+    errorMessage: '',
+    errorCode: '',
+    phase: 'idle',
+    recordState: 'idle', // 'idle' | 'recording' | 'ready'
+    recordUrl: null
+  };
+
+  const COACH_PHASE_TEXT = {
+    preparing: 'Mikrofon hazırlanıyor...',
+    permission: 'Tarayıcının mikrofon izin penceresini onaylayın ☝️',
+    listening: 'Dinliyorum — şimdi kelimeyi söyleyin 🎙️',
+    speech: 'Sesiniz algılandı, devam edin...',
+    processing: 'Telaffuzunuz çözümleniyor...'
   };
 
   function isSpeechRecognitionSupported() {
@@ -680,29 +692,42 @@
   const SPEECH_ENGINE = {
     rec: null,
     session: 0,
-    startTimer: null,
-    safetyTimer: null
+    timers: [],
+    meter: null,
+    requestStop: null
   };
+
+  function isMobileDevice() {
+    const ua = navigator.userAgent || '';
+    return /Android|iPhone|iPad|iPod|Mobile/i.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  }
 
   function getSpeechErrorMessage(code) {
     const host = (window.location && window.location.origin) || '';
     const messages = {
-      'unsupported': '⚠️ Bu tarayıcı konuşma tanımayı desteklemiyor (ör. Firefox). Lütfen Google Chrome, Microsoft Edge veya Safari kullanın.',
+      'unsupported': '⚠️ Bu tarayıcı konuşma tanımayı desteklemiyor (ör. Firefox). Lütfen Google Chrome, Microsoft Edge veya Safari kullanın. Aşağıdan kendi sesinizi kaydedip doğru telaffuzla karşılaştırabilirsiniz.',
       'insecure': `⚠️ Mikrofon bu adreste engellendi (${host}). Tarayıcılar mikrofonu yalnızca https:// veya localhost üzerinden açar. Telefonda http://192.168… yerine uygulamanın https (GitHub Pages) adresini kullanın.`,
       'brave': '⚠️ Brave tarayıcısı konuşma tanıma servisini engeller. Lütfen Google Chrome, Edge veya Safari kullanın.',
       'not-allowed': '⚠️ Mikrofon izni reddedildi. Adres çubuğundaki kilit 🔒 simgesinden Mikrofon → İzin Ver seçip sayfayı yenileyin. Mac’te ayrıca Sistem Ayarları → Gizlilik ve Güvenlik → Mikrofon’dan tarayıcıya izin verin.',
-      'service-not-allowed': '⚠️ Konuşma tanıma servisi kapalı. iPhone/Mac Safari’de Ayarlar → Klavye → Dikte (ve Siri) açık olmalı. Chrome’da sayfayı yenileyip tekrar deneyin.',
+      'service-not-allowed': '⚠️ Mikrofon çalışıyor ama konuşma tanıma servisi kapalı. Safari’de: Sistem Ayarları → Klavye → Dikte açık olmalı. Chrome’da sayfayı yenileyip tekrar deneyin.',
       'audio-capture': '⚠️ Mikrofona erişilemedi. Mikrofonun bağlı/açık olduğundan ve sistem ayarlarında tarayıcıya izin verildiğinden emin olun.',
       'no-mic': '⚠️ Bu cihazda mikrofon bulunamadı. Mikrofon/kulaklık bağlayıp tekrar deneyin.',
       'mic-busy': '⚠️ Mikrofon başka bir uygulama veya sekme tarafından kullanılıyor (Zoom, Meet, WhatsApp vb.). Kapatıp tekrar deneyin.',
       'network': '⚠️ Konuşma tanıma sunucusuna ulaşılamadı. Chrome/Edge konuşmayı tanımak için internet gerektirir. Bağlantınızı kontrol edin; VPN veya reklam engelleyici açıksa kapatmayı deneyin.',
       'no-speech': 'Ses algılanamadı. Mikrofona yakın ve net şekilde kelimeyi söyleyip tekrar deneyin.',
+      'no-audio': '⚠️ Mikrofondan hiç ses gelmedi. Doğru mikrofonun seçili olduğunu kontrol edin (Mac: Sistem Ayarları → Ses → Giriş; Chrome: adres çubuğundaki 🎙️ simgesi → mikrofon seçimi) ve tekrar deneyin.',
+      'service-no-result': '⚠️ Sesiniz mikrofona ulaşıyor ama tarayıcının konuşma tanıma servisi yanıt vermedi. Chrome/Edge internet ister (VPN/reklam engelleyiciyi kapatın); Safari’de Dikte açık olmalı. Arc, Opera, Vivaldi gibi tarayıcılarda bu servis çalışmayabilir — Google Chrome deneyin. Bu arada aşağıdan sesinizi kaydedip karşılaştırabilirsiniz.',
       'aborted': 'Dinleme yarıda kesildi. Tekrar denemek için mikrofona dokunun.',
       'language-not-supported': '⚠️ Seçilen aksan bu cihazda desteklenmiyor. UK/US aksanını değiştirip tekrar deneyin.',
       'start-timeout': '⚠️ Mikrofon başlatılamadı. İzin penceresini onaylayın veya sayfayı yenileyip tekrar deneyin.',
       'start-failed': '⚠️ Mikrofon başlatılamadı. Sayfayı yenileyip tekrar deneyin.'
     };
     return messages[code] || `Mikrofon hatası (${code}). Tekrar denemek için mikrofona dokunun.`;
+  }
+
+  /** Kayıt & karşılaştırma yedeğinin önerilmesi gereken (tanıma servisi kaynaklı) hatalar */
+  function isRecognitionServiceError(code) {
+    return ['unsupported', 'brave', 'service-not-allowed', 'network', 'service-no-result', 'start-timeout', 'start-failed', 'language-not-supported'].includes(code);
   }
 
   function getSpeechEnvironmentProblem() {
@@ -729,35 +754,122 @@
     }
   }
 
+  function addSpeechTimer(fn, ms) {
+    const id = setTimeout(fn, ms);
+    SPEECH_ENGINE.timers.push(id);
+    return id;
+  }
+
   function clearSpeechTimers() {
-    if (SPEECH_ENGINE.startTimer) clearTimeout(SPEECH_ENGINE.startTimer);
-    if (SPEECH_ENGINE.safetyTimer) clearTimeout(SPEECH_ENGINE.safetyTimer);
-    SPEECH_ENGINE.startTimer = null;
-    SPEECH_ENGINE.safetyTimer = null;
+    SPEECH_ENGINE.timers.forEach(id => clearTimeout(id));
+    SPEECH_ENGINE.timers = [];
+  }
+
+  // --------------------------------------------------------------------------
+  // Gerçek mikrofon seviye göstergesi (masaüstü): kullanıcı sesinin gerçekten
+  // alındığını görür; ayrıca "ses var ama servis yanıt vermiyor" teşhisini sağlar.
+  // Mobilde ikinci bir mikrofon akışı tanımayı bozabildiği için kapalıdır.
+  // --------------------------------------------------------------------------
+  function startMicLevelMeter(session, onLevel) {
+    if (isMobileDevice() || !navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) return;
+    const AC = window.AudioContext || window.webkitAudioContext;
+    if (!AC) return;
+    navigator.mediaDevices.getUserMedia({ audio: true }).then(stream => {
+      if (session !== SPEECH_ENGINE.session) {
+        stream.getTracks().forEach(t => t.stop());
+        return;
+      }
+      let ctx;
+      try {
+        ctx = new AC();
+      } catch (e) {
+        stream.getTracks().forEach(t => t.stop());
+        return;
+      }
+      const src = ctx.createMediaStreamSource(stream);
+      const analyser = ctx.createAnalyser();
+      analyser.fftSize = 512;
+      src.connect(analyser);
+      const buf = new Uint8Array(analyser.fftSize);
+      const meter = { stream, ctx, raf: 0, peak: 0 };
+      const tick = () => {
+        analyser.getByteTimeDomainData(buf);
+        let sum = 0;
+        for (let i = 0; i < buf.length; i++) {
+          const v = (buf[i] - 128) / 128;
+          sum += v * v;
+        }
+        const level = Math.min(1, Math.sqrt(sum / buf.length) * 7);
+        if (level > meter.peak) meter.peak = level;
+        if (onLevel) onLevel(level);
+        meter.raf = requestAnimationFrame(tick);
+      };
+      if (ctx.state === 'suspended') ctx.resume().catch(() => {});
+      SPEECH_ENGINE.meter = meter;
+      tick();
+    }).catch(() => {});
+  }
+
+  function stopMicLevelMeter() {
+    const m = SPEECH_ENGINE.meter;
+    SPEECH_ENGINE.meter = null;
+    if (!m) return null;
+    cancelAnimationFrame(m.raf);
+    m.stream.getTracks().forEach(t => t.stop());
+    try { m.ctx.close(); } catch (e) {}
+    return m.peak;
+  }
+
+  /** Dalga formu çubuklarını gerçek ses seviyesine göre boyar */
+  function renderLevelBars(container, level) {
+    if (!container) return;
+    container.classList.add('live');
+    const bars = container.querySelectorAll('.wave-bar');
+    const n = bars.length;
+    bars.forEach((bar, i) => {
+      const center = 1 - Math.abs(i - (n - 1) / 2) / ((n - 1) / 2 || 1);
+      const h = 6 + level * (12 + center * 22) * (0.75 + Math.random() * 0.5);
+      bar.style.height = `${Math.min(34, h).toFixed(1)}px`;
+    });
+  }
+
+  function resetLevelBars(container) {
+    if (!container) return;
+    container.classList.remove('live');
+    container.querySelectorAll('.wave-bar').forEach(bar => { bar.style.height = ''; });
   }
 
   /** Dinlemeyi nazikçe bitirir; o ana kadar duyulanlar değerlendirilir. */
   function stopSpeechSession() {
-    clearSpeechTimers();
-    if (SPEECH_ENGINE.rec) {
-      try { SPEECH_ENGINE.rec.stop(); } catch (e) {}
-    }
+    if (SPEECH_ENGINE.requestStop) SPEECH_ENGINE.requestStop();
   }
 
   /** Oturumu tamamen iptal eder; bekleyen olaylar yok sayılır. */
   function cancelSpeechSession() {
     SPEECH_ENGINE.session++;
     clearSpeechTimers();
+    stopMicLevelMeter();
+    SPEECH_ENGINE.requestStop = null;
     const rec = SPEECH_ENGINE.rec;
     SPEECH_ENGINE.rec = null;
     if (rec) {
-      rec.onstart = rec.onresult = rec.onerror = rec.onend = rec.onspeechend = null;
+      rec.onstart = rec.onaudiostart = rec.onsoundstart = rec.onspeechstart = null;
+      rec.onresult = rec.onerror = rec.onend = rec.onspeechend = rec.onnomatch = null;
       try { rec.abort(); } catch (e) {}
     }
   }
 
   /**
-   * opts: { lang, onStart(), onInterim(text), onError(code, message), onEnd(alternatives[], errored) }
+   * opts: {
+   *   lang,
+   *   onPhase(phase)   // 'preparing' | 'permission' | 'listening' | 'speech' | 'processing'
+   *   onLevel(level)   // 0..1 gerçek mikrofon seviyesi (yalnızca masaüstü)
+   *   onInterim(text),
+   *   onError(code, message),
+   *   onEnd(alternatives[], errored)
+   * }
+   * Her durumda onEnd tam olarak bir kez çağrılır (bekçi zamanlayıcılar sayesinde
+   * tarayıcı 'end' olayını hiç göndermese bile arayüz "dinliyorum"da takılı kalmaz).
    */
   function startSpeechSession(opts) {
     const problem = getSpeechEnvironmentProblem();
@@ -771,6 +883,9 @@
     cancelSpeechSession();
     const mySession = SPEECH_ENGINE.session;
     const isStale = () => mySession !== SPEECH_ENGINE.session;
+    const phase = (p) => { if (!isStale() && opts.onPhase) opts.onPhase(p); };
+
+    phase('preparing');
 
     // Ses çıkışlarını serbest bırak: konuşan TTS veya açık AudioContext mobilde mikrofonu kilitliyor
     let delay = hadPrevious ? 250 : 0;
@@ -800,22 +915,80 @@
       SPEECH_ENGINE.rec = rec;
 
       let started = false;
+      let heardSpeech = false;
+      let stopRequested = false;
+      let finished = false;
       let errored = false;
       let finalAlternatives = [];
       let interimText = '';
 
+      const finish = (reason) => {
+        if (finished || isStale()) return;
+        finished = true;
+        clearSpeechTimers();
+        SPEECH_ENGINE.requestStop = null;
+        const peak = stopMicLevelMeter();
+        if (SPEECH_ENGINE.rec === rec) SPEECH_ENGINE.rec = null;
+        if (reason !== 'end') {
+          // Tarayıcı 'end' göndermedi: tanıyıcıyı zorla kapat
+          rec.onstart = rec.onaudiostart = rec.onsoundstart = rec.onspeechstart = null;
+          rec.onresult = rec.onerror = rec.onend = rec.onspeechend = rec.onnomatch = null;
+          try { rec.abort(); } catch (e) {}
+        }
+
+        const alternatives = finalAlternatives.length ? finalAlternatives : (interimText ? [interimText] : []);
+        if (!alternatives.length && !errored) {
+          // Hiç sonuç yok: nedenini olabildiğince net söyle
+          let code = 'no-speech';
+          if (peak !== null && peak !== undefined) {
+            code = peak >= 0.08 ? 'service-no-result' : 'no-audio';
+          } else if (heardSpeech) {
+            code = 'service-no-result';
+          }
+          errored = true;
+          if (opts.onError) opts.onError(code, getSpeechErrorMessage(code));
+        }
+        if (opts.onEnd) opts.onEnd(alternatives, errored && !alternatives.length);
+      };
+
+      const requestStop = () => {
+        if (finished || isStale()) return;
+        if (!started) {
+          // Henüz başlamadıysa beklemeye gerek yok
+          finish('user');
+          return;
+        }
+        if (stopRequested) return;
+        stopRequested = true;
+        phase('processing');
+        try { rec.stop(); } catch (e) {}
+        // Bazı tarayıcılar stop() sonrası 'end' olayını hiç göndermiyor
+        addSpeechTimer(() => finish('watchdog'), 2500);
+      };
+      SPEECH_ENGINE.requestStop = requestStop;
+
       rec.onstart = () => {
         if (isStale()) return;
         started = true;
-        if (SPEECH_ENGINE.startTimer) clearTimeout(SPEECH_ENGINE.startTimer);
-        if (opts.onStart) opts.onStart();
-        SPEECH_ENGINE.safetyTimer = setTimeout(() => {
-          if (!isStale()) { try { rec.stop(); } catch (e) {} }
-        }, 8000);
+        phase('listening');
+        startMicLevelMeter(mySession, (lvl) => {
+          if (!isStale() && opts.onLevel) opts.onLevel(lvl);
+        });
+        // Azami dinleme süresi: tek kelime için 7 sn fazlasıyla yeter
+        addSpeechTimer(requestStop, 7000);
       };
+
+      const markSpeech = () => {
+        if (isStale() || heardSpeech) return;
+        heardSpeech = true;
+        if (!stopRequested) phase('speech');
+      };
+      rec.onsoundstart = markSpeech;
+      rec.onspeechstart = markSpeech;
 
       rec.onresult = (evt) => {
         if (isStale()) return;
+        heardSpeech = true;
         let interim = '';
         const finals = [];
         for (let i = 0; i < evt.results.length; i++) {
@@ -832,12 +1005,16 @@
         if (finals.length) finalAlternatives = finals;
         interimText = interim.trim();
         if (opts.onInterim) opts.onInterim(finals[0] || interimText);
+        if (finals.length) {
+          // Kesin sonuç geldi: 'end' gecikirse beklemeden sonuçlandır
+          addSpeechTimer(() => finish('final'), 900);
+        }
       };
 
       // Konuşma bitince hemen sonuçlandır (bazı mobil cihazlar aksi halde zaman aşımına düşüyor)
       rec.onspeechend = () => {
         if (isStale()) return;
-        try { rec.stop(); } catch (e) {}
+        requestStop();
       };
 
       rec.onerror = (evt) => {
@@ -845,6 +1022,8 @@
         const code = (evt && evt.error) || 'unknown';
         // Sonuç zaten geldiyse "no-speech/aborted" gibi geç hataları önemseme
         if ((code === 'no-speech' || code === 'aborted') && (finalAlternatives.length || interimText)) return;
+        // no-speech: kendi teşhisimiz (seviye ölçer) daha açıklayıcı mesaj üretir
+        if (code === 'no-speech') return;
         errored = true;
         console.warn('Speech recognition error:', code, evt && evt.message);
         if (code === 'not-allowed' || code === 'audio-capture') {
@@ -854,37 +1033,115 @@
         } else if (opts.onError) {
           opts.onError(code, getSpeechErrorMessage(code));
         }
+        // Hata sonrası 'end' gelmezse takılı kalma
+        addSpeechTimer(() => finish('watchdog'), 1500);
       };
 
       rec.onend = () => {
         if (isStale()) return;
-        clearSpeechTimers();
-        if (SPEECH_ENGINE.rec === rec) SPEECH_ENGINE.rec = null;
-        const alternatives = finalAlternatives.length ? finalAlternatives : (interimText ? [interimText] : []);
-        if (opts.onEnd) opts.onEnd(alternatives, errored);
+        finish('end');
       };
 
-      // İzin penceresi onaylanmadan / servis hiç başlamazsa kullanıcıyı bekletme
-      SPEECH_ENGINE.startTimer = setTimeout(() => {
-        if (isStale() || started) return;
-        cancelSpeechSession();
+      // İzin penceresi açıkken kullanıcıyı yönlendir
+      addSpeechTimer(() => {
+        if (!isStale() && !started && !finished) phase('permission');
+      }, 1500);
+
+      // Servis hiç başlamazsa kullanıcıyı bekletme
+      addSpeechTimer(() => {
+        if (isStale() || started || finished) return;
+        errored = true;
         if (opts.onError) opts.onError('start-timeout', getSpeechErrorMessage('start-timeout'));
-        if (opts.onEnd) opts.onEnd([], true);
-      }, 12000);
+        finish('watchdog');
+      }, 15000);
 
       try {
         rec.start();
       } catch (e) {
         console.error('Speech recognition start failed:', e);
-        cancelSpeechSession();
+        errored = true;
         if (opts.onError) opts.onError('start-failed', getSpeechErrorMessage('start-failed'));
-        if (opts.onEnd) opts.onEnd([], true);
+        finish('watchdog');
       }
     };
 
     if (delay) setTimeout(begin, delay);
     else begin();
     return true;
+  }
+
+  // --------------------------------------------------------------------------
+  // YEDEK MOD: Kaydet & Karşılaştır (tanıma servisi çalışmadığında da işlevsel)
+  // --------------------------------------------------------------------------
+  const SELF_RECORDER = { recorder: null, stream: null, chunks: [], url: null, timer: null };
+
+  function isSelfRecordingSupported() {
+    return !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia && window.MediaRecorder);
+  }
+
+  function stopSelfRecordingStream() {
+    if (SELF_RECORDER.timer) clearTimeout(SELF_RECORDER.timer);
+    SELF_RECORDER.timer = null;
+    if (SELF_RECORDER.stream) SELF_RECORDER.stream.getTracks().forEach(t => t.stop());
+    SELF_RECORDER.stream = null;
+  }
+
+  function discardSelfRecording() {
+    if (SELF_RECORDER.recorder && SELF_RECORDER.recorder.state !== 'inactive') {
+      SELF_RECORDER.recorder.onstop = null;
+      try { SELF_RECORDER.recorder.stop(); } catch (e) {}
+    }
+    SELF_RECORDER.recorder = null;
+    stopSelfRecordingStream();
+    if (SELF_RECORDER.url) URL.revokeObjectURL(SELF_RECORDER.url);
+    SELF_RECORDER.url = null;
+  }
+
+  /** onState('recording' | 'ready' | 'error', urlOrMessage) */
+  function toggleSelfRecording(onState) {
+    if (SELF_RECORDER.recorder && SELF_RECORDER.recorder.state === 'recording') {
+      SELF_RECORDER.recorder.stop();
+      return;
+    }
+    if (!isSelfRecordingSupported()) {
+      onState('error', 'Bu tarayıcı ses kaydını desteklemiyor.');
+      return;
+    }
+    cancelSpeechSession();
+    discardSelfRecording();
+    if (window.speechSynthesis) window.speechSynthesis.cancel();
+    navigator.mediaDevices.getUserMedia({ audio: true }).then(stream => {
+      SELF_RECORDER.stream = stream;
+      SELF_RECORDER.chunks = [];
+      let rec;
+      try {
+        rec = new MediaRecorder(stream);
+      } catch (e) {
+        stopSelfRecordingStream();
+        onState('error', 'Ses kaydı başlatılamadı.');
+        return;
+      }
+      SELF_RECORDER.recorder = rec;
+      rec.ondataavailable = (e) => { if (e.data && e.data.size) SELF_RECORDER.chunks.push(e.data); };
+      rec.onstop = () => {
+        stopSelfRecordingStream();
+        const blob = new Blob(SELF_RECORDER.chunks, { type: rec.mimeType || 'audio/webm' });
+        if (SELF_RECORDER.url) URL.revokeObjectURL(SELF_RECORDER.url);
+        SELF_RECORDER.url = URL.createObjectURL(blob);
+        SELF_RECORDER.recorder = null;
+        onState('ready', SELF_RECORDER.url);
+      };
+      rec.start();
+      onState('recording');
+      SELF_RECORDER.timer = setTimeout(() => {
+        if (rec.state === 'recording') rec.stop();
+      }, 5000);
+    }).catch(err => {
+      diagnoseMicError('not-allowed').then(code => {
+        const realCode = (err && err.name === 'NotAllowedError') ? 'not-allowed' : code;
+        onState('error', getSpeechErrorMessage(realCode));
+      });
+    });
   }
 
   /** Tanıyıcının verdiği alternatifler içinden hedefe en yakın olanı seçer. */
@@ -1011,6 +1268,11 @@
   function resolveWordObject(wordOrEn) {
     if (!wordOrEn) return null;
     if (typeof wordOrEn === 'object' && wordOrEn.en) return wordOrEn;
+    if (typeof wordOrEn === 'number' || (typeof wordOrEn === 'string' && /^\d+$/.test(wordOrEn.trim()))) {
+      const numId = Number(wordOrEn);
+      const byId = WORDS_DATA.find(w => w.id === numId || w.no === numId);
+      if (byId) return byId;
+    }
     const clean = String(wordOrEn).trim().toLowerCase();
     const found = WORDS_DATA.find(w => w.en.toLowerCase() === clean);
     if (found) return found;
@@ -1034,6 +1296,11 @@
     COACH_STATE.interimTranscript = '';
     COACH_STATE.finalTranscript = '';
     COACH_STATE.errorMessage = '';
+    COACH_STATE.errorCode = '';
+    COACH_STATE.phase = 'idle';
+    COACH_STATE.recordState = 'idle';
+    COACH_STATE.recordUrl = null;
+    discardSelfRecording();
     cancelSpeechSession();
     COACH_STATE.isListening = false;
 
@@ -1047,6 +1314,9 @@
 
   function closeSpeechCoach() {
     cancelSpeechSession();
+    discardSelfRecording();
+    COACH_STATE.recordState = 'idle';
+    COACH_STATE.recordUrl = null;
     COACH_STATE.isListening = false;
     COACH_STATE.active = false;
     const backdrop = document.getElementById('speech-coach-backdrop');
@@ -1199,9 +1469,9 @@
               <span class="wave-bar bar-7"></span>
             </div>
 
-            <div class="coach-status-text" id="coach-status-text" ${(!COACH_STATE.isListening && COACH_STATE.errorMessage) ? 'role="alert" style="color: var(--dp-color-red); font-weight: 600;"' : ''}>
+            <div class="coach-status-text" id="coach-status-text" ${(!COACH_STATE.isListening && COACH_STATE.errorMessage) ? 'role="alert" style="color: var(--dp-color-red); font-weight: 600;"' : 'aria-live="polite"'}>
               ${COACH_STATE.isListening 
-                ? 'Sizi dinliyorum... Kelimeyi seslendirin 🎙️' 
+                ? (COACH_PHASE_TEXT[COACH_STATE.phase] || COACH_PHASE_TEXT.preparing) 
                 : (COACH_STATE.errorMessage ? escapeHtml(COACH_STATE.errorMessage) : 'Mikrofona dokunun ve kelimeyi okuyun')}
             </div>
 
@@ -1217,8 +1487,54 @@
           ${evalHtml}
         </div>
 
+        ${renderSelfRecordBlock(isSupported)}
+
       </div>
     `;
+  }
+
+  function renderSelfRecordBlock(isSupported) {
+    const show = isSelfRecordingSupported() && (
+      !isSupported ||
+      isRecognitionServiceError(COACH_STATE.errorCode) ||
+      COACH_STATE.recordState !== 'idle'
+    );
+    if (!show || !COACH_STATE.targetWord) return '';
+    const w = COACH_STATE.targetWord;
+    const isRec = COACH_STATE.recordState === 'recording';
+    const hasRec = COACH_STATE.recordState === 'ready' && COACH_STATE.recordUrl;
+    return `
+      <div class="coach-self-record">
+        <div class="coach-self-record-head">
+          <strong>🎧 Kaydet &amp; Karşılaştır</strong>
+          <span>Otomatik puanlama çalışmasa da kendi sesinizi kaydedip doğru telaffuzla karşılaştırabilirsiniz.</span>
+        </div>
+        <div class="coach-self-record-actions">
+          <button type="button" class="ctrl-btn ${isRec ? 'is-recording' : ''}" onclick="window.APP.toggleCoachSelfRecording()">
+            ${isRec ? '⏹ Kaydı Bitir' : (hasRec ? '🔴 Yeniden Kaydet' : '🔴 Sesimi Kaydet')}
+          </button>
+          <button type="button" class="ctrl-btn" onclick="window.APP.speakWord('${escapeHtml(w.en)}')">🔊 Doğruyu Dinle</button>
+        </div>
+        ${isRec ? '<div class="coach-self-record-note">Kayıt yapılıyor... kelimeyi söyleyin (en fazla 5 sn)</div>' : ''}
+        ${hasRec ? `<audio class="coach-self-record-audio" controls src="${COACH_STATE.recordUrl}"></audio>` : ''}
+      </div>
+    `;
+  }
+
+  function toggleCoachSelfRecording() {
+    toggleSelfRecording((state, payload) => {
+      if (!COACH_STATE.active) return;
+      if (state === 'recording') {
+        COACH_STATE.recordState = 'recording';
+      } else if (state === 'ready') {
+        COACH_STATE.recordState = 'ready';
+        COACH_STATE.recordUrl = payload;
+      } else {
+        COACH_STATE.recordState = 'idle';
+        COACH_STATE.errorMessage = payload;
+      }
+      renderSpeechCoachDialog();
+    });
   }
 
   function toggleCoachListening() {
@@ -1235,8 +1551,12 @@
     COACH_STATE.interimTranscript = '';
     COACH_STATE.finalTranscript = '';
     COACH_STATE.errorMessage = '';
+    COACH_STATE.errorCode = '';
     COACH_STATE.lastEvaluation = null;
     COACH_STATE.isListening = true;
+    COACH_STATE.phase = 'preparing';
+    if (COACH_STATE.recordState === 'recording') discardSelfRecording();
+    if (COACH_STATE.recordState !== 'ready') COACH_STATE.recordState = 'idle';
     renderSpeechCoachDialog();
 
     const targetEn = COACH_STATE.targetWord.en;
@@ -1244,9 +1564,16 @@
 
     startSpeechSession({
       lang: accentCode,
-      onStart: () => {
+      onPhase: (phase) => {
+        if (!COACH_STATE.active || !COACH_STATE.isListening) return;
+        COACH_STATE.phase = phase;
         const statusEl = document.getElementById('coach-status-text');
-        if (statusEl) statusEl.textContent = 'Dinleniyor... Lütfen konuşun 🎙️';
+        if (statusEl) statusEl.textContent = COACH_PHASE_TEXT[phase] || '';
+        const stage = document.querySelector('.coach-mic-stage');
+        if (stage) stage.classList.toggle('processing', phase === 'processing');
+      },
+      onLevel: (level) => {
+        renderLevelBars(document.querySelector('#speech-coach-dialog .coach-waveform'), level);
       },
       onInterim: (text) => {
         COACH_STATE.interimTranscript = text;
@@ -1259,6 +1586,7 @@
       onError: (code, message) => {
         COACH_STATE.isListening = false;
         COACH_STATE.errorMessage = message;
+        COACH_STATE.errorCode = code;
         if (COACH_STATE.active) renderSpeechCoachDialog();
       },
       onEnd: (alternatives, errored) => {
@@ -1289,8 +1617,8 @@
   }
 
   function stopCoachListening() {
+    // Dinlemeyi bitir; o ana kadar duyulan değerlendirilir (onEnd arayüzü günceller)
     stopSpeechSession();
-    COACH_STATE.isListening = false;
   }
 
   // ==========================================================================
@@ -4550,6 +4878,7 @@
       const { micBtn, waveform, label } = getEls();
       if (micBtn) micBtn.classList.remove('active');
       if (waveform) waveform.classList.remove('active');
+      resetLevelBars(waveform);
       if (label) label.textContent = 'MİKROFONA DOKUN & OKU';
     };
     const isSameQuestion = () => STATE.quizState.active && STATE.quizState.currentIndex === questionIndex;
@@ -4562,15 +4891,31 @@
     }
     if (initialLabel) initialLabel.textContent = 'HAZIRLANIYOR...';
 
+    const quizPhaseText = {
+      permission: ['İZİN BEKLENİYOR...', 'Tarayıcının mikrofon izin penceresini onaylayın ☝️'],
+      listening: ['DİNLENİYOR... ŞİMDİ KONUŞUN 🎙️', 'Dinliyorum — hedef kelimeyi söyleyin.'],
+      speech: ['SES ALGILANDI...', 'Sesiniz algılandı, devam edin...'],
+      processing: ['ÇÖZÜMLENİYOR...', 'Telaffuzunuz değerlendiriliyor...']
+    };
+
     const started = startSpeechSession({
       lang: (STATE.settings.accent || 'en-GB').includes('US') ? 'en-US' : 'en-GB',
-      onStart: () => {
-        if (!isSameQuestion()) return;
+      onPhase: (phase) => {
+        if (!isSameQuestion() || !quizPhaseText[phase]) return;
         const { micBtn, label, waveform, statusEl } = getEls();
-        if (micBtn) micBtn.classList.add('active');
-        if (label) label.textContent = 'DİNLENİYOR... ŞİMDİ KONUŞUN 🎙️';
-        if (waveform) waveform.classList.add('active');
-        if (statusEl) statusEl.textContent = 'Sizi dinliyorum, hedef kelimeyi seslendirin...';
+        if (phase === 'listening' || phase === 'speech') {
+          if (micBtn) micBtn.classList.add('active');
+          if (waveform) waveform.classList.add('active');
+        }
+        if (label) label.textContent = quizPhaseText[phase][0];
+        if (statusEl) {
+          statusEl.style.color = '';
+          statusEl.textContent = quizPhaseText[phase][1];
+        }
+      },
+      onLevel: (level) => {
+        if (!isSameQuestion()) return;
+        renderLevelBars(getEls().waveform, level);
       },
       onInterim: (text) => {
         if (!isSameQuestion() || !text) return;
@@ -4584,6 +4929,16 @@
         if (statusEl) {
           statusEl.textContent = message;
           statusEl.style.color = 'var(--dp-color-red)';
+        }
+        // Tanıma servisi çalışmıyorsa kullanıcı soruda takılı kalmasın
+        const feedbackSlot = document.getElementById('quiz-speaking-feedback');
+        if (feedbackSlot && code !== 'no-speech' && code !== 'aborted') {
+          feedbackSlot.innerHTML = `
+            <div class="quiz-speaking-retry-actions" style="justify-content:center;">
+              <button type="button" class="ctrl-btn" onclick="window.APP.retryQuizSpeaking()">🔄 Tekrar Dene</button>
+              <button type="button" class="ctrl-btn" onclick="window.APP.skipQuizSpeaking()" style="color:var(--dp-color-ink-muted);">Bu Soruyu Atla &rarr;</button>
+            </div>
+          `;
         }
       },
       onEnd: (alternatives, errored) => {
@@ -5214,6 +5569,7 @@
     closeSpeechCoach,
     toggleCoachAccent,
     toggleCoachListening,
+    toggleCoachSelfRecording,
     startCoachListening,
     stopCoachListening,
     evaluatePronunciation,

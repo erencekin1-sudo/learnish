@@ -3688,6 +3688,64 @@ mark.pedagogy-word-highlight {
   100% { height: 26px; }
 }
 
+/* Gerçek mikrofon seviyesi: CSS animasyonu yerine canlı ses düzeyi */
+.coach-waveform.live .wave-bar,
+.quiz-speaking-waveform.live .wave-bar {
+  animation: none !important;
+  transition: height 0.08s linear;
+}
+
+.coach-mic-stage.processing .coach-mic-pulse-rings {
+  opacity: 0.35;
+}
+
+/* Kaydet & Karşılaştır yedek modu */
+.coach-self-record {
+  margin-top: 14px;
+  padding: 14px 16px;
+  border: 1px dashed var(--dp-color-border);
+  border-radius: 16px;
+  background: var(--dp-color-surface);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.coach-self-record-head {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 0.85rem;
+}
+
+.coach-self-record-head span {
+  color: var(--dp-color-ink-muted);
+  font-size: 0.8rem;
+  line-height: 1.4;
+}
+
+.coach-self-record-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.coach-self-record .ctrl-btn.is-recording {
+  color: var(--dp-color-red);
+  border-color: var(--dp-color-red);
+}
+
+.coach-self-record-note {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--dp-color-red);
+}
+
+.coach-self-record-audio {
+  width: 100%;
+  height: 40px;
+}
+
 .coach-status-text {
   font-size: 0.88rem;
   font-weight: 700;

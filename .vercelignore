@@ -1,0 +1,27 @@
+# Learnish Vercel Ignore File
+# Excludes heavy raw document sources, offline-only bundles, and developer scripts from Vercel deployment
+
+# 1. Raw pedagogical source documents & full pool JSONs (used only by build.py locally)
+belgeler/
+scratch/
+scripts/
+
+# 2. Monolithic single-file HTML (offline desktop use only; Vercel serves index.html)
+Learnish_Tek_Dosya_Web_App.html
+
+# 3. Development commands and preview screenshots
+GitHuba_Gonder.command
+Uygulamayı_Başlat.command
+learnish_desktop_preview.png
+learnish_mobile_preview.png
+
+# 4. OS, Python and Build files
+.DS_Store
+.AppleDouble
+.LSOverride
+*.docx
+*.pdf
+*.xlsx
+__pycache__/
+*.py[cod]
+build.py

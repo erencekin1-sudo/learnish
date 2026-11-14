@@ -3,7 +3,7 @@
  * Caches core assets for offline usage on mobile and desktop
  */
 
-const CACHE_NAME = 'learnish-v8-layout-fix';
+const CACHE_NAME = 'learnish-v10-opt';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
@@ -45,7 +45,9 @@ self.addEventListener('fetch', (event) => {
   if (req.method !== 'GET' || new URL(req.url).origin !== self.location.origin) return;
 
   event.respondWith(
-    fetch(req)
+    // cache: 'no-cache' → tarayıcının HTTP önbelleği de sunucuyla doğrulanır;
+    // aksi halde eski index.html/app.js günlerce sunulabiliyordu.
+    fetch(req, { cache: 'no-cache' })
       .then((response) => {
         if (response && response.ok) {
           const copy = response.clone();
