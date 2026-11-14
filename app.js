@@ -367,6 +367,8 @@
   // State Management
   const STATE = {
     activeModule: localStorage.getItem('learnish_active_module') || 'maarif', // 'maarif' | 'yds' | 'oxford' | 'all'
+    selectedGrade: parseInt(localStorage.getItem('learnish_selected_grade'), 10) || 5, // 1-12
+    activeCurriculumWeek: null, // null = current academic week, or 1-36
     currentView: 'home', // 'home', 'daily', 'flashcard', 'quiz', 'directory', 'stats'
     viewHistory: ['home'],
     currentDay: 1, // Maarif: 1-82, YDS: 1-145
@@ -2156,14 +2158,16 @@
 
   function updateMobileTriggerLabels() {
     const titleEl = document.getElementById('header-user-title');
+    const gNum = STATE.selectedGrade || 5;
+    const gData = (typeof window !== 'undefined' && window.CURRICULUM_DATA && window.CURRICULUM_DATA[gNum]) || { name: `${gNum}. Sınıf` };
     const modTitles = {
-      maarif: 'MEB Müfredatı',
+      maarif: `${gData.name} Müfredatı`,
       yds: 'YDS & YÖKDİL Akademik',
       oxford: 'The Oxford 5000',
       all: 'Tüm Kütüphane'
     };
     if (titleEl && STATE.currentView === 'home') {
-      titleEl.textContent = modTitles[STATE.activeModule] || '5. Sınıf Maarif Modeli';
+      titleEl.textContent = modTitles[STATE.activeModule] || `${gData.name} Müfredatı`;
     }
   }
 
@@ -2178,24 +2182,32 @@
       btn.setAttribute('aria-selected', isActive ? 'true' : 'false');
     });
 
+    const gNum = STATE.selectedGrade || 5;
+    const gData = (typeof window !== 'undefined' && window.CURRICULUM_DATA && window.CURRICULUM_DATA[gNum]) || { name: `${gNum}. Sınıf`, units: [] };
+
     const modTitles = {
-      maarif: 'MEB Müfredatı',
+      maarif: `${gData.name} Müfredatı`,
       yds: 'YDS & YÖKDİL Akademik',
       oxford: 'The Oxford 5000',
       all: 'Tüm Kütüphane'
     };
     const titleEl = document.getElementById('header-user-title');
     if (titleEl && STATE.currentView === 'home') {
-      titleEl.textContent = modTitles[moduleName] || '5. Sınıf Maarif Modeli';
+      titleEl.textContent = modTitles[moduleName] || `${gData.name} Müfredatı`;
     }
 
     // Update brand info subtitle - Architectural micro-goal telemetry
     const brandSub = document.getElementById('app-brand-subtitle');
     if (brandSub) {
-      if (moduleName === 'maarif') brandSub.innerText = 'MEB Müfredatı • 5. Sınıf Maarif Modeli (817 Kelime)';
+      if (moduleName === 'maarif') brandSub.innerText = `MEB Müfredatı • ${gData.name} (${gData.units.length} Ünite • 36 Hafta Planı)`;
       else if (moduleName === 'yds') brandSub.innerText = 'YDS & YÖKDİL Akademik • Günlük Hedef: 20 Kelime';
       else if (moduleName === 'oxford') brandSub.innerText = 'The Oxford 5000 • Günlük Hedef: 25 Kelime';
       else brandSub.innerText = 'Tüm Kütüphane • Akademik Kelime Arşivi';
+    }
+
+    const mebMeta = document.getElementById('mod-tab-meb-meta');
+    if (mebMeta) {
+      mebMeta.innerText = `${gData.name} • Planlı`;
     }
 
     // Dynamic Navigation Labels
@@ -2217,11 +2229,11 @@
       STATE.directoryPage = 1;
       STATE.flashcardSource = 'yds_all';
     } else if (moduleName === 'maarif') {
-      if (dailyText) dailyText.innerText = "MEB Günün 10'lusu";
-      if (flashText) flashText.innerText = "MEB Kartları";
-      if (quizText) quizText.innerText = "MEB Quiz";
-      if (dirText) dirText.innerText = "MEB 5. Sınıf Havuzu";
-      if (statsText) statsText.innerText = "MEB Kazanım Analizi";
+      if (dailyText) dailyText.innerText = `${gData.name} Takibi`;
+      if (flashText) flashText.innerText = `${gData.name} Kartları`;
+      if (quizText) quizText.innerText = `${gData.name} Sınavı`;
+      if (dirText) dirText.innerText = `${gData.name} Havuzu`;
+      if (statsText) statsText.innerText = "Kazanım Analizi";
       STATE.directoryFilters.dataset = 'maarif';
       STATE.directoryFilters.cefr = 'all';
       STATE.directoryFilters.search = '';
@@ -2252,6 +2264,240 @@
     }
 
     updateUI();
+  }
+
+  // ==========================================================================
+  // K-12 KADEME VE SINIF SEÇİCİ MODAL (Grade & Curriculum Modal Controller)
+  // ==========================================================================
+  function openGradeModal() {
+    const dialog = document.getElementById('grade-dialog');
+    const backdrop = document.getElementById('grade-modal-backdrop');
+    const body = document.getElementById('grade-dialog-body');
+    if (!dialog || !backdrop || !body) return;
+
+    const curGrade = STATE.selectedGrade || 5;
+    const curMod = STATE.activeModule;
+
+    const stages = [
+      {
+        id: 'ilkokul',
+        title: 'İLKOKUL',
+        badge: '1 - 4. SINIF',
+        badgeClass: 'stage-badge-ilkokul',
+        grades: [1, 2, 3, 4]
+      },
+      {
+        id: 'ortaokul',
+        title: 'ORTAOKUL & LGS',
+        badge: '5 - 8. SINIF',
+        badgeClass: 'stage-badge-ortaokul',
+        grades: [5, 6, 7, 8]
+      },
+      {
+        id: 'lise',
+        title: 'LİSE & YDT',
+        badge: '9 - 12. SINIF',
+        badgeClass: 'stage-badge-lise',
+        grades: [9, 10, 11, 12]
+      }
+    ];
+
+    let html = '';
+
+    for (const st of stages) {
+      html += `
+        <div class="stage-group-card">
+          <div class="stage-group-header">
+            <span class="stage-group-title">${st.title}</span>
+            <span class="stage-group-badge ${st.badgeClass}">${st.badge}</span>
+          </div>
+          <div class="stage-grade-grid">
+      `;
+
+      for (const gNum of st.grades) {
+        const gData = (window.CURRICULUM_DATA && window.CURRICULUM_DATA[gNum]) || { name: `${gNum}. Sınıf`, cefr: 'A1', units: [] };
+        const isCurrentActive = (curMod === 'maarif' && curGrade === gNum);
+
+        html += `
+          <button type="button" class="stage-grade-btn ${isCurrentActive ? 'active' : ''}" onclick="window.APP.switchGrade(${gNum})">
+            <div class="sgb-info">
+              <span class="sgb-name">${gData.name}</span>
+              <span class="sgb-meta">CEFR ${gData.cefr} • ${gData.units.length} Ünite</span>
+            </div>
+            <span class="sgb-check">✓</span>
+          </button>
+        `;
+      }
+
+      html += `
+          </div>
+        </div>
+      `;
+    }
+
+    // Ek Modüller (YDS, Oxford, Tüm Kütüphane)
+    html += `
+      <div class="stage-group-card">
+        <div class="stage-group-header">
+          <span class="stage-group-title">AKADEMİK &amp; GENEL HAVUZLAR</span>
+          <span class="stage-group-badge stage-badge-akademik">SINAV &amp; DÜNYA</span>
+        </div>
+        <div class="stage-grade-grid">
+          <button type="button" class="stage-grade-btn ${curMod === 'yds' ? 'active' : ''}" onclick="window.APP.switchModuleAndClose('yds')">
+            <div class="sgb-info">
+              <span class="sgb-name">YDS &amp; YÖKDİL</span>
+              <span class="sgb-meta">B2–C1 • 7.387 Kelime</span>
+            </div>
+            <span class="sgb-check">✓</span>
+          </button>
+          <button type="button" class="stage-grade-btn ${curMod === 'oxford' ? 'active' : ''}" onclick="window.APP.switchModuleAndClose('oxford')">
+            <div class="sgb-info">
+              <span class="sgb-name">The Oxford 5000</span>
+              <span class="sgb-meta">A1–C1 • 4.886 Kelime</span>
+            </div>
+            <span class="sgb-check">✓</span>
+          </button>
+          <button type="button" class="stage-grade-btn ${curMod === 'all' ? 'active' : ''}" onclick="window.APP.switchModuleAndClose('all')">
+            <div class="sgb-info">
+              <span class="sgb-name">Tüm Kütüphane</span>
+              <span class="sgb-meta">Birleşik 9.234 Kelime</span>
+            </div>
+            <span class="sgb-check">✓</span>
+          </button>
+        </div>
+      </div>
+    `;
+
+    body.innerHTML = html;
+    backdrop.classList.add('active');
+    dialog.classList.add('active');
+  }
+
+  function closeGradeModal() {
+    const dialog = document.getElementById('grade-dialog');
+    const backdrop = document.getElementById('grade-modal-backdrop');
+    if (dialog) dialog.classList.remove('active');
+    if (backdrop) backdrop.classList.remove('active');
+  }
+
+  function switchGrade(gradeNum) {
+    const gNum = Math.max(1, Math.min(12, parseInt(gradeNum, 10) || 5));
+    STATE.selectedGrade = gNum;
+    STATE.activeModule = 'maarif';
+    STATE.activeCurriculumWeek = null;
+    localStorage.setItem('learnish_selected_grade', gNum.toString());
+    localStorage.setItem('learnish_active_module', 'maarif');
+
+    closeGradeModal();
+    switchModule('maarif');
+    if (STATE.currentView === 'daily') {
+      renderDailyView();
+    }
+  }
+
+  // ==========================================================================
+  // SEMANTİK BAĞLAMA MOTORU MODAL (Curriculum Context Classifier Modal)
+  // ==========================================================================
+  function openClassifierForWord(wordInput) {
+    const dialog = document.getElementById('classifier-dialog');
+    const backdrop = document.getElementById('classifier-modal-backdrop');
+    const body = document.getElementById('classifier-dialog-body');
+    if (!dialog || !backdrop || !body || !window.CURRICULUM_CLASSIFIER) return;
+
+    let wordObj = null;
+    let wordStr = '';
+    if (typeof wordInput === 'object') {
+      wordObj = wordInput;
+      wordStr = wordObj.en || '';
+    } else {
+      wordStr = String(wordInput || '').trim();
+      wordObj = WORDS_DATA.find(w => w.en.toLowerCase() === wordStr.toLowerCase()) || { en: wordStr, tr: '', phonetic: '', cefr: '' };
+    }
+
+    const result = window.CURRICULUM_CLASSIFIER.classify(wordObj);
+    const scorePercent = Math.round(result.confidence * 100);
+
+    let alternatesHtml = '';
+    if (result.alternateMatches && result.alternateMatches.length > 0) {
+      alternatesHtml = `
+        <div class="classifier-alternates-section">
+          <span class="cas-title">DİĞER İLİŞKİLİ KADEME VE ÜNİTELER:</span>
+          ${result.alternateMatches.map(alt => `
+            <div class="cas-item">
+              <span class="cas-item-name">${alt.gradeName} • ${alt.unitTitle} (${alt.unitTitleTr || ''})</span>
+              <span class="cas-item-score">%${Math.round(alt.confidence * 100)} UYUM</span>
+            </div>
+          `).join('')}
+        </div>
+      `;
+    }
+
+    body.innerHTML = `
+      <div class="classifier-word-banner">
+        <div class="cwb-left">
+          <span class="cwb-word">${escapeHtml(wordObj.en)}</span>
+          <span class="cwb-meta">${escapeHtml(wordObj.phonetic ? `/${wordObj.phonetic}/ • ` : '')}${escapeHtml(wordObj.tr || 'Türkçe karşılık')}</span>
+        </div>
+        <button type="button" class="s-action-circle" onclick="window.APP.speakWord('${escapeHtml(wordObj.en)}')" title="Dinle">
+          ${ICONS.speaker}
+        </button>
+      </div>
+
+      <div class="classifier-result-card">
+        <div class="crc-badge-row">
+          <span class="crc-tag">${result.matchType === 'canonical_curriculum' ? '★ RESMİ MEB MÜFREDAT HEDEFİ' : '🔗 SEMANTİK BAĞLAM EŞLEŞMESİ'}</span>
+          <span class="crc-score">%${scorePercent} GÜVEN</span>
+        </div>
+        <h3 class="crc-title">${result.gradeName} • ${result.unitTitle}</h3>
+        <p class="crc-desc">${result.unitTitleTr}</p>
+      </div>
+
+      <div class="classifier-rationale-box">
+        <strong>Pedagojik Bağlama Gerekçesi:</strong>
+        <p style="margin: 4px 0 0 0;">${result.rationale}</p>
+      </div>
+
+      ${alternatesHtml}
+
+      <div class="classifier-action-row">
+        <button type="button" class="classifier-go-btn" onclick="window.APP.goToCurriculumUnit(${result.grade}, ${result.unitNum})">
+          🎓 ${result.gradeName} Bu Ünitenin Haftalık Planına Git
+        </button>
+      </div>
+    `;
+
+    backdrop.classList.add('active');
+    dialog.classList.add('active');
+  }
+
+  function closeClassifierModal() {
+    const dialog = document.getElementById('classifier-dialog');
+    const backdrop = document.getElementById('classifier-modal-backdrop');
+    if (dialog) dialog.classList.remove('active');
+    if (backdrop) backdrop.classList.remove('active');
+  }
+
+  function goToCurriculumUnit(grade, unitNum) {
+    STATE.selectedGrade = grade;
+    STATE.activeModule = 'maarif';
+    const gData = window.CURRICULUM_DATA && window.CURRICULUM_DATA[grade];
+    if (gData && gData.calendar) {
+      const matchWeek = gData.calendar.find(w => w.unitNum === unitNum);
+      STATE.activeCurriculumWeek = matchWeek ? matchWeek.weekNum : 1;
+    }
+    closeClassifierModal();
+    switchModule('maarif');
+    switchView('daily');
+  }
+
+  function changeScheduleWeek(targetWeekNum) {
+    STATE.activeCurriculumWeek = Math.max(1, Math.min(36, parseInt(targetWeekNum, 10) || 1));
+    renderDailyView();
+  }
+
+  function goToTodayCurriculumWeek() {
+    STATE.activeCurriculumWeek = null;
+    renderDailyView();
   }
 
   // ==========================================================================
@@ -2650,6 +2896,205 @@
     if (!container) return;
 
     const module = STATE.activeModule;
+
+    // A. MEB K-12 MÜFREDAT VE GÜNLÜK TAKİP (1. Sınıftan 12. Sınıfa Kadar)
+    if (module === 'maarif') {
+      const gNum = STATE.selectedGrade || 5;
+      const gData = (typeof window !== 'undefined' && window.CURRICULUM_DATA && window.CURRICULUM_DATA[gNum]) || null;
+      let sched = null;
+      if (typeof window !== 'undefined' && window.CURRICULUM_CLASSIFIER) {
+        sched = STATE.activeCurriculumWeek 
+          ? window.CURRICULUM_CLASSIFIER.getWeekByNumber(gNum, STATE.activeCurriculumWeek)
+          : window.CURRICULUM_CLASSIFIER.getSchedule(gNum);
+      }
+      if (!sched && gData && gData.calendar) {
+        sched = gData.calendar[0];
+      }
+
+      const targetWordsList = (sched && sched.targetWords) ? sched.targetWords : [];
+      const isViewingToday = !STATE.activeCurriculumWeek;
+
+      // Haftalık Hedef Kelime Kartları
+      let cardsHtml = '';
+      let weekLearnedCount = 0;
+
+      targetWordsList.forEach((wStr, idx) => {
+        const clean = wStr.toLowerCase().trim();
+        const found = WORDS_DATA.find(w => w.en.toLowerCase() === clean);
+        const wId = found ? found.id : (800000 + (gNum * 1000) + idx);
+        const wEn = found ? found.en : (wStr.charAt(0).toUpperCase() + wStr.slice(1));
+        const wTr = found ? found.tr : 'Resmi Müfredat Hedef Kelimesi';
+        const wPhonetic = found ? found.phonetic : '';
+        const wCefr = found ? found.cefr : (gData ? gData.cefr : 'A1');
+        const wDesc = found ? found.desc : 'hedef kelime';
+        const wExample = found ? found.example : `In our English class, we learn the word "${wEn}".`;
+
+        const isLearned = STATE.userData.learned.has(wId);
+        const isStarred = STATE.userData.starred.has(wId);
+        if (isLearned) weekLearnedCount++;
+
+        cardsHtml += `
+          <article class="secondary-feed-card word-card-item ${isLearned ? 'is-learned' : ''}" data-id="${wId}">
+            <div class="feed-audio-cluster" style="display: flex; flex-direction: column; gap: 6px; align-items: center; justify-content: center;">
+              <button type="button" class="feed-icon-box speak-btn" data-word="${escapeHtml(wEn)}" title="Sesli Telaffuz (${STATE.settings.accent})" aria-label="Dinle: ${escapeHtml(wEn)}">
+                🔊
+              </button>
+              <button type="button" class="feed-icon-box coach-mic-btn" onclick="event.stopPropagation(); window.APP.openSpeechCoach('${escapeHtml(wEn)}')" title="🎙️ Speaking Koçu ile Telaffuz Et" aria-label="Telaffuz Koçu: ${escapeHtml(wEn)}" style="background: rgba(202, 0, 19, 0.08); color: var(--dp-color-red); border-color: rgba(202, 0, 19, 0.2);">
+                🎙️
+              </button>
+            </div>
+
+            <div class="feed-content-wrap">
+              <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+                <h4 class="feed-card-title">${escapeHtml(wEn)}</h4>
+                ${wPhonetic ? `<span class="feed-card-meta">${escapeHtml(wPhonetic)}</span>` : ''}
+                ${getCefrBadgeHtml(wCefr)}
+                <button type="button" class="word-context-btn" onclick="event.stopPropagation(); window.APP.openClassifierForWord('${escapeHtml(wEn)}')" title="Bu kelimeyi müfredata bağla">🔗 Bağlamı İncele</button>
+              </div>
+              <div class="feed-card-tr">${escapeHtml(wTr)}</div>
+              <div class="feed-card-meta">${escapeHtml(wDesc)}</div>
+              ${wExample ? `<div class="feed-card-example">“${highlightWordInText(wExample.replace(/^["“”]|["“”]$/g, ''), wEn)}”</div>` : ''}
+            </div>
+
+            <div style="display: flex; flex-direction: column; gap: 8px; align-items: center;">
+              <button type="button" class="feed-trailing-btn ${isLearned ? 'checked' : ''}" onclick="window.APP.toggleLearned(${wId})" title="${isLearned ? 'Öğrenildi' : 'Öğrenildi Olarak İşaretle'}" aria-label="Öğrenildi"></button>
+              <button type="button" class="feed-trailing-btn ${isStarred ? 'active' : ''}" onclick="window.APP.toggleStarred(${wId})" title="${isStarred ? 'Favorilerden Çıkar' : 'Favorilere Ekle'}" aria-label="Favori" style="font-size: 14px;">
+                ${isStarred ? '★' : '☆'}
+              </button>
+            </div>
+          </article>
+        `;
+      });
+
+      // Bağlama Motoru ile Zenginleştirilen Kelimeler (Contextually Enriched Words)
+      let enrichedDeckHtml = '';
+      if (window.CURRICULUM_CLASSIFIER && sched) {
+        const targetWordsLower = targetWordsList.map(w => w.toLowerCase());
+        const enrichedList = [];
+        for (const w of WORDS_DATA) {
+          if (targetWordsLower.includes(w.en.toLowerCase())) continue;
+          const cls = window.CURRICULUM_CLASSIFIER.classify(w, gNum);
+          if (cls.unitNum === sched.unitNum && cls.confidence >= 0.4) {
+            enrichedList.push({ word: w, confidence: cls.confidence });
+            if (enrichedList.length >= 8) break;
+          }
+        }
+
+        if (enrichedList.length > 0) {
+          enrichedDeckHtml = `
+            <div class="curriculum-enriched-deck">
+              <div class="ced-header">
+                <span class="ced-title">
+                  <span>✨</span> BAĞLAMA MOTORU İLE İLİŞKİLENDİRİLEN EK KELİMELER
+                </span>
+                <span class="ced-badge">THE OXFORD 5000 &bull; ÜNİTEYE BAĞLI</span>
+              </div>
+              <p style="font-size: 12px; color: var(--dp-color-ink-muted); margin: 0 0 10px 0;">
+                Bu kelimeler yıllık plan listesi dışından, semantik bağlam motoru tarafından <strong>${sched.unitTitle}</strong> ünitesine bağlanmıştır:
+              </p>
+              <div class="ced-grid">
+                ${enrichedList.map(item => `
+                  <div class="ced-word-chip" onclick="window.APP.openClassifierForWord('${escapeHtml(item.word.en)}')">
+                    <div>
+                      <span class="ced-word-en">${escapeHtml(item.word.en)}</span>
+                      <div class="ced-word-tr">${escapeHtml(item.word.tr ? item.word.tr.slice(0, 24) + '...' : '')}</div>
+                    </div>
+                    <span style="font-family: var(--dp-typography-mono); font-size: 10px; font-weight: 800; color: #38bdf8;">%${Math.round(item.confidence * 100)}</span>
+                  </div>
+                `).join('')}
+              </div>
+            </div>
+          `;
+        }
+      }
+
+      const weekPercent = Math.round((weekLearnedCount / (targetWordsList.length || 1)) * 100);
+
+      container.innerHTML = `
+        <div class="curriculum-tracker-deck">
+          
+          <!-- Tracker Header -->
+          <div class="curriculum-tracker-header">
+            <div class="cth-badge-row">
+              <span class="cth-grade-badge">${sched ? sched.badge : `${gNum}. SINIF`}</span>
+              <span class="cth-stage-badge">${sched ? sched.stageTr : 'MEB'}</span>
+              <span class="cth-week-badge">HAFTA ${sched ? sched.weekNum : 1} &bull; ${sched ? sched.dates : ''}</span>
+              <button type="button" class="cth-switch-grade-btn" onclick="window.APP.openGradeModal()">SINIF DEĞİŞTİR ▾</button>
+            </div>
+
+            <div class="cth-unit-card">
+              <div class="cth-unit-left">
+                <span class="cth-unit-code">${sched ? sched.unitCode : 'UNIT'}</span>
+                <h2 class="cth-unit-title">${sched ? sched.unitTitle : 'MÜFREDAT DERSİ'}</h2>
+                <span class="cth-unit-title-tr">${sched ? sched.unitTitleTr : ''}</span>
+              </div>
+
+              <div class="cth-week-nav">
+                <button type="button" class="cth-nav-btn" onclick="window.APP.changeScheduleWeek(${(sched ? sched.weekNum : 1) - 1})" ${(sched && sched.weekNum <= 1) ? 'disabled' : ''}>◀ Önceki</button>
+                <span class="cth-nav-label">${sched ? sched.weekNum : 1} / 36</span>
+                <button type="button" class="cth-nav-btn" onclick="window.APP.changeScheduleWeek(${(sched ? sched.weekNum : 1) + 1})" ${(sched && sched.weekNum >= 36) ? 'disabled' : ''}>Sonraki ▶</button>
+              </div>
+            </div>
+
+            ${!isViewingToday ? `
+              <div style="margin-top: 10px; display: flex; align-items: center; justify-content: space-between; background: rgba(217, 119, 6, 0.1); border: 1px solid rgba(217, 119, 6, 0.25); border-radius: 8px; padding: 6px 12px; font-size: 11.5px;">
+                <span>📍 Özel hafta inceleniyor (Hafta ${sched.weekNum})</span>
+                <button type="button" style="background:transparent; border:none; color:var(--dp-color-amber); font-weight:800; cursor:pointer;" onclick="window.APP.goToTodayCurriculumWeek()">Bugünün Haftasına Dön</button>
+              </div>
+            ` : ''}
+          </div>
+
+          <!-- Outcomes Card -->
+          <div class="curriculum-outcomes-card">
+            <div class="coc-item"><strong>Haftanın Odağı:</strong> ${sched ? sched.focus : 'Müfredat konuları'}</div>
+            ${sched && sched.outcomes ? `<div class="coc-item"><strong>Kazanımlar &amp; İletişimsel İşlevler:</strong> ${sched.outcomes}</div>` : ''}
+            ${sched && sched.importantDays ? `<div class="coc-item coc-celebration"><strong>Önemli Gün &amp; Etkinlik:</strong> ${sched.importantDays}</div>` : ''}
+          </div>
+
+          <!-- Progress Bar & Actions -->
+          <div class="daily-progress-bar-wrap" style="margin: 4px 0;">
+            <div class="daily-progress-fill" style="width: ${weekPercent}%;"></div>
+          </div>
+
+          <div style="display: flex; gap: 10px; margin: 4px 0 12px 0; flex-wrap: wrap;">
+            <button type="button" class="fc-action-btn" onclick="window.APP.startDailyFlashcards(false)">
+              🗂️ <span>Haftanın Kartlarıyla Çalış (${targetWordsList.length})</span>
+            </button>
+            <button type="button" class="fc-action-btn" onclick="window.APP.startDailyFlashcards(true)" title="Kelimeleri rastgele karıştırarak başlat">
+              🔀 <span>Karışık Kartlar</span>
+            </button>
+            <button type="button" class="fc-action-btn learned-btn" onclick="window.APP.startDailyQuiz()">
+              ⚡ <span>Haftalık Kazanım Testi &rarr;</span>
+            </button>
+          </div>
+
+          <!-- Target Words List -->
+          <div class="section-header-row" style="margin-top: 14px;">
+            <span class="section-title">HAFTALIK HEDEF KELİMELER (${targetWordsList.length} KELİME)</span>
+            <span style="font-family:var(--dp-typography-mono); font-size:11px; font-weight:800; color:var(--dp-color-amber);">%${weekPercent} TAMAMLANDI</span>
+          </div>
+
+          <div class="daily-feed-column">
+            ${cardsHtml}
+          </div>
+
+          <!-- Enriched Words via Context Classifier -->
+          ${enrichedDeckHtml}
+
+        </div>
+      `;
+
+      container.querySelectorAll('.speak-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const word = btn.getAttribute('data-word');
+          speakWord(word);
+        });
+      });
+      return;
+    }
+
+    // B. YDS / OXFORD / TÜM KÜTÜPHANE WORKOUT MODU (Mevcut Günlük Akış)
     let targetPool = [];
     let batchSize = 10;
     let bannerTitle = '';
@@ -3667,6 +4112,7 @@
               ${getCefrBadgeHtml(w.cefr)}
               ${w.themeCode ? getThemeBadgeHtml(w.themeCode, w.themeTitle) : ''}
               ${prepBadge ? `<span class="yds-prep-tag">${prepBadge}</span>` : ''}
+              <button type="button" class="word-context-btn" onclick="event.stopPropagation(); window.APP.openClassifierForWord('${escapeHtml(w.en)}')" title="Bu kelimeyi müfredata bağla">🔗 Bağlam</button>
             </div>
             <span class="word-number">#${w.no || w.id}</span>
           </div>
@@ -4301,6 +4747,80 @@
   function triggerConfetti() {}
 
   // ==========================================================================
+  // TOP CONTEXT CANOPY ("İŞTE BURADASINIZ" HABER VERİCİ ÇİZGİSİ)
+  // Mobil ve masaüstünde aktif modül (MEB/YDS/Oxford) ve istasyon oryantasyonu
+  // ==========================================================================
+  let canopyTimer = null;
+
+  function updateContextCanopy(viewName, triggerExpand = false) {
+    const canopy = document.getElementById('context-canopy');
+    if (!canopy) return;
+
+    const mod = STATE.activeModule || 'maarif';
+    const view = viewName || STATE.currentView || 'home';
+
+    const modBadges = {
+      maarif: 'MEB',
+      yds: 'YDS',
+      oxford: 'OXF',
+      all: 'TÜM'
+    };
+
+    const modFullNames = {
+      maarif: 'K-12 MEB Müfredatı',
+      yds: 'YDS & YÖKDİL Akademik',
+      oxford: 'The Oxford 5000',
+      all: 'Tüm Kütüphane'
+    };
+
+    let modBadge = modBadges[mod] || 'MEB';
+    let modFullName = modFullNames[mod] || 'MEB Müfredatı';
+
+    if (mod === 'maarif') {
+      const gNum = STATE.selectedGrade || 5;
+      const gData = (typeof window !== 'undefined' && window.CURRICULUM_DATA && window.CURRICULUM_DATA[gNum]) || null;
+      if (gData) {
+        modBadge = gData.badge || `${gNum}. SINIF`;
+        const sched = (typeof window !== 'undefined' && window.CURRICULUM_CLASSIFIER) ? (STATE.activeCurriculumWeek ? window.CURRICULUM_CLASSIFIER.getWeekByNumber(gNum, STATE.activeCurriculumWeek) : window.CURRICULUM_CLASSIFIER.getSchedule(gNum)) : null;
+        const uTitle = sched ? sched.unitTitle : (gData.units[0]?.title || 'Müfredat');
+        modFullName = `${gData.name} • ${uTitle}`;
+      }
+    }
+
+    const viewTitles = {
+      home: 'Kontrol Merkezi',
+      daily: mod === 'yds' ? "Günün 20'si (Workout)" : (mod === 'maarif' ? "Müfredat Takibi" : "Günün Çalışması"),
+      flashcard: 'Flashcard Kartları',
+      quiz: mod === 'yds' ? 'YDS Cloze & Test' : (mod === 'maarif' ? 'Kazanım Değerlendirme' : 'Quiz & Sınav'),
+      directory: 'Kelime Havuzu',
+      stats: 'İlerleme & Analiz'
+    };
+
+    const badgeEl = document.getElementById('canopy-module-badge');
+    const nameEl = document.getElementById('canopy-module-name');
+    const viewEl = document.getElementById('canopy-view-name');
+
+    if (badgeEl) badgeEl.textContent = modBadge;
+    if (nameEl) nameEl.textContent = modFullName;
+    if (viewEl) viewEl.textContent = viewTitles[view] || view;
+
+    // Set theme class on canopy
+    canopy.classList.remove('mod-maarif', 'mod-yds', 'mod-oxford', 'mod-all');
+    canopy.classList.add(`mod-${mod}`);
+
+    if (triggerExpand) {
+      if (canopyTimer) clearTimeout(canopyTimer);
+      canopy.classList.remove('canopy-docked');
+      canopy.classList.add('canopy-expanded');
+
+      canopyTimer = setTimeout(() => {
+        canopy.classList.remove('canopy-expanded');
+        canopy.classList.add('canopy-docked');
+      }, 3200);
+    }
+  }
+
+  // ==========================================================================
   // NAVIGATION & BREADCRUMB CONTROLLERS (Live Architectural Telemetry)
   // ==========================================================================
   function updateBreadcrumb(viewName) {
@@ -4512,15 +5032,22 @@
       directory: 'KELİME HAVUZU • ARAMA',
       stats: 'ÖĞRENİM TELEMETRİSİ • ANALİZ'
     };
-    if (labelEl) labelEl.textContent = viewLabels[viewName] || 'GÜNLÜK HEDEF • LEARNISH';
-    if (titleEl) {
-      if (viewName === 'home') titleEl.textContent = modTitles[STATE.activeModule] || 'İngilizce Çalışması';
-      else if (viewName === 'daily') titleEl.textContent = STATE.activeModule === 'yds' ? "Günün 20'si" : "Günün 10'lusu";
-      else if (viewName === 'flashcard') titleEl.textContent = 'Flashcard Kartları';
-      else if (viewName === 'quiz') titleEl.textContent = 'Quiz & Test';
-      else if (viewName === 'directory') titleEl.textContent = 'Kelime Havuzu';
-      else if (viewName === 'stats') titleEl.textContent = 'İstatistik & Analiz';
+    const activeModName = modTitles[STATE.activeModule] || 'MEB Müfredatı';
+    if (labelEl) {
+      const baseLabel = viewLabels[viewName] || 'GÜNLÜK HEDEF • LEARNISH';
+      labelEl.textContent = `${baseLabel} • ${activeModName.toUpperCase()}`;
     }
+    if (titleEl) {
+      if (viewName === 'home') titleEl.textContent = activeModName;
+      else if (viewName === 'daily') titleEl.textContent = STATE.activeModule === 'yds' ? "Günün 20'si (YDS)" : "Günün 10'lusu (MEB)";
+      else if (viewName === 'flashcard') titleEl.textContent = `Flashcard (${activeModName})`;
+      else if (viewName === 'quiz') titleEl.textContent = `Quiz & Test (${activeModName})`;
+      else if (viewName === 'directory') titleEl.textContent = `Kelime Havuzu (${activeModName})`;
+      else if (viewName === 'stats') titleEl.textContent = `İstatistik (${activeModName})`;
+    }
+
+    // Trigger Context Canopy ("İşte Buradasınız" Tülü & Haber Verici Çizgisi)
+    updateContextCanopy(viewName, true);
 
     if (viewName === 'home') renderHomeView();
     if (viewName === 'daily') renderDailyView();
@@ -5582,8 +6109,18 @@
     speakCurrentWord,
     retestDebugWord,
     selectHeatmapUnit,
+    updateContextCanopy,
+    openGradeModal,
+    closeGradeModal,
+    switchGrade,
+    openClassifierForWord,
+    closeClassifierModal,
+    goToCurriculumUnit,
+    changeScheduleWeek,
+    goToTodayCurriculumWeek,
     goHome,
-    goBack
+    goBack,
+    getState: () => STATE
   };
 
   document.addEventListener('DOMContentLoaded', initApp);

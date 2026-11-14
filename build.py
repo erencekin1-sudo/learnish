@@ -653,6 +653,18 @@ const WORDS_DATA = _RAW_WORDS.map(t => {
     day: t[13] || 1
   };
 });
+
+if (typeof window !== 'undefined') {
+  window.THEMES_DATA = THEMES_DATA;
+  window.WORDS_DATA = WORDS_DATA;
+}
+if (typeof globalThis !== 'undefined') {
+  globalThis.THEMES_DATA = THEMES_DATA;
+  globalThis.WORDS_DATA = WORDS_DATA;
+}
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = { THEMES_DATA, WORDS_DATA };
+}
 """ % (len(combined_words), maarif_total, oxford_total, yds_total, raw_tuples_json)
 
     with open(WORDS_DATA_JS_PATH, 'w', encoding='utf-8') as f:
@@ -694,10 +706,10 @@ const WORDS_DATA = _RAW_WORDS.map(t => {
     if os.path.exists(SERVICE_WORKER_PATH):
         with open(SERVICE_WORKER_PATH, 'r', encoding='utf-8') as f:
             sw_text = f.read()
-        sw_text = re.sub(r"const CACHE_NAME = ['\"][^'\"]+['\"];", "const CACHE_NAME = 'learnish-v10-opt';", sw_text)
+        sw_text = re.sub(r"const CACHE_NAME = ['\"][^'\"]+['\"];", "const CACHE_NAME = 'learnish-v11-k12';", sw_text)
         with open(SERVICE_WORKER_PATH, 'w', encoding='utf-8') as f:
             f.write(sw_text)
-        log("✅ service-worker.js önbellek sürümü v10-opt olarak güncellendi.")
+        log("✅ service-worker.js önbellek sürümü v11-k12 olarak güncellendi.")
 
     # Rebuild Learnish_Tek_Dosya_Web_App.html
     log("Learnish_Tek_Dosya_Web_App.html tek dosya uygulaması derleniyor...")
@@ -708,14 +720,20 @@ const WORDS_DATA = _RAW_WORDS.map(t => {
     with open(os.path.join(BASE_DIR, 'app.js'), 'r', encoding='utf-8') as f:
         app_js = f.read()
 
+    curriculum_js = ''
+    curriculum_path = os.path.join(BASE_DIR, 'curriculum-data.js')
+    if os.path.exists(curriculum_path):
+        with open(curriculum_path, 'r', encoding='utf-8') as f:
+            curriculum_js = f.read()
+
     bundle_html = re.sub(
         r'<link rel="stylesheet" href="app\.css.*?">',
         lambda _: f'<style>\n{app_css}\n</style>',
         index_html
     )
     bundle_html = re.sub(
-        r'<script src="words-data\.js.*?"></script>\s*<script src="app\.js.*?"></script>',
-        lambda _: f'<script>\n{themes_js}\n</script>\n<script>\n{app_js}\n</script>',
+        r'<script src="curriculum-data\.js.*?"></script>\s*<script src="words-data\.js.*?"></script>\s*<script src="app\.js.*?"></script>',
+        lambda _: f'<script>\n{curriculum_js}\n</script>\n<script>\n{themes_js}\n</script>\n<script>\n{app_js}\n</script>',
         bundle_html
     )
 

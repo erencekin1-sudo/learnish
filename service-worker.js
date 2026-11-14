@@ -3,12 +3,13 @@
  * Caches core assets for offline usage on mobile and desktop
  */
 
-const CACHE_NAME = 'learnish-v10-opt';
+const CACHE_NAME = 'learnish-v11-k12';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
   './app.css',
   './app.js',
+  './curriculum-data.js',
   './words-data.js',
   './manifest.json',
   './favicon.png',

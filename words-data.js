@@ -147,3 +147,15 @@ const WORDS_DATA = _RAW_WORDS.map(t => {
     day: t[13] || 1
   };
 });
+
+if (typeof window !== 'undefined') {
+  window.THEMES_DATA = THEMES_DATA;
+  window.WORDS_DATA = WORDS_DATA;
+}
+if (typeof globalThis !== 'undefined') {
+  globalThis.THEMES_DATA = THEMES_DATA;
+  globalThis.WORDS_DATA = WORDS_DATA;
+}
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = { THEMES_DATA, WORDS_DATA };
+}

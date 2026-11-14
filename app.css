@@ -2114,6 +2114,277 @@ body {
 }
 
 /* ==========================================================================
+   CONTEXT CANOPY / "İŞTE BURADASINIZ" HABER VERİCİ ÇİZGİSİ
+   (Mobile-First Floating Orientation Veil & Module Indicator)
+   ========================================================================== */
+.context-canopy {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  width: 100%;
+  z-index: 1000;
+  background: rgba(246, 245, 241, 0.94);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--dp-color-border);
+  box-shadow: 0 4px 20px -2px rgba(23, 30, 25, 0.08);
+  transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1),
+              opacity 0.25s ease,
+              box-shadow 0.25s ease;
+  user-select: none;
+}
+
+[data-theme="dark"] .context-canopy {
+  background: rgba(23, 30, 25, 0.95);
+  border-bottom-color: rgba(183, 198, 194, 0.18);
+  box-shadow: 0 4px 24px -2px rgba(0, 0, 0, 0.50);
+}
+
+.context-canopy-content {
+  max-width: 480px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: calc(env(safe-area-inset-top, 0px) + 8px) 14px 8px 14px;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+@media (min-width: 768px) {
+  .context-canopy {
+    position: sticky;
+  }
+  .context-canopy-content {
+    max-width: 1080px;
+    padding-left: 20px;
+    padding-right: 20px;
+  }
+}
+
+.context-canopy-left {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  min-width: 0;
+  flex: 1;
+}
+
+.context-beacon-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: var(--dp-radius-circle);
+  background-color: #10b981;
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.25);
+  flex-shrink: 0;
+  animation: beaconPulse 2s infinite ease-in-out;
+}
+
+@keyframes beaconPulse {
+  0%, 100% {
+    transform: scale(1);
+    box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.25);
+  }
+  50% {
+    transform: scale(1.2);
+    box-shadow: 0 0 0 6px rgba(16, 185, 129, 0.08);
+  }
+}
+
+.context-eyebrow {
+  font-family: var(--dp-typography-face);
+  font-size: 9.5px;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--dp-color-ink-subtle);
+  flex-shrink: 0;
+}
+
+@media (max-width: 360px) {
+  .context-eyebrow {
+    display: none;
+  }
+}
+
+.context-module-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2px 7px;
+  font-family: var(--dp-typography-mono);
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 0.04em;
+  border-radius: 6px;
+  flex-shrink: 0;
+  transition: all 0.25s ease;
+}
+
+.context-module-name {
+  font-family: var(--dp-typography-face);
+  font-size: 12px;
+  font-weight: 800;
+  color: var(--dp-color-ink);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.context-separator {
+  color: var(--dp-color-ink-subtle);
+  font-weight: 700;
+  font-size: 12px;
+  flex-shrink: 0;
+  margin: 0 1px;
+}
+
+.context-view-name {
+  font-family: var(--dp-typography-face);
+  font-size: 12px;
+  font-weight: 800;
+  color: var(--dp-color-ink-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.context-canopy-right {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.context-switch-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 3px 9px;
+  border-radius: var(--dp-radius-pill);
+  font-family: var(--dp-typography-face);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  background: var(--dp-color-sage-bg);
+  color: var(--dp-color-ink-muted);
+  border: 1px solid var(--dp-color-border);
+  transition: all 0.2s ease;
+}
+
+.context-canopy-content:hover .context-switch-btn {
+  background: var(--dp-color-surface);
+  color: var(--dp-color-ink);
+  border-color: var(--dp-color-ink-subtle);
+  transform: translateY(-1px);
+}
+
+/* HABER VERİCİ ÇİZGİ (Dynamic Accent Line) */
+.context-accent-line {
+  height: 3px;
+  width: 100%;
+  position: relative;
+  overflow: hidden;
+  transition: background 0.3s ease;
+}
+
+/* Modül Renk Temaları */
+.context-canopy.mod-maarif .context-module-badge {
+  background: #1d4ed8;
+  color: #ffffff;
+}
+.context-canopy.mod-maarif .context-accent-line {
+  background: linear-gradient(90deg, #1e3a8a, #3b82f6 50%, #60a5fa);
+}
+.context-canopy.mod-maarif .context-view-name {
+  color: #1d4ed8;
+}
+
+.context-canopy.mod-yds .context-module-badge {
+  background: #7c3aed;
+  color: #ffffff;
+}
+.context-canopy.mod-yds .context-accent-line {
+  background: linear-gradient(90deg, #5b21b6, #8b5cf6 50%, #c084fc);
+}
+.context-canopy.mod-yds .context-view-name {
+  color: #7c3aed;
+}
+
+.context-canopy.mod-oxford .context-module-badge {
+  background: #0284c7;
+  color: #ffffff;
+}
+.context-canopy.mod-oxford .context-accent-line {
+  background: linear-gradient(90deg, #0369a1, #38bdf8 50%, #7dd3fc);
+}
+.context-canopy.mod-oxford .context-view-name {
+  color: #0284c7;
+}
+
+.context-canopy.mod-all .context-module-badge {
+  background: #d97706;
+  color: #ffffff;
+}
+.context-canopy.mod-all .context-accent-line {
+  background: linear-gradient(90deg, #b45309, #f59e0b 50%, #fcd34d);
+}
+.context-canopy.mod-all .context-view-name {
+  color: #d97706;
+}
+
+/* Notification / Tül Açılışı ve Dalga Hareketi (When bottom nav button is clicked) */
+.context-canopy.canopy-expanded {
+  box-shadow: 0 10px 30px -4px rgba(23, 30, 25, 0.20);
+  animation: canopyDropShade 0.38s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.context-canopy.canopy-expanded .context-accent-line::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.95), transparent);
+  animation: canopyShimmer 1.5s ease-out infinite;
+}
+
+@keyframes canopyDropShade {
+  0% {
+    transform: translateY(-100%);
+    opacity: 0;
+  }
+  60% {
+    transform: translateY(3px);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes canopyShimmer {
+  0% { left: -100%; }
+  100% { left: 100%; }
+}
+
+@media (max-width: 767px) {
+  .app-shell {
+    padding-top: calc(env(safe-area-inset-top, 0px) + 38px);
+  }
+  .app-top-header {
+    padding-top: 14px;
+  }
+}
+
+/* ==========================================================================
    9. DESKTOP VS MOBILE UNIFIED RESPONSIVE DESIGN & MODULE ENHANCEMENTS
    ========================================================================== */
 
@@ -4037,4 +4308,651 @@ mark.pedagogy-word-highlight {
   gap: 8px;
   margin-top: 10px;
   flex-wrap: wrap;
+}
+
+/* ==========================================================================
+   K-12 CURRICULUM & CONTEXT CLASSIFIER STYLES (Dark Geometric & Amber Precision)
+   ========================================================================== */
+
+/* 1. Grade & Curriculum Selector Modal */
+.grade-modal-backdrop,
+.classifier-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(12, 17, 14, 0.78);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  z-index: 99998;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s ease;
+}
+
+.grade-modal-backdrop.active,
+.classifier-modal-backdrop.active {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.grade-dialog-card,
+.classifier-dialog-card {
+  display: none;
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) scale(0.96);
+  width: calc(100% - 32px);
+  max-width: 540px;
+  max-height: 88vh;
+  border-radius: 20px;
+  background: var(--dp-color-surface);
+  border: 1px solid var(--dp-color-border);
+  box-shadow: 0 32px 80px -16px rgba(0, 0, 0, 0.6);
+  z-index: 99999;
+  overflow: hidden;
+  flex-direction: column;
+  transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.25s ease;
+  opacity: 0;
+}
+
+.grade-dialog-card.active,
+.classifier-dialog-card.active {
+  display: flex;
+  transform: translate(-50%, -50%) scale(1);
+  opacity: 1;
+}
+
+.grade-dialog-header,
+.classifier-dialog-header {
+  padding: 18px 22px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--dp-color-border-subtle);
+  background: var(--dp-color-surface-2);
+}
+
+.grade-dialog-eyebrow,
+.classifier-dialog-eyebrow {
+  display: block;
+  font-family: var(--dp-typography-mono);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  color: var(--dp-color-amber);
+  text-transform: uppercase;
+  margin-bottom: 3px;
+}
+
+.grade-dialog-title,
+.classifier-dialog-title {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  color: var(--dp-color-ink);
+}
+
+.grade-dialog-body,
+.classifier-dialog-body {
+  padding: 20px;
+  overflow-y: auto;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+/* Stage Group Cards in Grade Modal */
+.stage-group-card {
+  background: var(--dp-color-surface-2);
+  border: 1px solid var(--dp-color-border-subtle);
+  border-radius: 14px;
+  padding: 14px;
+}
+
+.stage-group-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--dp-color-border-subtle);
+}
+
+.stage-group-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 800;
+  font-family: var(--dp-typography-mono);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.stage-group-badge {
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 4px;
+  font-family: var(--dp-typography-mono);
+}
+
+.stage-badge-ilkokul {
+  background: rgba(2, 132, 199, 0.15);
+  color: #38bdf8;
+  border: 1px solid rgba(2, 132, 199, 0.35);
+}
+
+.stage-badge-ortaokul {
+  background: rgba(217, 119, 6, 0.15);
+  color: #fbbf24;
+  border: 1px solid rgba(217, 119, 6, 0.35);
+}
+
+.stage-badge-lise {
+  background: rgba(124, 58, 237, 0.15);
+  color: #c084fc;
+  border: 1px solid rgba(124, 58, 237, 0.35);
+}
+
+.stage-badge-akademik {
+  background: rgba(5, 150, 105, 0.15);
+  color: #34d399;
+  border: 1px solid rgba(5, 150, 105, 0.35);
+}
+
+.stage-grade-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+}
+
+@media (max-width: 440px) {
+  .stage-grade-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.stage-grade-btn {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 14px;
+  background: var(--dp-color-surface);
+  border: 1px solid var(--dp-color-border);
+  border-radius: 10px;
+  cursor: pointer;
+  text-align: left;
+  transition: all 0.18s ease;
+}
+
+.stage-grade-btn:hover {
+  background: rgba(255, 255, 255, 0.03);
+  border-color: var(--dp-color-amber);
+  transform: translateY(-1px);
+}
+
+.stage-grade-btn.active {
+  background: rgba(217, 119, 6, 0.12);
+  border-color: var(--dp-color-amber);
+  box-shadow: 0 0 0 1px var(--dp-color-amber);
+}
+
+.sgb-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.sgb-name {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--dp-color-ink);
+}
+
+.sgb-meta {
+  font-size: 11px;
+  color: var(--dp-color-ink-muted);
+  font-family: var(--dp-typography-mono);
+}
+
+.sgb-check {
+  font-size: 14px;
+  color: var(--dp-color-amber);
+  font-weight: 800;
+  display: none;
+}
+
+.stage-grade-btn.active .sgb-check {
+  display: block;
+}
+
+/* 2. Daily Curriculum Tracker Deck Styles */
+.curriculum-tracker-deck {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin-bottom: 22px;
+}
+
+.curriculum-tracker-header {
+  background: var(--dp-color-surface);
+  border: 1px solid var(--dp-color-border);
+  border-radius: 16px;
+  padding: 18px 20px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+}
+
+.cth-badge-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+
+.cth-grade-badge {
+  font-family: var(--dp-typography-mono);
+  font-size: 11px;
+  font-weight: 800;
+  padding: 4px 10px;
+  border-radius: 6px;
+  background: rgba(217, 119, 6, 0.15);
+  color: #fbbf24;
+  border: 1px solid rgba(217, 119, 6, 0.35);
+  letter-spacing: 0.05em;
+}
+
+.cth-stage-badge {
+  font-family: var(--dp-typography-mono);
+  font-size: 11px;
+  font-weight: 700;
+  padding: 4px 8px;
+  border-radius: 6px;
+  background: var(--dp-color-surface-2);
+  color: var(--dp-color-ink-muted);
+  border: 1px solid var(--dp-color-border-subtle);
+}
+
+.cth-week-badge {
+  font-family: var(--dp-typography-mono);
+  font-size: 11px;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 6px;
+  background: rgba(5, 150, 105, 0.15);
+  color: #34d399;
+  border: 1px solid rgba(5, 150, 105, 0.35);
+}
+
+.cth-switch-grade-btn {
+  margin-left: auto;
+  background: transparent;
+  border: 1px solid var(--dp-color-border);
+  border-radius: 6px;
+  padding: 4px 10px;
+  font-family: var(--dp-typography-mono);
+  font-size: 10px;
+  font-weight: 800;
+  color: var(--dp-color-amber);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.cth-switch-grade-btn:hover {
+  background: var(--dp-color-amber);
+  color: #121814;
+}
+
+.cth-unit-card {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  padding-top: 10px;
+  border-top: 1px solid var(--dp-color-border-subtle);
+}
+
+.cth-unit-left {
+  flex: 1;
+}
+
+.cth-unit-code {
+  display: inline-block;
+  font-family: var(--dp-typography-mono);
+  font-size: 10px;
+  font-weight: 800;
+  color: var(--dp-color-amber);
+  letter-spacing: 0.08em;
+  margin-bottom: 2px;
+}
+
+.cth-unit-title {
+  margin: 0 0 4px 0;
+  font-size: 20px;
+  font-weight: 900;
+  letter-spacing: -0.02em;
+  color: var(--dp-color-ink);
+  line-height: 1.2;
+}
+
+.cth-unit-title-tr {
+  font-size: 13px;
+  color: var(--dp-color-ink-muted);
+  font-weight: 600;
+}
+
+.cth-week-nav {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.cth-nav-btn {
+  background: var(--dp-color-surface-2);
+  border: 1px solid var(--dp-color-border);
+  color: var(--dp-color-ink);
+  padding: 6px 10px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: var(--dp-typography-mono);
+  transition: all 0.15s ease;
+}
+
+.cth-nav-btn:hover:not(:disabled) {
+  border-color: var(--dp-color-amber);
+  color: var(--dp-color-amber);
+}
+
+.cth-nav-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.cth-nav-label {
+  font-family: var(--dp-typography-mono);
+  font-size: 11px;
+  font-weight: 800;
+  color: var(--dp-color-ink);
+  padding: 0 4px;
+}
+
+/* Outcomes and Focus Card */
+.curriculum-outcomes-card {
+  background: var(--dp-color-surface-2);
+  border: 1px solid var(--dp-color-border-subtle);
+  border-radius: 12px;
+  padding: 14px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: var(--dp-color-ink);
+}
+
+.coc-item strong {
+  color: var(--dp-color-amber);
+  font-family: var(--dp-typography-mono);
+  font-size: 11px;
+  text-transform: uppercase;
+  margin-right: 4px;
+}
+
+.coc-celebration {
+  background: rgba(225, 29, 72, 0.1);
+  border: 1px solid rgba(225, 29, 72, 0.25);
+  border-radius: 6px;
+  padding: 6px 10px;
+  color: #fda4af;
+}
+
+.coc-celebration strong {
+  color: #fb7185;
+}
+
+/* Enriched Context Deck (Bağlama Motoru ile Zenginleştirilen Kelimeler) */
+.curriculum-enriched-deck {
+  background: rgba(15, 23, 42, 0.4);
+  border: 1px dashed var(--dp-color-border);
+  border-radius: 14px;
+  padding: 16px;
+  margin-top: 16px;
+}
+
+.ced-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.ced-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 800;
+  font-family: var(--dp-typography-mono);
+  color: var(--dp-color-ink);
+}
+
+.ced-badge {
+  font-size: 9.5px;
+  font-weight: 800;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: rgba(56, 189, 248, 0.15);
+  color: #38bdf8;
+  border: 1px solid rgba(56, 189, 248, 0.3);
+  font-family: var(--dp-typography-mono);
+}
+
+.ced-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 8px;
+}
+
+.ced-word-chip {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  background: var(--dp-color-surface);
+  border: 1px solid var(--dp-color-border-subtle);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.ced-word-chip:hover {
+  border-color: #38bdf8;
+  transform: translateY(-1px);
+}
+
+.ced-word-en {
+  font-weight: 700;
+  font-size: 13px;
+  color: var(--dp-color-ink);
+}
+
+.ced-word-tr {
+  font-size: 11px;
+  color: var(--dp-color-ink-muted);
+}
+
+/* 3. Context Classifier Modal ("Bağlama Motoru") */
+.classifier-word-banner {
+  background: var(--dp-color-surface-2);
+  border: 1px solid var(--dp-color-border-subtle);
+  border-radius: 12px;
+  padding: 14px 18px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.cwb-left {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.cwb-word {
+  font-size: 22px;
+  font-weight: 900;
+  color: var(--dp-color-ink);
+  letter-spacing: -0.01em;
+}
+
+.cwb-meta {
+  font-size: 13px;
+  color: var(--dp-color-ink-muted);
+}
+
+.classifier-result-card {
+  background: var(--dp-color-surface);
+  border: 2px solid var(--dp-color-amber);
+  border-radius: 14px;
+  padding: 16px 20px;
+  position: relative;
+  box-shadow: 0 10px 25px -5px rgba(217, 119, 6, 0.15);
+}
+
+.crc-badge-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.crc-tag {
+  font-family: var(--dp-typography-mono);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--dp-color-amber);
+}
+
+.crc-score {
+  font-family: var(--dp-typography-mono);
+  font-size: 11px;
+  font-weight: 800;
+  padding: 2px 7px;
+  border-radius: 4px;
+  background: rgba(217, 119, 6, 0.15);
+  color: #fbbf24;
+}
+
+.crc-title {
+  margin: 0 0 4px 0;
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--dp-color-ink);
+}
+
+.crc-desc {
+  font-size: 12.5px;
+  color: var(--dp-color-ink-muted);
+  line-height: 1.45;
+  margin: 0;
+}
+
+.classifier-rationale-box {
+  background: var(--dp-color-surface-2);
+  border-left: 3px solid var(--dp-color-amber);
+  padding: 12px 16px;
+  border-radius: 0 10px 10px 0;
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: var(--dp-color-ink);
+}
+
+.classifier-alternates-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.cas-title {
+  font-family: var(--dp-typography-mono);
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--dp-color-ink-muted);
+}
+
+.cas-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  background: var(--dp-color-surface-2);
+  border: 1px solid var(--dp-color-border-subtle);
+  border-radius: 8px;
+  font-size: 12px;
+}
+
+.cas-item-name {
+  font-weight: 700;
+  color: var(--dp-color-ink);
+}
+
+.cas-item-score {
+  font-family: var(--dp-typography-mono);
+  font-size: 10px;
+  color: var(--dp-color-ink-muted);
+}
+
+.classifier-action-row {
+  display: flex;
+  gap: 10px;
+  margin-top: 6px;
+}
+
+.classifier-go-btn {
+  flex: 1;
+  padding: 12px;
+  background: var(--dp-color-amber);
+  color: #121814;
+  font-weight: 800;
+  font-size: 13px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.classifier-go-btn:hover {
+  filter: brightness(1.1);
+  transform: translateY(-1px);
+}
+
+/* Word Card Mini Classifier Trigger */
+.word-context-btn {
+  background: transparent;
+  border: 1px solid var(--dp-color-border-subtle);
+  border-radius: 4px;
+  padding: 2px 7px;
+  font-family: var(--dp-typography-mono);
+  font-size: 9.5px;
+  font-weight: 700;
+  color: var(--dp-color-amber);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.word-context-btn:hover {
+  background: rgba(217, 119, 6, 0.12);
+  border-color: var(--dp-color-amber);
 }

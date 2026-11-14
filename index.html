@@ -28,6 +28,24 @@
 </head>
 <body>
 
+  <!-- TOP CONTEXT CANOPY / "İŞTE BURADASINIZ" HABER VERİCİ ÇİZGİSİ (Canlı Modül & Menü Bildirimi) -->
+  <aside class="context-canopy canopy-docked mod-maarif" id="context-canopy" role="status" aria-label="Canlı Konum ve Modül Bildirimi">
+    <div class="context-canopy-content" onclick="window.APP.openGradeModal()" title="K-12 Sınıfını veya Müfredatı Değiştirmek İçin Dokunun">
+      <div class="context-canopy-left">
+        <span class="context-beacon-dot" aria-hidden="true"></span>
+        <span class="context-eyebrow">BURADASINIZ:</span>
+        <span class="context-module-badge" id="canopy-module-badge">MEB</span>
+        <strong class="context-module-name" id="canopy-module-name">5. Sınıf Maarif Modeli</strong>
+        <span class="context-separator" aria-hidden="true">›</span>
+        <span class="context-view-name" id="canopy-view-name">Kontrol Merkezi</span>
+      </div>
+      <div class="context-canopy-right">
+        <span class="context-switch-btn">DEĞİŞTİR ▾</span>
+      </div>
+    </div>
+    <div class="context-accent-line" id="canopy-accent-line" aria-hidden="true"></div>
+  </aside>
+
   <!-- SINGLE-COLUMN APP SHELL -->
   <div class="app-shell">
 
@@ -77,12 +95,12 @@
     <section class="horizontal-scroll-selector" aria-label="Müfredat ve Kategori Seçimi">
       <div class="h-scroll-track" id="horizontal-module-track" role="tablist">
         
-        <!-- Module 1: MEB (Tüm Sınıflar İçin Ana Çatı) -->
-        <button type="button" class="h-category-btn module-btn active" data-module="maarif" id="mod-tab-maarif" onclick="window.APP.switchModule('maarif')" role="tab" aria-selected="true" title="MEB İngilizce Müfredatı (5. Sınıf Maarif Modeli)">
-          <div class="h-cat-badge">MEB</div>
+        <!-- Module 1: MEB (K-12 Tüm Sınıflar İçin Ana Çatı) -->
+        <button type="button" class="h-category-btn module-btn active" data-module="maarif" id="mod-tab-maarif" onclick="window.APP.switchModule('maarif')" role="tab" aria-selected="true" title="MEB İngilizce Müfredatı (1-12. Sınıf)">
+          <div class="h-cat-badge" id="mod-tab-meb-badge">MEB</div>
           <div class="h-cat-content">
-            <span class="h-cat-title">MEB Müfredatı</span>
-            <span class="h-cat-meta">5. Sınıf Maarif • 817 K</span>
+            <span class="h-cat-title" id="mod-tab-meb-title">K-12 Müfredat</span>
+            <span class="h-cat-meta" id="mod-tab-meb-meta">5. Sınıf • Planlı</span>
           </div>
         </button>
 
@@ -272,8 +290,39 @@
     <!-- Populated dynamically by window.APP.openSpeechCoach -->
   </div>
 
+  <!-- 7. K-12 GRADE & STAGE SELECTOR MODAL (1. Sınıftan 12. Sınıfa Kadar) -->
+  <div class="grade-modal-backdrop" id="grade-modal-backdrop" onclick="window.APP.closeGradeModal()" aria-hidden="true"></div>
+  <div class="grade-dialog-card" id="grade-dialog" role="dialog" aria-modal="true" aria-labelledby="grade-dialog-title">
+    <div class="grade-dialog-header">
+      <div class="grade-dialog-title-wrap">
+        <span class="grade-dialog-eyebrow">MEB İNGİLİZCE MÜFREDATI</span>
+        <h2 id="grade-dialog-title" class="grade-dialog-title">K-12 Sınıf &amp; Kademe Seçici</h2>
+      </div>
+      <button type="button" class="settings-close-circle-btn" onclick="window.APP.closeGradeModal()" aria-label="Pencereyi Kapat">✕</button>
+    </div>
+    <div class="grade-dialog-body" id="grade-dialog-body">
+      <!-- Populated dynamically by window.APP.renderGradeModalContent -->
+    </div>
+  </div>
+
+  <!-- 8. CURRICULUM CONTEXT CLASSIFIER MODAL ("BAĞLAMA MOTORU") -->
+  <div class="classifier-modal-backdrop" id="classifier-modal-backdrop" onclick="window.APP.closeClassifierModal()" aria-hidden="true"></div>
+  <div class="classifier-dialog-card" id="classifier-dialog" role="dialog" aria-modal="true" aria-labelledby="classifier-dialog-title">
+    <div class="classifier-dialog-header">
+      <div class="classifier-dialog-title-wrap">
+        <span class="classifier-dialog-eyebrow">SEMANTİK BAĞLAMA MOTORU</span>
+        <h2 id="classifier-dialog-title" class="classifier-dialog-title">Müfredat Bağlama Analizi</h2>
+      </div>
+      <button type="button" class="settings-close-circle-btn" onclick="window.APP.closeClassifierModal()" aria-label="Pencereyi Kapat">✕</button>
+    </div>
+    <div class="classifier-dialog-body" id="classifier-dialog-body">
+      <!-- Populated dynamically by window.APP.openClassifierForWord -->
+    </div>
+  </div>
+
   <!-- Data & Application Logic -->
-  <script src="words-data.js?v=v10-opt"></script>
-  <script src="app.js?v=v10-opt"></script>
+  <script src="curriculum-data.js?v=v11-k12"></script>
+  <script src="words-data.js?v=v11-k12"></script>
+  <script src="app.js?v=v11-k12"></script>
 </body>
 </html>
