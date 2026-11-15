@@ -24,6 +24,72 @@ def clean_text(s):
         return ''
     return ' '.join(s.split()).strip()
 
+def extract_subthemes_and_focus(content):
+    if not content:
+        return ''
+    m = re.search(r'Sub-Themes?:\s*(.*?)(?=\n\s*(?:Target\s+Vocabulary|Target\s+Grammatical|Functions\b|\*|\Z))', content, re.IGNORECASE | re.DOTALL)
+    if m:
+        return clean_text(m.group(1))
+    lines = [line.strip() for line in content.split('\n') if line.strip()]
+    header_lines = []
+    for line in lines:
+        if line.startswith('—') or line.startswith('-') or '?' in line:
+            break
+        header_lines.append(line)
+        if len(header_lines) >= 2:
+            break
+    if header_lines:
+        return clean_text(' / '.join(header_lines))
+    return clean_text(content[:150])
+
+def extract_communicative_functions(content):
+    if not content:
+        return ''
+    m = re.search(r'Functions\s+of\s+the\s+Target\s+Grammatical\s+Structures\s+in\s+Use:\s*(.*?)(?=\n\s*(?:\*|Target\s+Social|\Z))', content, re.IGNORECASE | re.DOTALL)
+    if m:
+        return clean_text(m.group(1))
+    m2 = re.search(r'Target\s+Grammatical\s+Structures\s+in\s+Use:\s*(.*?)(?=\n\s*(?:Functions|\*|\Z))', content, re.IGNORECASE | re.DOTALL)
+    if m2:
+        return clean_text(m2.group(1))
+    lines = [line.strip() for line in content.split('\n') if line.strip()]
+    if lines:
+        return clean_text(' '.join(lines[:3]))
+    return ''
+
+def parse_learning_outcomes(raw):
+    if not raw:
+        return [], ''
+    # Normalize typos e.g. ENG5. -> ENG.5. or ENG. 5. -> ENG.5.
+    text = re.sub(r'\bENG\s*(\d+)\.', r'ENG.\1.', raw)
+    text = re.sub(r'\bENG\.\s*(\d+)\.', r'ENG.\1.', text)
+    pattern = r'((?:ENG\.\d+\.\d+\.[A-Z0-9]+|E\d+\.\d+\.[A-Z0-9]+))\s*[:.]?\s*(.*?)(?=(?:ENG\.\d+\.\d+\.[A-Z0-9]+|E\d+\.\d+\.[A-Z0-9]+|\Z))'
+    matches = re.findall(pattern, text, re.DOTALL)
+    outcomes_list = []
+    headers_to_strip = [
+        'Listening', 'Pronunciation', 'Reading', 'Vocabulary', 'Grammar',
+        'Writing', 'Speaking', 'Spoken Interaction', 'Spoken Production'
+    ]
+    for code, desc in matches:
+        clean_code = code.strip()
+        clean_desc = clean_text(desc)
+        for h in headers_to_strip:
+            if clean_desc.endswith(' ' + h):
+                clean_desc = clean_desc[:-len(' ' + h)].strip()
+            elif clean_desc == h:
+                clean_desc = ''
+        skill = 'General'
+        if '.L' in clean_code: skill = 'Listening'
+        elif '.P' in clean_code: skill = 'Pronunciation'
+        elif '.R' in clean_code: skill = 'Reading'
+        elif '.V' in clean_code: skill = 'Vocabulary'
+        elif '.G' in clean_code: skill = 'Grammar'
+        elif '.W' in clean_code: skill = 'Writing'
+        elif '.S' in clean_code or '.SI' in clean_code or '.SP' in clean_code: skill = 'Speaking'
+        outcomes_list.append({'code': clean_code, 'skill': skill, 'text': clean_desc})
+    
+    full_text = ' '.join(f'{item["code"]}. {item["text"]}' for item in outcomes_list) if outcomes_list else clean_text(raw)
+    return outcomes_list, full_text
+
 def is_valid_vocab_word(w):
     w = clean_text(w)
     if not w or len(w) < 2 or len(w) > 40:
@@ -497,6 +563,9 @@ def build_full_curriculum_registry():
                         unit_title = clean_text(m_un.group(2))
 
                 vocab_list = extract_vocab_from_text(content)
+                clean_subthemes = extract_subthemes_and_focus(content)
+                clean_functions = extract_communicative_functions(content)
+                parsed_outcomes, full_outcomes_text = parse_learning_outcomes(outcomes)
 
                 if unit_num not in units_map:
                     units_map[unit_num] = {
@@ -504,12 +573,16 @@ def build_full_curriculum_registry():
                         'code': f"THEME {unit_num}" if mode == 'tymm' else f"UNIT {unit_num}",
                         'title': unit_title.upper(),
                         'titleTr': UNIT_TITLES_TR.get((grade_num, unit_num), unit_title),
-                        'subThemes': clean_text(content[:250]),
-                        'functions': clean_text(content[:300]),
-                        'outcomes': clean_text(outcomes[:250]),
+                        'subThemes': clean_subthemes or unit_title.upper(),
+                        'functions': clean_functions or f"Functions for {unit_title.upper()}",
+                        'outcomes': full_outcomes_text or f"Learning outcomes for {unit_title.upper()}",
+                        'outcomesList': parsed_outcomes,
                         'targetVocab': [],
                         'semanticKeywords': UNIT_KEYWORDS.get((grade_num, unit_num), [])
                     }
+                elif not units_map[unit_num].get('outcomesList') and parsed_outcomes:
+                    units_map[unit_num]['outcomesList'] = parsed_outcomes
+                    units_map[unit_num]['outcomes'] = full_outcomes_text
 
                 units_map[unit_num]['targetVocab'].extend(vocab_list)
                 units_map[unit_num]['targetVocab'] = list(dict.fromkeys(units_map[unit_num]['targetVocab']))
@@ -521,7 +594,7 @@ def build_full_curriculum_registry():
                     'hours': hours,
                     'unitNum': unit_num,
                     'unitTitle': unit_title.upper(),
-                    'focus': clean_text(content[:150]),
+                    'focus': clean_subthemes or unit_title.upper(),
                     'targetWords': vocab_list[:10],
                     'importantDays': important_days
                 })
@@ -584,7 +657,12 @@ def build_full_curriculum_registry():
                     'titleTr': tr_title,
                     'subThemes': f"{en_title} • {tr_title}",
                     'functions': f"Communicative functions and language patterns for {en_title}",
-                    'outcomes': f"ENG.{g_num}.{u_num} Learning outcomes and skills",
+                    'outcomes': f"ENG.{g_num}.{u_num} Learning outcomes and skills for {en_title}",
+                    'outcomesList': [{
+                        'code': f"ENG.{g_num}.{u_num}",
+                        'skill': 'General',
+                        'text': f"Learning outcomes and communicative skills for {en_title}"
+                    }],
                     'targetVocab': kw[:15],
                     'semanticKeywords': kw
                 })
@@ -737,7 +815,7 @@ def generate_curriculum_javascript(registry):
      */
     classify(wordInput, gradeFilter = null) {{
       const wordStr = typeof wordInput === 'string' ? wordInput : (wordInput?.en || '');
-      const cleanWord = wordStr.toLowerCase().trim().replace(/[^a-z0-9\s-]/g, '');
+      const cleanWord = wordStr.toLowerCase().trim().replace(/[^a-z0-9\\s-]/g, '');
       const cefr = (typeof wordInput === 'object' && wordInput?.cefr) ? wordInput.cefr.toUpperCase() : '';
       const def = (typeof wordInput === 'object' && (wordInput?.definition || wordInput?.desc || wordInput?.tr)) ? (wordInput.definition + ' ' + wordInput.desc + ' ' + wordInput.tr).toLowerCase() : '';
 
@@ -775,7 +853,7 @@ def generate_curriculum_javascript(registry):
 
       // B. Semantik Küme Eşleşmesi (Domain Clusters)
       const scoredUnits = [];
-      const wordTokens = cleanWord.split(/[\s-]+/);
+      const wordTokens = cleanWord.split(/[\\s-]+/);
 
       for (const cluster of DOMAIN_CLUSTERS) {{
         let clusterScore = 0;
@@ -784,7 +862,7 @@ def generate_curriculum_javascript(registry):
             clusterScore += 1.0;
           }} else if (cleanWord.length >= 5 && kw.length >= 5 && (cleanWord.startsWith(kw) || kw.startsWith(cleanWord))) {{
             clusterScore += 0.75;
-          }} else if (wordTokens.some(tok => tok.length >= 4 && kw.split(/[\s-]+/).includes(tok))) {{
+          }} else if (wordTokens.some(tok => tok.length >= 4 && kw.split(/[\\s-]+/).includes(tok))) {{
             clusterScore += 0.6;
           }} else if (def && (def.includes(' ' + kw + ' ') || def.startsWith(kw + ' ') || def.endsWith(' ' + kw))) {{
             clusterScore += 0.35;
@@ -955,9 +1033,10 @@ def generate_curriculum_javascript(registry):
         unitCode: activeUnit.code,
         unitTitle: activeUnit.title,
         unitTitleTr: activeUnit.titleTr,
-        focus: activeWeek.focus,
+        focus: activeWeek.focus || activeUnit.subThemes || activeUnit.title,
         functions: activeUnit.functions,
         outcomes: activeUnit.outcomes,
+        outcomesList: activeUnit.outcomesList || [],
         targetWords: activeWeek.targetWords || activeUnit.targetVocab.slice(0, 10),
         importantDays: activeWeek.importantDays,
         isCurrentWeek: true
@@ -987,9 +1066,10 @@ def generate_curriculum_javascript(registry):
         unitCode: targetU.code,
         unitTitle: targetU.title,
         unitTitleTr: targetU.titleTr,
-        focus: targetW.focus,
+        focus: targetW.focus || targetU.subThemes || targetU.title,
         functions: targetU.functions,
         outcomes: targetU.outcomes,
+        outcomesList: targetU.outcomesList || [],
         targetWords: targetW.targetWords || targetU.targetVocab.slice(0, 10),
         importantDays: targetW.importantDays
       }};

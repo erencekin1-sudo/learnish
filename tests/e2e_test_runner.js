@@ -577,6 +577,30 @@ registerTest(1, 'Navigation & Canopy', 'test_nav_daily_view_activation', () => {
   assert(canopyView.textContent === 'Müfredat Takibi' || canopyView.textContent === 'Günün Çalışması', 'Canopy should display daily view title');
 });
 
+registerTest(1, 'Navigation & Canopy', 'test_curriculum_outcomes_and_focus_untruncated', () => {
+  const env = createFreshAppEnvironment();
+  const sched = env.window.CURRICULUM_CLASSIFIER.getWeekByNumber(5, 10);
+  assert(sched, 'Schedule for 5th grade week 10 must exist');
+  assert(!sched.focus.includes('revisi'), 'Focus must not be arbitrarily truncated at "revisi"');
+  assertEqual(sched.focus, 'Classroom rules and language; school subjects; timetables; classroom objects; days of the week; time', 'Focus should be clean extracted sub-themes');
+  assert(Array.isArray(sched.outcomesList), 'outcomesList must be an array');
+  assertEqual(sched.outcomesList.length, 23, 'Theme 2 should have exactly 23 full outcomes');
+  assertEqual(sched.outcomesList[0].code, 'ENG.5.2.L1', 'First outcome must be ENG.5.2.L1');
+  assertEqual(sched.outcomesList[sched.outcomesList.length - 1].code, 'ENG.5.2.S6', 'Last outcome must be ENG.5.2.S6');
+  assert(sched.outcomesList[0].text.length > 50, 'Outcome text must be complete and informative');
+});
+
+registerTest(1, 'Navigation & Canopy', 'test_daily_view_curriculum_outcomes_drawer_and_toggle', () => {
+  const env = createFreshAppEnvironment();
+  env.APP.switchView('daily');
+  env.APP.changeScheduleWeek(10);
+  const dailySection = env.document.getElementById('view-daily');
+  assert(dailySection.innerHTML.includes('curriculum-outcomes-card'), 'Daily view must render curriculum-outcomes-card');
+  assert(dailySection.innerHTML.includes('23 Kazanım'), 'Outcomes card must show 23 Kazanım pill badge');
+  assert(dailySection.innerHTML.includes('ENG.5.2.L1'), 'Outcomes card must include ENG.5.2.L1');
+  assert(typeof env.APP.toggleCurriculumOutcomes === 'function', 'toggleCurriculumOutcomes must be exposed on APP');
+});
+
 registerTest(1, 'Navigation & Canopy', 'test_nav_flashcard_view_activation', () => {
   const env = createFreshAppEnvironment();
   env.APP.switchView('flashcard');

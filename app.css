@@ -4547,18 +4547,188 @@ mark.pedagogy-word-highlight {
   padding: 14px 18px;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 10px;
   font-size: 12.5px;
   line-height: 1.5;
   color: var(--dp-color-ink);
 }
 
-.coc-item strong {
+.coc-item strong,
+.coc-label {
   color: var(--dp-color-amber);
   font-family: var(--dp-typography-mono);
   font-size: 11px;
   text-transform: uppercase;
+  letter-spacing: 0.03em;
   margin-right: 4px;
+}
+
+.coc-focus-row {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.coc-focus-text {
+  color: var(--dp-color-ink);
+  font-weight: 500;
+  line-height: 1.45;
+}
+
+.coc-outcomes-block {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 2px;
+}
+
+.coc-outcomes-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.coc-count-pill {
+  font-family: var(--dp-typography-mono);
+  font-size: 10.5px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: rgba(245, 158, 11, 0.12);
+  color: var(--dp-color-amber);
+  border: 1px solid rgba(245, 158, 11, 0.25);
+  white-space: nowrap;
+}
+
+.coc-outcomes-preview,
+.coc-outcomes-drawer {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.coc-outcomes-drawer {
+  margin-top: 4px;
+  padding-top: 8px;
+  border-top: 1px dashed var(--dp-color-border-subtle);
+  max-height: 380px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.coc-outcome-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  background: var(--dp-color-surface-1, rgba(255, 255, 255, 0.03));
+  border: 1px solid var(--dp-color-border-subtle);
+  border-radius: 8px;
+  padding: 8px 10px;
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.coc-code-badge {
+  font-family: var(--dp-typography-mono);
+  font-size: 10px;
+  font-weight: 800;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: var(--dp-color-surface-3, rgba(255, 255, 255, 0.08));
+  color: var(--dp-color-ink);
+  white-space: nowrap;
+  flex-shrink: 0;
+  letter-spacing: 0.02em;
+}
+
+.coc-skill-badge {
+  font-family: var(--dp-typography-mono);
+  font-size: 9.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  padding: 2px 6px;
+  border-radius: 4px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.coc-skill-badge.skill-listening {
+  background: rgba(59, 130, 246, 0.15);
+  color: #60a5fa;
+  border: 1px solid rgba(59, 130, 246, 0.25);
+}
+
+.coc-skill-badge.skill-speaking {
+  background: rgba(16, 185, 129, 0.15);
+  color: #34d399;
+  border: 1px solid rgba(16, 185, 129, 0.25);
+}
+
+.coc-skill-badge.skill-reading {
+  background: rgba(168, 85, 247, 0.15);
+  color: #c084fc;
+  border: 1px solid rgba(168, 85, 247, 0.25);
+}
+
+.coc-skill-badge.skill-writing {
+  background: rgba(236, 72, 153, 0.15);
+  color: #f472b6;
+  border: 1px solid rgba(236, 72, 153, 0.25);
+}
+
+.coc-skill-badge.skill-pronunciation {
+  background: rgba(245, 158, 11, 0.15);
+  color: #fbbf24;
+  border: 1px solid rgba(245, 158, 11, 0.25);
+}
+
+.coc-skill-badge.skill-vocabulary {
+  background: rgba(20, 184, 166, 0.15);
+  color: #2dd4bf;
+  border: 1px solid rgba(20, 184, 166, 0.25);
+}
+
+.coc-skill-badge.skill-grammar {
+  background: rgba(249, 115, 22, 0.15);
+  color: #fb923c;
+  border: 1px solid rgba(249, 115, 22, 0.25);
+}
+
+.coc-skill-badge.skill-general {
+  background: rgba(148, 163, 184, 0.15);
+  color: #94a3b8;
+  border: 1px solid rgba(148, 163, 184, 0.25);
+}
+
+.coc-outcome-text {
+  flex: 1;
+  color: var(--dp-color-ink);
+  word-break: break-word;
+}
+
+.coc-toggle-btn {
+  align-self: flex-start;
+  background: transparent;
+  border: 1px solid var(--dp-color-border-subtle);
+  border-radius: 6px;
+  padding: 5px 12px;
+  font-family: var(--dp-typography-mono);
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--dp-color-amber);
+  cursor: pointer;
+  transition: all 0.18s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 4px;
+}
+
+.coc-toggle-btn:hover {
+  background: rgba(245, 158, 11, 0.1);
+  border-color: var(--dp-color-amber);
 }
 
 .coc-celebration {

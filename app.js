@@ -2611,6 +2611,26 @@
     renderDailyView();
   }
 
+  function toggleCurriculumOutcomes(btn) {
+    const drawer = document.getElementById('cocAllOutcomesDrawer');
+    if (!drawer) return;
+    const isHidden = drawer.style.display === 'none';
+    if (isHidden) {
+      drawer.style.display = 'flex';
+      if (btn) {
+        btn.classList.add('expanded');
+        btn.innerHTML = `<span>Kazanımları Gizle</span> ▴`;
+      }
+    } else {
+      drawer.style.display = 'none';
+      if (btn) {
+        btn.classList.remove('expanded');
+        const total = btn.getAttribute('data-total') || '';
+        btn.innerHTML = `<span>Tüm Kazanımları Gör (${total} Kazanım)</span> ▾`;
+      }
+    }
+  }
+
   // ==========================================================================
   // VIEW 0: KONTROL MERKEZİ / IDE COMMAND CENTER (#home)
   // ==========================================================================
@@ -3157,9 +3177,52 @@
 
           <!-- Outcomes Card -->
           <div class="curriculum-outcomes-card">
-            <div class="coc-item"><strong>Haftanın Odağı:</strong> ${sched ? sched.focus : 'Müfredat konuları'}</div>
-            ${sched && sched.outcomes ? `<div class="coc-item"><strong>Kazanımlar &amp; İletişimsel İşlevler:</strong> ${sched.outcomes}</div>` : ''}
-            ${sched && sched.importantDays ? `<div class="coc-item coc-celebration"><strong>Önemli Gün &amp; Etkinlik:</strong> ${sched.importantDays}</div>` : ''}
+            <div class="coc-item coc-focus-row">
+              <strong class="coc-label">Haftanın Odağı:</strong>
+              <span class="coc-focus-text">${sched ? escapeHtml(sched.focus) : 'Müfredat konuları'}</span>
+            </div>
+            ${sched && sched.outcomesList && sched.outcomesList.length > 0 ? `
+              <div class="coc-item coc-outcomes-block">
+                <div class="coc-outcomes-header">
+                  <strong class="coc-label">Kazanımlar &amp; İletişimsel İşlevler:</strong>
+                  <span class="coc-count-pill">${sched.outcomesList.length} Kazanım</span>
+                </div>
+                <div class="coc-outcomes-preview">
+                  ${sched.outcomesList.slice(0, 2).map(o => `
+                    <div class="coc-outcome-row">
+                      <span class="coc-code-badge">${escapeHtml(o.code)}</span>
+                      <span class="coc-skill-badge skill-${escapeHtml(o.skill.toLowerCase())}">${escapeHtml(o.skill)}</span>
+                      <span class="coc-outcome-text">${escapeHtml(o.text)}</span>
+                    </div>
+                  `).join('')}
+                </div>
+                ${sched.outcomesList.length > 2 ? `
+                  <div id="cocAllOutcomesDrawer" class="coc-outcomes-drawer" style="display: none;">
+                    ${sched.outcomesList.slice(2).map(o => `
+                      <div class="coc-outcome-row">
+                        <span class="coc-code-badge">${escapeHtml(o.code)}</span>
+                        <span class="coc-skill-badge skill-${escapeHtml(o.skill.toLowerCase())}">${escapeHtml(o.skill)}</span>
+                        <span class="coc-outcome-text">${escapeHtml(o.text)}</span>
+                      </div>
+                    `).join('')}
+                  </div>
+                  <button type="button" class="coc-toggle-btn" onclick="window.APP.toggleCurriculumOutcomes(this)" data-total="${sched.outcomesList.length}" data-remaining="${sched.outcomesList.length - 2}">
+                    <span>Tüm Kazanımları Gör (${sched.outcomesList.length} Kazanım)</span> ▾
+                  </button>
+                ` : ''}
+              </div>
+            ` : (sched && sched.outcomes ? `
+              <div class="coc-item">
+                <strong class="coc-label">Kazanımlar &amp; İletişimsel İşlevler:</strong>
+                <span>${escapeHtml(sched.outcomes)}</span>
+              </div>
+            ` : '')}
+            ${sched && sched.importantDays ? `
+              <div class="coc-item coc-celebration">
+                <strong class="coc-label">Önemli Gün &amp; Etkinlik:</strong>
+                <span>${escapeHtml(sched.importantDays)}</span>
+              </div>
+            ` : ''}
           </div>
 
           <!-- Progress Bar & Actions -->
@@ -6267,6 +6330,7 @@
     goToCurriculumUnit,
     changeScheduleWeek,
     goToTodayCurriculumWeek,
+    toggleCurriculumOutcomes,
     goHome,
     goBack,
     getState: () => STATE
