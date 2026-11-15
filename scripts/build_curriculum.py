@@ -12,7 +12,7 @@ import json
 import zipfile
 import xml.etree.ElementTree as ET
 
-BASE_DIR = '/Users/erencekin/Desktop/İntegral/Learnish'
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 EXCEL_PATH = os.path.join(BASE_DIR, 'belgeler', 'İNGİLİZCE (2-8. SINIF) TASLAK YILLIK ÇERÇEVE PLAN.xlsx')
 OUTPUT_JS_PATH = os.path.join(BASE_DIR, 'curriculum-data.js')
 

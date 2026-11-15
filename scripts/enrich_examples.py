@@ -12,7 +12,7 @@ import re
 import json
 import hashlib
 
-BASE_DIR = '/Users/erencekin/Desktop/İntegral/Learnish'
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 KELIMELER_PATH = os.path.join(BASE_DIR, 'belgeler', 'kelimeler_havuzu.json')
 WORDS_DATA_JS = os.path.join(BASE_DIR, 'words-data.js')
 OXFORD_JSON = os.path.join(BASE_DIR, 'belgeler', 'oxford_5000_cefr.json')

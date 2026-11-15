@@ -9,11 +9,12 @@ import os
 import sys
 import re
 import json
+import base64
+import argparse
 import zipfile
 import xml.etree.ElementTree as ET
-import fitz
 
-BASE_DIR = '/Users/erencekin/Desktop/İntegral/Learnish'
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DOCX_PATH = os.path.join(BASE_DIR, 'belgeler', 'The Oxford 5000 - word.docx')
 CEFR_JSON_PATH = os.path.join(BASE_DIR, 'belgeler', 'oxford_5000_cefr.json')
 WORDS_DATA_JS_PATH = os.path.join(BASE_DIR, 'words-data.js')
@@ -244,6 +245,12 @@ def parse_yds_pdf():
     if not os.path.exists(YDS_PDF_PATH):
         log(f"Hata: {YDS_PDF_PATH} bulunamadı!")
         return []
+
+    try:
+        import fitz
+    except ImportError:
+        log("HATA: PyMuPDF (fitz) kütüphanesi bulunamadı. PDF ayrıştırma için 'pip install pymupdf' gereklidir.")
+        raise
 
     doc = fitz.open(YDS_PDF_PATH)
     sections_def = [
@@ -712,34 +719,189 @@ if (typeof module !== 'undefined' && module.exports) {
         log("✅ service-worker.js önbellek sürümü v11-k12 olarak güncellendi.")
 
     # Rebuild Learnish_Tek_Dosya_Web_App.html
-    log("Learnish_Tek_Dosya_Web_App.html tek dosya uygulaması derleniyor...")
-    with open(os.path.join(BASE_DIR, 'index.html'), 'r', encoding='utf-8') as f:
-        index_html = f.read()
-    with open(os.path.join(BASE_DIR, 'app.css'), 'r', encoding='utf-8') as f:
+    bundle_single_file(words_js=themes_js)
+
+def inline_asset_base64(html_str, filename, mime_type):
+    """Inlines local binary assets as Base64 Data URIs for standalone offline robustness."""
+    file_path = os.path.join(BASE_DIR, filename)
+    if not os.path.exists(file_path):
+        return html_str
+    try:
+        with open(file_path, 'rb') as af:
+            b64_data = base64.b64encode(af.read()).decode('ascii')
+        data_uri = f"data:{mime_type};base64,{b64_data}"
+        pat = re.compile(rf'(href|src)=["\']{re.escape(filename)}(\?[^"\']*)?["\']')
+        new_html, count = pat.subn(rf'\1="{data_uri}"', html_str)
+        if count > 0:
+            log(f"Asset gömüldü (Base64): {filename} ({count} adet yer değiştirildi)")
+        return new_html
+    except Exception as e:
+        log(f"Uyarı: {filename} Base64 gömme işlemi sırasında hata: {e}")
+        return html_str
+
+def bundle_single_file(words_js=None, output_path=SINGLE_HTML_PATH, write_to_disk=True, inline_assets=True):
+    """
+    Decoupled fast single-file bundler.
+    Merges index.html, app.css, curriculum-data.js, words-data.js, and app.js into a monolithic HTML file.
+    Operates in ~50ms and does NOT require fitz, docx, or pdf parsing.
+    """
+    log("Learnish tek dosya web uygulaması paketleniyor...")
+
+    index_path = os.path.join(BASE_DIR, 'index.html')
+    css_path = os.path.join(BASE_DIR, 'app.css')
+    app_js_path = os.path.join(BASE_DIR, 'app.js')
+    curriculum_path = os.path.join(BASE_DIR, 'curriculum-data.js')
+
+    for p in [index_path, css_path, app_js_path]:
+        if not os.path.exists(p):
+            raise FileNotFoundError(f"Gereken dosya bulunamadı: {p}")
+
+    with open(index_path, 'r', encoding='utf-8') as f:
+        bundle_html = f.read()
+    with open(css_path, 'r', encoding='utf-8') as f:
         app_css = f.read()
-    with open(os.path.join(BASE_DIR, 'app.js'), 'r', encoding='utf-8') as f:
+    with open(app_js_path, 'r', encoding='utf-8') as f:
         app_js = f.read()
 
     curriculum_js = ''
-    curriculum_path = os.path.join(BASE_DIR, 'curriculum-data.js')
     if os.path.exists(curriculum_path):
         with open(curriculum_path, 'r', encoding='utf-8') as f:
             curriculum_js = f.read()
 
-    bundle_html = re.sub(
-        r'<link rel="stylesheet" href="app\.css.*?">',
-        lambda _: f'<style>\n{app_css}\n</style>',
-        index_html
-    )
-    bundle_html = re.sub(
-        r'<script src="curriculum-data\.js.*?"></script>\s*<script src="words-data\.js.*?"></script>\s*<script src="app\.js.*?"></script>',
-        lambda _: f'<script>\n{curriculum_js}\n</script>\n<script>\n{themes_js}\n</script>\n<script>\n{app_js}\n</script>',
-        bundle_html
-    )
+    if words_js is None:
+        if not os.path.exists(WORDS_DATA_JS_PATH):
+            raise FileNotFoundError(f"words-data.js bulunamadı: {WORDS_DATA_JS_PATH}")
+        with open(WORDS_DATA_JS_PATH, 'r', encoding='utf-8') as f:
+            words_js = f.read()
 
-    with open(SINGLE_HTML_PATH, 'w', encoding='utf-8') as f:
-        f.write(bundle_html)
-    log(f"✅ Learnish_Tek_Dosya_Web_App.html derlendi ({len(bundle_html):,} byte).")
+    # 1. CSS Inlining with strict assertion
+    css_pattern = re.compile(r'<link\s+[^>]*href=["\']app\.css.*?["\'][^>]*>')
+    if not css_pattern.search(bundle_html):
+        raise RuntimeError("Paketleme Hatası: index.html içinde app.css <link> etiketi bulunamadı!")
+    bundle_html, css_count = css_pattern.subn(lambda _: f'<style>\n{app_css}\n</style>', bundle_html, count=1)
+    if css_count != 1:
+        raise AssertionError(f"Paketleme Hatası: app.css yerine beklenen 1 ikame yapılması gerekirken {css_count} yapıldı!")
+
+    # 2. JS Inlining with strict assertion
+    script_pattern = re.compile(
+        r'<script\s+src=["\']curriculum-data\.js.*?["\']>\s*</script>\s*'
+        r'<script\s+src=["\']words-data\.js.*?["\']>\s*</script>\s*'
+        r'<script\s+src=["\']app\.js.*?["\']>\s*</script>'
+    )
+    if not script_pattern.search(bundle_html):
+        raise RuntimeError("Paketleme Hatası: index.html içinde modüler <script> etiketleri (curriculum, words, app) bulunamadı!")
+    bundle_html, script_count = script_pattern.subn(
+        lambda _: f'<script>\n{curriculum_js}\n</script>\n<script>\n{words_js}\n</script>\n<script>\n{app_js}\n</script>',
+        bundle_html,
+        count=1
+    )
+    if script_count != 1:
+        raise AssertionError(f"Paketleme Hatası: Script bloğu yerine beklenen 1 ikame yapılması gerekirken {script_count} yapıldı!")
+
+    # 3. Base64 Asset Inlining for standalone offline robustness
+    if inline_assets:
+        bundle_html = inline_asset_base64(bundle_html, 'favicon.png', 'image/png')
+        bundle_html = inline_asset_base64(bundle_html, 'icon-192.png', 'image/png')
+        bundle_html = inline_asset_base64(bundle_html, 'icon-512.png', 'image/png')
+        bundle_html = inline_asset_base64(bundle_html, 'logo.svg', 'image/svg+xml')
+
+    # 4. Invalidation assertions
+    if re.search(r'<link\s+[^>]*href=["\']app\.css', bundle_html):
+        raise AssertionError("Geçersizlik Kontrolü Başarısız: Pakette harici app.css linki kaldı!")
+    if re.search(r'<script\s+[^>]*src=["\']app\.js', bundle_html):
+        raise AssertionError("Geçersizlik Kontrolü Başarısız: Pakette harici app.js scripti kaldı!")
+    if re.search(r'<script\s+[^>]*src=["\']words-data\.js', bundle_html):
+        raise AssertionError("Geçersizlik Kontrolü Başarısız: Pakette harici words-data.js scripti kaldı!")
+    if re.search(r'<script\s+[^>]*src=["\']curriculum-data\.js', bundle_html):
+        raise AssertionError("Geçersizlik Kontrolü Başarısız: Pakette harici curriculum-data.js scripti kaldı!")
+
+    if '<style>' not in bundle_html or '</style>' not in bundle_html:
+        raise AssertionError("Geçersizlik Kontrolü Başarısız: Pakette <style> bloğu eksik!")
+    if '<script>' not in bundle_html or '</script>' not in bundle_html:
+        raise AssertionError("Geçersizlik Kontrolü Başarısız: Pakette <script> bloğu eksik!")
+
+    # 5. Write to disk if requested
+    if write_to_disk:
+        with open(output_path, 'w', encoding='utf-8') as f:
+            f.write(bundle_html)
+        log(f"✅ {os.path.basename(output_path)} başarıyla derlendi ({len(bundle_html):,} byte).")
+
+    return bundle_html
+
+def check_bundle_sync():
+    """
+    Checks whether Learnish_Tek_Dosya_Web_App.html is 100% in sync with the source files.
+    Returns True if synchronized, False if desynchronized.
+    """
+    log("Learnish_Tek_Dosya_Web_App.html senkronizasyon kontrolü yapılıyor...")
+    if not os.path.exists(SINGLE_HTML_PATH):
+        log(f"❌ HATA: {SINGLE_HTML_PATH} dosyası diskte bulunamadı!")
+        return False
+
+    with open(SINGLE_HTML_PATH, 'r', encoding='utf-8') as f:
+        existing_bundle = f.read()
+
+    try:
+        expected_bundle = bundle_single_file(write_to_disk=False, inline_assets=True)
+    except Exception as e:
+        log(f"❌ HATA: Doğrulama paketi oluşturulamadı: {e}")
+        return False
+
+    with open(os.path.join(BASE_DIR, 'app.css'), 'r', encoding='utf-8') as f:
+        app_css = f.read()
+    with open(os.path.join(BASE_DIR, 'app.js'), 'r', encoding='utf-8') as f:
+        app_js = f.read()
+    curriculum_path = os.path.join(BASE_DIR, 'curriculum-data.js')
+    curriculum_js = ''
+    if os.path.exists(curriculum_path):
+        with open(curriculum_path, 'r', encoding='utf-8') as f:
+            curriculum_js = f.read()
+    with open(WORDS_DATA_JS_PATH, 'r', encoding='utf-8') as f:
+        words_js = f.read()
+
+    sub_checks = [
+        ("app.css içeriği pakette mevcut", app_css in existing_bundle),
+        ("app.js içeriği pakette mevcut", app_js in existing_bundle),
+        ("curriculum-data.js içeriği pakette mevcut", curriculum_js in existing_bundle),
+        ("words-data.js içeriği pakette mevcut", words_js in existing_bundle),
+        ("Harici app.css linki yok", re.search(r'<link\s+[^>]*href=["\']app\.css', existing_bundle) is None),
+        ("Harici app.js scripti yok", re.search(r'<script\s+[^>]*src=["\']app\.js', existing_bundle) is None),
+        ("Birebir bayt eşitliği", existing_bundle == expected_bundle)
+    ]
+
+    all_ok = True
+    for label, passed in sub_checks:
+        if not passed:
+            log(f"  ❌ {label} başarısız!")
+            all_ok = False
+
+    if all_ok:
+        log("✅ Learnish_Tek_Dosya_Web_App.html kaynak dosyalarla %100 senkronize.")
+        return True
+    else:
+        log("❌ Learnish_Tek_Dosya_Web_App.html kaynak dosyalarla senkronize DEĞİL!")
+        log(f"   Mevcut bundle boyutu:  {len(existing_bundle):,} byte")
+        log(f"   Beklenen derleme:      {len(expected_bundle):,} byte")
+        log("   Senkronize etmek için: python3 build.py --bundle")
+        return False
+
+def main():
+    parser = argparse.ArgumentParser(description="Learnish Asset Compiler & Single-File Bundler")
+    parser.add_argument('--bundle', '-b', action='store_true', help="Hızlı tek dosya paketleme (~50ms, ETL çalıştırmaz)")
+    parser.add_argument('--check', '-c', action='store_true', help="Learnish_Tek_Dosya_Web_App.html senkronizasyon kontrolü (senkron: exit 0, uyumsuz: exit 1)")
+    parser.add_argument('--all', '--rebuild-db', action='store_true', help="Tam veritabanı ETL ve tek dosya derlemesi")
+
+    args = parser.parse_args()
+
+    if args.check:
+        is_synced = check_bundle_sync()
+        sys.exit(0 if is_synced else 1)
+    elif args.bundle:
+        bundle_single_file(write_to_disk=True, inline_assets=True)
+        sys.exit(0)
+    else:
+        # Default behavior: full database extraction and bundling
+        build_combined_database()
 
 if __name__ == '__main__':
-    build_combined_database()
+    main()

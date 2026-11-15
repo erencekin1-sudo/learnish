@@ -1,8 +1,8 @@
 /**
  * ============================================================================
- * LEARNISH • DARK GEOMETRIC & AMBER PRECISION SYSTEM
+ * LEARNISH • SOPHISTICATED PLAYFUL SYSTEM
  * Mimari: Maarif 5. Sınıf Modülü | YDS & YÖKDİL Akademik | The Oxford 5000
- * Tasarım: Dark Geometric & Amber Precision (Neo-Brutalist Academic Instrument)
+ * Tasarım: Sophisticated Playful (DESIGN.md Design System)
  * Web Speech API, Web Audio API Synthesizer, PWA, Cloze Test & Flashcards
  * ============================================================================
  */
@@ -594,11 +594,13 @@
   let synthVoices = [];
 
   function loadVoices() {
-    if ('speechSynthesis' in window) {
-      synthVoices = window.speechSynthesis.getVoices();
-      window.speechSynthesis.onvoiceschanged = () => {
-        synthVoices = window.speechSynthesis.getVoices();
-      };
+    if ('speechSynthesis' in window && window.speechSynthesis) {
+      synthVoices = typeof window.speechSynthesis.getVoices === 'function' ? window.speechSynthesis.getVoices() : [];
+      if (window.speechSynthesis.onvoiceschanged !== undefined) {
+        window.speechSynthesis.onvoiceschanged = () => {
+          synthVoices = typeof window.speechSynthesis.getVoices === 'function' ? window.speechSynthesis.getVoices() : [];
+        };
+      }
     }
   }
   loadVoices();
@@ -608,32 +610,36 @@
       if (onEndCallback) onEndCallback();
       return;
     }
-    if (!('speechSynthesis' in window)) {
-      alert('Tarayıcınız sesli telaffuz özelliğini desteklemiyor.');
+    if (!('speechSynthesis' in window && window.speechSynthesis)) {
       if (onEndCallback) onEndCallback();
       return;
     }
 
-    window.speechSynthesis.cancel();
-    const cleanWord = text.replace(/\[.*?\]/g, '').replace(/[\/\\()]/g, '').trim();
-    const utterance = new SpeechSynthesisUtterance(cleanWord);
-    utterance.lang = STATE.settings.accent || 'en-GB';
-    utterance.rate = STATE.settings.speed || 1.0;
-    utterance.pitch = 1.0;
+    try {
+      window.speechSynthesis.cancel();
+      const cleanWord = text.replace(/\[.*?\]/g, '').replace(/[\/\\()]/g, '').trim();
+      const utterance = new SpeechSynthesisUtterance(cleanWord);
+      utterance.lang = STATE.settings.accent || 'en-GB';
+      utterance.rate = STATE.settings.speed || 1.0;
+      utterance.pitch = 1.0;
 
-    if (synthVoices.length > 0) {
-      const preferred = synthVoices.find(v => v.lang.startsWith(utterance.lang.substring(0, 2)) && (v.name.includes('Google') || v.name.includes('Natural') || v.name.includes('Daniel') || v.name.includes('Samantha')));
-      if (preferred) utterance.voice = preferred;
+      if (synthVoices.length > 0) {
+        const preferred = synthVoices.find(v => v.lang.startsWith(utterance.lang.substring(0, 2)) && (v.name.includes('Google') || v.name.includes('Natural') || v.name.includes('Daniel') || v.name.includes('Samantha')));
+        if (preferred) utterance.voice = preferred;
+      }
+
+      utterance.onend = () => {
+        if (onEndCallback) onEndCallback();
+      };
+      utterance.onerror = () => {
+        if (onEndCallback) onEndCallback();
+      };
+
+      window.speechSynthesis.speak(utterance);
+    } catch (err) {
+      console.warn('Speech synthesis error:', err);
+      if (onEndCallback) onEndCallback();
     }
-
-    utterance.onend = () => {
-      if (onEndCallback) onEndCallback();
-    };
-    utterance.onerror = () => {
-      if (onEndCallback) onEndCallback();
-    };
-
-    window.speechSynthesis.speak(utterance);
   }
 
   // ==========================================================================
@@ -1657,6 +1663,88 @@
     saveUserData();
   }
 
+  function updateWordCardDOM(wordId) {
+    wordId = parseInt(wordId, 10);
+    const isLearned = STATE.userData.learned.has(wordId);
+    const isReview = STATE.userData.review.has(wordId);
+    const isStarred = STATE.userData.starred.has(wordId);
+
+    // 1. Directory word cards & feed cards (match on data-id)
+    const cards = document.querySelectorAll(`[data-id="${wordId}"]`);
+    cards.forEach(card => {
+      if (card.classList && card.classList.contains('secondary-feed-card')) {
+        card.classList.toggle('is-learned', isLearned);
+      }
+
+      const buttons = card.querySelectorAll ? card.querySelectorAll('button') : [];
+      buttons.forEach(btn => {
+        const onclickAttr = btn.getAttribute ? (btn.getAttribute('onclick') || '') : '';
+
+        if (onclickAttr.includes('toggleLearned')) {
+          if (btn.classList && btn.classList.contains('status-badge-btn')) {
+            btn.classList.toggle('learned', isLearned);
+            btn.innerHTML = `${ICONS.check} <span>${isLearned ? 'ÖĞRENDİM' : 'ÖĞREN'}</span>`;
+          } else if (btn.classList && btn.classList.contains('feed-trailing-btn')) {
+            btn.classList.toggle('checked', isLearned);
+            btn.title = isLearned ? 'Öğrenildi' : 'Öğrenildi Olarak İşaretle';
+          }
+        }
+
+        if (onclickAttr.includes('toggleReview')) {
+          if (btn.classList && btn.classList.contains('status-badge-btn')) {
+            btn.classList.toggle('review', isReview);
+            btn.innerHTML = `${ICONS.repeat} <span>${isReview ? 'TEKRARDA' : 'TEKRAR'}</span>`;
+          }
+        }
+
+        if (onclickAttr.includes('toggleStarred')) {
+          if (btn.classList && btn.classList.contains('star-btn')) {
+            btn.classList.toggle('starred', isStarred);
+            btn.innerHTML = isStarred ? ICONS.starFilled : ICONS.starOutline;
+          } else if (btn.classList && btn.classList.contains('feed-trailing-btn')) {
+            btn.classList.toggle('active', isStarred);
+            btn.title = isStarred ? 'Favorilerden Çıkar' : 'Favorilere Ekle';
+            btn.innerText = isStarred ? '★' : '☆';
+          }
+        }
+      });
+    });
+
+    // 2. Also check any loose buttons across the DOM
+    const allButtons = document.querySelectorAll('button');
+    allButtons.forEach(btn => {
+      const onclickAttr = btn.getAttribute ? (btn.getAttribute('onclick') || '') : '';
+      if (onclickAttr.includes(`toggleLearned(${wordId})`)) {
+        if (btn.classList && btn.classList.contains('status-badge-btn')) {
+          btn.classList.toggle('learned', isLearned);
+          btn.innerHTML = `${ICONS.check} <span>${isLearned ? 'ÖĞRENDİM' : 'ÖĞREN'}</span>`;
+        } else if (btn.classList && btn.classList.contains('feed-trailing-btn')) {
+          btn.classList.toggle('checked', isLearned);
+          btn.title = isLearned ? 'Öğrenildi' : 'Öğrenildi Olarak İşaretle';
+        }
+      }
+      if (onclickAttr.includes(`toggleReview(${wordId})`)) {
+        if (btn.classList && btn.classList.contains('status-badge-btn')) {
+          btn.classList.toggle('review', isReview);
+          btn.innerHTML = `${ICONS.repeat} <span>${isReview ? 'TEKRARDA' : 'TEKRAR'}</span>`;
+        }
+      }
+      if (onclickAttr.includes(`toggleStarred(${wordId})`)) {
+        if (btn.classList && btn.classList.contains('star-btn')) {
+          btn.classList.toggle('starred', isStarred);
+          btn.innerHTML = isStarred ? ICONS.starFilled : ICONS.starOutline;
+        } else if (btn.classList && btn.classList.contains('feed-trailing-btn')) {
+          btn.classList.toggle('active', isStarred);
+          btn.title = isStarred ? 'Favorilerden Çıkar' : 'Favorilere Ekle';
+          btn.innerText = isStarred ? '★' : '☆';
+        }
+      }
+    });
+
+    // 3. Update status chips counts in directory controls
+    syncDirectoryStatusChips();
+  }
+
   function toggleLearned(wordId) {
     wordId = parseInt(wordId, 10);
     const wordObj = WORDS_DATA.find(w => w.id === wordId);
@@ -1676,7 +1764,7 @@
       logActivity(`${modTitle} • GÜN ${STATE.currentDay}`, `KELİME DOĞRULANDI [${wEn}] • TOPLAM: ${STATE.userData.learned.size}`);
     }
     saveUserData();
-    updateUI();
+    updateWordCardDOM(wordId);
   }
 
   function toggleReview(wordId) {
@@ -1688,7 +1776,7 @@
       STATE.userData.learned.delete(wordId);
     }
     saveUserData();
-    updateUI();
+    updateWordCardDOM(wordId);
   }
 
   function toggleStarred(wordId) {
@@ -1699,7 +1787,7 @@
       STATE.userData.starred.add(wordId);
     }
     saveUserData();
-    updateUI();
+    updateWordCardDOM(wordId);
   }
 
   // ==========================================================================
@@ -1767,7 +1855,7 @@
       } else if (record.repetitions === 2) {
         record.interval = 6;
       } else {
-        record.interval = Math.max(7, Math.round(record.interval * record.easeFactor));
+        record.interval = Math.min(3650, Math.max(7, Math.round(record.interval * record.easeFactor)));
       }
       record.repetitions++;
       record.streak = (record.streak || 0) + 1;
@@ -1779,7 +1867,7 @@
       } else if (record.repetitions === 1) {
         record.interval = 6;
       } else {
-        record.interval = Math.max(8, Math.round(record.interval * record.easeFactor * 1.35));
+        record.interval = Math.min(3650, Math.max(8, Math.round(record.interval * record.easeFactor * 1.35)));
       }
       record.repetitions++;
       record.streak = (record.streak || 0) + 1;
@@ -1927,7 +2015,9 @@
     let reviewingCount = 0;
     let masteredCount = 0;
 
+    const countedIds = new Set();
     pool.forEach(w => {
+      countedIds.add(w.id);
       const srs = STATE.userData.srs[w.id];
       if (!srs) {
         if (STATE.userData.review.has(w.id)) {
@@ -1946,6 +2036,23 @@
           reviewingCount++;
         } else {
           learningCount++;
+        }
+      }
+    });
+
+    Object.keys(STATE.userData.srs).forEach(idStr => {
+      const id = parseInt(idStr, 10);
+      if (!countedIds.has(id)) {
+        const srs = STATE.userData.srs[id];
+        if (srs) {
+          if (srs.nextReview <= todayStr) dueCount++;
+          if (srs.state === 'mastered' || srs.interval >= 14) {
+            masteredCount++;
+          } else if (srs.state === 'reviewing' || srs.interval >= 4) {
+            reviewingCount++;
+          } else {
+            learningCount++;
+          }
         }
       }
     });
@@ -2142,6 +2249,10 @@
     closeModals();
   }
 
+  function startQuizSession(count = 10) {
+    startQuiz();
+  }
+
   function handleFabAction() {
     if (STATE.currentView === 'home') {
       switchView('daily');
@@ -2150,7 +2261,7 @@
     } else if (STATE.currentView === 'flashcard') {
       startDailyQuiz();
     } else if (STATE.currentView === 'quiz') {
-      startQuizSession(10);
+      startQuiz();
     } else {
       switchView('daily');
     }
@@ -3430,12 +3541,51 @@
         const isYDS = STATE.activeModule === 'yds';
         const isOxford = STATE.activeModule === 'oxford';
         const isAll = STATE.activeModule === 'all';
-        const targetPool = isYDS 
-          ? WORDS_DATA.filter(isYDSWord) 
-          : (isOxford ? WORDS_DATA.filter(isOxfordWord) : (isAll ? WORDS_DATA : WORDS_DATA.filter(isMaarifWord)));
-        const bSize = isYDS ? 20 : (isOxford || isAll ? 25 : 10);
-        const start = (STATE.currentDay - 1) * bSize;
-        pool = targetPool.slice(start, start + bSize);
+        if (!isYDS && !isOxford && !isAll) {
+          // Maarif mode: synchronize with 36-week curriculum schedule
+          const gNum = STATE.selectedGrade || 5;
+          let sched = null;
+          if (typeof window !== 'undefined' && window.CURRICULUM_CLASSIFIER) {
+            sched = STATE.activeCurriculumWeek 
+              ? window.CURRICULUM_CLASSIFIER.getWeekByNumber(gNum, STATE.activeCurriculumWeek)
+              : window.CURRICULUM_CLASSIFIER.getSchedule(gNum);
+          }
+          if (!sched && typeof window !== 'undefined' && window.CURRICULUM_DATA && window.CURRICULUM_DATA[gNum]?.calendar) {
+            sched = window.CURRICULUM_DATA[gNum].calendar[0];
+          }
+          const targetWordsList = (sched && sched.targetWords) ? sched.targetWords : [];
+          if (targetWordsList.length > 0) {
+            const gData = (typeof window !== 'undefined' && window.CURRICULUM_DATA && window.CURRICULUM_DATA[gNum]) || null;
+            pool = targetWordsList.map((wStr, idx) => {
+              const clean = wStr.toLowerCase().trim();
+              const found = WORDS_DATA.find(w => w.en.toLowerCase() === clean);
+              if (found) return found;
+              return {
+                id: 800000 + (gNum * 1000) + idx,
+                no: idx + 1,
+                en: wStr.charAt(0).toUpperCase() + wStr.slice(1),
+                tr: 'Resmi Müfredat Hedef Kelimesi',
+                phonetic: '',
+                cefr: gData ? gData.cefr : 'A1',
+                desc: 'hedef kelime',
+                example: `In our English class, we learn the word "${wStr}".`,
+                dataset: 'maarif'
+              };
+            });
+          } else {
+            const targetPool = WORDS_DATA.filter(isMaarifWord);
+            const bSize = 10;
+            const start = (STATE.currentDay - 1) * bSize;
+            pool = targetPool.slice(start, start + bSize);
+          }
+        } else {
+          const targetPool = isYDS 
+            ? WORDS_DATA.filter(isYDSWord) 
+            : (isOxford ? WORDS_DATA.filter(isOxfordWord) : WORDS_DATA);
+          const bSize = isYDS ? 20 : 25;
+          const start = (STATE.currentDay - 1) * bSize;
+          pool = targetPool.slice(start, start + bSize);
+        }
       } else if (sourceVal === 'past_cumulative') {
         const isYDS = STATE.activeModule === 'yds';
         const isOxford = STATE.activeModule === 'oxford';
@@ -4190,12 +4340,15 @@
   }
 
   function syncDirectoryStatusChips() {
-    const chipLearned = document.querySelector('#status-chips button[data-val="learned"]');
-    const chipReview = document.querySelector('#status-chips button[data-val="review"]');
-    const chipStarred = document.querySelector('#status-chips button[data-val="starred"]');
-    if (chipLearned) chipLearned.innerText = `ÖĞRENİLENLER (${STATE.userData.learned.size})`;
-    if (chipReview) chipReview.innerText = `TEKRAR EDİLECEKLER (${STATE.userData.review.size})`;
-    if (chipStarred) chipStarred.innerText = `FAVORİLER (${STATE.userData.starred.size})`;
+    const container = document.getElementById('status-chips');
+    if (!container) return;
+    const buttons = container.querySelectorAll ? container.querySelectorAll('button') : [];
+    for (const btn of buttons) {
+      const val = btn.getAttribute ? btn.getAttribute('data-val') : null;
+      if (val === 'learned') btn.innerText = `ÖĞRENİLENLER (${STATE.userData.learned.size})`;
+      if (val === 'review') btn.innerText = `TEKRAR EDİLECEKLER (${STATE.userData.review.size})`;
+      if (val === 'starred') btn.innerText = `FAVORİLER (${STATE.userData.starred.size})`;
+    }
   }
 
   function setDirectoryPage(pageNum) {
@@ -4243,7 +4396,7 @@
       <div class="directory-controls glass-panel" id="dir-controls-box">
         <div class="search-input-box">
           <span class="search-icon">${ICONS.search}</span>
-          <input type="text" class="search-input" id="dir-search-input" placeholder="İngilizce, Türkçe veya eş anlam ara... (ör: abandon, advocate, relieve)" value="${filters.search}" aria-label="Kelime Ara">
+          <input type="text" class="search-input" id="dir-search-input" placeholder="İngilizce, Türkçe veya eş anlam ara... (ör: abandon, advocate, relieve)" value="${escapeHtml(filters.search)}" aria-label="Kelime Ara">
         </div>
 
         ${isYdsModule ? `
@@ -4500,7 +4653,7 @@
 
     container.innerHTML = `
       <!-- AKTİF HEDEF MÜFREDAT & KAZANIM İSTASYONU (Home'dan Taşınan Modül) -->
-      <div class="stats-curriculum-station" style="border: var(--dp-border-rule) solid var(--dp-color-border); background: var(--dp-color-surface); padding: 24px; box-shadow: 6px 6px 0 #000000; margin-bottom: 24px;">
+      <div class="stats-curriculum-station" style="border: var(--dp-border-rule) solid var(--dp-color-border); border-radius: var(--dp-radius-card); background: var(--dp-color-surface); padding: 24px; box-shadow: 0 4px 16px -2px rgba(23, 30, 25, 0.06); margin-bottom: 24px;">
         <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 16px; margin-bottom: 16px;">
           <div>
             <div style="font-family: var(--dp-typography-mono); font-size: 0.78rem; font-weight: 800; color: var(--dp-color-field); text-transform: uppercase; margin-bottom: 4px; letter-spacing: 0.04em;">
@@ -4514,16 +4667,16 @@
             </div>
           </div>
           <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
-            <button class="ctrl-btn" onclick="window.APP.switchView('directory')" style="font-size: 0.78rem; padding: 6px 12px; background: var(--dp-color-ground); border: 2px solid var(--dp-color-border); box-shadow: 3px 3px 0 #000000;">
+            <button class="ctrl-btn" onclick="window.APP.switchView('directory')" style="font-size: 0.78rem; padding: 6px 12px; background: var(--dp-color-ground); border: 1px solid var(--dp-color-border); border-radius: var(--dp-radius-nested); box-shadow: 0 4px 16px -2px rgba(23, 30, 25, 0.06); color: var(--dp-color-ink);">
               📚 KELİME DİZİNİ
             </button>
-            <button class="ctrl-btn" onclick="window.APP.switchView('quiz')" style="font-size: 0.78rem; padding: 6px 12px; background: var(--dp-color-field-support); color: #000000; border: 2px solid var(--dp-color-border); box-shadow: 3px 3px 0 #000000;">
+            <button class="ctrl-btn" onclick="window.APP.switchView('quiz')" style="font-size: 0.78rem; padding: 6px 12px; background: var(--dp-color-field-support); color: var(--dp-color-ink); border: 1px solid var(--dp-color-border); border-radius: var(--dp-radius-nested); box-shadow: 0 4px 16px -2px rgba(23, 30, 25, 0.06);">
               ⚡ KAZANIM TESTİ
             </button>
           </div>
         </div>
 
-        <div style="background: var(--dp-color-ground); border: 2px solid var(--dp-color-border); padding: 16px; box-shadow: 3px 3px 0 #000000;">
+        <div style="background: var(--dp-color-ground); border: 1px solid var(--dp-color-border); border-radius: var(--dp-radius-nested); padding: 16px; box-shadow: 0 4px 16px -2px rgba(23, 30, 25, 0.06);">
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; flex-wrap: wrap; gap: 8px;">
             <span style="font-family: var(--dp-typography-mono); font-size: 0.76rem; font-weight: 800; text-transform: uppercase;">
               MÜFREDAT TAMAMLANMA ORANI
@@ -4532,8 +4685,8 @@
               %${activePct} (${activeLearned} / ${activeWords.length} KELİME)
             </span>
           </div>
-          <div style="height: 16px; border: 2px solid var(--dp-color-border); background: var(--dp-color-surface); overflow: hidden;">
-            <div style="height: 100%; width: ${activePct}%; background: var(--dp-color-field); transition: width 0.3s cubic-bezier(0.2, 0, 0, 1);"></div>
+          <div style="height: 16px; border: 1px solid var(--dp-color-border); border-radius: var(--dp-radius-pill); background: var(--dp-color-surface); overflow: hidden;">
+            <div style="height: 100%; width: ${activePct}%; background: var(--dp-color-field); border-radius: var(--dp-radius-pill); transition: width 0.3s cubic-bezier(0.2, 0, 0, 1);"></div>
           </div>
         </div>
       </div>
@@ -4743,7 +4896,7 @@
     `;
   }
 
-  // No-op: childish gamification / confetti disabled by Dark Geometric & Amber Precision spec
+  // No-op: confetti disabled per Sophisticated Playful spec
   function triggerConfetti() {}
 
   // ==========================================================================
@@ -4828,6 +4981,11 @@
     const viewLabel = document.getElementById('breadcrumb-view-label');
     const badgeContainer = document.getElementById('breadcrumb-dynamic-badge') || document.getElementById('breadcrumb-context-badge');
     const backBtn = document.getElementById('breadcrumb-back-btn');
+    const sidebarTelemetry = document.getElementById('sidebar-telemetry-badge');
+
+    if (!modText && !viewLabel && !badgeContainer && !backBtn && !sidebarTelemetry) {
+      return;
+    }
 
     const moduleNames = {
       maarif: 'MEB MÜFREDATI • 5. SINIF',
@@ -4851,8 +5009,6 @@
     if (viewLabel) {
       viewLabel.innerText = viewNames[viewName] || viewName;
     }
-
-    const sidebarTelemetry = document.getElementById('sidebar-telemetry-badge');
 
     // Compute Daily Goal telemetry for both sidebar footer & daily view badge
     const isYds = STATE.activeModule === 'yds';
@@ -4983,13 +5139,15 @@
   // VIEW SWITCHER & DISPATCHER (With 0.25s View-Transition Fade)
   // ==========================================================================
   function switchView(viewName, pushHash = true) {
+    const viewAliases = { 'word-list': 'directory', 'words': 'directory' };
+    const resolved = viewAliases[viewName] || viewName;
     cancelQuizSpeaking();
     if (document.startViewTransition) {
       document.startViewTransition(() => {
-        executeSwitchView(viewName, pushHash);
+        executeSwitchView(resolved, pushHash);
       });
     } else {
-      executeSwitchView(viewName, pushHash);
+      executeSwitchView(resolved, pushHash);
     }
   }
 
@@ -5112,7 +5270,7 @@
     renderQuizView();
   }
 
-  function startQuiz() {
+  function startQuiz(forcedSource = null) {
     cancelQuizSpeaking();
     const modeSelect = document.getElementById('quiz-mode-select');
     const sourceSelect = document.getElementById('quiz-source-select');
@@ -5120,7 +5278,8 @@
     const levelSelect = document.getElementById('quiz-level-select');
 
     const mode = modeSelect ? modeSelect.value : 'en-tr';
-    const source = sourceSelect ? sourceSelect.value : 'daily';
+    const source = forcedSource || (sourceSelect ? sourceSelect.value : 'daily');
+    if (sourceSelect && forcedSource) sourceSelect.value = forcedSource;
     const countVal = countSelect ? countSelect.value : '10';
     const levelVal = levelSelect ? levelSelect.value : 'all';
 
@@ -5682,11 +5841,7 @@
   function startDailyQuiz() {
     STATE.quizState.active = false;
     switchView('quiz');
-    setTimeout(() => {
-      const srcSelect = document.getElementById('quiz-source-select');
-      if (srcSelect) srcSelect.value = 'daily';
-      startQuiz();
-    }, 100);
+    startQuiz('daily');
   }
 
   function startPastDaysFlashcards(andShuffle = false) {
@@ -5710,11 +5865,7 @@
   function startPastDaysQuiz() {
     STATE.quizState.active = false;
     switchView('quiz');
-    setTimeout(() => {
-      const srcSelect = document.getElementById('quiz-source-select');
-      if (srcSelect) srcSelect.value = 'past_cumulative';
-      startQuiz();
-    }, 100);
+    startQuiz('past_cumulative');
   }
 
   function startSRSDueFlashcards() {
@@ -5866,6 +6017,7 @@
     if (STATE.currentView === 'flashcard' && STATE.filteredFlashcards.length > 0) {
       const currentWord = STATE.filteredFlashcards[STATE.activeFlashcardIndex];
       if (e.code === 'Space') {
+        if (onButton || e.repeat || (document.activeElement && ['BUTTON', 'INPUT', 'SELECT', 'TEXTAREA'].includes(document.activeElement.tagName))) return;
         e.preventDefault();
         STATE.flashcardFlipped = !STATE.flashcardFlipped;
         playSound('flip');
@@ -5941,8 +6093,20 @@
     document.documentElement.setAttribute('data-theme', STATE.settings.theme);
     const metaThemeColor = document.querySelector('meta[name="theme-color"]');
     if (metaThemeColor) {
-      metaThemeColor.setAttribute('content', STATE.settings.theme === 'dark' ? '#0A0A0A' : '#F5F4EE');
+      metaThemeColor.setAttribute('content', STATE.settings.theme === 'dark' ? '#171e19' : '#eeebe3');
     }
+
+    // Hash routing — default landing page is #home (Kontrol Merkezi)
+    const validViews = ['home', 'daily', 'flashcard', 'quiz', 'directory', 'stats'];
+    const viewAliases = { 'word-list': 'directory', 'words': 'directory' };
+    const resolveView = (h) => {
+      const clean = (h || '').replace('#', '').trim();
+      const mapped = viewAliases[clean] || clean;
+      return validViews.includes(mapped) ? mapped : null;
+    };
+
+    const initialView = resolveView(window.location.hash) || 'home';
+    STATE.currentView = initialView;
 
     // Apply saved module
     switchModule(STATE.activeModule);
@@ -5962,24 +6126,16 @@
       const themeText = STATE.settings.theme === 'dark' ? 'TEMA: KOYU' : 'TEMA: AÇIK';
 
       const dAccent = document.getElementById('accent-toggle-btn');
-      const mAccent = document.getElementById('m-accent-toggle-btn');
       if (dAccent) dAccent.innerText = accentText;
-      if (mAccent) mAccent.innerText = accentText;
 
       const dSpeed = document.getElementById('speed-toggle-btn');
-      const mSpeed = document.getElementById('m-speed-toggle-btn');
       if (dSpeed) dSpeed.innerText = speedText;
-      if (mSpeed) mSpeed.innerText = speedText;
 
       const dSound = document.getElementById('sound-toggle-btn');
-      const mSound = document.getElementById('m-sound-toggle-btn');
       if (dSound) dSound.innerText = soundText;
-      if (mSound) mSound.innerText = soundText;
 
       const dTheme = document.getElementById('theme-toggle-btn');
-      const mTheme = document.getElementById('m-theme-toggle-btn');
       if (dTheme) dTheme.innerText = themeText;
-      if (mTheme) mTheme.innerText = themeText;
     }
 
     function toggleAccentSetting() {
@@ -6006,37 +6162,26 @@
       localStorage.setItem('mk_theme', STATE.settings.theme);
       const metaThemeColor = document.querySelector('meta[name="theme-color"]');
       if (metaThemeColor) {
-        metaThemeColor.setAttribute('content', STATE.settings.theme === 'dark' ? '#0A0A0A' : '#F5F4EE');
+        metaThemeColor.setAttribute('content', STATE.settings.theme === 'dark' ? '#171e19' : '#eeebe3');
       }
       syncAllSettingsButtons();
     }
 
     document.getElementById('accent-toggle-btn')?.addEventListener('click', toggleAccentSetting);
-    document.getElementById('m-accent-toggle-btn')?.addEventListener('click', toggleAccentSetting);
-
     document.getElementById('speed-toggle-btn')?.addEventListener('click', toggleSpeedSetting);
-    document.getElementById('m-speed-toggle-btn')?.addEventListener('click', toggleSpeedSetting);
-
     document.getElementById('sound-toggle-btn')?.addEventListener('click', toggleSoundSetting);
-    document.getElementById('m-sound-toggle-btn')?.addEventListener('click', toggleSoundSetting);
-
     document.getElementById('theme-toggle-btn')?.addEventListener('click', toggleThemeSetting);
-    document.getElementById('m-theme-toggle-btn')?.addEventListener('click', toggleThemeSetting);
 
     syncAllSettingsButtons();
     updateMobileTriggerLabels();
 
-    // Hash routing — default landing page is #home (Kontrol Merkezi)
-    const validViews = ['home', 'daily', 'flashcard', 'quiz', 'directory', 'stats'];
-    const initialHash = window.location.hash.replace('#', '');
-    const initialView = validViews.includes(initialHash) ? initialHash : 'home';
-    switchView(initialView, !initialHash);
+    switchView(initialView, !window.location.hash);
 
     window.addEventListener('hashchange', () => {
-      const hView = window.location.hash.replace('#', '');
-      if (validViews.includes(hView) && hView !== STATE.currentView) {
-        switchView(hView, false);
-      } else if (!hView && STATE.currentView !== 'home') {
+      const resolved = resolveView(window.location.hash);
+      if (resolved && resolved !== STATE.currentView) {
+        switchView(resolved, false);
+      } else if (!window.location.hash.replace('#', '').trim() && STATE.currentView !== 'home') {
         switchView('home', false);
       }
     });
@@ -6059,9 +6204,13 @@
     closeModals,
     switchModuleAndClose,
     switchViewAndClose,
+    startQuizSession,
     toggleLearned,
+    toggleWordLearned: toggleLearned,
     toggleReview,
+    toggleWordReview: toggleReview,
     toggleStarred,
+    toggleWordFavorite: toggleStarred,
     markFlashcardKnown,
     markFlashcardReview,
     markFlashcardSRS,
