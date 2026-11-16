@@ -588,8 +588,9 @@ registerTest(1, 'Navigation & Canopy', 'test_nav_home_view_activation', () => {
   assertEqual(env.APP.getState().currentView, 'home', 'currentView should be home');
   const homeSection = env.document.getElementById('view-home');
   assert(homeSection.classList.contains('active'), '#view-home section should have active class');
-  const canopyView = env.document.getElementById('canopy-view-name');
-  assertEqual(canopyView.textContent, 'Kontrol Merkezi', 'Canopy should display Kontrol Merkezi');
+  const greetingTitle = env.document.getElementById('header-user-title');
+  assert(greetingTitle, '#header-user-title should exist in header');
+  assert(!env.document.getElementById('context-canopy'), '#context-canopy should be removed from DOM');
 });
 
 registerTest(1, 'Navigation & Canopy', 'test_nav_home_view_orientation_and_modules_guide', () => {
@@ -622,8 +623,8 @@ registerTest(1, 'Navigation & Canopy', 'test_nav_daily_view_activation', () => {
   assertEqual(env.APP.getState().currentView, 'daily', 'currentView should be daily');
   const dailySection = env.document.getElementById('view-daily');
   assert(dailySection.classList.contains('active'), '#view-daily should have active class');
-  const canopyView = env.document.getElementById('canopy-view-name');
-  assert(canopyView.textContent === 'Müfredat Takibi' || canopyView.textContent === 'Günün Çalışması', 'Canopy should display daily view title');
+  const greetingLabel = env.document.getElementById('header-greeting-label');
+  assert(greetingLabel && greetingLabel.textContent.includes('GÜNLÜK ÇALIŞMA'), 'Header greeting label should reflect daily view');
 });
 
 registerTest(1, 'Navigation & Canopy', 'test_curriculum_outcomes_and_focus_untruncated', () => {
@@ -685,15 +686,24 @@ registerTest(1, 'Navigation & Canopy', 'test_nav_stats_view_activation', () => {
   assert(statsSection.classList.contains('active'), '#view-stats should have active class');
 });
 
-registerTest(1, 'Navigation & Canopy', 'test_canopy_reflects_active_module', () => {
+registerTest(1, 'Navigation & Canopy', 'test_header_route_and_telemetry_reflects_active_module', () => {
   const env = createFreshAppEnvironment();
+  // Ensure canopy is absent from DOM
+  assert(!env.document.getElementById('context-canopy'), '#context-canopy should not exist in DOM');
+
   env.APP.switchModule('yds');
-  const canopyBadge = env.document.getElementById('canopy-module-badge');
-  assertEqual(canopyBadge.textContent, 'YDS', 'Canopy module badge should update to YDS');
+  const hrLabel = env.document.getElementById('header-route-label');
+  const hrIcon = env.document.getElementById('header-route-icon');
+  assertEqual(hrLabel.textContent, 'YDS / YÖKDİL', 'Header route pill label should update to YDS / YÖKDİL');
+  assertEqual(hrIcon.textContent, '🎯', 'Header route pill icon should update to 🎯');
+  
   env.APP.switchModule('oxford');
-  assertEqual(canopyBadge.textContent, 'OXF', 'Canopy module badge should update to OXF');
+  assertEqual(hrLabel.textContent, 'Oxford 5000', 'Header route pill label should update to Oxford 5000');
+  assertEqual(hrIcon.textContent, '🌐', 'Header route pill icon should update to 🌐');
+
   env.APP.switchModule('maarif');
-  assert(canopyBadge.textContent === '5. SINIF' || canopyBadge.textContent === 'MEB', 'Canopy module badge should reflect Maarif grade/module');
+  assertEqual(hrIcon.textContent, '🏫', 'Header route pill icon should update to 🏫');
+  assertIncludes(hrLabel.textContent, 'Sınıf MEB', 'Header route pill label should reflect MEB grade');
 });
 
 registerTest(1, 'Navigation & Canopy', 'test_header_route_pill_replaces_horizontal_selector', () => {

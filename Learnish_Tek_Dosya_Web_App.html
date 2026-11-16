@@ -181,10 +181,10 @@ body {
 }
 
 /* ==========================================================================
-   1. TOP-ALIGNED HEADER (56px Top Padding)
+   1. TOP-ALIGNED HEADER
    ========================================================================== */
 .app-top-header {
-  padding-top: 56px;
+  padding-top: 24px;
   padding-bottom: 20px;
   display: flex;
   align-items: center;
@@ -2056,24 +2056,10 @@ body {
 
 /* ==========================================================================
    CONTEXT CANOPY / "İŞTE BURADASINIZ" HABER VERİCİ ÇİZGİSİ
-   (Mobile-First Floating Orientation Veil & Module Indicator)
+   (Replaced by Top-Header Route Pill)
    ========================================================================== */
 .context-canopy {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  width: 100%;
-  z-index: 1000;
-  background: rgba(246, 245, 241, 0.94);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border-bottom: 1px solid var(--dp-color-border);
-  box-shadow: 0 4px 20px -2px rgba(23, 30, 25, 0.08);
-  transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1),
-              opacity 0.25s ease,
-              box-shadow 0.25s ease;
-  user-select: none;
+  display: none !important;
 }
 
 [data-theme="dark"] .context-canopy {
@@ -2318,7 +2304,7 @@ body {
 
 @media (max-width: 767px) {
   .app-shell {
-    padding-top: calc(env(safe-area-inset-top, 0px) + 38px);
+    padding-top: calc(env(safe-area-inset-top, 0px) + 8px);
   }
   .app-top-header {
     padding-top: 14px;
@@ -6387,24 +6373,6 @@ mark.pedagogy-word-highlight {
 </style>
 </head>
 <body>
-
-  <!-- TOP CONTEXT CANOPY / "İŞTE BURADASINIZ" HABER VERİCİ ÇİZGİSİ (Canlı Modül & Menü Bildirimi) -->
-  <aside class="context-canopy canopy-docked mod-maarif" id="context-canopy" role="status" aria-label="Canlı Konum ve Modül Bildirimi">
-    <div class="context-canopy-content" onclick="window.APP.openGradeModal()" title="K-12 Sınıfını veya Müfredatı Değiştirmek İçin Dokunun">
-      <div class="context-canopy-left">
-        <span class="context-beacon-dot" aria-hidden="true"></span>
-        <span class="context-eyebrow">BURADASINIZ:</span>
-        <span class="context-module-badge" id="canopy-module-badge">MEB</span>
-        <strong class="context-module-name" id="canopy-module-name">5. Sınıf Maarif Modeli</strong>
-        <span class="context-separator" aria-hidden="true">›</span>
-        <span class="context-view-name" id="canopy-view-name">Kontrol Merkezi</span>
-      </div>
-      <div class="context-canopy-right">
-        <span class="context-switch-btn">DEĞİŞTİR ▾</span>
-      </div>
-    </div>
-    <div class="context-accent-line" id="canopy-accent-line" aria-hidden="true"></div>
-  </aside>
 
   <!-- SINGLE-COLUMN APP SHELL -->
   <div class="app-shell">
@@ -13034,11 +13002,31 @@ if (typeof module !== 'undefined' && module.exports) {
   let canopyTimer = null;
 
   function updateContextCanopy(viewName, triggerExpand = false) {
-    const canopy = document.getElementById('context-canopy');
-    if (!canopy) return;
-
     const mod = STATE.activeModule || 'maarif';
     const view = viewName || STATE.currentView || 'home';
+
+    // Update Header Route Pill (Primary Route & Grade Indicator)
+    const hrIcon = document.getElementById('header-route-icon');
+    const hrLabel = document.getElementById('header-route-label');
+    const hrPill = document.getElementById('header-route-pill-btn');
+    if (hrIcon) hrIcon.textContent = mod === 'maarif' ? '🏫' : (mod === 'yds' ? '🎯' : (mod === 'oxford' ? '🌐' : '📚'));
+    if (hrLabel) {
+      if (mod === 'maarif') {
+        const gNum = STATE.selectedGrade || 5;
+        hrLabel.textContent = `${gNum}. Sınıf MEB`;
+      } else if (mod === 'yds') {
+        hrLabel.textContent = 'YDS / YÖKDİL';
+      } else if (mod === 'oxford') {
+        hrLabel.textContent = 'Oxford 5000';
+      } else {
+        hrLabel.textContent = 'Tüm Kütüphane';
+      }
+    }
+    if (hrPill) hrPill.setAttribute('data-active-module', mod);
+
+    // Safely update legacy canopy if element exists
+    const canopy = document.getElementById('context-canopy');
+    if (!canopy) return;
 
     const modBadges = {
       maarif: 'MEB',
@@ -13084,25 +13072,6 @@ if (typeof module !== 'undefined' && module.exports) {
     if (badgeEl) badgeEl.textContent = modBadge;
     if (nameEl) nameEl.textContent = modFullName;
     if (viewEl) viewEl.textContent = viewTitles[view] || view;
-
-    // Update Header Route Pill
-    const hrIcon = document.getElementById('header-route-icon');
-    const hrLabel = document.getElementById('header-route-label');
-    const hrPill = document.getElementById('header-route-pill-btn');
-    if (hrIcon) hrIcon.textContent = mod === 'maarif' ? '🏫' : (mod === 'yds' ? '🎯' : (mod === 'oxford' ? '🌐' : '📚'));
-    if (hrLabel) {
-      if (mod === 'maarif') {
-        const gNum = STATE.selectedGrade || 5;
-        hrLabel.textContent = `${gNum}. Sınıf MEB`;
-      } else if (mod === 'yds') {
-        hrLabel.textContent = 'YDS / YÖKDİL';
-      } else if (mod === 'oxford') {
-        hrLabel.textContent = 'Oxford 5000';
-      } else {
-        hrLabel.textContent = 'Tüm Kütüphane';
-      }
-    }
-    if (hrPill) hrPill.setAttribute('data-active-module', mod);
 
     // Set theme class on canopy
     canopy.classList.remove('mod-maarif', 'mod-yds', 'mod-oxford', 'mod-all');

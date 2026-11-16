@@ -5816,11 +5816,31 @@
   let canopyTimer = null;
 
   function updateContextCanopy(viewName, triggerExpand = false) {
-    const canopy = document.getElementById('context-canopy');
-    if (!canopy) return;
-
     const mod = STATE.activeModule || 'maarif';
     const view = viewName || STATE.currentView || 'home';
+
+    // Update Header Route Pill (Primary Route & Grade Indicator)
+    const hrIcon = document.getElementById('header-route-icon');
+    const hrLabel = document.getElementById('header-route-label');
+    const hrPill = document.getElementById('header-route-pill-btn');
+    if (hrIcon) hrIcon.textContent = mod === 'maarif' ? '🏫' : (mod === 'yds' ? '🎯' : (mod === 'oxford' ? '🌐' : '📚'));
+    if (hrLabel) {
+      if (mod === 'maarif') {
+        const gNum = STATE.selectedGrade || 5;
+        hrLabel.textContent = `${gNum}. Sınıf MEB`;
+      } else if (mod === 'yds') {
+        hrLabel.textContent = 'YDS / YÖKDİL';
+      } else if (mod === 'oxford') {
+        hrLabel.textContent = 'Oxford 5000';
+      } else {
+        hrLabel.textContent = 'Tüm Kütüphane';
+      }
+    }
+    if (hrPill) hrPill.setAttribute('data-active-module', mod);
+
+    // Safely update legacy canopy if element exists
+    const canopy = document.getElementById('context-canopy');
+    if (!canopy) return;
 
     const modBadges = {
       maarif: 'MEB',
@@ -5866,25 +5886,6 @@
     if (badgeEl) badgeEl.textContent = modBadge;
     if (nameEl) nameEl.textContent = modFullName;
     if (viewEl) viewEl.textContent = viewTitles[view] || view;
-
-    // Update Header Route Pill
-    const hrIcon = document.getElementById('header-route-icon');
-    const hrLabel = document.getElementById('header-route-label');
-    const hrPill = document.getElementById('header-route-pill-btn');
-    if (hrIcon) hrIcon.textContent = mod === 'maarif' ? '🏫' : (mod === 'yds' ? '🎯' : (mod === 'oxford' ? '🌐' : '📚'));
-    if (hrLabel) {
-      if (mod === 'maarif') {
-        const gNum = STATE.selectedGrade || 5;
-        hrLabel.textContent = `${gNum}. Sınıf MEB`;
-      } else if (mod === 'yds') {
-        hrLabel.textContent = 'YDS / YÖKDİL';
-      } else if (mod === 'oxford') {
-        hrLabel.textContent = 'Oxford 5000';
-      } else {
-        hrLabel.textContent = 'Tüm Kütüphane';
-      }
-    }
-    if (hrPill) hrPill.setAttribute('data-active-module', mod);
 
     // Set theme class on canopy
     canopy.classList.remove('mod-maarif', 'mod-yds', 'mod-oxford', 'mod-all');
