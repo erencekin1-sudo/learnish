@@ -39,7 +39,9 @@
       </div>
       <div class="header-right-actions">
         <button type="button" class="header-action-btn header-route-pill-btn" id="header-route-pill-btn" onclick="window.APP.openGradeModal()" title="Öğrenim Rotasını &amp; Sınıfı Değiştir" aria-label="Öğrenim Rotası Seçici">
-          <span class="hrp-icon" id="header-route-icon">🏫</span>
+          <span class="hrp-icon" id="header-route-icon" data-icon="school">
+            <svg class="ui-icon hrp-svg-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" data-icon="school"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
+          </span>
           <div class="hrp-text-group">
             <span class="hrp-eyebrow">AKTİF ROTA</span>
             <span class="hrp-label" id="header-route-label">5. Sınıf MEB</span>
@@ -186,7 +188,9 @@
       <!-- Quick Shortcuts -->
       <div class="settings-nav-shortcuts">
         <button type="button" class="settings-shortcut-btn" onclick="window.APP.switchViewAndClose('directory')">
-          <span class="s-icon">📚</span>
+          <span class="s-icon">
+            <svg class="ui-icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z"/><path d="M6 6h10"/><path d="M6 10h10"/></svg>
+          </span>
           <div class="s-text">
             <strong>Kelime Havuzu &amp; Arama</strong>
             <span>9.234 kelimelik tam kütüphane</span>
@@ -194,7 +198,9 @@
           <span class="s-arrow">→</span>
         </button>
         <button type="button" class="settings-shortcut-btn" onclick="window.APP.switchViewAndClose('stats')">
-          <span class="s-icon">📊</span>
+          <span class="s-icon">
+            <svg class="ui-icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+          </span>
           <div class="s-text">
             <strong>İstatistik &amp; Analiz</strong>
             <span>Öğrenim telemetrisi ve kazanım analizi</span>
@@ -202,7 +208,9 @@
           <span class="s-arrow">→</span>
         </button>
         <button type="button" class="settings-shortcut-btn" onclick="window.APP.openFeedbackModal()">
-          <span class="s-icon">💬</span>
+          <span class="s-icon">
+            <svg class="ui-icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+          </span>
           <div class="s-text">
             <strong>Bize Ulaşın &amp; Hata Bildir</strong>
             <span>Öğretmen ve kullanıcı geri bildirimi iletin</span>
@@ -325,11 +333,11 @@
         </label>
         <div class="feedback-select-wrap">
           <select id="feedback-topic" class="feedback-select" aria-label="Konu Başlığı Seçiniz">
-            <option value="Hata / Teknik Problem">🐞 Hata / Teknik Problem</option>
-            <option value="Kelime / Çeviri Hatası">📖 Kelime / Çeviri / İçerik Hatası</option>
-            <option value="Yeni Özellik / Geliştirme Önerisi">💡 Yeni Özellik / Geliştirme Önerisi</option>
-            <option value="Öğretmen &amp; Müfredat Görüşü">🎓 Öğretmen &amp; Müfredat Görüşü</option>
-            <option value="Genel Deneyim &amp; Diğer">💬 Genel Deneyim &amp; Diğer</option>
+            <option value="Hata / Teknik Problem">Hata / Teknik Problem</option>
+            <option value="Kelime / Çeviri Hatası">Kelime / Çeviri / İçerik Hatası</option>
+            <option value="Yeni Özellik / Geliştirme Önerisi">Yeni Özellik / Geliştirme Önerisi</option>
+            <option value="Öğretmen &amp; Müfredat Görüşü">Öğretmen &amp; Müfredat Görüşü</option>
+            <option value="Genel Deneyim &amp; Diğer">Genel Deneyim &amp; Diğer</option>
           </select>
         </div>
       </div>
@@ -386,7 +394,9 @@
       <div id="feedback-status-banner" class="feedback-status-banner" style="display: none;" role="status" aria-live="polite"></div>
 
       <div class="feedback-footer-note">
-        <span>💡</span>
+        <span class="feedback-footer-icon">
+          <svg class="ui-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18h6"/><path d="M10 22h4"/><path d="M15.09 14c.18-.98.65-1.74 1.41-2.5A4.65 4.65 0 0 0 18 8 6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.76.76 1.23 1.52 1.41 2.5"/></svg>
+        </span>
         <p>Geri bildirimleriniz doğrudan geliştirici öğretmen ekibine ulaşır ve bir sonraki güncellemede değerlendirilir. Desteğiniz için teşekkür ederiz!</p>
       </div>
     </div>

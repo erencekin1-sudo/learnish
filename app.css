@@ -162,6 +162,31 @@ body {
 }
 
 /* ==========================================================================
+   MINIMALIST MONOCHROME VECTOR ICON SYSTEM (.ui-icon)
+   ========================================================================== */
+.ui-icon {
+  display: inline-block;
+  vertical-align: middle;
+  flex-shrink: 0;
+  stroke: currentColor;
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.hrp-svg-icon {
+  color: var(--dp-color-ink);
+}
+
+.feedback-footer-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--dp-color-amber);
+  flex-shrink: 0;
+}
+
+/* ==========================================================================
    APP SHELL (Mobile-first, Single-column centered layout)
    ========================================================================== */
 .app-shell {

@@ -696,14 +696,14 @@ registerTest(1, 'Navigation & Canopy', 'test_header_route_and_telemetry_reflects
   const hrLabel = env.document.getElementById('header-route-label');
   const hrIcon = env.document.getElementById('header-route-icon');
   assertEqual(hrLabel.textContent, 'YDS / YÖKDİL', 'Header route pill label should update to YDS / YÖKDİL');
-  assertEqual(hrIcon.textContent, '🎯', 'Header route pill icon should update to 🎯');
+  assert(hrIcon.getAttribute('data-icon') === 'target' || hrIcon.innerHTML.includes('data-icon="target"'), 'Header route pill icon should update to target SVG');
   
   env.APP.switchModule('oxford');
   assertEqual(hrLabel.textContent, 'Kütüphane', 'Header route pill label should update to Kütüphane');
-  assertEqual(hrIcon.textContent, '📚', 'Header route pill icon should update to 📚');
+  assert(hrIcon.getAttribute('data-icon') === 'book' || hrIcon.innerHTML.includes('data-icon="book"'), 'Header route pill icon should update to book SVG');
 
   env.APP.switchModule('maarif');
-  assertEqual(hrIcon.textContent, '🏫', 'Header route pill icon should update to 🏫');
+  assert(hrIcon.getAttribute('data-icon') === 'school' || hrIcon.innerHTML.includes('data-icon="school"'), 'Header route pill icon should update to school SVG');
   assertIncludes(hrLabel.textContent, 'Sınıf MEB', 'Header route pill label should reflect MEB grade');
 });
 
@@ -723,20 +723,20 @@ registerTest(1, 'Navigation & Canopy', 'test_header_route_pill_replaces_horizont
   assert(hrLabel, '#header-route-label must exist inside route pill');
 
   // Default state: Maarif 5. Sınıf
-  assertEqual(hrIcon.textContent, '🏫', 'Route pill icon should be school icon for MEB Maarif');
+  assert(hrIcon.getAttribute('data-icon') === 'school' || hrIcon.innerHTML.includes('data-icon="school"'), 'Route pill icon should be school icon for MEB Maarif');
   assertIncludes(hrLabel.textContent, '5. Sınıf', 'Route pill label should show 5. Sınıf');
 
   // 3. Dynamic route switching updates pill
   env.APP.switchModule('yds');
-  assertEqual(hrIcon.textContent, '🎯', 'Route pill icon should be target for YDS');
+  assert(hrIcon.getAttribute('data-icon') === 'target' || hrIcon.innerHTML.includes('data-icon="target"'), 'Route pill icon should be target for YDS');
   assertEqual(hrLabel.textContent, 'YDS / YÖKDİL', 'Route pill label should be YDS / YÖKDİL');
 
   env.APP.switchModule('oxford');
-  assertEqual(hrIcon.textContent, '📚', 'Route pill icon should be books for Library');
+  assert(hrIcon.getAttribute('data-icon') === 'book' || hrIcon.innerHTML.includes('data-icon="book"'), 'Route pill icon should be books for Library');
   assertEqual(hrLabel.textContent, 'Kütüphane', 'Route pill label should be Kütüphane');
 
   env.APP.switchGrade(8);
-  assertEqual(hrIcon.textContent, '🏫', 'Route pill icon should be school for MEB grade');
+  assert(hrIcon.getAttribute('data-icon') === 'school' || hrIcon.innerHTML.includes('data-icon="school"'), 'Route pill icon should be school for MEB grade');
   assertIncludes(hrLabel.textContent, '8. Sınıf', 'Route pill label should show 8. Sınıf');
 
   // 4. Clicking route pill triggers grade & curriculum modal

@@ -36,6 +36,51 @@
     mic: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="23"></line><line x1="8" y1="23" x2="16" y2="23"></line></svg>`
   };
 
+  // Minimalist Monochrome Vector Iconography System (Sophisticated Playful)
+  const UI_ICONS = {
+    school: '<path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/>',
+    target: '<circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/>',
+    book: '<path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z"/><path d="M6 6h10"/><path d="M6 10h10"/>',
+    bookOpen: '<path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>',
+    flame: '<path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/>',
+    brain: '<path d="M9.5 2A2.5 2.5 0 0 1 12 4.5v15a2.5 2.5 0 0 1-4.96.44 2.5 2.5 0 0 1-2.96-3.08 3 3 0 0 1-.34-5.58 2.5 2.5 0 0 1 1.32-4.24 2.5 2.5 0 0 1 4.44-5.04z"/><path d="M14.5 2A2.5 2.5 0 0 0 12 4.5v15a2.5 2.5 0 0 0 4.96.44 2.5 2.5 0 0 0 2.96-3.08 3 3 0 0 0 .34-5.58 2.5 2.5 0 0 0-1.32-4.24 2.5 2.5 0 0 0-4.44-5.04z"/>',
+    repeat: '<path d="m17 2 4 4-4 4"/><path d="M3 11v-1a4 4 0 0 1 4-4h14"/><path d="m7 22-4-4 4-4"/><path d="M21 13v1a4 4 0 0 1-4 4H3"/>',
+    alert: '<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>',
+    rocket: '<path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"/><path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"/><path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0"/><path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5"/>',
+    calendar: '<rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>',
+    layers: '<polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/>',
+    zap: '<polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>',
+    mic: '<path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/>',
+    fileText: '<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>',
+    search: '<circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>',
+    chart: '<line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/>',
+    message: '<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>',
+    check: '<polyline points="20 6 9 17 4 12"/>',
+    cross: '<line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>',
+    speaker: '<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/>',
+    starOutline: '<polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>',
+    starFilled: '<polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>',
+    refresh: '<path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"/>',
+    scissors: '<circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><line x1="20" y1="4" x2="8.12" y2="15.88"/><line x1="14.47" y1="14.48" x2="20" y2="20"/><line x1="8.12" y1="8.12" x2="12" y2="12"/>',
+    sparkles: '<path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/>',
+    compass: '<circle cx="12" cy="12" r="10"/><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/>',
+    tools: '<path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>',
+    pin: '<path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/>',
+    lightbulb: '<path d="M9 18h6"/><path d="M10 22h4"/><path d="M15.09 14c.18-.98.65-1.74 1.41-2.5A4.65 4.65 0 0 0 18 8 6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.76.76 1.23 1.52 1.41 2.5"/>',
+    bug: '<rect x="8" y="9" width="8" height="10" rx="4"/><path d="m19 7-3 2"/><path d="m5 7 3 2"/><path d="m19 19-3-2"/><path d="m5 19 3-2"/><path d="M20 13h-4"/><path d="M4 13h4"/><path d="m10 4 1 2"/><path d="m14 4-1 2"/>',
+    headphones: '<path d="M3 18v-6a9 9 0 0 1 18 0v6"/><path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3zM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"/>',
+    circleDot: '<circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/>',
+    lock: '<rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>'
+  };
+
+  function renderIcon(name, size = 18, className = '', strokeWidth = 2.2) {
+    const path = UI_ICONS[name] || UI_ICONS.sparkles;
+    const cls = className ? `ui-icon ${className}` : 'ui-icon';
+    const isFilled = name === 'starFilled';
+    const fillAttr = isFilled ? 'currentColor' : 'none';
+    return `<svg class="${cls}" width="${size}" height="${size}" viewBox="0 0 24 24" fill="${fillAttr}" stroke="currentColor" stroke-width="${strokeWidth}" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" data-icon="${name}">${path}</svg>`;
+  }
+
   // ==========================================================================
   // YDS AKADEMİK EŞ ANLAM VE PREPOSITION SÖZLÜĞÜ (High-Yield Collocations)
   // ==========================================================================
@@ -671,8 +716,8 @@
 
   const COACH_PHASE_TEXT = {
     preparing: 'Mikrofon hazırlanıyor...',
-    permission: 'Tarayıcının mikrofon izin penceresini onaylayın ☝️',
-    listening: 'Dinliyorum — şimdi kelimeyi söyleyin 🎙️',
+    permission: 'Tarayıcının mikrofon izin penceresini onaylayın',
+    listening: 'Dinliyorum — şimdi kelimeyi söyleyin',
     speech: 'Sesiniz algılandı, devam edin...',
     processing: 'Telaffuzunuz çözümleniyor...'
   };
@@ -716,14 +761,14 @@
       'unsupported': '⚠️ Bu tarayıcı konuşma tanımayı desteklemiyor (ör. Firefox). Lütfen Google Chrome, Microsoft Edge veya Safari kullanın. Aşağıdan kendi sesinizi kaydedip doğru telaffuzla karşılaştırabilirsiniz.',
       'insecure': `⚠️ Mikrofon bu adreste engellendi (${host}). Tarayıcılar mikrofonu yalnızca https:// veya localhost üzerinden açar. Telefonda http://192.168… yerine uygulamanın https (GitHub Pages) adresini kullanın.`,
       'brave': '⚠️ Brave tarayıcısı konuşma tanıma servisini engeller. Lütfen Google Chrome, Edge veya Safari kullanın.',
-      'not-allowed': '⚠️ Mikrofon izni reddedildi. Adres çubuğundaki kilit 🔒 simgesinden Mikrofon → İzin Ver seçip sayfayı yenileyin. Mac’te ayrıca Sistem Ayarları → Gizlilik ve Güvenlik → Mikrofon’dan tarayıcıya izin verin.',
-      'service-not-allowed': '⚠️ Mikrofon çalışıyor ama konuşma tanıma servisi kapalı. Safari’de: Sistem Ayarları → Klavye → Dikte açık olmalı. Chrome’da sayfayı yenileyip tekrar deneyin.',
-      'audio-capture': '⚠️ Mikrofona erişilemedi. Mikrofonun bağlı/açık olduğundan ve sistem ayarlarında tarayıcıya izin verildiğinden emin olun.',
-      'no-mic': '⚠️ Bu cihazda mikrofon bulunamadı. Mikrofon/kulaklık bağlayıp tekrar deneyin.',
-      'mic-busy': '⚠️ Mikrofon başka bir uygulama veya sekme tarafından kullanılıyor (Zoom, Meet, WhatsApp vb.). Kapatıp tekrar deneyin.',
-      'network': '⚠️ Konuşma tanıma sunucusuna ulaşılamadı. Chrome/Edge konuşmayı tanımak için internet gerektirir. Bağlantınızı kontrol edin; VPN veya reklam engelleyici açıksa kapatmayı deneyin.',
+      'not-allowed': 'Mikrofon izni reddedildi. Adres çubuğundaki kilit simgesinden Mikrofon → İzin Ver seçip sayfayı yenileyin. Mac’te ayrıca Sistem Ayarları → Gizlilik ve Güvenlik → Mikrofon’dan tarayıcıya izin verin.',
+      'service-not-allowed': 'Mikrofon çalışıyor ama konuşma tanıma servisi kapalı. Safari’de: Sistem Ayarları → Klavye → Dikte açık olmalı. Chrome’da sayfayı yenileyip tekrar deneyin.',
+      'audio-capture': 'Mikrofona erişilemedi. Mikrofonun bağlı/açık olduğundan ve sistem ayarlarında tarayıcıya izin verildiğinden emin olun.',
+      'no-mic': 'Bu cihazda mikrofon bulunamadı. Mikrofon/kulaklık bağlayıp tekrar deneyin.',
+      'mic-busy': 'Mikrofon başka bir uygulama veya sekme tarafından kullanılıyor (Zoom, Meet, WhatsApp vb.). Kapatıp tekrar deneyin.',
+      'network': 'Konuşma tanıma sunucusuna ulaşılamadı. Chrome/Edge konuşmayı tanımak için internet gerektirir. Bağlantınızı kontrol edin; VPN veya reklam engelleyici açıksa kapatmayı deneyin.',
       'no-speech': 'Ses algılanamadı. Mikrofona yakın ve net şekilde kelimeyi söyleyip tekrar deneyin.',
-      'no-audio': '⚠️ Mikrofondan hiç ses gelmedi. Doğru mikrofonun seçili olduğunu kontrol edin (Mac: Sistem Ayarları → Ses → Giriş; Chrome: adres çubuğundaki 🎙️ simgesi → mikrofon seçimi) ve tekrar deneyin.',
+      'no-audio': 'Mikrofondan hiç ses gelmedi. Doğru mikrofonun seçili olduğunu kontrol edin (Mac: Sistem Ayarları → Ses → Giriş; Chrome: adres çubuğundaki mikrofon simgesi) ve tekrar deneyin.',
       'service-no-result': '⚠️ Sesiniz mikrofona ulaşıyor ama tarayıcının konuşma tanıma servisi yanıt vermedi. Chrome/Edge internet ister (VPN/reklam engelleyiciyi kapatın); Safari’de Dikte açık olmalı. Arc, Opera, Vivaldi gibi tarayıcılarda bu servis çalışmayabilir — Google Chrome deneyin. Bu arada aşağıdan sesinizi kaydedip karşılaştırabilirsiniz.',
       'aborted': 'Dinleme yarıda kesildi. Tekrar denemek için mikrofona dokunun.',
       'language-not-supported': '⚠️ Seçilen aksan bu cihazda desteklenmiyor. UK/US aksanını değiştirip tekrar deneyin.',
@@ -1205,7 +1250,7 @@
       return {
         score: 100,
         tier: 'excellent',
-        title: 'Mükemmel Telaffuz! 🎯',
+        title: 'Mükemmel Telaffuz!',
         message: 'Kusursuz akıcılık ve birebir fonetik eşleşme.',
         spoken: cleanSpoken,
         target: cleanTarget
@@ -1222,7 +1267,7 @@
         return {
           score: Math.min(98, score),
           tier: score >= 90 ? 'excellent' : 'good',
-          title: score >= 90 ? 'Harika Telaffuz! 🌟' : 'Gayet Başarılı! 👍',
+          title: score >= 90 ? 'Harika Telaffuz!' : 'Gayet Başarılı!',
           message: 'Kelime net olarak anlaşıldı ve doğru telaffuz edildi.',
           spoken: cleanSpoken,
           target: cleanTarget
@@ -1251,15 +1296,15 @@
 
     if (finalScore >= 88) {
       tier = 'excellent';
-      title = 'Mükemmel Telaffuz! 🎯';
+      title = 'Mükemmel Telaffuz!';
       message = 'Native seviyesinde berrak ve akıcı bir telaffuz.';
     } else if (finalScore >= 70) {
       tier = 'good';
-      title = 'Çok İyi! 👍';
+      title = 'Çok İyi!';
       message = 'Anlaşılır ve doğru sesletim. Harika ilerleme!';
     } else if (finalScore >= 50) {
       tier = 'moderate';
-      title = 'Yaklaştınız! 💡';
+      title = 'Yaklaştınız!';
       message = 'Vurguyu ve ses tonunu biraz daha belirginleştirmeyi deneyin.';
     }
 
@@ -1391,13 +1436,13 @@
 
           <div class="speech-eval-actions">
             <button type="button" class="ctrl-btn" onclick="window.APP.startCoachListening()">
-              🎙️ <span>Yeniden Söyle</span>
+              ${renderIcon('mic', 15)} <span>Yeniden Söyle</span>
             </button>
             <button type="button" class="ctrl-btn" onclick="window.APP.speakWord('${escapeHtml(w.en)}')">
-              🔊 <span>Doğruyu Dinle</span>
+              ${renderIcon('speaker', 15)} <span>Doğruyu Dinle</span>
             </button>
             <button type="button" class="fc-action-btn learned-btn" onclick="window.APP.closeSpeechCoach()" style="padding: 0 18px; min-height: 42px;">
-              ✓ <span>Tamamla</span>
+              ${renderIcon('check', 15)} <span>Tamamla</span>
             </button>
           </div>
         </div>
@@ -1407,7 +1452,7 @@
     dialog.innerHTML = `
       <div class="speech-coach-header">
         <div class="speech-coach-title-wrap">
-          <div class="speech-coach-icon-badge">🎙️</div>
+          <div class="speech-coach-icon-badge">${renderIcon('mic', 18)}</div>
           <div>
             <h3 id="speech-coach-title" class="speech-coach-title">Speaking &amp; Telaffuz Koçu</h3>
             <p class="speech-coach-sub">Yapay Zeka Destekli Fonetik Değerlendirme</p>
@@ -1514,14 +1559,14 @@
     return `
       <div class="coach-self-record">
         <div class="coach-self-record-head">
-          <strong>🎧 Kaydet &amp; Karşılaştır</strong>
+          <strong>${renderIcon('headphones', 14)} Kaydet &amp; Karşılaştır</strong>
           <span>Otomatik puanlama çalışmasa da kendi sesinizi kaydedip doğru telaffuzla karşılaştırabilirsiniz.</span>
         </div>
         <div class="coach-self-record-actions">
           <button type="button" class="ctrl-btn ${isRec ? 'is-recording' : ''}" onclick="window.APP.toggleCoachSelfRecording()">
-            ${isRec ? '⏹ Kaydı Bitir' : (hasRec ? '🔴 Yeniden Kaydet' : '🔴 Sesimi Kaydet')}
+            ${isRec ? `${renderIcon('cross', 13)} Kaydı Bitir` : (hasRec ? `${renderIcon('repeat', 13)} Yeniden Kaydet` : `${renderIcon('mic', 13)} Sesimi Kaydet`)}
           </button>
-          <button type="button" class="ctrl-btn" onclick="window.APP.speakWord('${escapeHtml(w.en)}')">🔊 Doğruyu Dinle</button>
+          <button type="button" class="ctrl-btn" onclick="window.APP.speakWord('${escapeHtml(w.en)}')">${renderIcon('speaker', 14)} Doğruyu Dinle</button>
         </div>
         ${isRec ? '<div class="coach-self-record-note">Kayıt yapılıyor... kelimeyi söyleyin (en fazla 5 sn)</div>' : ''}
         ${hasRec ? `<audio class="coach-self-record-audio" controls src="${COACH_STATE.recordUrl}"></audio>` : ''}
@@ -2138,7 +2183,7 @@
     const toast = document.createElement('div');
     toast.className = 'recovery-toast-alert';
     toast.innerHTML = `
-      <div class="recovery-toast-icon">🎉</div>
+      <div class="recovery-toast-icon">${renderIcon('sparkles', 20)}</div>
       <div class="recovery-toast-content">
         <strong>KURTARMA BAŞARILI!</strong>
         <span><strong>${word.en.toUpperCase()}</strong> 2 kez doğru bilindi ve Hata Defterinden temizlendi!</span>
@@ -2352,7 +2397,11 @@
     const hrIcon = document.getElementById('header-route-icon');
     const hrLabel = document.getElementById('header-route-label');
     const hrPill = document.getElementById('header-route-pill-btn');
-    if (hrIcon) hrIcon.textContent = moduleName === 'maarif' ? '🏫' : (moduleName === 'yds' ? '🎯' : (moduleName === 'oxford' ? '📚' : '📖'));
+    if (hrIcon) {
+      const iconKey = moduleName === 'maarif' ? 'school' : (moduleName === 'yds' ? 'target' : 'book');
+      hrIcon.innerHTML = renderIcon(iconKey, 18, 'hrp-svg-icon');
+      hrIcon.setAttribute('data-icon', iconKey);
+    }
     if (hrLabel) {
       if (moduleName === 'maarif') hrLabel.textContent = `${gData.name} MEB`;
       else if (moduleName === 'yds') hrLabel.textContent = 'YDS / YÖKDİL';
@@ -2601,7 +2650,7 @@
 
       <div class="classifier-result-card">
         <div class="crc-badge-row">
-          <span class="crc-tag">${result.matchType === 'canonical_curriculum' ? '★ RESMİ MEB MÜFREDAT HEDEFİ' : '🔗 SEMANTİK BAĞLAM EŞLEŞMESİ'}</span>
+          <span class="crc-tag">${result.matchType === 'canonical_curriculum' ? '★ RESMİ MEB MÜFREDAT HEDEFİ' : `${renderIcon('sparkles', 12)} SEMANTİK BAĞLAM EŞLEŞMESİ`}</span>
           <span class="crc-score">%${scorePercent} GÜVEN</span>
         </div>
         <h3 class="crc-title">${result.gradeName} • ${result.unitTitle}</h3>
@@ -2617,7 +2666,7 @@
 
       <div class="classifier-action-row">
         <button type="button" class="classifier-go-btn" onclick="window.APP.goToCurriculumUnit(${result.grade}, ${result.unitNum})">
-          🎓 ${result.gradeName} Bu Ünitenin Haftalık Planına Git
+          ${renderIcon('school', 15)} ${result.gradeName} Bu Ünitenin Haftalık Planına Git
         </button>
       </div>
     `;
@@ -2833,7 +2882,7 @@
       subTitle = `Bilişsel Hata Analizi • ${gradeLabel} • Toplam ${words.length} Kritik Kelime`;
       bannerHtml = `
         <div class="ws-banner">
-          <span class="ws-banner-title">🛑 BİLİŞSEL GELİŞİM VE HATA AYIKLAMA YÖNERGESİ:</span>
+          <span class="ws-banner-title">${renderIcon('alert', 15)} BİLİŞSEL GELİŞİM VE HATA AYIKLAMA YÖNERGESİ:</span>
           <span class="ws-banner-desc">Bu çalışma föyü testlerde yanlış cevaplanan kelimelerinizden derlenmiştir. Anlamları inceleyiniz, kelimeleri 3 kez yazım alanına yazınız ve örnek cümle kurarak kalıcı hafızaya aktarınız.</span>
         </div>
       `;
@@ -2847,7 +2896,7 @@
       subTitle = `${gradeLabel} • Hedef Müfredat Kelimeleri`;
       bannerHtml = `
         <div class="ws-banner banner-curriculum">
-          <span class="ws-banner-title">📚 HAFTANIN ODAĞI &amp; KAZANIMI:</span>
+          <span class="ws-banner-title">${renderIcon('book', 15)} HAFTANIN ODAĞI &amp; KAZANIMI:</span>
           <span class="ws-banner-desc">${escapeHtml(focusText)}</span>
         </div>
       `;
@@ -2856,7 +2905,7 @@
       subTitle = `${gradeLabel} • Süre: 20 Dakika • Puan: 100`;
       bannerHtml = `
         <div class="ws-banner banner-quiz">
-          <span class="ws-banner-title">📝 SINAV YÖNERGESİ:</span>
+          <span class="ws-banner-title">${renderIcon('fileText', 15)} SINAV YÖNERGESİ:</span>
           <span class="ws-banner-desc">Soruları dikkatle okuyunuz ve doğru seçeneği işaretleyiniz. Cevap anahtarı sayfanın en altında yer almaktadır.</span>
         </div>
       `;
@@ -2865,7 +2914,7 @@
       subTitle = `${gradeLabel} • Çift Taraflı Çalışma Kartları`;
       bannerHtml = `
         <div class="ws-banner banner-flashcards">
-          <span class="ws-banner-title">✂️ KULLANIM KILAVUZU:</span>
+          <span class="ws-banner-title">${renderIcon('scissors', 15)} KULLANIM KILAVUZU:</span>
           <span class="ws-banner-desc">Kesik çizgilerden (---) kesiniz, ortadaki noktalı çizgiden (:::) ikiye katlayınız. Bir yüzü İngilizce, diğer yüzü Türkçe taşınabilir kartınız hazır!</span>
         </div>
       `;
@@ -3013,7 +3062,7 @@
       if (state.includeAnswerKey) {
         bodyHtml += `
           <div class="ws-answer-key-box">
-            <div class="ws-answer-key-title">✂️ CEVAP ANAHTARI (ANSWER KEY):</div>
+            <div class="ws-answer-key-title">${renderIcon('scissors', 14)} CEVAP ANAHTARI (ANSWER KEY):</div>
             <div class="ws-answer-key-content">${answerKey.join('   •   ')}</div>
           </div>
         `;
@@ -3123,28 +3172,28 @@
             <label class="pdf-group-label">1. ÇALIŞMA ŞABLONU SEÇİN</label>
             <div class="pdf-template-grid">
               <button type="button" class="pdf-template-btn ${state.template === 'mistakes' ? 'active' : ''}" onclick="window.APP.updatePdfStudioOption('template', 'mistakes')">
-                <span class="ptb-icon">🛑</span>
+                <span class="ptb-icon">${renderIcon('alert', 22)}</span>
                 <div class="ptb-info">
                   <span class="ptb-title">Hata Kampı &amp; Yanlışlar</span>
                   <span class="ptb-desc">Yanlış yapılan kelimeler, 3x yazım &amp; kurtarma</span>
                 </div>
               </button>
               <button type="button" class="pdf-template-btn ${state.template === 'curriculum' ? 'active' : ''}" onclick="window.APP.updatePdfStudioOption('template', 'curriculum')">
-                <span class="ptb-icon">📚</span>
+                <span class="ptb-icon">${renderIcon('book', 22)}</span>
                 <div class="ptb-info">
                   <span class="ptb-title">Sınıf Müfredat Föyü</span>
                   <span class="ptb-desc">Seçilen sınıf ve haftanın hedef kelimeleri</span>
                 </div>
               </button>
               <button type="button" class="pdf-template-btn ${state.template === 'quiz' ? 'active' : ''}" onclick="window.APP.updatePdfStudioOption('template', 'quiz')">
-                <span class="ptb-icon">📝</span>
+                <span class="ptb-icon">${renderIcon('fileText', 22)}</span>
                 <div class="ptb-info">
                   <span class="ptb-title">Yazdırılabilir Test &amp; Quiz</span>
                   <span class="ptb-desc">Çoktan seçmeli sınav kağıdı + Cevap Anahtarı</span>
                 </div>
               </button>
               <button type="button" class="pdf-template-btn ${state.template === 'flashcards' ? 'active' : ''}" onclick="window.APP.updatePdfStudioOption('template', 'flashcards')">
-                <span class="ptb-icon">✂️</span>
+                <span class="ptb-icon">${renderIcon('scissors', 22)}</span>
                 <div class="ptb-info">
                   <span class="ptb-title">Kes &amp; Katla Kartları</span>
                   <span class="ptb-desc">A4 basılıp katlanan çift taraflı cep kartları</span>
@@ -3188,11 +3237,11 @@
               <div class="pdf-field-wrap">
                 <span class="pdf-field-title">Kapsam:</span>
                 <select id="pdf-scope-select" class="pdf-select" onchange="window.APP.updatePdfStudioOption('scope', this.value)">
-                  <option value="mistakes" ${state.scope === 'mistakes' ? 'selected' : ''}>🛑 Yanlışlarım (Hata Defteri)</option>
-                  <option value="current_week" ${state.scope === 'current_week' ? 'selected' : ''}>📅 Bu Haftanın Hedef Kelimeleri</option>
-                  <option value="unit" ${state.scope === 'unit' ? 'selected' : ''}>📖 Seçili Ünite Kelimeleri</option>
-                  <option value="starred" ${state.scope === 'starred' ? 'selected' : ''}>⭐ Yıldızlı / Favorilerim</option>
-                  <option value="all" ${state.scope === 'all' ? 'selected' : ''}>🌐 Sınıf Genel Havuzu</option>
+                  <option value="mistakes" ${state.scope === 'mistakes' ? 'selected' : ''}>Yanlışlarım (Hata Defteri)</option>
+                  <option value="current_week" ${state.scope === 'current_week' ? 'selected' : ''}>Bu Haftanın Hedef Kelimeleri</option>
+                  <option value="unit" ${state.scope === 'unit' ? 'selected' : ''}>Seçili Ünite Kelimeleri</option>
+                  <option value="starred" ${state.scope === 'starred' ? 'selected' : ''}>Yıldızlı / Favorilerim</option>
+                  <option value="all" ${state.scope === 'all' ? 'selected' : ''}>Sınıf Genel Havuzu</option>
                 </select>
               </div>
             </div>
@@ -3261,7 +3310,7 @@
         <!-- Sağ Canlı Önizleme Paneli -->
         <div class="pdf-preview-pane">
           <div class="pdf-preview-header">
-            <span class="pph-title">📄 Canlı A4 Baskı Önizlemesi</span>
+            <span class="pph-title">${renderIcon('fileText', 16)} Canlı A4 Baskı Önizlemesi</span>
             <span class="pph-badge" id="pdf-preview-page-count">Standart A4 • 210 x 297 mm</span>
           </div>
           <div class="pdf-preview-scroll-wrap">
@@ -3495,7 +3544,7 @@
     const body = report.fullText;
     const mailtoUrl = `mailto:${encodeURIComponent(targetEmail)}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
 
-    showFeedbackStatus('📧 E-posta istemciniz açılıyor... Gönder butonuna basarak bize iletebilirsiniz.', 'success');
+    showFeedbackStatus('E-posta istemciniz açılıyor... Gönder butonuna basarak bize iletebilirsiniz.', 'success');
     window.location.href = mailtoUrl;
   }
 
@@ -3504,7 +3553,7 @@
     if (!report) return;
 
     const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(report.fullText)}`;
-    showFeedbackStatus('💬 WhatsApp açılıyor... Mesajı dilediğiniz kişiye veya gruba iletebilirsiniz.', 'success');
+    showFeedbackStatus('WhatsApp açılıyor... Mesajı dilediğiniz kişiye veya gruba iletebilirsiniz.', 'success');
     window.open(whatsappUrl, '_blank');
   }
 
@@ -3519,9 +3568,9 @@
       tempArea.select();
       document.execCommand('copy');
       document.body.removeChild(tempArea);
-      showFeedbackStatus('📋 Rapor panoya kopyalandı! WhatsApp veya dilediğiniz kanaldan iletebilirsiniz.', 'success');
+      showFeedbackStatus('Rapor panoya kopyalandı! WhatsApp veya dilediğiniz kanaldan iletebilirsiniz.', 'success');
     } catch (e) {
-      showFeedbackStatus('⚠️ Kopyalama başarısız oldu, lütfen metni seçip manuel kopyalayınız.', 'warning');
+      showFeedbackStatus('Kopyalama başarısız oldu, lütfen metni seçip manuel kopyalayınız.', 'warning');
     }
   }
 
@@ -3532,7 +3581,7 @@
     const text = report.fullText;
     if (navigator && navigator.clipboard && navigator.clipboard.writeText) {
       navigator.clipboard.writeText(text).then(() => {
-        showFeedbackStatus('📋 Rapor panoya kopyalandı! WhatsApp, e-posta veya dilediğiniz kanaldan iletebilirsiniz.', 'success');
+        showFeedbackStatus('Rapor panoya kopyalandı! WhatsApp, e-posta veya dilediğiniz kanaldan iletebilirsiniz.', 'success');
       }).catch(() => {
         fallbackCopyText(text);
       });
@@ -3662,8 +3711,8 @@
     let debugListHtml = '';
     if (reviewWords.length === 0) {
       debugListHtml = `
-        <div style="padding: 24px 12px; color: var(--dp-color-ink-muted); font-size: 0.85rem; text-align: center;">
-          ✨ Şu an tekrar kuyruğunuz temiz. Testlerde yanlış cevaplanan kelimeler anında buraya eklenir.
+        <div style="padding: 24px 12px; color: var(--dp-color-ink-muted); font-size: 0.85rem; text-align: center; display: flex; align-items: center; justify-content: center; gap: 8px;">
+          ${renderIcon('sparkles', 16)} <span>Şu an tekrar kuyruğunuz temiz. Testlerde yanlış cevaplanan kelimeler anında buraya eklenir.</span>
         </div>
       `;
     } else {
@@ -3730,7 +3779,7 @@
         <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 20px; flex-wrap: wrap; position: relative; z-index: 1;">
           <div style="flex: 1; min-width: 280px;">
             <div class="hero-icon-holder" aria-hidden="true">
-              <span>🚀</span>
+              <span>${renderIcon('rocket', 28)}</span>
             </div>
             <div class="hero-label-wrap">
               <span class="hero-tag-label">LEARNISH AKILLI İNGİLİZCE EKOSİSTEMİ • KONTROL MERKEZİ</span>
@@ -3743,7 +3792,7 @@
 
           <!-- Quick Actions & Active Route Summary -->
           <div class="home-hero-summary-box">
-            <span class="hh-status-tag">📍 ŞU ANKİ AKTİF HEDEFİNİZ</span>
+            <span class="hh-status-tag">${renderIcon('pin', 12)} ŞU ANKİ AKTİF HEDEFİNİZ</span>
             <div class="hh-status-title">${activeUnitTitle}</div>
             <div class="hh-status-sub">${activeCurriculumSubtitle}</div>
             <button type="button" class="hero-primary-cta-btn" onclick="window.APP.switchView('daily')" style="margin-top: 14px; width: 100%;">
@@ -3758,7 +3807,7 @@
           <div class="bento-metric-card">
             <span class="bento-card-title">GÜNLÜK SERİ</span>
             <div class="bento-card-content">
-              <div class="bento-circular-icon">🔥</div>
+              <div class="bento-circular-icon">${renderIcon('flame', 18)}</div>
               <span class="bento-val">${streakFormatted}</span>
             </div>
           </div>
@@ -3766,7 +3815,7 @@
           <div class="bento-metric-card">
             <span class="bento-card-title">HAFIZA KALICILIĞI</span>
             <div class="bento-card-content">
-              <div class="bento-circular-icon">🧠</div>
+              <div class="bento-circular-icon">${renderIcon('brain', 18)}</div>
               <span class="bento-val">%${srsStats.retentionRate} (${srsStats.masteredCount} USTA)</span>
             </div>
           </div>
@@ -3774,7 +3823,7 @@
           <div class="bento-metric-card ${srsDueWords.length > 0 ? 'metric-highlight-due' : ''}">
             <span class="bento-card-title">ARALIKLI TEKRAR</span>
             <div class="bento-card-content">
-              <div class="bento-circular-icon">🔁</div>
+              <div class="bento-circular-icon">${renderIcon('repeat', 18)}</div>
               <span class="bento-val">${srsDueWords.length} BEKLEYEN</span>
             </div>
           </div>
@@ -3782,7 +3831,7 @@
           <div class="bento-metric-card ${activeMistakes.length > 0 ? 'metric-highlight-mistake' : ''}">
             <span class="bento-card-title">HATA DEFTERİ</span>
             <div class="bento-card-content">
-              <div class="bento-circular-icon">🛑</div>
+              <div class="bento-circular-icon">${renderIcon('alert', 18)}</div>
               <span class="bento-val">${activeMistakes.length} ZAYIF NOKTA</span>
             </div>
           </div>
@@ -3793,7 +3842,7 @@
       <section class="home-guide-section" aria-label="Öğrenim Modülleri Rehberi">
         <div class="home-section-header">
           <div class="hsh-left">
-            <span class="home-section-badge">🧭 3 FARKLI ÖĞRENİM ROTASI</span>
+            <span class="home-section-badge">${renderIcon('compass', 13)} 3 FARKLI ÖĞRENİM ROTASI</span>
             <h3 class="home-section-title">Modüller Ne İşe Yarar &amp; Hangisini Seçmelisiniz?</h3>
             <p class="home-section-desc">Learnish 3 bağımsız uzmanlık rotası sunar. İhtiyacınıza uygun rotayı seçerek doğrudan ilgili müfredat ve kelime havuzunda çalışabilirsiniz.</p>
           </div>
@@ -3804,7 +3853,7 @@
           <article class="home-route-card ${module === 'maarif' ? 'is-active-route' : ''}">
             <div class="hrc-header">
               <span class="hrc-tag tag-maarif">1. – 12. SINIFLAR • K-12 MÜFREDAT</span>
-              <div class="hrc-icon-circle">🏫</div>
+              <div class="hrc-icon-circle">${renderIcon('school', 26)}</div>
             </div>
             <h4 class="hrc-title">MEB Türkiye Yüzyılı Maarif Modeli</h4>
             <p class="hrc-desc">
@@ -3814,17 +3863,17 @@
               <strong>Kimler İçin:</strong> Okul derslerine destek, LGS &amp; YKS hazırlığı, MEB kazanımlarıyla adım adım ilerlemek isteyen öğrenciler ve veliler.
             </div>
             <ul class="hrc-features-list">
-              <li><span>✓</span> 36 haftalık resmi çerçeve planı ve haftanın odağı</li>
-              <li><span>✓</span> Kazanım kodları (Listening, Speaking, Reading, Writing)</li>
-              <li><span>✓</span> Sınıfa özel haftalık kelime listesi, kartlar ve testler</li>
-              <li><span>✓</span> MEB Maarif formatında A4 yazdırılabilir çalışma kağıdı</li>
+              <li><span>${renderIcon('check', 13)}</span> 36 haftalık resmi çerçeve planı ve haftanın odağı</li>
+              <li><span>${renderIcon('check', 13)}</span> Kazanım kodları (Listening, Speaking, Reading, Writing)</li>
+              <li><span>${renderIcon('check', 13)}</span> Sınıfa özel haftalık kelime listesi, kartlar ve testler</li>
+              <li><span>${renderIcon('check', 13)}</span> MEB Maarif formatında A4 yazdırılabilir çalışma kağıdı</li>
             </ul>
             <div class="hrc-actions">
               <button type="button" class="hrc-primary-btn" onclick="window.APP.selectModuleAndGo('maarif')">
                 ${module === 'maarif' ? '✓ Aktif Rota • Müfredata Git' : 'Müfredat Moduna Geç →'}
               </button>
               <button type="button" class="hrc-secondary-btn" onclick="window.APP.openGradeModal()">
-                🎓 Sınıf Değiştir (${STATE.selectedGrade || 5}. Sınıf)
+                ${renderIcon('school', 15)} Sınıf Değiştir (${STATE.selectedGrade || 5}. Sınıf)
               </button>
             </div>
           </article>
@@ -3833,7 +3882,7 @@
           <article class="home-route-card ${module === 'yds' ? 'is-active-route' : ''}">
             <div class="hrc-header">
               <span class="hrc-tag tag-yds">ÖSYM B2–C1 • AKADEMİK SINAVLAR</span>
-              <div class="hrc-icon-circle">🎯</div>
+              <div class="hrc-icon-circle">${renderIcon('target', 26)}</div>
             </div>
             <h4 class="hrc-title">YDS, YÖKDİL, YDT &amp; TIPDİL</h4>
             <p class="hrc-desc">
@@ -3843,10 +3892,10 @@
               <strong>Kimler İçin:</strong> Yüksek lisans, doktora, doçentlik, kamu personeli veya üniversite dil sınavlarına hazırlanan yetişkinler ve adaylar.
             </div>
             <ul class="hrc-features-list">
-              <li><span>✓</span> 2020–2026 ÖSYM çıkmış cümle ve akademik kaynak etiketleri</li>
-              <li><span>✓</span> Sık sorulan edat kalıpları (Prepositions: in, on, at, by...)</li>
-              <li><span>✓</span> Kritik eş anlamlılar (Synonyms) ve çeldirici analizleri</li>
-              <li><span>✓</span> Günde 20 kelimelik yoğun antrenman &amp; kümülatif sınavlar</li>
+              <li><span>${renderIcon('check', 13)}</span> 2020–2026 ÖSYM çıkmış cümle ve akademik kaynak etiketleri</li>
+              <li><span>${renderIcon('check', 13)}</span> Sık sorulan edat kalıpları (Prepositions: in, on, at, by...)</li>
+              <li><span>${renderIcon('check', 13)}</span> Kritik eş anlamlılar (Synonyms) ve çeldirici analizleri</li>
+              <li><span>${renderIcon('check', 13)}</span> Günde 20 kelimelik yoğun antrenman &amp; kümülatif sınavlar</li>
             </ul>
             <div class="hrc-actions">
               <button type="button" class="hrc-primary-btn" onclick="window.APP.selectModuleAndGo('yds')">
@@ -3859,7 +3908,7 @@
           <article class="home-route-card ${module === 'oxford' ? 'is-active-route' : ''}">
             <div class="hrc-header">
               <span class="hrc-tag tag-oxford">CEFR A1–C1 • KÜTÜPHANE</span>
-              <div class="hrc-icon-circle">📚</div>
+              <div class="hrc-icon-circle">${renderIcon('book', 26)}</div>
             </div>
             <h4 class="hrc-title">Kelime Kütüphanesi (A1–C1)</h4>
             <p class="hrc-desc">
@@ -3869,17 +3918,17 @@
               <strong>Kimler İçin:</strong> Genel İngilizce konuşma ve anlama becerisini geliştirmek, uluslararası standartta kelime dağarcığı oluşturmak isteyenler.
             </div>
             <ul class="hrc-features-list">
-              <li><span>✓</span> CEFR A1, A2, B1, B2 ve C1 seviye etiketleri</li>
-              <li><span>✓</span> Tam IPA fonetik telaffuz transkripsiyonu ve seslendirme</li>
-              <li><span>✓</span> 9.234 kelimelik birleşik arama ve filtreleme kütüphanesi</li>
-              <li><span>✓</span> Serbest tempolu flashcard ve test antrenmanları</li>
+              <li><span>${renderIcon('check', 13)}</span> CEFR A1, A2, B1, B2 ve C1 seviye etiketleri</li>
+              <li><span>${renderIcon('check', 13)}</span> Tam IPA fonetik telaffuz transkripsiyonu ve seslendirme</li>
+              <li><span>${renderIcon('check', 13)}</span> 9.234 kelimelik birleşik arama ve filtreleme kütüphanesi</li>
+              <li><span>${renderIcon('check', 13)}</span> Serbest tempolu flashcard ve test antrenmanları</li>
             </ul>
             <div class="hrc-actions">
               <button type="button" class="hrc-primary-btn" onclick="window.APP.selectModuleAndGo('oxford')">
                 ${module === 'oxford' ? '✓ Aktif Rota • Kütüphane' : 'Kütüphane Moduna Geç →'}
               </button>
               <button type="button" class="hrc-secondary-btn" onclick="window.APP.switchView('directory')">
-                🔍 Sözlükte Ara
+                ${renderIcon('search', 15)} Sözlükte Ara
               </button>
             </div>
           </article>
@@ -3890,7 +3939,7 @@
       <section class="home-guide-section" aria-label="Bilişsel Çalışma Döngüsü">
         <div class="home-section-header">
           <div class="hsh-left">
-            <span class="home-section-badge">📈 BİLİŞSEL ÖĞRENME YOL HARİTASI</span>
+            <span class="home-section-badge">${renderIcon('chart', 13)} BİLİŞSEL ÖĞRENME YOL HARİTASI</span>
             <h3 class="home-section-title">Bu Uygulama ile Nasıl Çalışmalısınız?</h3>
             <p class="home-section-desc">Hafızada kalıcılığı 4 katına çıkaran 4 adımlı bilişsel çalışma metodolojisi:</p>
           </div>
@@ -3900,7 +3949,7 @@
           <!-- Adım 1 -->
           <div class="home-step-card">
             <div class="hsc-step-badge">ADIM 01</div>
-            <div class="hsc-icon">📅</div>
+            <div class="hsc-icon">${renderIcon('calendar', 26)}</div>
             <h4 class="hsc-title">Günlük Mikro Hedef (Daily Workout)</h4>
             <p class="hsc-desc">Her gün seviyenize göre 10 veya 20 hedef kelimeyi inceleyin. Fonetik seslendirmeyi dinleyin, Türkçe anlamlarını ve örnek MEB cümlelerini okuyun.</p>
             <button type="button" class="hsc-link-btn" onclick="window.APP.switchView('daily')">
@@ -3911,7 +3960,7 @@
           <!-- Adım 2 -->
           <div class="home-step-card">
             <div class="hsc-step-badge">ADIM 02</div>
-            <div class="hsc-icon">🗂️</div>
+            <div class="hsc-icon">${renderIcon('layers', 26)}</div>
             <h4 class="hsc-title">Aktif Hatırlama (Active Recall Flashcards)</h4>
             <p class="hsc-desc">Dijital iki yüzlü kartlarla kelimeyi tahmin edin, kartı çevirip kendinizi değerlendirin ("Zor", "İyi", "Kolay"). Beynin aktif geri çağırma kasını çalıştırın.</p>
             <button type="button" class="hsc-link-btn" onclick="window.APP.switchView('flashcard')">
@@ -3922,7 +3971,7 @@
           <!-- Adım 3 -->
           <div class="home-step-card">
             <div class="hsc-step-badge">ADIM 03</div>
-            <div class="hsc-icon">⚡</div>
+            <div class="hsc-icon">${renderIcon('zap', 26)}</div>
             <h4 class="hsc-title">Çok Modlu Test &amp; Telaffuz Koçu (Quiz &amp; Speaking)</h4>
             <p class="hsc-desc">TR&rarr;EN, EN&rarr;TR, Dinleme, Cümle Tamamlama ve Mikrofona Telaffuz testleriyle kelimeyi çok yönlü pekiştirin. Telaffuz koçuyla aksan skoru alın.</p>
             <button type="button" class="hsc-link-btn" onclick="window.APP.switchView('quiz')">
@@ -3933,7 +3982,7 @@
           <!-- Adım 4 -->
           <div class="home-step-card">
             <div class="hsc-step-badge">ADIM 04</div>
-            <div class="hsc-icon">🧠</div>
+            <div class="hsc-icon">${renderIcon('brain', 26)}</div>
             <h4 class="hsc-title">Aralıklı Tekrar (SM-2) &amp; Hata Defteri</h4>
             <p class="hsc-desc">Ebbinghaus unutma eğrisine göre kelimeler tam unutmaya yaklaştığınız 1, 3, 7, 14. günlerde tekrar kuyruğunuza gelir. Hatalar otomatik Hata Kampına aktarılır.</p>
             <button type="button" class="hsc-link-btn" onclick="window.APP.startSRSDueFlashcards()">
@@ -3947,7 +3996,7 @@
       <section class="home-guide-section" aria-label="Temel Yetenekler ve Araçlar">
         <div class="home-section-header">
           <div class="hsh-left">
-            <span class="home-section-badge">🛠️ GÜÇLÜ ÖĞRENME ARAÇLARI</span>
+            <span class="home-section-badge">${renderIcon('tools', 13)} GÜÇLÜ ÖĞRENME ARAÇLARI</span>
             <h3 class="home-section-title">Learnish Araç Seti ile Neler Yapabilirsiniz?</h3>
             <p class="home-section-desc">Öğrenme sürecinizi destekleyen yapay zeka ve materyal araçları:</p>
           </div>
@@ -3956,84 +4005,84 @@
         <div class="home-features-grid">
           <!-- Özellik 1: Speaking Coach -->
           <div class="home-feature-box">
-            <div class="hfb-icon-wrap" style="background: rgba(202, 0, 19, 0.08); color: var(--dp-color-red); border-color: rgba(202, 0, 19, 0.2);">🎙️</div>
+            <div class="hfb-icon-wrap" style="background: rgba(202, 0, 19, 0.08); color: var(--dp-color-red); border-color: rgba(202, 0, 19, 0.2);">${renderIcon('mic', 24)}</div>
             <div class="hfb-content">
               <h4 class="hfb-title">AI Speaking &amp; Telaffuz Koçu</h4>
               <p class="hfb-desc">Web Speech API ile mikrofondan sesinizi dinler, fonetik transkripsiyonla eşleştirir ve anlık telaffuz doğruluğunuzu puanlar. US/UK aksanı seçebilirsiniz.</p>
               <button type="button" class="hfb-btn" onclick="window.APP.openSpeechCoach('pronunciation')">
-                🎙️ Telaffuz Koçunu Aç &rarr;
+                ${renderIcon('mic', 15)} Telaffuz Koçunu Aç &rarr;
               </button>
             </div>
           </div>
 
           <!-- Özellik 2: PDF Studio -->
           <div class="home-feature-box">
-            <div class="hfb-icon-wrap" style="background: rgba(2, 132, 199, 0.08); color: var(--dp-color-blue); border-color: rgba(2, 132, 199, 0.2);">📄</div>
+            <div class="hfb-icon-wrap" style="background: rgba(2, 132, 199, 0.08); color: var(--dp-color-blue); border-color: rgba(2, 132, 199, 0.2);">${renderIcon('fileText', 24)}</div>
             <div class="hfb-content">
               <h4 class="hfb-title">PDF &amp; Çalışma Kağıdı Stüdyosu</h4>
               <p class="hfb-desc">Seçtiğiniz sınıfın haftalık föyünü, 10 soruluk cevap anahtarlı testini, fiziksel kes-katla flashcardlarını veya yanlış yaptığınız kelimeleri A4 PDF olarak çıkartın.</p>
               <button type="button" class="hfb-btn" onclick="window.APP.openPdfStudio()">
-                📄 PDF Stüdyosunu Başlat &rarr;
+                ${renderIcon('fileText', 15)} PDF Stüdyosunu Başlat &rarr;
               </button>
             </div>
           </div>
 
           <!-- Özellik 3: Hata Defteri -->
           <div class="home-feature-box">
-            <div class="hfb-icon-wrap" style="background: rgba(217, 119, 6, 0.08); color: var(--dp-color-amber); border-color: rgba(217, 119, 6, 0.2);">🛑</div>
+            <div class="hfb-icon-wrap" style="background: rgba(217, 119, 6, 0.08); color: var(--dp-color-amber); border-color: rgba(217, 119, 6, 0.2);">${renderIcon('alert', 24)}</div>
             <div class="hfb-content">
               <h4 class="hfb-title">Akıllı Hata Defteri &amp; Kurtarma Kampı</h4>
               <p class="hfb-desc">Quizlerde veya kartlarda yanlış yaptığınız kelimeler otomatik kaydedilir. 2 ardışık doğru cevapla kelimeyi ustalık seviyesine çıkarıp temizleyebilirsiniz.</p>
               <button type="button" class="hfb-btn" onclick="window.APP.startMistakeQuiz()">
-                🎯 Hata Kampına Git &rarr;
+                ${renderIcon('alert', 15)} Hata Kampına Git &rarr;
               </button>
             </div>
           </div>
 
           <!-- Özellik 4: SM-2 Aralıklı Tekrar -->
           <div class="home-feature-box">
-            <div class="hfb-icon-wrap" style="background: rgba(0, 135, 68, 0.08); color: var(--dp-color-green); border-color: rgba(0, 135, 68, 0.2);">🔁</div>
+            <div class="hfb-icon-wrap" style="background: rgba(0, 135, 68, 0.08); color: var(--dp-color-green); border-color: rgba(0, 135, 68, 0.2);">${renderIcon('repeat', 24)}</div>
             <div class="hfb-content">
               <h4 class="hfb-title">SM-2 Aralıklı Tekrar Motoru</h4>
               <p class="hfb-desc">Kelimeleri ne zaman unutacağınızı hesaplayan bilişsel aralıklı tekrar motoru. Zamanı gelen kelimeleri tek tıkla flashcard veya testle pekiştirin.</p>
               <button type="button" class="hfb-btn" onclick="window.APP.startSRSDueFlashcards()">
-                🃏 Tekrarları Başlat &rarr;
+                ${renderIcon('repeat', 15)} Tekrarları Başlat &rarr;
               </button>
             </div>
           </div>
 
           <!-- Özellik 5: Gelişmiş Dizin -->
           <div class="home-feature-box">
-            <div class="hfb-icon-wrap" style="background: rgba(82, 96, 86, 0.08); color: var(--dp-color-ink-muted); border-color: rgba(82, 96, 86, 0.2);">📚</div>
+            <div class="hfb-icon-wrap" style="background: rgba(82, 96, 86, 0.08); color: var(--dp-color-ink-muted); border-color: rgba(82, 96, 86, 0.2);">${renderIcon('book', 24)}</div>
             <div class="hfb-content">
               <h4 class="hfb-title">9.234 Kelimelik Gelişmiş Sözlük</h4>
               <p class="hfb-desc">Kelime türü (isim, fiil, sıfat), CEFR seviyesi (A1-C1) ve MEB temalarına göre anında arama yapın, yıldızlayın veya öğrenildi işaretleyin.</p>
               <button type="button" class="hfb-btn" onclick="window.APP.switchView('directory')">
-                🔍 Kütüphaneyi Aç &rarr;
+                ${renderIcon('search', 15)} Kütüphaneyi Aç &rarr;
               </button>
             </div>
           </div>
 
           <!-- Özellik 6: İstatistikler & Heatmap -->
           <div class="home-feature-box">
-            <div class="hfb-icon-wrap" style="background: rgba(202, 0, 19, 0.08); color: var(--dp-color-red); border-color: rgba(202, 0, 19, 0.2);">📊</div>
+            <div class="hfb-icon-wrap" style="background: rgba(202, 0, 19, 0.08); color: var(--dp-color-red); border-color: rgba(202, 0, 19, 0.2);">${renderIcon('chart', 24)}</div>
             <div class="hfb-content">
               <h4 class="hfb-title">Öğrenim Telemetrisi &amp; Kazanım Haritası</h4>
               <p class="hfb-desc">Günlük serinizi, doğruluk yüzdesini, tema bazlı kazanım matrisini (Heatmap) ve son çalışma oturumlarınızı canlı analiz edin.</p>
               <button type="button" class="hfb-btn" onclick="window.APP.switchView('stats')">
-                📈 İstatistikleri Gör &rarr;
+                ${renderIcon('chart', 15)} İstatistikleri Gör &rarr;
               </button>
             </div>
           </div>
 
           <!-- Özellik 7: Bize Ulaşın & Hata Bildirimi -->
           <div class="home-feature-box">
-            <div class="hfb-icon-wrap" style="background: rgba(2, 132, 199, 0.08); color: var(--dp-color-blue); border-color: rgba(2, 132, 199, 0.2);">💬</div>
+            <div class="hfb-icon-wrap" style="background: rgba(2, 132, 199, 0.08); color: var(--dp-color-blue); border-color: rgba(2, 132, 199, 0.2);">${renderIcon('message', 24)}</div>
             <div class="hfb-content">
               <h4 class="hfb-title">Bize Ulaşın &amp; Hata Raporlama</h4>
               <p class="hfb-desc">Öğretmenlerimizin ve öğrencilerimizin geri bildirimleri bizim için çok değerli. Karşılaştığınız hataları, kelime önerilerini veya deneyimlerinizi tek tıkla iletin.</p>
               <button type="button" class="hfb-btn" onclick="window.APP.openFeedbackModal()">
-                💬 Geri Bildirim Gönder &rarr;
+                ${renderIcon('message', 15)} Geri Bildirim Gönder &rarr;
               </button>
             </div>
           </div>
@@ -4044,7 +4093,7 @@
       <section class="pedagogy-station-section" aria-label="Akıllı Hafıza &amp; Tekrar İstasyonu">
         <div class="pedagogy-station-header">
           <div>
-            <span class="pedagogy-station-badge">🧠 AKILLI PEDAGOJİ SİSTEMİ</span>
+            <span class="pedagogy-station-badge">${renderIcon('brain', 13)} AKILLI PEDAGOJİ SİSTEMİ</span>
             <h3 class="pedagogy-station-title">Bilişsel Hafıza &amp; Hata Ayıklama İstasyonu</h3>
           </div>
           <span class="pedagogy-station-subtitle">SM-2 Spaced Repetition + Hata Defteri</span>
@@ -4054,7 +4103,7 @@
           <!-- Kart 1: Aralıklı Tekrar -->
           <div class="pedagogy-card srs-card ${srsDueWords.length > 0 ? 'has-due' : ''}">
             <div class="ped-card-top">
-              <span class="ped-tag">🔁 BİLİŞSEL TEKRAR KUYRUĞU</span>
+              <span class="ped-tag">${renderIcon('repeat', 13)} BİLİŞSEL TEKRAR KUYRUĞU</span>
               <div class="ped-count-badge ${srsDueWords.length > 0 ? 'active' : ''}">${srsDueWords.length} KELİME</div>
             </div>
             <h4 class="ped-card-title">Bugün Zamanı Gelen Aralıklı Tekrarlar</h4>
@@ -4065,10 +4114,10 @@
             </p>
             <div class="ped-card-actions">
               <button type="button" class="ped-btn ped-btn-primary" onclick="window.APP.startSRSDueFlashcards()" ${srsDueWords.length === 0 ? 'disabled' : ''}>
-                🃏 Kartlarla Tekrar Et (${srsDueWords.length})
+                ${renderIcon('layers', 15)} Kartlarla Tekrar Et (${srsDueWords.length})
               </button>
               <button type="button" class="ped-btn ped-btn-secondary" onclick="window.APP.startSRSDueQuiz()" ${srsDueWords.length === 0 ? 'disabled' : ''}>
-                ⚡ Hızlı SRS Testi
+                ${renderIcon('zap', 15)} Hızlı SRS Testi
               </button>
             </div>
           </div>
@@ -4076,7 +4125,7 @@
           <!-- Kart 2: Akıllı Hata Defteri -->
           <div class="pedagogy-card mistake-card ${activeMistakes.length > 0 ? 'has-mistakes' : ''}">
             <div class="ped-card-top">
-              <span class="ped-tag">🛑 ZAYIF NOKTALAR &amp; GELİŞİM</span>
+              <span class="ped-tag">${renderIcon('alert', 13)} ZAYIF NOKTALAR &amp; GELİŞİM</span>
               <div class="ped-count-badge mistake ${activeMistakes.length > 0 ? 'active' : ''}">${activeMistakes.length} KRİTİK</div>
             </div>
             <h4 class="ped-card-title">Akıllı Hata Defteri &amp; Kurtarma Kampı</h4>
@@ -4097,13 +4146,13 @@
 
             <div class="ped-card-actions">
               <button type="button" class="ped-btn ped-btn-mistake" onclick="window.APP.startMistakeQuiz()" ${activeMistakes.length === 0 ? 'disabled' : ''}>
-                🎯 Kurtarma Kampı Sınavı
+                ${renderIcon('target', 15)} Kurtarma Kampı Sınavı
               </button>
               <button type="button" class="ped-btn ped-btn-secondary" onclick="window.APP.startMistakeFlashcards()" ${activeMistakes.length === 0 ? 'disabled' : ''}>
-                🃏 Hata Kartları
+                ${renderIcon('layers', 15)} Hata Kartları
               </button>
               <button type="button" class="ped-btn ped-btn-pdf" onclick="window.APP.openPdfStudio('mistakes')" title="Yanlışlarımı PDF / Yazdırılabilir Çalışma Kağıdı Olarak İndir">
-                📄 Yanlışları PDF Çıkart
+                ${renderIcon('fileText', 15)} Yanlışları PDF Çıkart
               </button>
             </div>
           </div>
@@ -4161,10 +4210,10 @@
           <article class="secondary-feed-card word-card-item ${isLearned ? 'is-learned' : ''}" data-id="${wId}">
             <div class="feed-audio-cluster" style="display: flex; flex-direction: column; gap: 6px; align-items: center; justify-content: center;">
               <button type="button" class="feed-icon-box speak-btn" data-word="${escapeHtml(wEn)}" title="Sesli Telaffuz (${STATE.settings.accent})" aria-label="Dinle: ${escapeHtml(wEn)}">
-                🔊
+                ${renderIcon('speaker', 15)}
               </button>
-              <button type="button" class="feed-icon-box coach-mic-btn" onclick="event.stopPropagation(); window.APP.openSpeechCoach('${escapeHtml(wEn)}')" title="🎙️ Speaking Koçu ile Telaffuz Et" aria-label="Telaffuz Koçu: ${escapeHtml(wEn)}" style="background: rgba(202, 0, 19, 0.08); color: var(--dp-color-red); border-color: rgba(202, 0, 19, 0.2);">
-                🎙️
+              <button type="button" class="feed-icon-box coach-mic-btn" onclick="event.stopPropagation(); window.APP.openSpeechCoach('${escapeHtml(wEn)}')" title="Speaking Koçu ile Telaffuz Et" aria-label="Telaffuz Koçu: ${escapeHtml(wEn)}" style="background: rgba(202, 0, 19, 0.08); color: var(--dp-color-red); border-color: rgba(202, 0, 19, 0.2);">
+                ${renderIcon('mic', 15)}
               </button>
             </div>
 
@@ -4173,7 +4222,7 @@
                 <h4 class="feed-card-title">${escapeHtml(wEn)}</h4>
                 ${wPhonetic ? `<span class="feed-card-meta">${escapeHtml(wPhonetic)}</span>` : ''}
                 ${getCefrBadgeHtml(wCefr)}
-                <button type="button" class="word-context-btn" onclick="event.stopPropagation(); window.APP.openClassifierForWord('${escapeHtml(wEn)}')" title="Bu kelimeyi müfredata bağla">🔗 Bağlamı İncele</button>
+                <button type="button" class="word-context-btn" onclick="event.stopPropagation(); window.APP.openClassifierForWord('${escapeHtml(wEn)}')" title="Bu kelimeyi müfredata bağla">${renderIcon('sparkles', 12)} Bağlamı İncele</button>
               </div>
               <div class="feed-card-tr">${escapeHtml(wTr)}</div>
               <div class="feed-card-meta">${escapeHtml(wDesc)}</div>
@@ -4209,7 +4258,7 @@
             <div class="curriculum-enriched-deck">
               <div class="ced-header">
                 <span class="ced-title">
-                  <span>✨</span> BAĞLAMA MOTORU İLE İLİŞKİLENDİRİLEN EK KELİMELER
+                  ${renderIcon('sparkles', 14)} BAĞLAMA MOTORU İLE İLİŞKİLENDİRİLEN EK KELİMELER
                 </span>
                 <span class="ced-badge">THE OXFORD 5000 &bull; ÜNİTEYE BAĞLI</span>
               </div>
@@ -4262,7 +4311,7 @@
 
             ${!isViewingToday ? `
               <div style="margin-top: 10px; display: flex; align-items: center; justify-content: space-between; background: rgba(217, 119, 6, 0.1); border: 1px solid rgba(217, 119, 6, 0.25); border-radius: 8px; padding: 6px 12px; font-size: 11.5px;">
-                <span>📍 Özel hafta inceleniyor (Hafta ${sched.weekNum})</span>
+                <span style="display:inline-flex; align-items:center; gap:6px;">${renderIcon('pin', 13)} Özel hafta inceleniyor (Hafta ${sched.weekNum})</span>
                 <button type="button" style="background:transparent; border:none; color:var(--dp-color-amber); font-weight:800; cursor:pointer;" onclick="window.APP.goToTodayCurriculumWeek()">Bugünün Haftasına Dön</button>
               </div>
             ` : ''}
@@ -4325,16 +4374,16 @@
 
           <div style="display: flex; gap: 10px; margin: 4px 0 12px 0; flex-wrap: wrap;">
             <button type="button" class="fc-action-btn" onclick="window.APP.startDailyFlashcards(false)">
-              🗂️ <span>Haftanın Kartlarıyla Çalış (${targetWordsList.length})</span>
+              ${renderIcon('layers', 15)} <span>Haftanın Kartlarıyla Çalış (${targetWordsList.length})</span>
             </button>
             <button type="button" class="fc-action-btn" onclick="window.APP.startDailyFlashcards(true)" title="Kelimeleri rastgele karıştırarak başlat">
-              🔀 <span>Karışık Kartlar</span>
+              ${renderIcon('repeat', 15)} <span>Karışık Kartlar</span>
             </button>
             <button type="button" class="fc-action-btn learned-btn" onclick="window.APP.startDailyQuiz()">
-              ⚡ <span>Haftalık Kazanım Testi &rarr;</span>
+              ${renderIcon('zap', 15)} <span>Haftalık Kazanım Testi &rarr;</span>
             </button>
             <button type="button" class="fc-action-btn pdf-btn" onclick="window.APP.openPdfStudio('daily')" title="Bu haftanın çalışma föyünü PDF olarak çıkart" style="background: rgba(202, 0, 19, 0.08); color: var(--dp-color-red); border-color: rgba(202, 0, 19, 0.25);">
-              📄 <span>Haftalık Föyü İndir (PDF)</span>
+              ${renderIcon('fileText', 15)} <span>Haftalık Föyü İndir (PDF)</span>
             </button>
           </div>
 
@@ -4405,7 +4454,7 @@
         mebCalendarHtml = `
           <div class="daily-meb-calendar-banner is-today">
             <div class="dmc-left">
-              <span class="dmc-icon-badge">📅</span>
+              <span class="dmc-icon-badge">${renderIcon('calendar', 16)}</span>
               <div class="dmc-info">
                 <span class="dmc-tag">MEB 2026-2027 YILLIK ÇERÇEVE PLANI • BUGÜNÜN DERSİ</span>
                 <span class="dmc-title">${todayMEB.dateFormatted} • Hafta ${todayMEB.weekNum} • ${todayMEB.themeName} (Gün ${todayMEB.day})</span>
@@ -4420,14 +4469,14 @@
         mebCalendarHtml = `
           <div class="daily-meb-calendar-banner not-today">
             <div class="dmc-left">
-              <span class="dmc-icon-badge">📌</span>
+              <span class="dmc-icon-badge">${renderIcon('pin', 16)}</span>
               <div class="dmc-info">
                 <span class="dmc-tag">ÖZEL SEÇİM İNCELENİYOR (GÜN ${STATE.currentDay})</span>
                 <span class="dmc-title">Şu an seçtiğiniz günün kelimelerini inceliyorsunuz. MEB takvimine göre bugünün dersi: Gün ${todayMEB.day} (${todayMEB.dateFormatted})</span>
               </div>
             </div>
             <button type="button" class="dmc-return-btn" onclick="window.APP.goToTodayMEBDay()">
-              📍 <span>Bugünün MEB Planına Dön (Gün ${todayMEB.day})</span>
+              ${renderIcon('pin', 14)} <span>Bugünün MEB Planına Dön (Gün ${todayMEB.day})</span>
             </button>
           </div>
         `;
@@ -4441,7 +4490,7 @@
       cumulativeCardHtml = `
         <section class="daily-cumulative-card">
           <div class="dcr-header-row">
-            <span class="dcr-tag-badge">📚 KÜMÜLATİF TEKRAR & PEKİŞTİRME</span>
+            <span class="dcr-tag-badge">${renderIcon('book', 12)} KÜMÜLATİF TEKRAR & PEKİŞTİRME</span>
             <span class="dcr-meta-badge">1. GÜN &rarr; ${STATE.currentDay}. GÜN TOPLAMI (${cumulativeCount} KELİME)</span>
           </div>
           <div class="dcr-body">
@@ -4451,13 +4500,13 @@
             </p>
             <div class="dcr-actions-row">
               <button type="button" class="fc-action-btn dcr-action-btn" onclick="window.APP.startPastDaysFlashcards(false)">
-                🗂️ <span>Geçmiş Kartları Tekrar Et (${cumulativeCount})</span>
+                ${renderIcon('layers', 15)} <span>Geçmiş Kartları Tekrar Et (${cumulativeCount})</span>
               </button>
               <button type="button" class="fc-action-btn dcr-action-btn" onclick="window.APP.startPastDaysFlashcards(true)" title="Geçmiş günlerin tüm kelimelerini rastgele karıştırarak kart çalışması başlat">
-                🔀 <span>Karışık Kart Tekrarı</span>
+                ${renderIcon('repeat', 15)} <span>Karışık Kart Tekrarı</span>
               </button>
               <button type="button" class="fc-action-btn learned-btn dcr-action-btn" onclick="window.APP.startPastDaysQuiz()">
-                ⚡ <span>Geçmiş Günlerin Testi (Kümülatif Sınav) &rarr;</span>
+                ${renderIcon('zap', 15)} <span>Geçmiş Günlerin Testi (Kümülatif Sınav) &rarr;</span>
               </button>
             </div>
           </div>
@@ -4488,7 +4537,7 @@
     if (dayLearnedCount === dayWords.length && dayWords.length > 0) {
       celebrationHtml = `
         <div class="hero-alert-box" style="margin-bottom: 20px; background: rgba(0, 135, 68, 0.12); border: 1px solid rgba(0, 135, 68, 0.3);">
-          <span class="alert-icon">🎉</span>
+          <span class="alert-icon">${renderIcon('sparkles', 16)}</span>
           <span class="alert-text"><strong>Tebrikler!</strong> Günün tüm kelimelerini öğrendiniz (%100). Kazanımı pekiştirmek için günün testini başlatın.</span>
         </div>
       `;
@@ -4518,10 +4567,10 @@
             <!-- 56px Audio & Speaking Action Cluster -->
             <div class="feed-audio-cluster" style="display: flex; flex-direction: column; gap: 6px; align-items: center; justify-content: center;">
               <button type="button" class="feed-icon-box speak-btn" data-word="${w.en}" title="Sesli Telaffuz (${STATE.settings.accent})" aria-label="Dinle: ${w.en}">
-                🔊
+                ${renderIcon('speaker', 15)}
               </button>
-              <button type="button" class="feed-icon-box coach-mic-btn" onclick="event.stopPropagation(); window.APP.openSpeechCoach('${escapeHtml(w.en)}')" title="🎙️ Speaking Koçu ile Telaffuz Et" aria-label="Telaffuz Koçu: ${w.en}" style="background: rgba(202, 0, 19, 0.08); color: var(--dp-color-red); border-color: rgba(202, 0, 19, 0.2);">
-                🎙️
+              <button type="button" class="feed-icon-box coach-mic-btn" onclick="event.stopPropagation(); window.APP.openSpeechCoach('${escapeHtml(w.en)}')" title="Speaking Koçu ile Telaffuz Et" aria-label="Telaffuz Koçu: ${w.en}" style="background: rgba(202, 0, 19, 0.08); color: var(--dp-color-red); border-color: rgba(202, 0, 19, 0.2);">
+                ${renderIcon('mic', 15)}
               </button>
             </div>
 
@@ -4532,15 +4581,15 @@
                 ${w.phonetic ? `<span class="feed-card-meta">${w.phonetic}</span>` : ''}
                 ${getCefrBadgeHtml(w.cefr)}
                 ${prepBadge ? `<span class="yds-prep-tag" title="Sık kullanılan edat">${prepBadge}</span>` : ''}
-                ${curMistake && !curMistake.cleared ? `<span class="pedagogy-badge mistake-badge" title="Hata Defterinde (${curMistake.wrongCount}x Yanlış)">🛑 ${curMistake.wrongCount}x Hata</span>` : ''}
-                ${curSRS ? `<span class="pedagogy-badge srs-badge ${curSRS.state}" title="Aralıklı Tekrar Aralığı: ${curSRS.interval} gün">🔁 ${curSRS.state === 'mastered' ? 'Kalıcı' : (curSRS.interval || 1) + 'g'}</span>` : ''}
+                ${curMistake && !curMistake.cleared ? `<span class="pedagogy-badge mistake-badge" title="Hata Defterinde (${curMistake.wrongCount}x Yanlış)">${renderIcon('alert', 12)} ${curMistake.wrongCount}x Hata</span>` : ''}
+                ${curSRS ? `<span class="pedagogy-badge srs-badge ${curSRS.state}" title="Aralıklı Tekrar Aralığı: ${curSRS.interval} gün">${renderIcon('repeat', 12)} ${curSRS.state === 'mastered' ? 'Kalıcı' : (curSRS.interval || 1) + 'g'}</span>` : ''}
               </div>
               <div class="feed-card-tr">${w.tr || '<span style="color:var(--dp-color-ink-muted); font-style:italic;">(Anlamı ekleniyor)</span>'}</div>
               <div class="feed-card-meta">${w.desc || ''} ${w.cat ? '• ' + w.cat : ''}</div>
               ${w.definition && w.definition.toLowerCase().trim() !== (w.tr || '').toLowerCase().trim() ? `<div class="feed-card-desc">"${w.definition}"</div>` : ''}
               ${syn ? `<div class="feed-card-meta" style="color:var(--dp-color-red);"><strong>EŞ ANLAM:</strong> ${syn}</div>` : ''}
               ${w.example ? `<div class="feed-card-example">“${highlightWordInText(w.example.replace(/^["“”]|["“”]$/g, ''), w.en)}”</div>` : ''}
-              ${w.ydsExample ? `<div class="yds-exam-cite-tag">📝 <strong>ÖSYM Sınav Kaynağı:</strong> ${escapeHtml(w.ydsExample)}</div>` : ''}
+              ${w.ydsExample ? `<div class="yds-exam-cite-tag">${renderIcon('fileText', 12)} <strong>ÖSYM Sınav Kaynağı:</strong> ${escapeHtml(w.ydsExample)}</div>` : ''}
             </div>
 
             <!-- Trailing Action Buttons -->
@@ -4586,7 +4635,7 @@
           <div class="bento-metric-card">
             <span class="bento-card-title">GÜNLÜK İLERLEME</span>
             <div class="bento-card-content">
-              <div class="bento-circular-icon">🎯</div>
+              <div class="bento-circular-icon">${renderIcon('target', 18)}</div>
               <span class="bento-val">${dayLearnedCount} / ${dayWords.length} KELİME</span>
             </div>
           </div>
@@ -4594,7 +4643,7 @@
           <div class="bento-metric-card">
             <span class="bento-card-title">BAŞARI YÜZDESİ</span>
             <div class="bento-card-content">
-              <div class="bento-circular-icon">⚡</div>
+              <div class="bento-circular-icon">${renderIcon('zap', 18)}</div>
               <span class="bento-val">%${dayPercent} TAMAMLANDI</span>
             </div>
           </div>
@@ -4602,7 +4651,7 @@
           <div class="bento-metric-card">
             <span class="bento-card-title">KÜTÜPHANE İNDEKSİ</span>
             <div class="bento-card-content">
-              <div class="bento-circular-icon">📚</div>
+              <div class="bento-circular-icon">${renderIcon('book', 18)}</div>
               <span class="bento-val">${startIndex + 1}–${Math.min(startIndex + batchSize, targetPool.length)} / ${targetPool.length}</span>
             </div>
           </div>
@@ -4610,7 +4659,7 @@
           <div class="bento-metric-card">
             <span class="bento-card-title">HEDEF ZAMANLAMA</span>
             <div class="bento-card-content">
-              <div class="bento-circular-icon">⏱️</div>
+              <div class="bento-circular-icon">${renderIcon('calendar', 18)}</div>
               <span class="bento-val">~10 DAKİKA</span>
             </div>
           </div>
@@ -4624,16 +4673,16 @@
         <!-- Quick Action Buttons -->
         <div style="display: flex; gap: 10px; margin-top: 18px; flex-wrap: wrap;">
           <button type="button" class="fc-action-btn" onclick="window.APP.startDailyFlashcards(false)">
-            🗂️ <span>Günün Kartlarıyla Çalış</span>
+            ${renderIcon('layers', 15)} <span>Günün Kartlarıyla Çalış</span>
           </button>
           <button type="button" class="fc-action-btn" onclick="window.APP.startDailyFlashcards(true)" title="Kelimeleri rastgele karıştırarak başlat">
-            🔀 <span>Karışık Başlat</span>
+            ${renderIcon('repeat', 15)} <span>Karışık Başlat</span>
           </button>
           <button type="button" class="fc-action-btn learned-btn" onclick="window.APP.startDailyQuiz()">
-            ⚡ <span>Günün Testini Başlat →</span>
+            ${renderIcon('zap', 15)} <span>Günün Testini Başlat →</span>
           </button>
           <button type="button" class="fc-action-btn pdf-btn" onclick="window.APP.openPdfStudio('daily')" title="Bu günün çalışma föyünü PDF olarak çıkart" style="background: rgba(202, 0, 19, 0.08); color: var(--dp-color-red); border-color: rgba(202, 0, 19, 0.25);">
-            📄 <span>Föyü İndir (PDF)</span>
+            ${renderIcon('fileText', 15)} <span>Föyü İndir (PDF)</span>
           </button>
         </div>
       </section>
@@ -4809,7 +4858,7 @@
     const activeMistakesList = getActiveMistakeWords();
 
     const flashcardSourceOptions = `
-      <optgroup label="🧠 Akıllı Pedagoji &amp; Hafıza">
+      <optgroup label="Akıllı Pedagoji &amp; Hafıza">
         <option value="srs_due" ${sourceVal === 'srs_due' ? 'selected' : ''}>Aralıklı Tekrar: Bugün Bekleyenler (${srsDueList.length})</option>
         <option value="mistakes" ${sourceVal === 'mistakes' ? 'selected' : ''}>Akıllı Hata Defteri: Kurtarma Kampı (${activeMistakesList.length})</option>
       </optgroup>
@@ -4846,7 +4895,7 @@
             </select>
           </div>
           <div class="glass-panel" style="padding: 48px 24px; text-align: center; width: 100%;">
-            <div style="font-size: 2rem; margin-bottom: 12px;">🗂️</div>
+            <div style="margin-bottom: 12px; color: var(--dp-color-ink-muted);">${renderIcon('layers', 40)}</div>
             <h3>${sourceVal === 'srs_due' ? 'Bugün için bekleyen aralıklı tekrarınız yok. Harika!' : (sourceVal === 'mistakes' ? 'Hata Defteriniz tertemiz! Zayıf nokta bulunmuyor.' : 'Bu filtre grubunda henüz kelime bulunmuyor.')}</h3>
             <p style="color: var(--dp-color-ink-muted); margin-top: 6px;">Lütfen yukarıdaki menüden başka bir kelime havuzu seçin.</p>
           </div>
@@ -4909,14 +4958,14 @@
                   ${getCefrBadgeHtml(currentWord.cefr)}
                   ${currentWord.themeCode ? getThemeBadgeHtml(currentWord.themeCode, currentWord.themeTitle) : ''}
                   ${prepBadge ? `<span class="yds-prep-tag">${prepBadge}</span>` : ''}
-                  ${curMistake && !curMistake.cleared ? `<span class="pedagogy-badge mistake-badge" title="Hata Defterinde">🛑 ${curMistake.wrongCount}x HATA</span>` : ''}
-                  ${curSRS ? `<span class="pedagogy-badge srs-badge ${curSRS.state}" title="Aralıklı Tekrar Aralığı: ${curSRS.interval} gün">🔁 ${curSRS.state === 'mastered' ? 'Kalıcı Bellek' : (curSRS.interval || 1) + 'g Tekrar'}</span>` : ''}
+                  ${curMistake && !curMistake.cleared ? `<span class="pedagogy-badge mistake-badge" title="Hata Defterinde">${renderIcon('alert', 12)} ${curMistake.wrongCount}x HATA</span>` : ''}
+                  ${curSRS ? `<span class="pedagogy-badge srs-badge ${curSRS.state}" title="Aralıklı Tekrar Aralığı: ${curSRS.interval} gün">${renderIcon('repeat', 12)} ${curSRS.state === 'mastered' ? 'Kalıcı Bellek' : (curSRS.interval || 1) + 'g Tekrar'}</span>` : ''}
                 </div>
                 <div class="fc-audio-action-group" style="display:inline-flex; gap:6px; align-items:center;">
                   <button class="speak-btn" data-word="${currentWord.en}" onclick="event.stopPropagation(); window.APP.speakCurrentWord('${currentWord.en}')" title="Dinle" aria-label="Dinle">
                     ${ICONS.speaker}
                   </button>
-                  <button class="speak-btn coach-mic-btn" onclick="event.stopPropagation(); window.APP.openSpeechCoach('${escapeHtml(currentWord.en)}')" title="🎙️ Speaking Koçu ile Telaffuz Et" aria-label="Telaffuz Koçu">
+                  <button class="speak-btn coach-mic-btn" onclick="event.stopPropagation(); window.APP.openSpeechCoach('${escapeHtml(currentWord.en)}')" title="Speaking Koçu ile Telaffuz Et" aria-label="Telaffuz Koçu">
                     ${ICONS.mic}
                   </button>
                 </div>
@@ -4946,7 +4995,7 @@
                   <button class="speak-btn" data-word="${currentWord.en}" onclick="event.stopPropagation(); window.APP.speakCurrentWord('${currentWord.en}')" title="Dinle" aria-label="Dinle">
                     ${ICONS.speaker}
                   </button>
-                  <button class="speak-btn coach-mic-btn" onclick="event.stopPropagation(); window.APP.openSpeechCoach('${escapeHtml(currentWord.en)}')" title="🎙️ Speaking Koçu ile Telaffuz Et" aria-label="Telaffuz Koçu">
+                  <button class="speak-btn coach-mic-btn" onclick="event.stopPropagation(); window.APP.openSpeechCoach('${escapeHtml(currentWord.en)}')" title="Speaking Koçu ile Telaffuz Et" aria-label="Telaffuz Koçu">
                     ${ICONS.mic}
                   </button>
                 </div>
@@ -4960,16 +5009,16 @@
 
                 <!-- Pedagogical Memory Retention Bar -->
                 <div class="srs-card-pedagogy-meta">
-                  <span class="srs-pill-item">🔁 <strong>Tekrar Aralığı:</strong> ${curSRS ? (curSRS.interval || 1) + ' Gün' : 'Yeni'}</span>
-                  <span class="srs-pill-item">⚡ <strong>Hafıza Gücü:</strong> %${curSRS ? Math.round(curSRS.easeFactor * 100) : 250}</span>
+                  <span class="srs-pill-item">${renderIcon('repeat', 12)} <strong>Tekrar Aralığı:</strong> ${curSRS ? (curSRS.interval || 1) + ' Gün' : 'Yeni'}</span>
+                  <span class="srs-pill-item">${renderIcon('zap', 12)} <strong>Hafıza Gücü:</strong> %${curSRS ? Math.round(curSRS.easeFactor * 100) : 250}</span>
                   ${curMistake && !curMistake.cleared ? `
-                    <span class="srs-pill-item srs-pill-mistake">🛑 <strong>Hata Geçmişi:</strong> ${curMistake.wrongCount}x Yanlış (${Math.max(0, 2 - (curMistake.consecutiveCorrect || 0))} doğru sonra temizlenir)</span>
+                    <span class="srs-pill-item srs-pill-mistake">${renderIcon('alert', 12)} <strong>Hata Geçmişi:</strong> ${curMistake.wrongCount}x Yanlış (${Math.max(0, 2 - (curMistake.consecutiveCorrect || 0))} doğru sonra temizlenir)</span>
                   ` : ''}
                 </div>
 
                 ${currentWord.definition && currentWord.definition.toLowerCase().trim() !== (currentWord.tr || '').toLowerCase().trim() ? `<div class="word-def" style="max-width: 52ch;">“${currentWord.definition}”</div>` : ''}
                 ${currentWord.example ? `<div class="word-example" style="max-width: 52ch;">“${highlightWordInText(currentWord.example.replace(/^["“”]|["“”]$/g, ''), currentWord.en)}”</div>` : ''}
-                ${currentWord.ydsExample ? `<div class="yds-exam-cite-tag" style="margin-top:8px;">📝 <strong>ÖSYM Sınav Kaynağı:</strong> ${escapeHtml(currentWord.ydsExample)}</div>` : ''}
+                ${currentWord.ydsExample ? `<div class="yds-exam-cite-tag" style="margin-top:8px;">${renderIcon('fileText', 12)} <strong>ÖSYM Sınav Kaynağı:</strong> ${escapeHtml(currentWord.ydsExample)}</div>` : ''}
               </div>
 
               <div class="fc-footer">
@@ -4990,19 +5039,19 @@
           </button>
           
           <button class="fc-action-btn fc-btn-again ${isReview ? 'active' : ''}" onclick="window.APP.markFlashcardSRS(${currentWord.id}, 1)" title="Zorlandım / Hatırlamadım (1 gün sonra tekrar sor)">
-            <span class="fc-btn-top">🛑 ZOR / TEKRAR</span>
+            <span class="fc-btn-top">${renderIcon('alert', 13)} ZOR / TEKRAR</span>
             <span class="fc-btn-sub">1 gün sonra</span>
             <span class="kbd-badge">1</span>
           </button>
 
           <button class="fc-action-btn fc-btn-good ${isLearned ? 'active' : ''}" onclick="window.APP.markFlashcardSRS(${currentWord.id}, 4)" title="İyi / Hatırladım">
-            <span class="fc-btn-top">⚡ İYİ / HATIRLADIM</span>
+            <span class="fc-btn-top">${renderIcon('zap', 13)} İYİ / HATIRLADIM</span>
             <span class="fc-btn-sub">${nextGoodDays} gün sonra</span>
             <span class="kbd-badge">2</span>
           </button>
 
           <button class="fc-action-btn fc-btn-easy" onclick="window.APP.markFlashcardSRS(${currentWord.id}, 5)" title="Çok Kolay / Zihnimde">
-            <span class="fc-btn-top">✨ KOLAY / ZİHNİMDE</span>
+            <span class="fc-btn-top">${renderIcon('check', 13)} KOLAY / ZİHNİMDE</span>
             <span class="fc-btn-sub">${nextEasyDays} gün sonra</span>
             <span class="kbd-badge">3</span>
           </button>
@@ -5041,7 +5090,7 @@
             resumeCardHtml = `
               <div class="resume-quiz-card glass-panel">
                 <div class="resume-quiz-info">
-                  <span class="resume-quiz-badge">📌 OTURUM KAYDEDİLDİ</span>
+                  <span class="resume-quiz-badge">${renderIcon('pin', 12)} OTURUM KAYDEDİLDİ</span>
                   <div class="resume-quiz-title">Yarım kalan bir test oturumunuz bulunuyor</div>
                   <div class="resume-quiz-meta">
                     SORU ${sq.currentIndex + 1} / ${sq.questions.length} • MEVCUT SKOR: ${sq.score}
@@ -5081,14 +5130,14 @@
                     <option value="definition">İngilizce Tanımdan Kelimeyi Bulma</option>
                   ` : ''}
                   <option value="listening">Dinleme &amp; Anlama (Sesli Telaffuz)</option>
-                  <option value="speaking">🎙️ Telaffuz &amp; Speaking Sınavı (Mikrofonla Oku)</option>
+                  <option value="speaking">Telaffuz &amp; Speaking Sınavı (Mikrofonla Oku)</option>
                 </select>
               </div>
 
               <div class="config-group">
                 <label for="quiz-source-select">Soru Kaynağı</label>
                 <select id="quiz-source-select">
-                  <optgroup label="🧠 Akıllı Pedagoji &amp; Hafıza">
+                  <optgroup label="Akıllı Pedagoji &amp; Hafıza">
                     <option value="srs_due">Aralıklı Tekrar: Bugün Bekleyenler (${getSRSDueWords().length} Kelime)</option>
                     <option value="mistakes">Akıllı Hata Defteri: Kurtarma Kampı (${getActiveMistakeWords().length} Kelime)</option>
                   </optgroup>
@@ -5211,11 +5260,11 @@
               </button>
               ${(STATE.userData.mistakes && Object.keys(STATE.userData.mistakes).length > 0) ? `
                 <button class="fc-action-btn pdf-btn" onclick="window.APP.openPdfStudio('mistakes')" style="min-height: 48px; min-width: 160px; background: rgba(202, 0, 19, 0.08); color: var(--dp-color-red); border-color: rgba(202, 0, 19, 0.25);">
-                  📄 Yanlışları PDF Çıkart
+                  ${renderIcon('fileText', 14)} <span>Yanlışları PDF Çıkart</span>
                 </button>
               ` : `
                 <button class="fc-action-btn pdf-btn" onclick="window.APP.openPdfStudio('quiz')" style="min-height: 48px; min-width: 160px; background: rgba(202, 0, 19, 0.08); color: var(--dp-color-red); border-color: rgba(202, 0, 19, 0.25);">
-                  📄 Test Föyünü İndir (PDF)
+                  ${renderIcon('fileText', 14)} <span>Test Föyünü İndir (PDF)</span>
                 </button>
               `}
             </div>
@@ -5232,7 +5281,7 @@
       'cloze': 'CÜMLE TAMAMLAMA',
       'definition': 'TANIM EŞLEŞTİRME',
       'listening': 'DİNLEME TESTİ',
-      'speaking': '🎙️ TELAFFUZ & SPEAKING',
+      'speaking': 'TELAFFUZ & SPEAKING',
       'tr-en': 'TR → EN',
       'en-tr': 'EN → TR'
     };
@@ -5433,7 +5482,7 @@
               ${getCefrBadgeHtml(w.cefr)}
               ${w.themeCode ? getThemeBadgeHtml(w.themeCode, w.themeTitle) : ''}
               ${prepBadge ? `<span class="yds-prep-tag">${prepBadge}</span>` : ''}
-              <button type="button" class="word-context-btn" onclick="event.stopPropagation(); window.APP.openClassifierForWord('${escapeHtml(w.en)}')" title="Bu kelimeyi müfredata bağla">🔗 Bağlam</button>
+              <button type="button" class="word-context-btn" onclick="event.stopPropagation(); window.APP.openClassifierForWord('${escapeHtml(w.en)}')" title="Bu kelimeyi müfredata bağla">${renderIcon('sparkles', 12)} Bağlam</button>
             </div>
             <span class="word-number">#${w.no || w.id}</span>
           </div>
@@ -5444,7 +5493,7 @@
               ${w.phonetic ? `<span class="word-phonetic">${w.phonetic}</span>` : ''}
               <div class="card-audio-btns" style="display:inline-flex; gap:6px; margin-left:auto; align-items:center;">
                 <button class="speak-btn" data-word="${w.en}" aria-label="Dinle: ${w.en}">${ICONS.speaker}</button>
-                <button class="speak-btn coach-mic-btn" onclick="event.stopPropagation(); window.APP.openSpeechCoach('${escapeHtml(w.en)}')" title="🎙️ Speaking Koçu ile Telaffuz Et" aria-label="Telaffuz Koçu: ${w.en}">
+                <button class="speak-btn coach-mic-btn" onclick="event.stopPropagation(); window.APP.openSpeechCoach('${escapeHtml(w.en)}')" title="Speaking Koçu ile Telaffuz Et" aria-label="Telaffuz Koçu: ${w.en}">
                   ${ICONS.mic}
                 </button>
               </div>
@@ -5826,8 +5875,8 @@
       <div class="stats-curriculum-station" style="border: var(--dp-border-rule) solid var(--dp-color-border); border-radius: var(--dp-radius-card); background: var(--dp-color-surface); padding: 24px; box-shadow: 0 4px 16px -2px rgba(23, 30, 25, 0.06); margin-bottom: 24px;">
         <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 16px; margin-bottom: 16px;">
           <div>
-            <div style="font-family: var(--dp-typography-mono); font-size: 0.78rem; font-weight: 800; color: var(--dp-color-field); text-transform: uppercase; margin-bottom: 4px; letter-spacing: 0.04em;">
-              🎯 [ AKTİF HEDEF MÜFREDAT KAZANIM İSTASYONU ]
+            <div style="font-family: var(--dp-typography-mono); font-size: 0.78rem; font-weight: 800; color: var(--dp-color-field); text-transform: uppercase; margin-bottom: 4px; letter-spacing: 0.04em; display: flex; align-items: center; gap: 6px;">
+              ${renderIcon('target', 15)} <span>[ AKTİF HEDEF MÜFREDAT KAZANIM İSTASYONU ]</span>
             </div>
             <h2 style="font-size: 1.5rem; font-weight: 800; margin: 0; letter-spacing: -0.02em;">
               ${activeCurriculumTitle}
@@ -5837,11 +5886,11 @@
             </div>
           </div>
           <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
-            <button class="ctrl-btn" onclick="window.APP.switchView('directory')" style="font-size: 0.78rem; padding: 6px 12px; background: var(--dp-color-ground); border: 1px solid var(--dp-color-border); border-radius: var(--dp-radius-nested); box-shadow: 0 4px 16px -2px rgba(23, 30, 25, 0.06); color: var(--dp-color-ink);">
-              📚 KELİME DİZİNİ
+            <button class="ctrl-btn" onclick="window.APP.switchView('directory')" style="font-size: 0.78rem; padding: 6px 12px; background: var(--dp-color-ground); border: 1px solid var(--dp-color-border); border-radius: var(--dp-radius-nested); box-shadow: 0 4px 16px -2px rgba(23, 30, 25, 0.06); color: var(--dp-color-ink); display: inline-flex; align-items: center; gap: 6px;">
+              ${renderIcon('book', 14)} <span>KELİME DİZİNİ</span>
             </button>
-            <button class="ctrl-btn" onclick="window.APP.switchView('quiz')" style="font-size: 0.78rem; padding: 6px 12px; background: var(--dp-color-field-support); color: var(--dp-color-ink); border: 1px solid var(--dp-color-border); border-radius: var(--dp-radius-nested); box-shadow: 0 4px 16px -2px rgba(23, 30, 25, 0.06);">
-              ⚡ KAZANIM TESTİ
+            <button class="ctrl-btn" onclick="window.APP.switchView('quiz')" style="font-size: 0.78rem; padding: 6px 12px; background: var(--dp-color-field-support); color: var(--dp-color-ink); border: 1px solid var(--dp-color-border); border-radius: var(--dp-radius-nested); box-shadow: 0 4px 16px -2px rgba(23, 30, 25, 0.06); display: inline-flex; align-items: center; gap: 6px;">
+              ${renderIcon('zap', 14)} <span>KAZANIM TESTİ</span>
             </button>
           </div>
         </div>
@@ -5904,8 +5953,8 @@
       <!-- 4. SM-2 ARALIKLI TEKRAR & BİLİŞSEL HAFIZA MATRİSİ -->
       <div class="themes-breakdown-card glass-panel" style="margin-bottom: 20px;">
         <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:14px;">
-          <h3 style="margin:0; text-transform: uppercase; letter-spacing: 0.03em;">
-            🧠 SM-2 BİLİŞSEL HAFIZA &amp; KALICILIK MATRİSİ
+          <h3 style="margin:0; text-transform: uppercase; letter-spacing: 0.03em; display:flex; align-items:center; gap:8px;">
+            ${renderIcon('brain', 16)} <span>SM-2 BİLİŞSEL HAFIZA &amp; KALICILIK MATRİSİ</span>
           </h3>
           <span class="pedagogy-station-badge">HAFIZA GÜCÜ: %${srsStats.retentionRate}</span>
         </div>
@@ -5916,7 +5965,7 @@
         <div class="srs-retention-tier-grid">
           <div class="srs-tier-card tier-new">
             <div class="srs-tier-top">
-              <span class="srs-tier-name">🥚 Yeni / Henüz Başlanmadı</span>
+              <span class="srs-tier-name" style="display:inline-flex; align-items:center; gap:6px;">${renderIcon('circleDot', 13)} Yeni / Henüz Başlanmadı</span>
               <strong class="srs-tier-num">${srsStats.newCount}</strong>
             </div>
             <div class="srs-tier-bar-bg"><div class="srs-tier-bar-fill" style="width:${Math.round((srsStats.newCount / (srsStats.total || 1)) * 100)}%;"></div></div>
@@ -5925,7 +5974,7 @@
 
           <div class="srs-tier-card tier-learning">
             <div class="srs-tier-top">
-              <span class="srs-tier-name">🌱 Öğreniliyor (1–3 Gün)</span>
+              <span class="srs-tier-name" style="display:inline-flex; align-items:center; gap:6px;">${renderIcon('zap', 13)} Öğreniliyor (1–3 Gün)</span>
               <strong class="srs-tier-num">${srsStats.learningCount}</strong>
             </div>
             <div class="srs-tier-bar-bg"><div class="srs-tier-bar-fill" style="width:${Math.round((srsStats.learningCount / (srsStats.total || 1)) * 100)}%;"></div></div>
@@ -5934,7 +5983,7 @@
 
           <div class="srs-tier-card tier-reviewing">
             <div class="srs-tier-top">
-              <span class="srs-tier-name">🌿 Pekiştiriliyor (4–14 Gün)</span>
+              <span class="srs-tier-name" style="display:inline-flex; align-items:center; gap:6px;">${renderIcon('sparkles', 13)} Pekiştiriliyor (4–14 Gün)</span>
               <strong class="srs-tier-num">${srsStats.reviewingCount}</strong>
             </div>
             <div class="srs-tier-bar-bg"><div class="srs-tier-bar-fill" style="width:${Math.round((srsStats.reviewingCount / (srsStats.total || 1)) * 100)}%;"></div></div>
@@ -5943,7 +5992,7 @@
 
           <div class="srs-tier-card tier-mastered">
             <div class="srs-tier-top">
-              <span class="srs-tier-name">🌳 Kalıcı Bellek (15+ Gün)</span>
+              <span class="srs-tier-name" style="display:inline-flex; align-items:center; gap:6px;">${renderIcon('check', 13)} Kalıcı Bellek (15+ Gün)</span>
               <strong class="srs-tier-num">${srsStats.masteredCount}</strong>
             </div>
             <div class="srs-tier-bar-bg"><div class="srs-tier-bar-fill" style="width:${Math.round((srsStats.masteredCount / (srsStats.total || 1)) * 100)}%;"></div></div>
@@ -5955,8 +6004,8 @@
       <!-- 5. AKILLI HATA DEFTERİ & KURTARMA TELEMETRİSİ -->
       <div class="themes-breakdown-card glass-panel" style="margin-bottom: 20px;">
         <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:14px;">
-          <h3 style="margin:0; text-transform: uppercase; letter-spacing: 0.03em;">
-            🛑 AKILLI HATA DEFTERİ &amp; ZAYIF NOKTALAR
+          <h3 style="margin:0; text-transform: uppercase; letter-spacing: 0.03em; display:flex; align-items:center; gap:8px;">
+            ${renderIcon('alert', 16)} <span>AKILLI HATA DEFTERİ &amp; ZAYIF NOKTALAR</span>
           </h3>
           <span class="pedagogy-station-badge mistake">KURTARMA BAŞARISI: %${mistakeStats.recoveryRate}</span>
         </div>
@@ -6022,8 +6071,8 @@
       <!-- 6. SPEAKING & TELAFFUZ KOÇU TELEMETRİSİ -->
       <div class="themes-breakdown-card glass-panel" style="margin-bottom: 20px;">
         <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:14px;">
-          <h3 style="margin:0; text-transform: uppercase; letter-spacing: 0.03em;">
-            🎙️ SPEAKING &amp; TELAFFUZ KOÇU TELEMETRİSİ
+          <h3 style="margin:0; text-transform: uppercase; letter-spacing: 0.03em; display:flex; align-items:center; gap:8px;">
+            ${renderIcon('mic', 16)} <span>SPEAKING &amp; TELAFFUZ KOÇU TELEMETRİSİ</span>
           </h3>
           <span class="pedagogy-station-badge" style="border-color:var(--dp-color-emphasis); color:var(--dp-color-emphasis);">
             AKSAN: ${STATE.settings.accent || 'en-GB'}
@@ -6083,7 +6132,11 @@
     const hrIcon = document.getElementById('header-route-icon');
     const hrLabel = document.getElementById('header-route-label');
     const hrPill = document.getElementById('header-route-pill-btn');
-    if (hrIcon) hrIcon.textContent = mod === 'maarif' ? '🏫' : (mod === 'yds' ? '🎯' : (mod === 'oxford' ? '📚' : '📖'));
+    if (hrIcon) {
+      const iconKey = mod === 'maarif' ? 'school' : (mod === 'yds' ? 'target' : 'book');
+      hrIcon.innerHTML = renderIcon(iconKey, 18, 'hrp-svg-icon');
+      hrIcon.setAttribute('data-icon', iconKey);
+    }
     if (hrLabel) {
       if (mod === 'maarif') {
         const gNum = STATE.selectedGrade || 5;
@@ -6659,7 +6712,7 @@
         </div>
         
         <div class="feedback-pedagogy-alert">
-          <span class="ped-alert-icon">🧠</span>
+          <span class="ped-alert-icon">${renderIcon('brain', 16)}</span>
           <div class="ped-alert-text">
             <strong>Bilişsel Aralıklı Tekrar:</strong> Bu kelime <strong>Hata Defterinize</strong> eklendi ve unutulmaması için yarınki <strong>Aralıklı Tekrar</strong> programınıza dahil edildi.
           </div>
@@ -6768,8 +6821,8 @@
     if (initialLabel) initialLabel.textContent = 'HAZIRLANIYOR...';
 
     const quizPhaseText = {
-      permission: ['İZİN BEKLENİYOR...', 'Tarayıcının mikrofon izin penceresini onaylayın ☝️'],
-      listening: ['DİNLENİYOR... ŞİMDİ KONUŞUN 🎙️', 'Dinliyorum — hedef kelimeyi söyleyin.'],
+      permission: ['İZİN BEKLENİYOR...', 'Tarayıcının mikrofon izin penceresini onaylayın'],
+      listening: ['DİNLENİYOR... ŞİMDİ KONUŞUN', 'Dinliyorum — hedef kelimeyi söyleyin.'],
       speech: ['SES ALGILANDI...', 'Sesiniz algılandı, devam edin...'],
       processing: ['ÇÖZÜMLENİYOR...', 'Telaffuzunuz değerlendiriliyor...']
     };
@@ -6811,7 +6864,7 @@
         if (feedbackSlot && code !== 'no-speech' && code !== 'aborted') {
           feedbackSlot.innerHTML = `
             <div class="quiz-speaking-retry-actions" style="justify-content:center;">
-              <button type="button" class="ctrl-btn" onclick="window.APP.retryQuizSpeaking()">🔄 Tekrar Dene</button>
+              <button type="button" class="ctrl-btn" onclick="window.APP.retryQuizSpeaking()">${renderIcon('repeat', 13)} <span>Tekrar Dene</span></button>
               <button type="button" class="ctrl-btn" onclick="window.APP.skipQuizSpeaking()" style="color:var(--dp-color-ink-muted);">Bu Soruyu Atla &rarr;</button>
             </div>
           `;
@@ -6899,10 +6952,10 @@
               <p>Duyulan: “${escapeHtml(evalResult.spoken)}” • Hedef: “${escapeHtml(targetWord.en)}”</p>
               <div class="quiz-speaking-retry-actions">
                 <button type="button" class="ctrl-btn" onclick="window.APP.retryQuizSpeaking()">
-                  🔄 Tekrar Dene
+                  ${renderIcon('repeat', 13)} <span>Tekrar Dene</span>
                 </button>
                 <button type="button" class="ctrl-btn" onclick="window.APP.speakWord('${escapeHtml(targetWord.en)}')">
-                  🔊 Örnek Dinle
+                  ${renderIcon('speaker', 13)} <span>Örnek Dinle</span>
                 </button>
                 <button type="button" class="ctrl-btn" onclick="window.APP.skipQuizSpeaking()" style="color:var(--dp-color-ink-muted);">
                   Sonraki Soru &rarr;
