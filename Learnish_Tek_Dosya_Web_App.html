@@ -10619,6 +10619,20 @@ if (typeof module !== 'undefined' && module.exports) {
   function getWorksheetTargetWords(state = PDF_STUDIO_STATE) {
     const { template, grade, scope, unitNum, limit } = state;
     let list = [];
+    const targetLimit = limit === 'all' ? 50 : (parseInt(limit, 10) || 10);
+
+    const getGradePool = () => {
+      if (grade === 'yds') {
+        return WORDS_DATA.filter(isYDSWord);
+      } else if (grade === 'oxford') {
+        return WORDS_DATA.filter(isOxfordWord);
+      } else {
+        const gNum = parseInt(grade, 10) || 5;
+        const gData = window.CURRICULUM_DATA && window.CURRICULUM_DATA[gNum];
+        const currWords = (gData && gData.units) ? gData.units.flatMap(u => (u.targetVocab || []).map(resolveWorksheetWord)).filter(Boolean) : [];
+        return currWords.length > 0 ? currWords : WORDS_DATA.filter(isMaarifWord);
+      }
+    };
 
     if (template === 'mistakes' || scope === 'mistakes') {
       const activeMistakes = getActiveMistakeWords();
@@ -10642,17 +10656,17 @@ if (typeof module !== 'undefined' && module.exports) {
         list = activeMistakes;
       }
 
-      if (list.length === 0) {
-        if (grade === 'yds') {
-          list = WORDS_DATA.filter(isYDSWord).slice(0, 20);
-        } else if (grade === 'oxford') {
-          list = WORDS_DATA.filter(isOxfordWord).slice(0, 20);
-        } else {
-          const gNum = parseInt(grade, 10) || 5;
-          const gData = window.CURRICULUM_DATA && window.CURRICULUM_DATA[gNum];
-          const unitWords = (gData && gData.units && gData.units[0]?.targetVocab) || [];
-          list = unitWords.map(resolveWorksheetWord).filter(Boolean);
-          if (list.length === 0) list = WORDS_DATA.filter(isMaarifWord).slice(0, 20);
+      // Hata Defteri kapsamındayken seçilen soru/kelime limitine ulaşmak için:
+      // Varsa hatalı kelimeler en başa yerleştirilir, kalan kısım sınıf müfredat havuzundan tamamlanır.
+      if (list.length < targetLimit) {
+        const poolFiller = getGradePool();
+        const existingIds = new Set(list.map(w => w.id));
+        for (const w of poolFiller) {
+          if (!existingIds.has(w.id)) {
+            list.push(w);
+            existingIds.add(w.id);
+            if (list.length >= targetLimit) break;
+          }
         }
       }
     } else if (scope === 'current_week') {
@@ -10662,6 +10676,17 @@ if (typeof module !== 'undefined' && module.exports) {
         const rawTargetWords = sched.targetWords || [];
         list = rawTargetWords.map(resolveWorksheetWord).filter(Boolean);
       }
+      if (list.length < targetLimit) {
+        const poolFiller = getGradePool();
+        const existingIds = new Set(list.map(w => w.id));
+        for (const w of poolFiller) {
+          if (!existingIds.has(w.id)) {
+            list.push(w);
+            existingIds.add(w.id);
+            if (list.length >= targetLimit) break;
+          }
+        }
+      }
     } else if (scope === 'unit') {
       const gNum = parseInt(grade, 10) || 5;
       const gData = window.CURRICULUM_DATA && window.CURRICULUM_DATA[gNum];
@@ -10670,11 +10695,30 @@ if (typeof module !== 'undefined' && module.exports) {
         const rawWords = (targetUnit.targetVocab || []).concat(targetUnit.semanticKeywords || []);
         list = rawWords.map(resolveWorksheetWord).filter(Boolean);
       }
+      if (list.length < targetLimit) {
+        const poolFiller = getGradePool();
+        const existingIds = new Set(list.map(w => w.id));
+        for (const w of poolFiller) {
+          if (!existingIds.has(w.id)) {
+            list.push(w);
+            existingIds.add(w.id);
+            if (list.length >= targetLimit) break;
+          }
+        }
+      }
     } else if (scope === 'starred') {
       const starredIds = Array.from(STATE.userData.starred || []);
       list = WORDS_DATA.filter(w => starredIds.includes(w.id));
-      if (list.length === 0) {
-        list = WORDS_DATA.filter(isMaarifWord).slice(0, 15);
+      if (list.length < targetLimit) {
+        const poolFiller = getGradePool();
+        const existingIds = new Set(list.map(w => w.id));
+        for (const w of poolFiller) {
+          if (!existingIds.has(w.id)) {
+            list.push(w);
+            existingIds.add(w.id);
+            if (list.length >= targetLimit) break;
+          }
+        }
       }
     } else { // 'all'
       const gNum = parseInt(grade, 10);
@@ -10749,8 +10793,10 @@ if (typeof module !== 'undefined' && module.exports) {
         </div>
       `;
     } else if (state.template === 'quiz') {
+      const qCount = state.limit === 'all' ? words.length : (parseInt(state.limit, 10) || 10);
+      const durationMinutes = Math.max(10, Math.round(qCount * 1.5));
       titleMain = 'KELİME KAZANIM DEĞERLENDİRME TESTİ (QUIZ)';
-      subTitle = `${gradeLabel} • Süre: 20 Dakika • Puan: 100`;
+      subTitle = `${gradeLabel} • Toplam ${qCount} Soru • Süre: ${durationMinutes} Dakika • Puan: 100`;
       bannerHtml = `
         <div class="ws-banner banner-quiz">
           <span class="ws-banner-title">${renderIcon('fileText', 15)} SINAV YÖNERGESİ:</span>
@@ -10866,7 +10912,8 @@ if (typeof module !== 'undefined' && module.exports) {
         `;
       }
     } else if (state.template === 'quiz') {
-      const quizWords = words.slice(0, Math.min(10, words.length));
+      const targetLimit = state.limit === 'all' ? words.length : (parseInt(state.limit, 10) || 10);
+      const quizWords = words.slice(0, targetLimit);
       const answerKey = [];
 
       bodyHtml += `<div class="ws-quiz-list">`;
@@ -10916,7 +10963,8 @@ if (typeof module !== 'undefined' && module.exports) {
         `;
       }
     } else if (state.template === 'flashcards') {
-      const fcWords = words.slice(0, Math.min(8, words.length));
+      const targetLimit = state.limit === 'all' ? words.length : (parseInt(state.limit, 10) || 8);
+      const fcWords = words.slice(0, targetLimit);
       bodyHtml += `<div class="ws-flashcards-grid">`;
       fcWords.forEach((w, idx) => {
         bodyHtml += `
@@ -11099,12 +11147,12 @@ if (typeof module !== 'undefined' && module.exports) {
           <div class="pdf-form-group">
             <div class="pdf-form-row">
               <div class="pdf-field-wrap">
-                <span class="pdf-field-title">Kelime Sayısı Limiti:</span>
+                <span class="pdf-field-title">${state.template === 'quiz' ? 'Soru Sayısı:' : 'Kelime Sayısı Limiti:'}</span>
                 <select id="pdf-limit-select" class="pdf-select" onchange="window.APP.updatePdfStudioOption('limit', this.value)">
-                  <option value="10" ${state.limit == 10 ? 'selected' : ''}>10 Kelime (1 Sayfa İdeal)</option>
-                  <option value="15" ${state.limit == 15 ? 'selected' : ''}>15 Kelime</option>
-                  <option value="20" ${state.limit == 20 ? 'selected' : ''}>20 Kelime (2 Sayfa)</option>
-                  <option value="30" ${state.limit == 30 ? 'selected' : ''}>30 Kelime</option>
+                  <option value="10" ${state.limit == 10 ? 'selected' : ''}>${state.template === 'quiz' ? '10 Soru (1 Sayfa İdeal)' : '10 Kelime (1 Sayfa İdeal)'}</option>
+                  <option value="15" ${state.limit == 15 ? 'selected' : ''}>${state.template === 'quiz' ? '15 Soru' : '15 Kelime'}</option>
+                  <option value="20" ${state.limit == 20 ? 'selected' : ''}>${state.template === 'quiz' ? '20 Soru (2 Sayfa İdeal)' : '20 Kelime (2 Sayfa)'}</option>
+                  <option value="30" ${state.limit == 30 ? 'selected' : ''}>${state.template === 'quiz' ? '30 Soru' : '30 Kelime'}</option>
                   <option value="all" ${state.limit === 'all' ? 'selected' : ''}>Tüm Liste</option>
                 </select>
               </div>

@@ -1342,12 +1342,26 @@ registerTest(1, 'PDF & Worksheet Studio', 'test_pdf_worksheet_generation_curricu
 registerTest(1, 'PDF & Worksheet Studio', 'test_pdf_worksheet_generation_quiz_with_answer_key', () => {
   const env = createFreshAppEnvironment();
   env.APP.updatePdfStudioOption('template', 'quiz');
-  env.APP.updatePdfStudioOption('grade', 6);
+  env.APP.updatePdfStudioOption('grade', 5);
+  env.APP.updatePdfStudioOption('scope', 'mistakes');
+  env.APP.updatePdfStudioOption('limit', 20);
+
+  // Simulate having only 1 mistake in mistake notebook
+  const sampleWord = env.window.WORDS_DATA[0];
+  env.APP.getState().userData.mistakes[sampleWord.id] = {
+    wordId: sampleWord.id,
+    wrongCount: 1,
+    lastMistakeAt: Date.now(),
+    wrongAnswers: ['wrong_choice'],
+    cleared: false
+  };
 
   const html = env.APP.generateWorksheetHTML(env.APP.PDF_STUDIO_STATE);
   assert(html.includes('KELİME KAZANIM DEĞERLENDİRME TESTİ'), 'Quiz worksheet should contain test title');
   assert(html.includes('1.') && html.includes('kelimesinin Türkçe karşılığı'), 'Quiz worksheet should contain numbered questions');
+  assert(html.includes('20.') && html.includes('kelimesinin Türkçe karşılığı'), 'Quiz worksheet with 20 limit should generate exactly 20 questions');
   assert(html.includes('CEVAP ANAHTARI'), 'Quiz worksheet should contain answer key at the bottom');
+  assert(html.includes('20-'), 'Answer key should contain answers up to question 20');
 });
 
 registerTest(1, 'PDF & Worksheet Studio', 'test_pdf_worksheet_generation_cut_fold_flashcards', () => {
