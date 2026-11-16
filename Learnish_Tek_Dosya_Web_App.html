@@ -262,11 +262,103 @@ body {
 }
 
 /* ==========================================================================
-   2. HORIZONTAL SNAP-SCROLL SELECTOR
+   2. HEADER ROUTE PILL & CURRICULUM SELECTION
    ========================================================================== */
 .horizontal-scroll-selector {
-  margin-bottom: 24px;
-  overflow: hidden;
+  display: none !important;
+}
+
+.header-route-pill-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 40px;
+  padding: 0 14px 0 10px;
+  border-radius: var(--dp-radius-pill);
+  background: var(--dp-color-surface);
+  border: 1.5px solid var(--dp-color-border);
+  box-shadow: var(--dp-shadow-soft-xs);
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  text-decoration: none;
+  user-select: none;
+  flex-shrink: 0;
+}
+
+.header-route-pill-btn:hover {
+  border-color: var(--dp-color-red);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 14px rgba(202, 0, 19, 0.16);
+}
+
+.header-route-pill-btn:active {
+  transform: translateY(0);
+}
+
+.hrp-icon {
+  font-size: 18px;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.hrp-text-group {
+  display: flex;
+  flex-direction: column;
+  text-align: left;
+  line-height: 1.15;
+}
+
+.hrp-eyebrow {
+  font-family: var(--dp-typography-mono);
+  font-size: 8px;
+  font-weight: 800;
+  color: var(--dp-color-red);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.hrp-label {
+  font-family: var(--dp-typography-face);
+  font-size: 12.5px;
+  font-weight: 800;
+  color: var(--dp-color-ink);
+  white-space: nowrap;
+}
+
+.hrp-arrow {
+  font-size: 10px;
+  color: var(--dp-color-ink-muted);
+  margin-left: 2px;
+  transition: transform 0.2s ease, color 0.2s ease;
+}
+
+.header-route-pill-btn:hover .hrp-arrow {
+  color: var(--dp-color-red);
+  transform: translateY(1px);
+}
+
+@media (max-width: 640px) {
+  .hrp-eyebrow {
+    display: none;
+  }
+  .header-route-pill-btn {
+    height: 36px;
+    padding: 0 10px 0 8px;
+    gap: 6px;
+  }
+  .hrp-label {
+    font-size: 12px;
+  }
+}
+
+@media (max-width: 420px) {
+  .hrp-label {
+    max-width: 80px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
 }
 
 .h-scroll-track {
@@ -6324,6 +6416,14 @@ mark.pedagogy-word-highlight {
         <h1 class="header-greeting-title" id="header-user-title">MEB Müfredatı</h1>
       </div>
       <div class="header-right-actions">
+        <button type="button" class="header-action-btn header-route-pill-btn" id="header-route-pill-btn" onclick="window.APP.openGradeModal()" title="Öğrenim Rotasını &amp; Sınıfı Değiştir" aria-label="Öğrenim Rotası Seçici">
+          <span class="hrp-icon" id="header-route-icon">🏫</span>
+          <div class="hrp-text-group">
+            <span class="hrp-eyebrow">AKTİF ROTA</span>
+            <span class="hrp-label" id="header-route-label">5. Sınıf MEB</span>
+          </div>
+          <span class="hrp-arrow" aria-hidden="true">▾</span>
+        </button>
         <button type="button" class="header-action-btn pdf-header-btn" onclick="window.APP.openPdfStudio()" title="PDF &amp; Çalışma Kağıdı Stüdyosu" aria-label="PDF Çalışma Föyü">
           <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
           <span class="pdf-btn-label">PDF Föyü</span>
@@ -6368,49 +6468,6 @@ mark.pedagogy-word-highlight {
         <span>PDF &amp; Yazdır</span>
       </button>
     </nav>
-
-    <!-- 2. HORIZONTAL SNAP-SCROLL SELECTOR (Müfredat Seçici) -->
-    <section class="horizontal-scroll-selector" aria-label="Müfredat ve Kategori Seçimi">
-      <div class="h-scroll-track" id="horizontal-module-track" role="tablist">
-        
-        <!-- Module 1: MEB (K-12 Tüm Sınıflar İçin Ana Çatı) -->
-        <button type="button" class="h-category-btn module-btn active" data-module="maarif" id="mod-tab-maarif" onclick="window.APP.switchModule('maarif')" role="tab" aria-selected="true" title="MEB İngilizce Müfredatı (1-12. Sınıf)">
-          <div class="h-cat-badge" id="mod-tab-meb-badge">MEB</div>
-          <div class="h-cat-content">
-            <span class="h-cat-title" id="mod-tab-meb-title">K-12 Müfredat</span>
-            <span class="h-cat-meta" id="mod-tab-meb-meta">5. Sınıf • Planlı</span>
-          </div>
-        </button>
-
-        <!-- Module 2: YDS -->
-        <button type="button" class="h-category-btn module-btn" data-module="yds" id="mod-tab-yds" onclick="window.APP.switchModule('yds')" role="tab" aria-selected="false">
-          <div class="h-cat-badge">YDS</div>
-          <div class="h-cat-content">
-            <span class="h-cat-title">YDS / YÖKDİL</span>
-            <span class="h-cat-meta">7.387 KELİME</span>
-          </div>
-        </button>
-
-        <!-- Module 3: Oxford 5000 -->
-        <button type="button" class="h-category-btn module-btn" data-module="oxford" id="mod-tab-oxford" onclick="window.APP.switchModule('oxford')" role="tab" aria-selected="false">
-          <div class="h-cat-badge">OXF</div>
-          <div class="h-cat-content">
-            <span class="h-cat-title">Oxford 5000</span>
-            <span class="h-cat-meta">4.886 KELİME</span>
-          </div>
-        </button>
-
-        <!-- Module 4: All Library -->
-        <button type="button" class="h-category-btn module-btn" data-module="all" id="mod-tab-all" onclick="window.APP.switchModule('all')" role="tab" aria-selected="false">
-          <div class="h-cat-badge">ALL</div>
-          <div class="h-cat-content">
-            <span class="h-cat-title">Tüm Kütüphane</span>
-            <span class="h-cat-meta">9.234 KELİME</span>
-          </div>
-        </button>
-
-      </div>
-    </section>
 
     <!-- 3. VIEWS CONTAINER (Single-Column Content) -->
     <main class="views-wrapper" id="views-wrapper" role="main">
@@ -6568,13 +6625,13 @@ mark.pedagogy-word-highlight {
     <!-- Populated dynamically by window.APP.openSpeechCoach -->
   </div>
 
-  <!-- 7. K-12 GRADE & STAGE SELECTOR MODAL (1. Sınıftan 12. Sınıfa Kadar) -->
+  <!-- 7. K-12 GRADE & STAGE SELECTOR MODAL (1. Sınıftan 12. Sınıfa Kadar + Akademik Rotalar) -->
   <div class="grade-modal-backdrop" id="grade-modal-backdrop" onclick="window.APP.closeGradeModal()" aria-hidden="true"></div>
   <div class="grade-dialog-card" id="grade-dialog" role="dialog" aria-modal="true" aria-labelledby="grade-dialog-title">
     <div class="grade-dialog-header">
       <div class="grade-dialog-title-wrap">
-        <span class="grade-dialog-eyebrow">MEB İNGİLİZCE MÜFREDATI</span>
-        <h2 id="grade-dialog-title" class="grade-dialog-title">K-12 Sınıf &amp; Kademe Seçici</h2>
+        <span class="grade-dialog-eyebrow">ÖĞRENİM ROTASI &amp; MÜFREDAT</span>
+        <h2 id="grade-dialog-title" class="grade-dialog-title">Öğrenim Rotası &amp; Sınıf Seçici</h2>
       </div>
       <button type="button" class="settings-close-circle-btn" onclick="window.APP.closeGradeModal()" aria-label="Pencereyi Kapat">✕</button>
     </div>
@@ -9487,6 +9544,19 @@ if (typeof module !== 'undefined' && module.exports) {
       mebMeta.innerText = `${gData.name} • Planlı`;
     }
 
+    // Update Header Route Pill
+    const hrIcon = document.getElementById('header-route-icon');
+    const hrLabel = document.getElementById('header-route-label');
+    const hrPill = document.getElementById('header-route-pill-btn');
+    if (hrIcon) hrIcon.textContent = moduleName === 'maarif' ? '🏫' : (moduleName === 'yds' ? '🎯' : (moduleName === 'oxford' ? '🌐' : '📚'));
+    if (hrLabel) {
+      if (moduleName === 'maarif') hrLabel.textContent = `${gData.name} MEB`;
+      else if (moduleName === 'yds') hrLabel.textContent = 'YDS / YÖKDİL';
+      else if (moduleName === 'oxford') hrLabel.textContent = 'Oxford 5000';
+      else hrLabel.textContent = 'Tüm Kütüphane';
+    }
+    if (hrPill) hrPill.setAttribute('data-active-module', moduleName);
+
     // Dynamic Navigation Labels
     const dailyText = document.getElementById('tab-daily-text');
     const flashText = document.getElementById('tab-flashcard-text');
@@ -9509,9 +9579,9 @@ if (typeof module !== 'undefined' && module.exports) {
       if (dailyText) dailyText.innerText = `${gData.name} Takibi`;
       if (flashText) flashText.innerText = `${gData.name} Kartları`;
       if (quizText) quizText.innerText = `${gData.name} Sınavı`;
-      if (dirText) dirText.innerText = `${gData.name} Havuzu`;
+      if (dirText) dirText.innerText = "Kelime Kütüphanesi";
       if (statsText) statsText.innerText = "Kazanım Analizi";
-      STATE.directoryFilters.dataset = 'maarif';
+      STATE.directoryFilters.dataset = 'all';
       STATE.directoryFilters.cefr = 'all';
       STATE.directoryFilters.search = '';
       STATE.directoryPage = 1;
@@ -12475,7 +12545,6 @@ if (typeof module !== 'undefined' && module.exports) {
               <button class="filter-chip ${filters.dataset === 'all' ? 'active' : ''}" data-val="all">TÜM KÜTÜPHANELER (${WORDS_DATA.length.toLocaleString('tr-TR')})</button>
               <button class="filter-chip ${filters.dataset === 'yds' ? 'active' : ''}" data-val="yds">YDS &amp; YÖKDİL (${WORDS_DATA.filter(isYDSWord).length.toLocaleString('tr-TR')})</button>
               <button class="filter-chip ${filters.dataset === 'oxford' ? 'active' : ''}" data-val="oxford">THE OXFORD 5000 (${WORDS_DATA.filter(isOxfordWord).length.toLocaleString('tr-TR')})</button>
-              <button class="filter-chip ${filters.dataset === 'maarif' ? 'active' : ''}" data-val="maarif">MEB: 5. SINIF MAARİF (${WORDS_DATA.filter(isMaarifWord).length.toLocaleString('tr-TR')})</button>
             </div>
           </div>
         `}
@@ -13015,6 +13084,25 @@ if (typeof module !== 'undefined' && module.exports) {
     if (badgeEl) badgeEl.textContent = modBadge;
     if (nameEl) nameEl.textContent = modFullName;
     if (viewEl) viewEl.textContent = viewTitles[view] || view;
+
+    // Update Header Route Pill
+    const hrIcon = document.getElementById('header-route-icon');
+    const hrLabel = document.getElementById('header-route-label');
+    const hrPill = document.getElementById('header-route-pill-btn');
+    if (hrIcon) hrIcon.textContent = mod === 'maarif' ? '🏫' : (mod === 'yds' ? '🎯' : (mod === 'oxford' ? '🌐' : '📚'));
+    if (hrLabel) {
+      if (mod === 'maarif') {
+        const gNum = STATE.selectedGrade || 5;
+        hrLabel.textContent = `${gNum}. Sınıf MEB`;
+      } else if (mod === 'yds') {
+        hrLabel.textContent = 'YDS / YÖKDİL';
+      } else if (mod === 'oxford') {
+        hrLabel.textContent = 'Oxford 5000';
+      } else {
+        hrLabel.textContent = 'Tüm Kütüphane';
+      }
+    }
+    if (hrPill) hrPill.setAttribute('data-active-module', mod);
 
     // Set theme class on canopy
     canopy.classList.remove('mod-maarif', 'mod-yds', 'mod-oxford', 'mod-all');

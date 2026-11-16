@@ -235,11 +235,103 @@ body {
 }
 
 /* ==========================================================================
-   2. HORIZONTAL SNAP-SCROLL SELECTOR
+   2. HEADER ROUTE PILL & CURRICULUM SELECTION
    ========================================================================== */
 .horizontal-scroll-selector {
-  margin-bottom: 24px;
-  overflow: hidden;
+  display: none !important;
+}
+
+.header-route-pill-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 40px;
+  padding: 0 14px 0 10px;
+  border-radius: var(--dp-radius-pill);
+  background: var(--dp-color-surface);
+  border: 1.5px solid var(--dp-color-border);
+  box-shadow: var(--dp-shadow-soft-xs);
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  text-decoration: none;
+  user-select: none;
+  flex-shrink: 0;
+}
+
+.header-route-pill-btn:hover {
+  border-color: var(--dp-color-red);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 14px rgba(202, 0, 19, 0.16);
+}
+
+.header-route-pill-btn:active {
+  transform: translateY(0);
+}
+
+.hrp-icon {
+  font-size: 18px;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.hrp-text-group {
+  display: flex;
+  flex-direction: column;
+  text-align: left;
+  line-height: 1.15;
+}
+
+.hrp-eyebrow {
+  font-family: var(--dp-typography-mono);
+  font-size: 8px;
+  font-weight: 800;
+  color: var(--dp-color-red);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.hrp-label {
+  font-family: var(--dp-typography-face);
+  font-size: 12.5px;
+  font-weight: 800;
+  color: var(--dp-color-ink);
+  white-space: nowrap;
+}
+
+.hrp-arrow {
+  font-size: 10px;
+  color: var(--dp-color-ink-muted);
+  margin-left: 2px;
+  transition: transform 0.2s ease, color 0.2s ease;
+}
+
+.header-route-pill-btn:hover .hrp-arrow {
+  color: var(--dp-color-red);
+  transform: translateY(1px);
+}
+
+@media (max-width: 640px) {
+  .hrp-eyebrow {
+    display: none;
+  }
+  .header-route-pill-btn {
+    height: 36px;
+    padding: 0 10px 0 8px;
+    gap: 6px;
+  }
+  .hrp-label {
+    font-size: 12px;
+  }
+}
+
+@media (max-width: 420px) {
+  .hrp-label {
+    max-width: 80px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
 }
 
 .h-scroll-track {

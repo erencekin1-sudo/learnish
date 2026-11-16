@@ -2326,6 +2326,19 @@
       mebMeta.innerText = `${gData.name} • Planlı`;
     }
 
+    // Update Header Route Pill
+    const hrIcon = document.getElementById('header-route-icon');
+    const hrLabel = document.getElementById('header-route-label');
+    const hrPill = document.getElementById('header-route-pill-btn');
+    if (hrIcon) hrIcon.textContent = moduleName === 'maarif' ? '🏫' : (moduleName === 'yds' ? '🎯' : (moduleName === 'oxford' ? '🌐' : '📚'));
+    if (hrLabel) {
+      if (moduleName === 'maarif') hrLabel.textContent = `${gData.name} MEB`;
+      else if (moduleName === 'yds') hrLabel.textContent = 'YDS / YÖKDİL';
+      else if (moduleName === 'oxford') hrLabel.textContent = 'Oxford 5000';
+      else hrLabel.textContent = 'Tüm Kütüphane';
+    }
+    if (hrPill) hrPill.setAttribute('data-active-module', moduleName);
+
     // Dynamic Navigation Labels
     const dailyText = document.getElementById('tab-daily-text');
     const flashText = document.getElementById('tab-flashcard-text');
@@ -2348,9 +2361,9 @@
       if (dailyText) dailyText.innerText = `${gData.name} Takibi`;
       if (flashText) flashText.innerText = `${gData.name} Kartları`;
       if (quizText) quizText.innerText = `${gData.name} Sınavı`;
-      if (dirText) dirText.innerText = `${gData.name} Havuzu`;
+      if (dirText) dirText.innerText = "Kelime Kütüphanesi";
       if (statsText) statsText.innerText = "Kazanım Analizi";
-      STATE.directoryFilters.dataset = 'maarif';
+      STATE.directoryFilters.dataset = 'all';
       STATE.directoryFilters.cefr = 'all';
       STATE.directoryFilters.search = '';
       STATE.directoryPage = 1;
@@ -5314,7 +5327,6 @@
               <button class="filter-chip ${filters.dataset === 'all' ? 'active' : ''}" data-val="all">TÜM KÜTÜPHANELER (${WORDS_DATA.length.toLocaleString('tr-TR')})</button>
               <button class="filter-chip ${filters.dataset === 'yds' ? 'active' : ''}" data-val="yds">YDS &amp; YÖKDİL (${WORDS_DATA.filter(isYDSWord).length.toLocaleString('tr-TR')})</button>
               <button class="filter-chip ${filters.dataset === 'oxford' ? 'active' : ''}" data-val="oxford">THE OXFORD 5000 (${WORDS_DATA.filter(isOxfordWord).length.toLocaleString('tr-TR')})</button>
-              <button class="filter-chip ${filters.dataset === 'maarif' ? 'active' : ''}" data-val="maarif">MEB: 5. SINIF MAARİF (${WORDS_DATA.filter(isMaarifWord).length.toLocaleString('tr-TR')})</button>
             </div>
           </div>
         `}
@@ -5854,6 +5866,25 @@
     if (badgeEl) badgeEl.textContent = modBadge;
     if (nameEl) nameEl.textContent = modFullName;
     if (viewEl) viewEl.textContent = viewTitles[view] || view;
+
+    // Update Header Route Pill
+    const hrIcon = document.getElementById('header-route-icon');
+    const hrLabel = document.getElementById('header-route-label');
+    const hrPill = document.getElementById('header-route-pill-btn');
+    if (hrIcon) hrIcon.textContent = mod === 'maarif' ? '🏫' : (mod === 'yds' ? '🎯' : (mod === 'oxford' ? '🌐' : '📚'));
+    if (hrLabel) {
+      if (mod === 'maarif') {
+        const gNum = STATE.selectedGrade || 5;
+        hrLabel.textContent = `${gNum}. Sınıf MEB`;
+      } else if (mod === 'yds') {
+        hrLabel.textContent = 'YDS / YÖKDİL';
+      } else if (mod === 'oxford') {
+        hrLabel.textContent = 'Oxford 5000';
+      } else {
+        hrLabel.textContent = 'Tüm Kütüphane';
+      }
+    }
+    if (hrPill) hrPill.setAttribute('data-active-module', mod);
 
     // Set theme class on canopy
     canopy.classList.remove('mod-maarif', 'mod-yds', 'mod-oxford', 'mod-all');

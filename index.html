@@ -56,6 +56,14 @@
         <h1 class="header-greeting-title" id="header-user-title">MEB Müfredatı</h1>
       </div>
       <div class="header-right-actions">
+        <button type="button" class="header-action-btn header-route-pill-btn" id="header-route-pill-btn" onclick="window.APP.openGradeModal()" title="Öğrenim Rotasını &amp; Sınıfı Değiştir" aria-label="Öğrenim Rotası Seçici">
+          <span class="hrp-icon" id="header-route-icon">🏫</span>
+          <div class="hrp-text-group">
+            <span class="hrp-eyebrow">AKTİF ROTA</span>
+            <span class="hrp-label" id="header-route-label">5. Sınıf MEB</span>
+          </div>
+          <span class="hrp-arrow" aria-hidden="true">▾</span>
+        </button>
         <button type="button" class="header-action-btn pdf-header-btn" onclick="window.APP.openPdfStudio()" title="PDF &amp; Çalışma Kağıdı Stüdyosu" aria-label="PDF Çalışma Föyü">
           <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
           <span class="pdf-btn-label">PDF Föyü</span>
@@ -100,49 +108,6 @@
         <span>PDF &amp; Yazdır</span>
       </button>
     </nav>
-
-    <!-- 2. HORIZONTAL SNAP-SCROLL SELECTOR (Müfredat Seçici) -->
-    <section class="horizontal-scroll-selector" aria-label="Müfredat ve Kategori Seçimi">
-      <div class="h-scroll-track" id="horizontal-module-track" role="tablist">
-        
-        <!-- Module 1: MEB (K-12 Tüm Sınıflar İçin Ana Çatı) -->
-        <button type="button" class="h-category-btn module-btn active" data-module="maarif" id="mod-tab-maarif" onclick="window.APP.switchModule('maarif')" role="tab" aria-selected="true" title="MEB İngilizce Müfredatı (1-12. Sınıf)">
-          <div class="h-cat-badge" id="mod-tab-meb-badge">MEB</div>
-          <div class="h-cat-content">
-            <span class="h-cat-title" id="mod-tab-meb-title">K-12 Müfredat</span>
-            <span class="h-cat-meta" id="mod-tab-meb-meta">5. Sınıf • Planlı</span>
-          </div>
-        </button>
-
-        <!-- Module 2: YDS -->
-        <button type="button" class="h-category-btn module-btn" data-module="yds" id="mod-tab-yds" onclick="window.APP.switchModule('yds')" role="tab" aria-selected="false">
-          <div class="h-cat-badge">YDS</div>
-          <div class="h-cat-content">
-            <span class="h-cat-title">YDS / YÖKDİL</span>
-            <span class="h-cat-meta">7.387 KELİME</span>
-          </div>
-        </button>
-
-        <!-- Module 3: Oxford 5000 -->
-        <button type="button" class="h-category-btn module-btn" data-module="oxford" id="mod-tab-oxford" onclick="window.APP.switchModule('oxford')" role="tab" aria-selected="false">
-          <div class="h-cat-badge">OXF</div>
-          <div class="h-cat-content">
-            <span class="h-cat-title">Oxford 5000</span>
-            <span class="h-cat-meta">4.886 KELİME</span>
-          </div>
-        </button>
-
-        <!-- Module 4: All Library -->
-        <button type="button" class="h-category-btn module-btn" data-module="all" id="mod-tab-all" onclick="window.APP.switchModule('all')" role="tab" aria-selected="false">
-          <div class="h-cat-badge">ALL</div>
-          <div class="h-cat-content">
-            <span class="h-cat-title">Tüm Kütüphane</span>
-            <span class="h-cat-meta">9.234 KELİME</span>
-          </div>
-        </button>
-
-      </div>
-    </section>
 
     <!-- 3. VIEWS CONTAINER (Single-Column Content) -->
     <main class="views-wrapper" id="views-wrapper" role="main">
@@ -300,13 +265,13 @@
     <!-- Populated dynamically by window.APP.openSpeechCoach -->
   </div>
 
-  <!-- 7. K-12 GRADE & STAGE SELECTOR MODAL (1. Sınıftan 12. Sınıfa Kadar) -->
+  <!-- 7. K-12 GRADE & STAGE SELECTOR MODAL (1. Sınıftan 12. Sınıfa Kadar + Akademik Rotalar) -->
   <div class="grade-modal-backdrop" id="grade-modal-backdrop" onclick="window.APP.closeGradeModal()" aria-hidden="true"></div>
   <div class="grade-dialog-card" id="grade-dialog" role="dialog" aria-modal="true" aria-labelledby="grade-dialog-title">
     <div class="grade-dialog-header">
       <div class="grade-dialog-title-wrap">
-        <span class="grade-dialog-eyebrow">MEB İNGİLİZCE MÜFREDATI</span>
-        <h2 id="grade-dialog-title" class="grade-dialog-title">K-12 Sınıf &amp; Kademe Seçici</h2>
+        <span class="grade-dialog-eyebrow">ÖĞRENİM ROTASI &amp; MÜFREDAT</span>
+        <h2 id="grade-dialog-title" class="grade-dialog-title">Öğrenim Rotası &amp; Sınıf Seçici</h2>
       </div>
       <button type="button" class="settings-close-circle-btn" onclick="window.APP.closeGradeModal()" aria-label="Pencereyi Kapat">✕</button>
     </div>

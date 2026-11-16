@@ -696,6 +696,61 @@ registerTest(1, 'Navigation & Canopy', 'test_canopy_reflects_active_module', () 
   assert(canopyBadge.textContent === '5. SINIF' || canopyBadge.textContent === 'MEB', 'Canopy module badge should reflect Maarif grade/module');
 });
 
+registerTest(1, 'Navigation & Canopy', 'test_header_route_pill_replaces_horizontal_selector', () => {
+  const env = createFreshAppEnvironment();
+  
+  // 1. Old horizontal scroll selector must be absent from main navigation flow
+  const oldSelector = env.document.querySelector('.horizontal-scroll-selector');
+  assert(!oldSelector, 'Old horizontal-scroll-selector must be removed from the DOM');
+
+  // 2. Header route pill button must exist in header
+  const routePill = env.document.getElementById('header-route-pill-btn');
+  assert(routePill, '#header-route-pill-btn must exist in top header');
+  const hrIcon = env.document.getElementById('header-route-icon');
+  const hrLabel = env.document.getElementById('header-route-label');
+  assert(hrIcon, '#header-route-icon must exist inside route pill');
+  assert(hrLabel, '#header-route-label must exist inside route pill');
+
+  // Default state: Maarif 5. Sınıf
+  assertEqual(hrIcon.textContent, '🏫', 'Route pill icon should be school icon for MEB Maarif');
+  assertIncludes(hrLabel.textContent, '5. Sınıf', 'Route pill label should show 5. Sınıf');
+
+  // 3. Dynamic route switching updates pill
+  env.APP.switchModule('yds');
+  assertEqual(hrIcon.textContent, '🎯', 'Route pill icon should be target for YDS');
+  assertEqual(hrLabel.textContent, 'YDS / YÖKDİL', 'Route pill label should be YDS / YÖKDİL');
+
+  env.APP.switchModule('oxford');
+  assertEqual(hrIcon.textContent, '🌐', 'Route pill icon should be globe for Oxford');
+  assertEqual(hrLabel.textContent, 'Oxford 5000', 'Route pill label should be Oxford 5000');
+
+  env.APP.switchGrade(8);
+  assertEqual(hrIcon.textContent, '🏫', 'Route pill icon should be school for MEB grade');
+  assertIncludes(hrLabel.textContent, '8. Sınıf', 'Route pill label should show 8. Sınıf');
+
+  // 4. Clicking route pill triggers grade & curriculum modal
+  const dialog = env.document.getElementById('grade-dialog');
+  const backdrop = env.document.getElementById('grade-modal-backdrop');
+  assert(dialog && backdrop, 'Grade & route dialog elements must exist');
+  assert(!dialog.classList.contains('active'), 'Dialog should initially be closed');
+
+  env.APP.openGradeModal();
+  assert(dialog.classList.contains('active'), 'Clicking route pill must open grade modal dialog');
+  assert(backdrop.classList.contains('active'), 'Backdrop must be active');
+
+  // 5. Verify modal title and body structure
+  const dialogTitle = env.document.getElementById('grade-dialog-title');
+  assert(dialogTitle, '#grade-dialog-title must exist');
+  assertIncludes(rawIndexHtml, 'id="grade-dialog-title" class="grade-dialog-title">Öğrenim Rotası &amp; Sınıf Seçici</h2>', 'Dialog title in index.html should be unified Öğrenim Rotası & Sınıf Seçici');
+  
+  const dialogBody = env.document.getElementById('grade-dialog-body');
+  assert(dialogBody, '#grade-dialog-body must exist');
+  assertIncludes(dialogBody.innerHTML, 'İLKOKUL', 'Dialog body should contain İlkokul stage');
+  assertIncludes(dialogBody.innerHTML, 'ORTAOKUL', 'Dialog body should contain Ortaokul stage');
+  assertIncludes(dialogBody.innerHTML, 'LİSE', 'Dialog body should contain Lise stage');
+  assertIncludes(dialogBody.innerHTML, 'AKADEMİK &amp; GENEL HAVUZLAR', 'Dialog body should contain Academic & General pools');
+});
+
 // --- 1.2 Theme Toggle & Tokens (6 Tests) ---
 
 registerTest(1, 'Theme & Tokens', 'test_theme_toggle_light_to_dark', () => {
@@ -990,6 +1045,17 @@ registerTest(1, 'Word Directory', 'test_directory_in_place_status_toggle', () =>
   const wordId = 1; // Valid integer ID
   env.APP.toggleLearned(wordId);
   assert(env.APP.getState().userData.learned.has(wordId), 'Word should be marked in learned set');
+});
+
+registerTest(1, 'Word Directory', 'test_directory_absence_of_redundant_grade_filter', () => {
+  const env = createFreshAppEnvironment();
+  env.APP.switchModule('maarif');
+  env.APP.switchView('directory');
+  const dirSection = env.document.getElementById('view-directory');
+  assert(!dirSection.innerHTML.includes('MEB: 5. SINIF MAARİF'), 'Directory must not contain redundant 5. Sınıf filter chip');
+  assert(dirSection.innerHTML.includes('TÜM KÜTÜPHANELER'), 'Directory should offer unified library chip');
+  assert(dirSection.innerHTML.includes('THE OXFORD 5000'), 'Directory should offer Oxford 5000 chip');
+  assert(dirSection.innerHTML.includes('YDS &amp; YÖKDİL') || dirSection.innerHTML.includes('YDS & YÖKDİL'), 'Directory should offer YDS chip');
 });
 
 // --- 1.6 Telemetry & Progress Metrics (6 Tests) ---
