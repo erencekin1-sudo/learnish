@@ -12437,7 +12437,6 @@ if (typeof module !== 'undefined' && module.exports) {
               ${w.definition && w.definition.toLowerCase().trim() !== (w.tr || '').toLowerCase().trim() ? `<div class="feed-card-desc">"${w.definition}"</div>` : ''}
               ${syn ? `<div class="feed-card-meta" style="color:var(--dp-color-red);"><strong>EŞ ANLAM:</strong> ${syn}</div>` : ''}
               ${w.example ? `<div class="feed-card-example">“${highlightWordInText(w.example.replace(/^["“”]|["“”]$/g, ''), w.en)}”</div>` : ''}
-              ${w.ydsExample ? `<div class="yds-exam-cite-tag">${renderIcon('fileText', 12)} <strong>ÖSYM Sınav Kaynağı:</strong> ${escapeHtml(w.ydsExample)}</div>` : ''}
             </div>
 
             <!-- Trailing Action Buttons -->
@@ -12866,7 +12865,6 @@ if (typeof module !== 'undefined' && module.exports) {
 
                 ${currentWord.definition && currentWord.definition.toLowerCase().trim() !== (currentWord.tr || '').toLowerCase().trim() ? `<div class="word-def" style="max-width: 52ch;">“${currentWord.definition}”</div>` : ''}
                 ${currentWord.example ? `<div class="word-example" style="max-width: 52ch;">“${highlightWordInText(currentWord.example.replace(/^["“”]|["“”]$/g, ''), currentWord.en)}”</div>` : ''}
-                ${currentWord.ydsExample ? `<div class="yds-exam-cite-tag" style="margin-top:8px;">${renderIcon('fileText', 12)} <strong>ÖSYM Sınav Kaynağı:</strong> ${escapeHtml(currentWord.ydsExample)}</div>` : ''}
               </div>
 
               <div class="fc-footer">
