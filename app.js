@@ -5450,11 +5450,22 @@
       const q = filters.search.trim().toLowerCase();
       pool = pool.filter(w => 
         w.en.toLowerCase().includes(q) || 
+        (w.alt && w.alt.toLowerCase().includes(q)) ||
         (w.tr && w.tr.toLowerCase().includes(q)) ||
         (w.synonym && w.synonym.toLowerCase().includes(q)) ||
         (w.definition && w.definition.toLowerCase().includes(q))
       );
     }
+
+    // Deduplication safeguard: ensure each normalized English headword appears strictly once
+    const seenWords = new Set();
+    pool = pool.filter(w => {
+      const k = (w.en || '').trim().toLowerCase().replace(/[\.\!\?,;:]+$/g, '').replace(/[\s\-_~]+/g, '');
+      if (seenWords.has(k)) return false;
+      seenWords.add(k);
+      return true;
+    });
+
     return pool;
   }
 
@@ -5489,7 +5500,7 @@
 
           <div class="card-body">
             <div class="word-en-row">
-              <span class="word-en">${w.en}</span>
+              <span class="word-en">${w.en}${w.alt ? ` <small class="word-alt-badge" style="font-size:0.75rem; color:var(--dp-color-ink-muted); font-weight:500;" title="Alternatif yazım">(${escapeHtml(w.alt)})</small>` : ''}</span>
               ${w.phonetic ? `<span class="word-phonetic">${w.phonetic}</span>` : ''}
               <div class="card-audio-btns" style="display:inline-flex; gap:6px; margin-left:auto; align-items:center;">
                 <button class="speak-btn" data-word="${w.en}" aria-label="Dinle: ${w.en}">${ICONS.speaker}</button>

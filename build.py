@@ -50,6 +50,139 @@ def merge_desc(existing_desc, new_desc):
         return new_desc
     return f"{existing_desc} / {new_desc}"
 
+CANONICAL_MAPPINGS = {
+    # UK -> US verbs (-ise -> -ize)
+    'characterise': 'characterize',
+    'criticise': 'criticize',
+    'emphasise': 'emphasize',
+    'maximise': 'maximize',
+    'minimise': 'minimize',
+    'mobilise': 'mobilize',
+    'organise': 'organize',
+    'realise': 'realize',
+    'recognise': 'recognize',
+    'scrutinise': 'scrutinize',
+    'specialise': 'specialize',
+    'stabilise': 'stabilize',
+    'utilise': 'utilize',
+
+    # Nouns & spelling variants
+    'metre': 'meter',
+    'fibre': 'fiber',
+    'licence': 'license',
+    'practise': 'practice',
+    'programme': 'program',
+    'enquiry': 'inquiry',
+
+    # Prepositions / adverbs
+    'towards': 'toward',
+    'downwards': 'downward',
+    'afterwards': 'afterward',
+
+    # Hyphen & spacing variants -> standard unified form
+    'e-mail': 'email',
+    'film-maker': 'filmmaker',
+    'make-up': 'make up',
+    'set-up': 'set up',
+    'per cent': 'percent',
+    'any more': 'anymore',
+    'feed back': 'feedback',
+    'break down': 'breakdown',
+    'anti-oxidant': 'antioxidant',
+    'build-up': 'build up',
+    'come back': 'comeback',
+    'dropout': 'drop out',
+    'ground-breaking': 'groundbreaking',
+    'highly-valued': 'highly valued',
+    'low-income': 'low income',
+    'new-born': 'newborn',
+    'payoff': 'pay off',
+    'real-world': 'real world',
+    'shutdown': 'shut down',
+    'slowdown': 'slow down',
+    'socio-economic': 'socioeconomic',
+    'take ~ into account': 'take into account',
+    'take-off': 'take off',
+    'turn out': 'turnout',
+    'wake-up': 'wake up'
+}
+
+PROPER_NOUNS = {
+    'ataturk', 'türkiye', 'turkey', 'turkish', 'the united kingdom', 'uk',
+    'the united states of america', 'usa', 'england', 'scotland', 'wales',
+    'northern ireland', 'singapore', 'monday', 'tuesday', 'wednesday',
+    'thursday', 'friday', 'saturday', 'sunday', 'january', 'february',
+    'march', 'april', 'may', 'june', 'july', 'august', 'september',
+    'october', 'november', 'december'
+}
+
+def clean_word_string(s):
+    s = s.strip()
+    s = re.sub(r'[\.\!\?,;:]+$', '', s).strip()
+    s = re.sub(r'\s*\((noun|verb|adj|adjective|adv|adverb|prep|preposition|pron|pronoun|conj|conjunction|v|n)\)\s*$', '', s, flags=re.I).strip()
+    lower = s.lower()
+    if lower not in PROPER_NOUNS and not any(p in lower for p in ['atatürk', '15 july', 'democracy and national unity', 'republic day', 'national sovereignty', 'victory day', 'united kingdom', 'united states']):
+        s = lower
+    return s
+
+def get_canonical_key(s):
+    cleaned = clean_word_string(s).lower()
+    if cleaned in CANONICAL_MAPPINGS:
+        cleaned = CANONICAL_MAPPINGS[cleaned].lower()
+    return re.sub(r'[\s\-_~]+', '', cleaned)
+
+def merge_entry(entry, w):
+    entry['tr'] = merge_tr(entry.get('tr', ''), w.get('tr', ''))
+    entry['desc'] = merge_desc(entry.get('desc', ''), w.get('desc', ''))
+
+    if w.get('isMaarif'):
+        entry['isMaarif'] = True
+    if w.get('isOxford'):
+        entry['isOxford'] = True
+    if w.get('isYds'):
+        entry['isYds'] = True
+
+    for ds in w.get('datasets', []):
+        if ds not in entry.setdefault('datasets', []):
+            entry['datasets'].append(ds)
+
+    if not entry.get('phonetic') and w.get('phonetic'):
+        entry['phonetic'] = w['phonetic']
+    if not entry.get('definition') and w.get('definition'):
+        entry['definition'] = w['definition']
+    if not entry.get('example') and w.get('example'):
+        entry['example'] = w['example']
+    if not entry.get('ydsStats') and w.get('ydsStats'):
+        entry['ydsStats'] = w['ydsStats']
+    if not entry.get('ydsExample') and w.get('ydsExample'):
+        entry['ydsExample'] = w['ydsExample']
+    if not entry.get('cefr') and w.get('cefr'):
+        entry['cefr'] = w['cefr']
+    if not entry.get('pos') and w.get('pos'):
+        entry['pos'] = w['pos']
+    if not entry.get('cat') and w.get('cat'):
+        entry['cat'] = w['cat']
+
+    w_clean = clean_word_string(w.get('en', ''))
+    e_clean = clean_word_string(entry.get('en', ''))
+    w_low = w_clean.lower()
+    e_low = e_clean.lower()
+
+    pref = CANONICAL_MAPPINGS.get(w_low) or CANONICAL_MAPPINGS.get(e_low)
+    if pref:
+        if w_low == pref:
+            entry['en'] = w_clean
+            entry['alt'] = e_clean
+        else:
+            entry['en'] = e_clean
+            entry['alt'] = w_clean
+    elif w_low != e_low:
+        if '-' in e_clean and '-' not in w_clean:
+            entry['en'] = w_clean
+            entry['alt'] = e_clean
+        elif not entry.get('alt'):
+            entry['alt'] = w_clean
+
 # 1. Load Maarif words from existing words-data.js or kelimeler_havuzu.json
 def load_maarif_words():
     log("Mevcut 5. Sınıf Maarif Modeli kelimeleri okunuyor...")
@@ -92,6 +225,8 @@ def load_maarif_words():
                 except Exception as e:
                     log(f"Uyarı: words-data.js okunamadı ({e})")
 
+    for w in maarif_raw:
+        w['en'] = clean_word_string(w.get('en', ''))
     log(f"✅ {len(maarif_raw)} adet ham Maarif kaydı bulundu.")
     return maarif_raw
 
@@ -366,11 +501,10 @@ def build_combined_database():
 
     # Step 1: Add Maarif words
     for w in maarif_words:
-        clean_en = w['en'].strip().lower()
-        if clean_en in pool_dict:
-            entry = pool_dict[clean_en]
-            entry['tr'] = merge_tr(entry.get('tr', ''), w.get('tr', ''))
-            entry['desc'] = merge_desc(entry.get('desc', ''), w.get('desc', ''))
+        w['en'] = clean_word_string(w['en'])
+        key = get_canonical_key(w['en'])
+        if key in pool_dict:
+            merge_entry(pool_dict[key], w)
         else:
             entry = dict(w)
             entry['dataset'] = 'maarif'
@@ -378,59 +512,39 @@ def build_combined_database():
             entry['isOxford'] = False
             entry['isYds'] = False
             entry['datasets'] = ['maarif']
-            pool_dict[clean_en] = entry
+            pool_dict[key] = entry
 
     log(f"✅ Maarif tekilleştirildi: {len(pool_dict)} benzersiz kelime.")
 
     # Step 2: Merge Oxford words
     for w in oxford_words:
-        clean_en = w['en'].strip().lower()
-        if clean_en in pool_dict:
-            entry = pool_dict[clean_en]
-            entry['isOxford'] = True
-            if 'oxford' not in entry['datasets']:
-                entry['datasets'].append('oxford')
-            entry['tr'] = merge_tr(entry.get('tr', ''), w.get('tr', ''))
-            entry['desc'] = merge_desc(entry.get('desc', ''), w.get('desc', ''))
-            if not entry.get('phonetic') and w.get('phonetic'):
-                entry['phonetic'] = w['phonetic']
-            if not entry.get('definition') and w.get('definition'):
-                entry['definition'] = w['definition']
-            if not entry.get('example') and w.get('example'):
-                entry['example'] = w['example']
-            if not entry.get('cefr') and w.get('cefr'):
-                entry['cefr'] = w['cefr']
+        w['en'] = clean_word_string(w['en'])
+        key = get_canonical_key(w['en'])
+        w['dataset'] = 'oxford'
+        w['isMaarif'] = False
+        w['isOxford'] = True
+        w['isYds'] = False
+        w['datasets'] = ['oxford']
+        if key in pool_dict:
+            merge_entry(pool_dict[key], w)
         else:
             entry = dict(w)
-            entry['dataset'] = 'oxford'
-            entry['isMaarif'] = False
-            entry['isOxford'] = True
-            entry['isYds'] = False
-            entry['datasets'] = ['oxford']
-            pool_dict[clean_en] = entry
+            pool_dict[key] = entry
 
     log(f"✅ Oxford birleştirildi: Toplam {len(pool_dict)} benzersiz kelime.")
 
     # Step 3: Merge YDS words
     for w in yds_words:
-        clean_en = w['en'].strip().lower()
-        if clean_en in pool_dict:
-            entry = pool_dict[clean_en]
-            entry['isYds'] = True
-            if 'yds' not in entry['datasets']:
-                entry['datasets'].append('yds')
-            entry['tr'] = merge_tr(entry.get('tr', ''), w.get('tr', ''))
-            if not entry.get('ydsStats') and w.get('ydsStats'):
-                entry['ydsStats'] = w['ydsStats']
-            if not entry.get('ydsExample') and w.get('ydsExample'):
-                entry['ydsExample'] = w['ydsExample']
-            if not entry.get('example') and w.get('ydsExample'):
-                entry['example'] = w['ydsExample']
-            if not entry.get('cefr'):
-                entry['cefr'] = w.get('cefr', 'B2')
+        w['en'] = clean_word_string(w['en'])
+        key = get_canonical_key(w['en'])
+        w['isYds'] = True
+        if 'datasets' not in w:
+            w['datasets'] = ['yds']
+        if key in pool_dict:
+            merge_entry(pool_dict[key], w)
         else:
             entry = dict(w)
-            pool_dict[clean_en] = entry
+            pool_dict[key] = entry
 
     log(f"✅ YDS birleştirildi: Havuzda toplam {len(pool_dict)} benzersiz kelime/kalıp!")
 
@@ -506,7 +620,8 @@ def build_combined_database():
             w.get('definition') or '',
             w.get('ydsExample') or '',
             w.get('day') or 1,
-            w.get('ydsStats') or ''
+            w.get('ydsStats') or '',
+            w.get('alt') or ''
         ])
 
     raw_tuples_json = json.dumps(tuple_records, ensure_ascii=False, separators=(',', ':'))
@@ -657,7 +772,8 @@ const WORDS_DATA = _RAW_WORDS.map(t => {
     definition: t[11] || '',
     ydsStats: t[14] || '',
     ydsExample: t[12] || '',
-    day: t[13] || 1
+    day: t[13] || 1,
+    alt: t[15] || ''
   };
 });
 
@@ -702,7 +818,8 @@ if (typeof module !== 'undefined' && module.exports) {
             'definition': w.get('definition', ''),
             'ydsStats': w.get('ydsStats', ''),
             'ydsExample': w.get('ydsExample', ''),
-            'day': w.get('day', 1)
+            'day': w.get('day', 1),
+            'alt': w.get('alt', '')
         })
 
     with open(KELIMELER_HAVUZU_PATH, 'w', encoding='utf-8') as f:

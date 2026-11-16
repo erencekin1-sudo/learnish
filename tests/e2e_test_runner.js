@@ -1130,6 +1130,49 @@ registerTest(1, 'Word Directory', 'test_directory_absence_of_redundant_grade_fil
   assert(dirSection.innerHTML.includes('YDS &amp; YÖKDİL') || dirSection.innerHTML.includes('YDS & YÖKDİL'), 'Directory should offer YDS chip');
 });
 
+registerTest(1, 'Word Directory', 'test_directory_zero_duplicates_guarantee', () => {
+  const env = createFreshAppEnvironment();
+  const allWords = env.window.WORDS_DATA;
+  
+  // 1. Verify zero normalized duplicates in entire master dataset
+  const seenNorm = new Set();
+  const dupClusters = [];
+  for (const w of allWords) {
+    const k = (w.en || '').trim().toLowerCase().replace(/[\.\!\?,;:]+$/g, '').replace(/[\s\-_~]+/g, '');
+    if (seenNorm.has(k)) {
+      dupClusters.push(w.en);
+    }
+    seenNorm.add(k);
+  }
+  assertEqual(dupClusters.length, 0, `Master WORDS_DATA must have 0 duplicate clusters (found: ${dupClusters.slice(0, 5).join(', ')})`);
+
+  // 2. Verify duplicate pairs have strictly ONE card with unified information
+  const emailCards = allWords.filter(w => w.en.toLowerCase() === 'email');
+  assertEqual(emailCards.length, 1, 'email must have strictly 1 card in WORDS_DATA');
+  assertEqual(emailCards[0].alt, 'e-mail', 'email card must have e-mail as alternative spelling');
+
+  const organizeCards = allWords.filter(w => w.en.toLowerCase() === 'organize');
+  assertEqual(organizeCards.length, 1, 'organize must have strictly 1 card in WORDS_DATA');
+  assertEqual(organizeCards[0].alt, 'organise', 'organize card must have organise as alternative spelling');
+
+  const lineupCards = allWords.filter(w => w.en.toLowerCase() === 'line up');
+  assertEqual(lineupCards.length, 1, 'line up must have strictly 1 card in WORDS_DATA');
+  assert(lineupCards[0].isMaarif && lineupCards[0].isOxford, 'line up must combine both Maarif and Oxford datasets');
+
+  const wakeupCards = allWords.filter(w => w.en.toLowerCase() === 'wake up');
+  assertEqual(wakeupCards.length, 1, 'wake up must have strictly 1 card in WORDS_DATA');
+  assertEqual(wakeupCards[0].alt, 'wake-up', 'wake up must have wake-up as alternative spelling');
+
+  // 3. Verify directory search finds unified card via alt spelling
+  env.APP.switchView('directory');
+  const state = env.APP.getState();
+  state.directoryFilters.dataset = 'all';
+  state.directoryFilters.search = 'organise';
+  env.APP.renderDirectoryView();
+  const dirSection = env.document.getElementById('view-directory');
+  assertIncludes(dirSection.innerHTML, 'organize', 'Search for organise should find the organize card');
+});
+
 // --- 1.6 Telemetry & Progress Metrics (6 Tests) ---
 
 registerTest(1, 'Telemetry & Stats', 'test_telemetry_zero_state_defaults', () => {
