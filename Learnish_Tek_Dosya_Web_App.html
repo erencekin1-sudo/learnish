@@ -4200,7 +4200,8 @@ mark.pedagogy-word-highlight {
 
 /* 1. Grade & Curriculum Selector Modal */
 .grade-modal-backdrop,
-.classifier-modal-backdrop {
+.classifier-modal-backdrop,
+.pdf-modal-backdrop {
   position: fixed;
   inset: 0;
   background: rgba(12, 17, 14, 0.78);
@@ -4213,13 +4214,15 @@ mark.pedagogy-word-highlight {
 }
 
 .grade-modal-backdrop.active,
-.classifier-modal-backdrop.active {
+.classifier-modal-backdrop.active,
+.pdf-modal-backdrop.active {
   opacity: 1;
   pointer-events: auto;
 }
 
 .grade-dialog-card,
-.classifier-dialog-card {
+.classifier-dialog-card,
+.pdf-dialog-card {
   display: none;
   position: fixed;
   top: 50%;
@@ -4239,15 +4242,23 @@ mark.pedagogy-word-highlight {
   opacity: 0;
 }
 
+.pdf-dialog-card {
+  max-width: 1160px;
+  max-height: 92vh;
+  height: 92vh;
+}
+
 .grade-dialog-card.active,
-.classifier-dialog-card.active {
+.classifier-dialog-card.active,
+.pdf-dialog-card.active {
   display: flex;
   transform: translate(-50%, -50%) scale(1);
   opacity: 1;
 }
 
 .grade-dialog-header,
-.classifier-dialog-header {
+.classifier-dialog-header,
+.pdf-dialog-header {
   padding: 18px 22px;
   display: flex;
   align-items: center;
@@ -4257,7 +4268,8 @@ mark.pedagogy-word-highlight {
 }
 
 .grade-dialog-eyebrow,
-.classifier-dialog-eyebrow {
+.classifier-dialog-eyebrow,
+.pdf-dialog-eyebrow {
   display: block;
   font-family: var(--dp-typography-mono);
   font-size: 10px;
@@ -4269,7 +4281,14 @@ mark.pedagogy-word-highlight {
 }
 
 .grade-dialog-title,
-.classifier-dialog-title {
+.classifier-dialog-title,
+.pdf-dialog-title {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  color: var(--dp-color-ink);
+}
   margin: 0;
   font-size: 18px;
   font-weight: 800;
@@ -5011,6 +5030,1268 @@ mark.pedagogy-word-highlight {
   border-color: var(--dp-color-amber);
 }
 
+/* ==========================================================================
+   PDF & ÇALIŞMA KAĞIDI STÜDYOSU (Printable Worksheet & PDF Studio)
+   ========================================================================== */
+
+/* Header Action Button */
+.header-right-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.pdf-header-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(202, 0, 19, 0.08);
+  color: var(--dp-color-red);
+  border: 1px solid rgba(202, 0, 19, 0.28);
+  border-radius: 9999px;
+  padding: 6px 14px;
+  font-size: 12px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.pdf-header-btn:hover {
+  background: rgba(202, 0, 19, 0.16);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 14px rgba(202, 0, 19, 0.25);
+}
+
+@media (max-width: 600px) {
+  .pdf-btn-label {
+    display: none;
+  }
+  .pdf-header-btn {
+    padding: 7px;
+    border-radius: 50%;
+  }
+}
+
+.ped-btn-pdf {
+  background: rgba(202, 0, 19, 0.08);
+  color: var(--dp-color-red);
+  border: 1px solid rgba(202, 0, 19, 0.28);
+  font-weight: 700;
+  padding: 10px 14px;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.18s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.ped-btn-pdf:hover {
+  background: rgba(202, 0, 19, 0.15);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(202, 0, 19, 0.2);
+}
+
+.pdf-dialog-body {
+  padding: 0;
+  flex: 1;
+  overflow: hidden;
+  display: flex;
+}
+
+.pdf-studio-layout {
+  display: grid;
+  grid-template-columns: 1fr 1.05fr;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+/* Controls Pane */
+.pdf-controls-pane {
+  padding: 20px 24px;
+  overflow-y: auto;
+  border-right: 1px solid var(--dp-color-border-subtle);
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  background: var(--dp-color-surface);
+}
+
+.pdf-form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.pdf-group-label {
+  font-family: var(--dp-typography-mono);
+  font-size: 10.5px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  color: var(--dp-color-amber);
+  text-transform: uppercase;
+}
+
+.pdf-template-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.pdf-template-btn {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  background: var(--dp-color-surface-2);
+  border: 1.5px solid var(--dp-color-border-subtle);
+  border-radius: 12px;
+  padding: 10px 12px;
+  text-align: left;
+  cursor: pointer;
+  transition: all 0.18s ease;
+}
+
+.pdf-template-btn:hover {
+  border-color: var(--dp-color-amber);
+  background: rgba(245, 158, 11, 0.05);
+}
+
+.pdf-template-btn.active {
+  border-color: var(--dp-color-red);
+  background: rgba(202, 0, 19, 0.06);
+  box-shadow: 0 4px 16px rgba(202, 0, 19, 0.15);
+}
+
+.pdf-template-btn .ptb-icon {
+  font-size: 20px;
+  line-height: 1;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.pdf-template-btn .ptb-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.pdf-template-btn .ptb-title {
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--dp-color-ink);
+}
+
+.pdf-template-btn.active .ptb-title {
+  color: var(--dp-color-red);
+}
+
+.pdf-template-btn .ptb-desc {
+  font-size: 11px;
+  line-height: 1.35;
+  color: var(--dp-color-ink-muted);
+}
+
+.pdf-form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.pdf-field-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.pdf-field-title {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--dp-color-ink);
+}
+
+.pdf-select,
+.pdf-input {
+  width: 100%;
+  padding: 9px 12px;
+  background: var(--dp-color-surface-2);
+  border: 1px solid var(--dp-color-border);
+  border-radius: 10px;
+  color: var(--dp-color-ink);
+  font-size: 12.5px;
+  font-family: inherit;
+  outline: none;
+  transition: all 0.18s ease;
+}
+
+.pdf-select:focus,
+.pdf-input:focus {
+  border-color: var(--dp-color-amber);
+  box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.15);
+}
+
+.pdf-checkbox-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px 12px;
+}
+
+.pdf-checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--dp-color-ink);
+  cursor: pointer;
+  user-select: none;
+}
+
+.pdf-checkbox-label input[type="checkbox"] {
+  accent-color: var(--dp-color-red);
+  width: 15px;
+  height: 15px;
+  cursor: pointer;
+}
+
+.pdf-actions-footer {
+  margin-top: auto;
+  display: flex;
+  gap: 10px;
+  padding-top: 14px;
+  border-top: 1px solid var(--dp-color-border-subtle);
+}
+
+.pdf-cta-print-btn {
+  flex: 1.5;
+  padding: 13px 18px;
+  background: var(--dp-color-red);
+  color: #ffffff;
+  border: none;
+  border-radius: 12px;
+  font-size: 13.5px;
+  font-weight: 800;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 8px 24px -4px rgba(202, 0, 19, 0.35);
+}
+
+.pdf-cta-print-btn:hover {
+  filter: brightness(1.1);
+  transform: translateY(-1px);
+  box-shadow: 0 12px 28px -4px rgba(202, 0, 19, 0.45);
+}
+
+.pdf-secondary-download-btn {
+  flex: 1;
+  padding: 13px 14px;
+  background: var(--dp-color-surface-2);
+  color: var(--dp-color-ink);
+  border: 1px solid var(--dp-color-border);
+  border-radius: 12px;
+  font-size: 12.5px;
+  font-weight: 700;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  transition: all 0.18s ease;
+}
+
+.pdf-secondary-download-btn:hover {
+  background: var(--dp-color-surface-3);
+  border-color: var(--dp-color-ink-muted);
+}
+
+/* Preview Pane */
+.pdf-preview-pane {
+  background: #0f172a;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.pdf-preview-header {
+  padding: 12px 18px;
+  background: rgba(15, 23, 42, 0.95);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.pph-title {
+  font-family: var(--dp-typography-mono);
+  font-size: 11px;
+  font-weight: 800;
+  color: #e2e8f0;
+  letter-spacing: 0.05em;
+}
+
+.pph-badge {
+  font-family: var(--dp-typography-mono);
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: rgba(245, 158, 11, 0.18);
+  color: #fbbf24;
+  border: 1px solid rgba(245, 158, 11, 0.3);
+}
+
+.pdf-preview-scroll-wrap {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px;
+  display: flex;
+  justify-content: center;
+}
+
+/* Simulated A4 Sheet */
+.pdf-a4-preview-viewport {
+  width: 100%;
+  max-width: 520px;
+  min-height: 720px;
+  background: #ffffff;
+  color: #171e19;
+  border-radius: 4px;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.35);
+  padding: 24px;
+  font-family: 'Nunito', -apple-system, sans-serif;
+  line-height: 1.45;
+  box-sizing: border-box;
+}
+
+/* Responsive adjustment for studio layout */
+@media (max-width: 900px) {
+  .pdf-studio-layout {
+    grid-template-columns: 1fr;
+    overflow-y: auto;
+  }
+  .pdf-controls-pane {
+    border-right: none;
+    border-bottom: 1px solid var(--dp-color-border-subtle);
+    overflow: visible;
+  }
+  .pdf-preview-pane {
+    min-height: 500px;
+  }
+}
+
+/* ==========================================================================
+   WORKSHEET HTML COMPONENTS (Used in Preview and Print)
+   ========================================================================== */
+.ws-doc {
+  font-family: 'Nunito', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  color: #171e19;
+  background: #ffffff;
+  box-sizing: border-box;
+  width: 100%;
+}
+
+.ws-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 2px solid #171e19;
+  padding-bottom: 10px;
+  margin-bottom: 14px;
+}
+
+.ws-brand-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.ws-logo-text {
+  font-size: 18px;
+  font-weight: 900;
+  letter-spacing: -0.02em;
+  color: #ca0013;
+}
+
+.ws-title-wrap {
+  text-align: right;
+}
+
+.ws-main-title {
+  font-size: 14px;
+  font-weight: 800;
+  color: #171e19;
+  margin: 0;
+  text-transform: uppercase;
+}
+
+.ws-sub-title {
+  font-size: 10px;
+  font-weight: 700;
+  color: #64748b;
+  margin: 2px 0 0 0;
+}
+
+.ws-student-table {
+  width: 100%;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  margin-bottom: 12px;
+  border-collapse: collapse;
+  font-size: 11px;
+}
+
+.ws-student-table td {
+  padding: 6px 10px;
+  border: 1px solid #cbd5e1;
+}
+
+.ws-field-label {
+  font-weight: 800;
+  color: #475569;
+  text-transform: uppercase;
+  font-size: 9.5px;
+}
+
+.ws-field-blank {
+  color: #171e19;
+  font-weight: 700;
+}
+
+.ws-banner {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-left: 4px solid #ca0013;
+  border-radius: 4px;
+  padding: 8px 12px;
+  margin-bottom: 14px;
+  font-size: 11px;
+}
+
+.ws-banner.banner-curriculum {
+  border-left-color: #f59e0b;
+}
+
+.ws-banner.banner-quiz {
+  border-left-color: #3b82f6;
+}
+
+.ws-banner.banner-flashcards {
+  border-left-color: #10b981;
+}
+
+.ws-banner-title {
+  font-weight: 800;
+  color: #171e19;
+  display: block;
+  margin-bottom: 2px;
+  font-size: 11.5px;
+}
+
+.ws-banner-desc {
+  color: #475569;
+  line-height: 1.4;
+}
+
+/* Mistakes & Curriculum Word Cards */
+.ws-cards-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.ws-word-card {
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  padding: 8px 12px;
+  background: #ffffff;
+  page-break-inside: avoid;
+  break-inside: avoid;
+}
+
+.ws-wc-top {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.ws-wc-left {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.ws-wc-index {
+  font-size: 10px;
+  font-weight: 800;
+  color: #64748b;
+}
+
+.ws-wc-en {
+  font-size: 15px;
+  font-weight: 900;
+  color: #171e19;
+  letter-spacing: -0.01em;
+}
+
+.ws-wc-phonetic {
+  font-size: 11px;
+  color: #64748b;
+  font-style: italic;
+}
+
+.ws-wc-pos {
+  font-size: 9.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: #0284c7;
+  background: #f0f9ff;
+  border: 1px solid #bae6fd;
+  padding: 1px 5px;
+  border-radius: 4px;
+}
+
+.ws-wc-badge {
+  font-size: 9.5px;
+  font-weight: 800;
+  color: #ca0013;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  padding: 1px 6px;
+  border-radius: 4px;
+  white-space: nowrap;
+}
+
+.ws-wc-tr {
+  font-size: 12px;
+  font-weight: 700;
+  color: #334155;
+  margin-bottom: 4px;
+}
+
+.ws-wc-example {
+  font-size: 11px;
+  color: #475569;
+  font-style: italic;
+  margin-bottom: 6px;
+  line-height: 1.35;
+}
+
+.ws-practice-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: 6px;
+  padding-top: 6px;
+  border-top: 1px dashed #e2e8f0;
+}
+
+.ws-practice-line-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 10.5px;
+  color: #64748b;
+}
+
+.ws-dotted-blank {
+  flex: 1;
+  border-bottom: 1.5px dotted #94a3b8;
+  height: 12px;
+}
+
+/* Matching Activity Box */
+.ws-matching-section {
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  padding: 10px 14px;
+  margin-top: 14px;
+  page-break-inside: avoid;
+  break-inside: avoid;
+}
+
+.ws-matching-title {
+  font-size: 11.5px;
+  font-weight: 800;
+  color: #171e19;
+  margin-bottom: 8px;
+  text-transform: uppercase;
+}
+
+.ws-matching-columns {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  font-size: 11px;
+}
+
+.ws-match-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 0;
+}
+
+.ws-match-bullet {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 1.5px solid #64748b;
+  display: inline-block;
+  flex-shrink: 0;
+}
+
+/* Quiz Section */
+.ws-quiz-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.ws-quiz-item {
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  padding: 8px 12px;
+  page-break-inside: avoid;
+  break-inside: avoid;
+}
+
+.ws-quiz-q-title {
+  font-size: 12px;
+  font-weight: 800;
+  color: #171e19;
+  margin-bottom: 6px;
+}
+
+.ws-quiz-options-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px 12px;
+  font-size: 11px;
+}
+
+.ws-quiz-opt {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.ws-opt-letter {
+  font-weight: 800;
+  color: #64748b;
+}
+
+.ws-answer-key-box {
+  margin-top: 14px;
+  padding: 8px 12px;
+  border: 1px dashed #94a3b8;
+  border-radius: 4px;
+  font-size: 10px;
+  page-break-inside: avoid;
+  break-inside: avoid;
+}
+
+.ws-answer-key-title {
+  font-weight: 800;
+  text-transform: uppercase;
+  color: #64748b;
+  margin-bottom: 4px;
+}
+
+.ws-answer-key-content {
+  font-family: var(--dp-typography-mono, monospace);
+  font-weight: 700;
+  color: #171e19;
+}
+
+/* Flashcards Cut & Fold Grid */
+.ws-flashcards-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.ws-fc-cut-card {
+  border: 1.5px dashed #64748b;
+  border-radius: 6px;
+  padding: 10px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  page-break-inside: avoid;
+  break-inside: avoid;
+  position: relative;
+}
+
+.ws-fc-side-en {
+  border-right: 1px dotted #cbd5e1;
+  padding-right: 8px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.ws-fc-side-tr {
+  padding-left: 8px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.ws-footer {
+  margin-top: 14px;
+  padding-top: 8px;
+  border-top: 1px solid #e2e8f0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 9px;
+  color: #94a3b8;
+  page-break-inside: avoid;
+  break-inside: avoid;
+}
+
+/* Printable Hidden Element on Screen */
+#learnish-printable-sheet {
+  display: none;
+}
+
+/* ==========================================================================
+   HOME VIEW: COMPREHENSIVE INFORMATIVE HUB & MODULE GUIDE
+   ========================================================================== */
+.home-orientation-hero {
+  border-radius: var(--dp-radius-card);
+  background: var(--dp-color-surface);
+  border: 1.5px solid var(--dp-color-border);
+  box-shadow: var(--dp-shadow-soft-lg);
+  padding: 32px 28px;
+  position: relative;
+  overflow: hidden;
+  margin-bottom: 28px;
+}
+
+.home-hero-summary-box {
+  background: var(--dp-color-surface-subtle);
+  border: 1.5px solid var(--dp-color-border);
+  border-radius: 20px;
+  padding: 20px 22px;
+  min-width: 280px;
+  max-width: 340px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  box-shadow: var(--dp-shadow-soft-sm);
+}
+
+.hh-status-tag {
+  font-family: var(--dp-typography-mono);
+  font-size: 10.5px;
+  font-weight: 800;
+  color: var(--dp-color-red);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin-bottom: 6px;
+}
+
+.hh-status-title {
+  font-size: 15px;
+  font-weight: 900;
+  color: var(--dp-color-ink);
+  line-height: 1.35;
+}
+
+.hh-status-sub {
+  font-size: 12px;
+  color: var(--dp-color-ink-muted);
+  margin-top: 4px;
+}
+
+/* Section Header */
+.home-guide-section {
+  margin: 32px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.home-section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding: 0 4px;
+}
+
+.home-section-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--dp-typography-mono);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--dp-color-red);
+  background: var(--dp-color-red-light);
+  padding: 5px 12px;
+  border-radius: var(--dp-radius-pill);
+  margin-bottom: 8px;
+}
+
+.home-section-title {
+  font-size: 24px;
+  font-weight: 900;
+  color: var(--dp-color-ink);
+  letter-spacing: -0.015em;
+  line-height: 1.25;
+}
+
+.home-section-desc {
+  font-size: 13.5px;
+  color: var(--dp-color-ink-muted);
+  max-width: 720px;
+  margin-top: 4px;
+  line-height: 1.5;
+}
+
+/* 1. Routes Grid (3 Columns) */
+.home-routes-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 20px;
+}
+
+@media (min-width: 900px) {
+  .home-routes-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+.home-route-card {
+  background: var(--dp-color-surface);
+  border: 1.5px solid var(--dp-color-border);
+  border-radius: var(--dp-radius-card);
+  box-shadow: var(--dp-shadow-soft-md);
+  padding: 26px 22px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.home-route-card:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--dp-shadow-soft-lg);
+  border-color: var(--dp-color-ink-faint);
+}
+
+.home-route-card.is-active-route {
+  border-color: var(--dp-color-red);
+  box-shadow: 0 8px 24px rgba(202, 0, 19, 0.12);
+}
+
+.hrc-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.hrc-tag {
+  font-family: var(--dp-typography-mono);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  padding: 4px 9px;
+  border-radius: 8px;
+  text-transform: uppercase;
+}
+
+.hrc-tag.tag-maarif {
+  background: rgba(0, 135, 68, 0.1);
+  color: var(--dp-color-green);
+  border: 1px solid rgba(0, 135, 68, 0.25);
+}
+
+.hrc-tag.tag-yds {
+  background: rgba(202, 0, 19, 0.1);
+  color: var(--dp-color-red);
+  border: 1px solid rgba(202, 0, 19, 0.25);
+}
+
+.hrc-tag.tag-oxford {
+  background: rgba(2, 132, 199, 0.1);
+  color: var(--dp-color-blue);
+  border: 1px solid rgba(2, 132, 199, 0.25);
+}
+
+.hrc-icon-circle {
+  width: 44px;
+  height: 44px;
+  border-radius: 14px;
+  background: var(--dp-color-surface-subtle);
+  border: 1px solid var(--dp-color-border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  flex-shrink: 0;
+}
+
+.hrc-title {
+  font-size: 19px;
+  font-weight: 900;
+  color: var(--dp-color-ink);
+  line-height: 1.3;
+  margin-bottom: 8px;
+}
+
+.hrc-desc {
+  font-size: 12.5px;
+  color: var(--dp-color-ink-muted);
+  line-height: 1.5;
+  margin-bottom: 14px;
+}
+
+.hrc-target-pill {
+  background: var(--dp-color-surface-subtle);
+  border: 1px solid var(--dp-color-border-subtle);
+  border-radius: 10px;
+  padding: 8px 12px;
+  font-size: 11.5px;
+  color: var(--dp-color-ink);
+  line-height: 1.45;
+  margin-bottom: 14px;
+}
+
+.hrc-features-list {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 18px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.hrc-features-list li {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--dp-color-ink);
+  line-height: 1.4;
+}
+
+.hrc-features-list li span {
+  color: var(--dp-color-green);
+  font-weight: 900;
+  font-size: 12px;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.hrc-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: auto;
+}
+
+.hrc-primary-btn {
+  width: 100%;
+  min-height: 44px;
+  background: var(--dp-color-red);
+  color: #ffffff;
+  border: none;
+  border-radius: 12px;
+  font-family: var(--dp-typography-family);
+  font-size: 13px;
+  font-weight: 800;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  box-shadow: 0 3px 10px rgba(202, 0, 19, 0.2);
+  transition: background 0.15s ease, transform 0.15s ease;
+}
+
+.hrc-primary-btn:hover {
+  background: var(--dp-color-red-hover);
+  transform: translateY(-1px);
+}
+
+.hrc-secondary-btn {
+  width: 100%;
+  min-height: 38px;
+  background: transparent;
+  color: var(--dp-color-ink);
+  border: 1.5px solid var(--dp-color-border);
+  border-radius: 12px;
+  font-family: var(--dp-typography-family);
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.hrc-secondary-btn:hover {
+  background: var(--dp-color-surface-subtle);
+  border-color: var(--dp-color-ink-faint);
+}
+
+/* 2. Methodology Steps Grid (4 Columns) */
+.home-methodology-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 16px;
+}
+
+@media (min-width: 600px) {
+  .home-methodology-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 1024px) {
+  .home-methodology-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+.home-step-card {
+  background: var(--dp-color-surface);
+  border: 1.5px solid var(--dp-color-border);
+  border-radius: 20px;
+  box-shadow: var(--dp-shadow-soft-sm);
+  padding: 22px 18px;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.home-step-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--dp-shadow-soft-md);
+  border-color: var(--dp-color-red);
+}
+
+.hsc-step-badge {
+  font-family: var(--dp-typography-mono);
+  font-size: 10px;
+  font-weight: 900;
+  color: var(--dp-color-red);
+  letter-spacing: 0.08em;
+  margin-bottom: 12px;
+}
+
+.hsc-icon {
+  font-size: 28px;
+  margin-bottom: 10px;
+}
+
+.hsc-title {
+  font-size: 15px;
+  font-weight: 900;
+  color: var(--dp-color-ink);
+  line-height: 1.35;
+  margin-bottom: 8px;
+}
+
+.hsc-desc {
+  font-size: 12px;
+  color: var(--dp-color-ink-muted);
+  line-height: 1.5;
+  margin-bottom: 16px;
+}
+
+.hsc-link-btn {
+  margin-top: auto;
+  background: var(--dp-color-surface-subtle);
+  border: 1px solid var(--dp-color-border);
+  border-radius: 10px;
+  color: var(--dp-color-ink);
+  font-family: var(--dp-typography-family);
+  font-size: 11.5px;
+  font-weight: 800;
+  padding: 8px 12px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+
+.hsc-link-btn:hover {
+  background: var(--dp-color-red-light);
+  border-color: rgba(202, 0, 19, 0.3);
+  color: var(--dp-color-red);
+}
+
+/* 3. Features Bento Grid (3 Columns) */
+.home-features-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 16px;
+}
+
+@media (min-width: 640px) {
+  .home-features-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 1024px) {
+  .home-features-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+.home-feature-box {
+  background: var(--dp-color-surface);
+  border: 1.5px solid var(--dp-color-border);
+  border-radius: 20px;
+  box-shadow: var(--dp-shadow-soft-sm);
+  padding: 22px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.home-feature-box:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--dp-shadow-soft-md);
+  border-color: var(--dp-color-ink-faint);
+}
+
+.hfb-icon-wrap {
+  width: 44px;
+  height: 44px;
+  border-radius: 14px;
+  border: 1px solid transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  flex-shrink: 0;
+}
+
+.hfb-content {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+.hfb-title {
+  font-size: 16px;
+  font-weight: 900;
+  color: var(--dp-color-ink);
+  line-height: 1.35;
+  margin-bottom: 6px;
+}
+
+.hfb-desc {
+  font-size: 12px;
+  color: var(--dp-color-ink-muted);
+  line-height: 1.5;
+  margin-bottom: 14px;
+}
+
+.hfb-btn {
+  margin-top: auto;
+  align-self: flex-start;
+  background: transparent;
+  border: 1.5px solid var(--dp-color-border);
+  border-radius: 10px;
+  color: var(--dp-color-ink);
+  font-family: var(--dp-typography-family);
+  font-size: 12px;
+  font-weight: 800;
+  padding: 7px 14px;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+
+.hfb-btn:hover {
+  background: var(--dp-color-surface-subtle);
+  border-color: var(--dp-color-red);
+  color: var(--dp-color-red);
+}
+
+/* ==========================================================================
+   @MEDIA PRINT — Clean Vector A4 Output (Zero Web Chrome)
+   ========================================================================== */
+@media print {
+  @page {
+    size: A4 portrait;
+    margin: 8mm 10mm 10mm 10mm;
+  }
+
+  html, body {
+    background: #ffffff !important;
+    color: #171e19 !important;
+    font-size: 11pt !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  /* Completely hide all app chrome and dialogs */
+  .app-shell,
+  .floating-nav-bar,
+  .desktop-nav-bar,
+  .app-top-header,
+  .settings-modal-backdrop,
+  .settings-dialog-card,
+  .grade-modal-backdrop,
+  .grade-dialog-card,
+  .classifier-modal-backdrop,
+  .classifier-dialog-card,
+  .pdf-modal-backdrop,
+  .pdf-dialog-card,
+  .speech-coach-dialog {
+    display: none !important;
+  }
+
+  /* Show solely the printable worksheet */
+  #learnish-printable-sheet {
+    display: block !important;
+    visibility: visible !important;
+    position: static !important;
+    width: 100% !important;
+    background: #ffffff !important;
+    color: #171e19 !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  .ws-word-card,
+  .ws-quiz-item,
+  .ws-matching-section,
+  .ws-fc-cut-card,
+  .ws-answer-key-box {
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
+  }
+}
+
 </style>
 </head>
 <body>
@@ -5042,12 +6323,18 @@ mark.pedagogy-word-highlight {
         <span class="header-greeting-label" id="header-greeting-label">GÜNLÜK HEDEF • LEARNISH</span>
         <h1 class="header-greeting-title" id="header-user-title">MEB Müfredatı</h1>
       </div>
-      <button type="button" class="header-profile-btn" id="header-profile-trigger" onclick="window.APP.openSettingsModal()" aria-label="Ayarlar ve Profil">
-        <div class="header-avatar-circle">
-          <img src="data:image/png;base64,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" alt="Learnish Profil" class="header-avatar-img">
-          <span class="header-notification-badge" aria-label="Aktif bildirim"></span>
-        </div>
-      </button>
+      <div class="header-right-actions">
+        <button type="button" class="header-action-btn pdf-header-btn" onclick="window.APP.openPdfStudio()" title="PDF &amp; Çalışma Kağıdı Stüdyosu" aria-label="PDF Çalışma Föyü">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+          <span class="pdf-btn-label">PDF Föyü</span>
+        </button>
+        <button type="button" class="header-profile-btn" id="header-profile-trigger" onclick="window.APP.openSettingsModal()" aria-label="Ayarlar ve Profil">
+          <div class="header-avatar-circle">
+            <img src="data:image/png;base64,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" alt="Learnish Profil" class="header-avatar-img">
+            <span class="header-notification-badge" aria-label="Aktif bildirim"></span>
+          </div>
+        </button>
+      </div>
     </header>
 
     <!-- 1.5 DESKTOP TOP NAVIGATION (Visible on Desktop >= 768px, Hidden on Mobile) -->
@@ -5075,6 +6362,10 @@ mark.pedagogy-word-highlight {
       <button type="button" class="desktop-nav-btn nav-btn" data-view="stats">
         <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
         <span>İstatistik &amp; Analiz</span>
+      </button>
+      <button type="button" class="desktop-nav-btn nav-btn" onclick="window.APP.openPdfStudio()" title="PDF Çalışma Kağıdı &amp; Hata Kampı">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+        <span>PDF &amp; Yazdır</span>
       </button>
     </nav>
 
@@ -5306,6 +6597,24 @@ mark.pedagogy-word-highlight {
       <!-- Populated dynamically by window.APP.openClassifierForWord -->
     </div>
   </div>
+
+  <!-- 9. PDF & WORKSHEET STUDIO MODAL ("PDF & ÇALIŞMA KAĞIDI STÜDYOSU") -->
+  <div class="pdf-modal-backdrop" id="pdf-modal-backdrop" onclick="window.APP.closePdfStudio()" aria-hidden="true"></div>
+  <div class="pdf-dialog-card" id="pdf-dialog" role="dialog" aria-modal="true" aria-labelledby="pdf-dialog-title">
+    <div class="pdf-dialog-header">
+      <div class="pdf-dialog-title-wrap">
+        <span class="pdf-dialog-eyebrow">YAZDIRILABİLİR MATERYAL MERKEZİ</span>
+        <h2 id="pdf-dialog-title" class="pdf-dialog-title">PDF &amp; Çalışma Kağıdı Stüdyosu</h2>
+      </div>
+      <button type="button" class="settings-close-circle-btn" onclick="window.APP.closePdfStudio()" aria-label="Pencereyi Kapat">✕</button>
+    </div>
+    <div class="pdf-dialog-body" id="pdf-dialog-body">
+      <!-- Populated dynamically by window.APP.renderPdfStudio -->
+    </div>
+  </div>
+
+  <!-- Dedicated Hidden Printable Container (Rendered during @media print) -->
+  <div id="learnish-printable-sheet" class="learnish-printable-sheet" aria-hidden="true"></div>
 
   <!-- Data & Application Logic -->
   <script>
@@ -8096,6 +9405,11 @@ if (typeof module !== 'undefined' && module.exports) {
     closeModals();
   }
 
+  function selectModuleAndGo(moduleKey) {
+    switchModule(moduleKey);
+    switchView('daily');
+  }
+
   function switchViewAndClose(viewKey) {
     switchView(viewKey);
     closeModals();
@@ -8484,6 +9798,650 @@ if (typeof module !== 'undefined' && module.exports) {
   }
 
   // ==========================================================================
+  // PDF & ÇALIŞMA KAĞIDI STÜDYOSU (Printable Worksheet & PDF Studio)
+  // ==========================================================================
+  const PDF_STUDIO_STATE = {
+    template: 'mistakes', // 'mistakes' | 'curriculum' | 'quiz' | 'flashcards'
+    grade: 5,             // 1-12, 'yds', 'oxford'
+    scope: 'mistakes',     // 'mistakes', 'current_week', 'unit', 'starred', 'all'
+    unitNum: 1,
+    limit: 15,
+    showTr: true,
+    showPhonetic: true,
+    showExamples: true,
+    showWritingPractice: true,
+    showMatching: true,
+    includeAnswerKey: true,
+    studentName: ''
+  };
+
+  function resolveWorksheetWord(rawItem) {
+    if (typeof rawItem === 'object' && rawItem !== null && rawItem.en) return rawItem;
+    const str = String(rawItem || '').trim();
+    const cleanEn = str.replace(/^(verbs?|nouns?|adjectives?|adverbs?):\s*/i, '')
+                       .replace(/^(to|a|an)\s+/i, '')
+                       .replace(/\s*\([^)]*\)/g, '')
+                       .trim();
+    if (!cleanEn) return null;
+    const found = WORDS_DATA.find(w => w.en.toLowerCase() === cleanEn.toLowerCase())
+               || WORDS_DATA.find(w => w.en.toLowerCase().includes(cleanEn.toLowerCase()));
+    if (found) return found;
+    return {
+      id: 990000 + Math.floor(Math.random() * 10000),
+      en: cleanEn,
+      tr: '—',
+      desc: 'kelime',
+      pos: 'other',
+      cefr: 'A1',
+      phonetic: '',
+      example: `Practice using "${cleanEn}" in your own sentences.`
+    };
+  }
+
+  function getWorksheetTargetWords(state = PDF_STUDIO_STATE) {
+    const { template, grade, scope, unitNum, limit } = state;
+    let list = [];
+
+    if (template === 'mistakes' || scope === 'mistakes') {
+      const activeMistakes = getActiveMistakeWords();
+      if (grade && grade !== 'all' && grade !== 'yds' && grade !== 'oxford') {
+        const gNum = parseInt(grade, 10);
+        const gData = window.CURRICULUM_DATA && window.CURRICULUM_DATA[gNum];
+        if (gData && gData.units) {
+          const gKeywords = new Set(gData.units.flatMap(u => (u.targetVocab || []).concat(u.semanticKeywords || [])).map(s => String(s).toLowerCase()));
+          const gradeMistakes = activeMistakes.filter(w => gKeywords.has(w.en.toLowerCase()) || (gNum === 5 && isMaarifWord(w)));
+          list = gradeMistakes.length > 0 ? gradeMistakes : activeMistakes;
+        } else {
+          list = activeMistakes;
+        }
+      } else if (grade === 'yds') {
+        const ydsMistakes = activeMistakes.filter(isYDSWord);
+        list = ydsMistakes.length > 0 ? ydsMistakes : activeMistakes;
+      } else if (grade === 'oxford') {
+        const oxMistakes = activeMistakes.filter(isOxfordWord);
+        list = oxMistakes.length > 0 ? oxMistakes : activeMistakes;
+      } else {
+        list = activeMistakes;
+      }
+
+      if (list.length === 0) {
+        if (grade === 'yds') {
+          list = WORDS_DATA.filter(isYDSWord).slice(0, 20);
+        } else if (grade === 'oxford') {
+          list = WORDS_DATA.filter(isOxfordWord).slice(0, 20);
+        } else {
+          const gNum = parseInt(grade, 10) || 5;
+          const gData = window.CURRICULUM_DATA && window.CURRICULUM_DATA[gNum];
+          const unitWords = (gData && gData.units && gData.units[0]?.targetVocab) || [];
+          list = unitWords.map(resolveWorksheetWord).filter(Boolean);
+          if (list.length === 0) list = WORDS_DATA.filter(isMaarifWord).slice(0, 20);
+        }
+      }
+    } else if (scope === 'current_week') {
+      const gNum = parseInt(grade, 10) || 5;
+      if (window.CURRICULUM_CLASSIFIER) {
+        const sched = window.CURRICULUM_CLASSIFIER.getSchedule(gNum);
+        const rawTargetWords = sched.targetWords || [];
+        list = rawTargetWords.map(resolveWorksheetWord).filter(Boolean);
+      }
+    } else if (scope === 'unit') {
+      const gNum = parseInt(grade, 10) || 5;
+      const gData = window.CURRICULUM_DATA && window.CURRICULUM_DATA[gNum];
+      if (gData && gData.units) {
+        const targetUnit = gData.units.find(u => u.unitNum === parseInt(unitNum, 10)) || gData.units[0];
+        const rawWords = (targetUnit.targetVocab || []).concat(targetUnit.semanticKeywords || []);
+        list = rawWords.map(resolveWorksheetWord).filter(Boolean);
+      }
+    } else if (scope === 'starred') {
+      const starredIds = Array.from(STATE.userData.starred || []);
+      list = WORDS_DATA.filter(w => starredIds.includes(w.id));
+      if (list.length === 0) {
+        list = WORDS_DATA.filter(isMaarifWord).slice(0, 15);
+      }
+    } else { // 'all'
+      const gNum = parseInt(grade, 10);
+      if (gNum >= 1 && gNum <= 12) {
+        const gData = window.CURRICULUM_DATA && window.CURRICULUM_DATA[gNum];
+        if (gData && gData.units) {
+          list = gData.units.flatMap(u => (u.targetVocab || []).map(resolveWorksheetWord)).filter(Boolean);
+        }
+        if (list.length === 0) list = WORDS_DATA.filter(isMaarifWord);
+      } else if (grade === 'yds') {
+        list = WORDS_DATA.filter(isYDSWord);
+      } else if (grade === 'oxford') {
+        list = WORDS_DATA.filter(isOxfordWord);
+      } else {
+        list = WORDS_DATA.slice(0, 50);
+      }
+    }
+
+    const seen = new Set();
+    const unique = [];
+    for (const w of list) {
+      if (!w || !w.en) continue;
+      const key = w.en.toLowerCase().trim();
+      if (!seen.has(key)) {
+        seen.add(key);
+        unique.push(w);
+      }
+    }
+
+    const numLimit = parseInt(limit, 10);
+    return !isNaN(numLimit) && numLimit > 0 ? unique.slice(0, numLimit) : unique;
+  }
+
+  function generateWorksheetHTML(state = PDF_STUDIO_STATE, isForPrint = false) {
+    const words = getWorksheetTargetWords(state);
+    const dateFormatted = new Date().toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' });
+    const gNum = parseInt(state.grade, 10);
+    let gradeLabel = '5. Sınıf (MEB)';
+    if (gNum >= 1 && gNum <= 12) {
+      gradeLabel = `${gNum}. Sınıf (${gNum <= 4 ? 'İlkokul' : gNum <= 8 ? 'Ortaokul' : 'Lise'})`;
+    } else if (state.grade === 'yds') {
+      gradeLabel = 'YDS &amp; YÖKDİL';
+    } else if (state.grade === 'oxford') {
+      gradeLabel = 'The Oxford 5000';
+    }
+
+    let titleMain = 'KAZANIM VE KELİME ÇALIŞMA FÖYÜ';
+    let subTitle = `MEB İngilizce Maarif Modeli • ${gradeLabel}`;
+    let bannerHtml = '';
+
+    if (state.template === 'mistakes') {
+      titleMain = 'AKILLI HATA DEFTERİ &amp; KURTARMA ÇALIŞMA FÖYÜ';
+      subTitle = `Bilişsel Hata Analizi • ${gradeLabel} • Toplam ${words.length} Kritik Kelime`;
+      bannerHtml = `
+        <div class="ws-banner">
+          <span class="ws-banner-title">🛑 BİLİŞSEL GELİŞİM VE HATA AYIKLAMA YÖNERGESİ:</span>
+          <span class="ws-banner-desc">Bu çalışma föyü testlerde yanlış cevaplanan kelimelerinizden derlenmiştir. Anlamları inceleyiniz, kelimeleri 3 kez yazım alanına yazınız ve örnek cümle kurarak kalıcı hafızaya aktarınız.</span>
+        </div>
+      `;
+    } else if (state.template === 'curriculum') {
+      let focusText = 'Haftalık hedef kelimeler ve iletişimsel dil işlevleri.';
+      if (window.CURRICULUM_CLASSIFIER && gNum >= 1 && gNum <= 12) {
+        const sched = window.CURRICULUM_CLASSIFIER.getSchedule(gNum);
+        if (sched && sched.focus) focusText = sched.focus;
+      }
+      titleMain = 'MEB MAARİF MODELİ HAFTALIK ÇALIŞMA FÖYÜ';
+      subTitle = `${gradeLabel} • Hedef Müfredat Kelimeleri`;
+      bannerHtml = `
+        <div class="ws-banner banner-curriculum">
+          <span class="ws-banner-title">📚 HAFTANIN ODAĞI &amp; KAZANIMI:</span>
+          <span class="ws-banner-desc">${escapeHtml(focusText)}</span>
+        </div>
+      `;
+    } else if (state.template === 'quiz') {
+      titleMain = 'KELİME KAZANIM DEĞERLENDİRME TESTİ (QUIZ)';
+      subTitle = `${gradeLabel} • Süre: 20 Dakika • Puan: 100`;
+      bannerHtml = `
+        <div class="ws-banner banner-quiz">
+          <span class="ws-banner-title">📝 SINAV YÖNERGESİ:</span>
+          <span class="ws-banner-desc">Soruları dikkatle okuyunuz ve doğru seçeneği işaretleyiniz. Cevap anahtarı sayfanın en altında yer almaktadır.</span>
+        </div>
+      `;
+    } else if (state.template === 'flashcards') {
+      titleMain = 'YAZDIRILABİLİR KES &amp; KATLA KELİME KARTLARI';
+      subTitle = `${gradeLabel} • Çift Taraflı Çalışma Kartları`;
+      bannerHtml = `
+        <div class="ws-banner banner-flashcards">
+          <span class="ws-banner-title">✂️ KULLANIM KILAVUZU:</span>
+          <span class="ws-banner-desc">Kesik çizgilerden (---) kesiniz, ortadaki noktalı çizgiden (:::) ikiye katlayınız. Bir yüzü İngilizce, diğer yüzü Türkçe taşınabilir kartınız hazır!</span>
+        </div>
+      `;
+    }
+
+    const studentTableHtml = `
+      <table class="ws-student-table">
+        <tr>
+          <td style="width: 50%;">
+            <span class="ws-field-label">ÖĞRENCİ ADI SOYADI:</span>
+            <span class="ws-field-blank">${state.studentName ? escapeHtml(state.studentName) : '...................................................'}</span>
+          </td>
+          <td style="width: 25%;">
+            <span class="ws-field-label">SINIF / ŞUBE:</span>
+            <span class="ws-field-blank">........... / ...........</span>
+          </td>
+          <td style="width: 25%;">
+            <span class="ws-field-label">TARİH:</span>
+            <span class="ws-field-blank">${dateFormatted}</span>
+          </td>
+        </tr>
+      </table>
+    `;
+
+    let bodyHtml = '';
+
+    if (state.template === 'mistakes' || state.template === 'curriculum') {
+      bodyHtml += `<div class="ws-cards-list">`;
+      words.forEach((w, idx) => {
+        const mistakeData = STATE.userData.mistakes[w.id];
+        const mistakeCount = (mistakeData && mistakeData.wrongCount) || 1;
+        const posText = w.pos || w.desc || 'kelime';
+
+        bodyHtml += `
+          <div class="ws-word-card">
+            <div class="ws-wc-top">
+              <div class="ws-wc-left">
+                <span class="ws-wc-index">#${idx + 1}</span>
+                <span class="ws-wc-en">${escapeHtml(w.en)}</span>
+                ${state.showPhonetic && w.phonetic ? `<span class="ws-wc-phonetic">${escapeHtml(w.phonetic)}</span>` : ''}
+                <span class="ws-wc-pos">${escapeHtml(posText)}</span>
+                ${w.cefr ? `<span class="ws-wc-pos" style="background:#fef3c7; border-color:#fde68a; color:#b45309;">${escapeHtml(w.cefr)}</span>` : ''}
+              </div>
+              ${state.template === 'mistakes' ? `<span class="ws-wc-badge">⚠️ ${mistakeCount}x Yanlış Yapıldı</span>` : ''}
+            </div>
+
+            ${state.showTr ? `<div class="ws-wc-tr"><strong>Türkçe Anlamı:</strong> ${escapeHtml(w.tr || '—')}</div>` : ''}
+            ${state.showExamples && (w.example || w.definition) ? `
+              <div class="ws-wc-example"><strong>Örnek Cümle:</strong> “${escapeHtml(w.example || w.definition)}”</div>
+            ` : ''}
+
+            ${state.showWritingPractice ? `
+              <div class="ws-practice-grid">
+                <div class="ws-practice-line-row">
+                  <span>Doğru Yazım (3x):</span>
+                  <span class="ws-dotted-blank"></span>
+                  <span class="ws-dotted-blank"></span>
+                  <span class="ws-dotted-blank"></span>
+                </div>
+                <div class="ws-practice-line-row" style="margin-top:2px;">
+                  <span>Kendi Cümleniz:</span>
+                  <span class="ws-dotted-blank"></span>
+                </div>
+              </div>
+            ` : ''}
+          </div>
+        `;
+      });
+      bodyHtml += `</div>`;
+
+      if (state.showMatching && words.length >= 4) {
+        const matchSlice = words.slice(0, Math.min(6, words.length));
+        const shuffledTr = matchSlice.map((w, i) => ({ tr: w.tr, originalIndex: i }))
+                                     .sort(() => 0.5 - Math.random());
+
+        bodyHtml += `
+          <div class="ws-matching-section">
+            <div class="ws-matching-title">BÖLÜM B: HIZLI EŞLEŞTİRME ALIŞTIRMASI (MATCHING CHALLENGE)</div>
+            <div style="font-size:10.5px; color:#64748b; margin-bottom:8px;">Sol taraftaki İngilizce kelimeleri sağ taraftaki doğru Türkçe karşılıkları ile ok çekerek eşleştiriniz:</div>
+            <div class="ws-matching-columns">
+              <div>
+                ${matchSlice.map((w, i) => `
+                  <div class="ws-match-item">
+                    <span class="ws-match-bullet"></span>
+                    <strong>${i + 1}.</strong>
+                    <span>${escapeHtml(w.en)}</span>
+                  </div>
+                `).join('')}
+              </div>
+              <div>
+                ${shuffledTr.map((item, i) => `
+                  <div class="ws-match-item">
+                    <span class="ws-match-bullet"></span>
+                    <strong>${String.fromCharCode(65 + i)})</strong>
+                    <span>${escapeHtml(item.tr)}</span>
+                  </div>
+                `).join('')}
+              </div>
+            </div>
+          </div>
+        `;
+      }
+    } else if (state.template === 'quiz') {
+      const quizWords = words.slice(0, Math.min(10, words.length));
+      const answerKey = [];
+
+      bodyHtml += `<div class="ws-quiz-list">`;
+      quizWords.forEach((w, qIdx) => {
+        const distractors = WORDS_DATA
+          .filter(other => other.id !== w.id && other.tr && other.tr !== w.tr)
+          .sort(() => 0.5 - Math.random())
+          .slice(0, 3)
+          .map(d => d.tr);
+
+        const correctLetterIdx = Math.floor(Math.random() * 4);
+        const letters = ['A', 'B', 'C', 'D'];
+        answerKey.push(`${qIdx + 1}-${letters[correctLetterIdx]}`);
+
+        const options = [];
+        let dIdx = 0;
+        for (let i = 0; i < 4; i++) {
+          if (i === correctLetterIdx) {
+            options.push(w.tr);
+          } else {
+            options.push(distractors[dIdx++] || '—');
+          }
+        }
+
+        bodyHtml += `
+          <div class="ws-quiz-item">
+            <div class="ws-quiz-q-title">${qIdx + 1}. "${escapeHtml(w.en)}" kelimesinin Türkçe karşılığı aşağıdakilerden hangisidir?</div>
+            <div class="ws-quiz-options-grid">
+              ${options.map((opt, oIdx) => `
+                <div class="ws-quiz-opt">
+                  <span class="ws-opt-letter">${letters[oIdx]})</span>
+                  <span>${escapeHtml(opt)}</span>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+        `;
+      });
+      bodyHtml += `</div>`;
+
+      if (state.includeAnswerKey) {
+        bodyHtml += `
+          <div class="ws-answer-key-box">
+            <div class="ws-answer-key-title">✂️ CEVAP ANAHTARI (ANSWER KEY):</div>
+            <div class="ws-answer-key-content">${answerKey.join('   •   ')}</div>
+          </div>
+        `;
+      }
+    } else if (state.template === 'flashcards') {
+      const fcWords = words.slice(0, Math.min(8, words.length));
+      bodyHtml += `<div class="ws-flashcards-grid">`;
+      fcWords.forEach((w, idx) => {
+        bodyHtml += `
+          <div class="ws-fc-cut-card">
+            <div class="ws-fc-side-en">
+              <span style="font-size:9px; font-weight:800; color:#94a3b8;">KART #${idx + 1}</span>
+              <div style="font-size:16px; font-weight:900; color:#171e19; margin:4px 0 2px 0;">${escapeHtml(w.en)}</div>
+              ${w.phonetic ? `<div style="font-size:10px; color:#64748b; font-style:italic;">${escapeHtml(w.phonetic)}</div>` : ''}
+              <div style="font-size:9.5px; font-weight:700; color:#0284c7; margin-top:4px;">${escapeHtml(w.desc || w.pos || 'kelime')}</div>
+            </div>
+            <div class="ws-fc-side-tr">
+              <span style="font-size:9px; font-weight:800; color:#94a3b8;">TÜRKÇE / ÖRNEK</span>
+              <div style="font-size:13px; font-weight:800; color:#334155; margin:4px 0 2px 0;">${escapeHtml(w.tr || '—')}</div>
+              ${w.example ? `<div style="font-size:10px; color:#475569; font-style:italic; line-height:1.3;">“${escapeHtml(w.example)}”</div>` : ''}
+            </div>
+          </div>
+        `;
+      });
+      bodyHtml += `</div>`;
+    }
+
+    return `
+      <div class="ws-doc">
+        <header class="ws-header">
+          <div class="ws-brand-wrap">
+            <span class="ws-logo-text">LEARNISH</span>
+            <span style="font-size:10px; font-weight:800; background:#ca0013; color:#fff; padding:2px 6px; border-radius:4px;">STUDY SHEET</span>
+          </div>
+          <div class="ws-title-wrap">
+            <h1 class="ws-main-title">${titleMain}</h1>
+            <p class="ws-sub-title">${subTitle}</p>
+          </div>
+        </header>
+
+        ${studentTableHtml}
+        ${bannerHtml}
+        ${bodyHtml}
+
+        <footer class="ws-footer">
+          <span>Learnish Akıllı İngilizce Öğrenim Sistemi • MEB Maarif Modeli</span>
+          <span>${dateFormatted} • Başarılar Dileriz!</span>
+        </footer>
+      </div>
+    `;
+  }
+
+  function openPdfStudio(presetMode = null) {
+    if (presetMode === 'mistakes') {
+      PDF_STUDIO_STATE.template = 'mistakes';
+      PDF_STUDIO_STATE.scope = 'mistakes';
+    } else if (presetMode === 'daily') {
+      PDF_STUDIO_STATE.template = 'curriculum';
+      PDF_STUDIO_STATE.scope = 'current_week';
+      PDF_STUDIO_STATE.grade = STATE.selectedGrade || 5;
+    } else if (presetMode === 'quiz') {
+      PDF_STUDIO_STATE.template = 'quiz';
+    } else if (presetMode === 'flashcards') {
+      PDF_STUDIO_STATE.template = 'flashcards';
+    }
+
+    const dialog = document.getElementById('pdf-dialog');
+    const backdrop = document.getElementById('pdf-modal-backdrop');
+    if (!dialog || !backdrop) return;
+
+    renderPdfStudio();
+    backdrop.classList.add('active');
+    dialog.classList.add('active');
+  }
+
+  function closePdfStudio() {
+    const dialog = document.getElementById('pdf-dialog');
+    const backdrop = document.getElementById('pdf-modal-backdrop');
+    if (dialog) dialog.classList.remove('active');
+    if (backdrop) backdrop.classList.remove('active');
+  }
+
+  function updatePdfStudioOption(key, value) {
+    PDF_STUDIO_STATE[key] = value;
+    if (key === 'template' && value === 'mistakes') {
+      PDF_STUDIO_STATE.scope = 'mistakes';
+    }
+    renderPdfPreview();
+    if (key === 'template' || key === 'grade') {
+      renderPdfStudio();
+    }
+  }
+
+  function renderPdfStudio() {
+    const body = document.getElementById('pdf-dialog-body');
+    if (!body) return;
+    const state = PDF_STUDIO_STATE;
+
+    body.innerHTML = `
+      <div class="pdf-studio-layout">
+        <!-- Sol Kontrol Paneli -->
+        <div class="pdf-controls-pane">
+          <!-- 1. Şablon Seçimi -->
+          <div class="pdf-form-group">
+            <label class="pdf-group-label">1. ÇALIŞMA ŞABLONU SEÇİN</label>
+            <div class="pdf-template-grid">
+              <button type="button" class="pdf-template-btn ${state.template === 'mistakes' ? 'active' : ''}" onclick="window.APP.updatePdfStudioOption('template', 'mistakes')">
+                <span class="ptb-icon">🛑</span>
+                <div class="ptb-info">
+                  <span class="ptb-title">Hata Kampı &amp; Yanlışlar</span>
+                  <span class="ptb-desc">Yanlış yapılan kelimeler, 3x yazım &amp; kurtarma</span>
+                </div>
+              </button>
+              <button type="button" class="pdf-template-btn ${state.template === 'curriculum' ? 'active' : ''}" onclick="window.APP.updatePdfStudioOption('template', 'curriculum')">
+                <span class="ptb-icon">📚</span>
+                <div class="ptb-info">
+                  <span class="ptb-title">Sınıf Müfredat Föyü</span>
+                  <span class="ptb-desc">Seçilen sınıf ve haftanın hedef kelimeleri</span>
+                </div>
+              </button>
+              <button type="button" class="pdf-template-btn ${state.template === 'quiz' ? 'active' : ''}" onclick="window.APP.updatePdfStudioOption('template', 'quiz')">
+                <span class="ptb-icon">📝</span>
+                <div class="ptb-info">
+                  <span class="ptb-title">Yazdırılabilir Test &amp; Quiz</span>
+                  <span class="ptb-desc">Çoktan seçmeli sınav kağıdı + Cevap Anahtarı</span>
+                </div>
+              </button>
+              <button type="button" class="pdf-template-btn ${state.template === 'flashcards' ? 'active' : ''}" onclick="window.APP.updatePdfStudioOption('template', 'flashcards')">
+                <span class="ptb-icon">✂️</span>
+                <div class="ptb-info">
+                  <span class="ptb-title">Kes &amp; Katla Kartları</span>
+                  <span class="ptb-desc">A4 basılıp katlanan çift taraflı cep kartları</span>
+                </div>
+              </button>
+            </div>
+          </div>
+
+          <!-- 2. Sınıf ve Kapsam -->
+          <div class="pdf-form-group">
+            <label class="pdf-group-label">2. SINIF VE KAPSAM AYARI</label>
+            <div class="pdf-form-row">
+              <div class="pdf-field-wrap">
+                <span class="pdf-field-title">Sınıf / Havuz:</span>
+                <select id="pdf-grade-select" class="pdf-select" onchange="window.APP.updatePdfStudioOption('grade', this.value)">
+                  <optgroup label="İlkokul (MEB)">
+                    <option value="1" ${state.grade == 1 ? 'selected' : ''}>1. Sınıf</option>
+                    <option value="2" ${state.grade == 2 ? 'selected' : ''}>2. Sınıf</option>
+                    <option value="3" ${state.grade == 3 ? 'selected' : ''}>3. Sınıf</option>
+                    <option value="4" ${state.grade == 4 ? 'selected' : ''}>4. Sınıf</option>
+                  </optgroup>
+                  <optgroup label="Ortaokul &amp; LGS (MEB)">
+                    <option value="5" ${state.grade == 5 ? 'selected' : ''}>5. Sınıf (Maarif Modeli)</option>
+                    <option value="6" ${state.grade == 6 ? 'selected' : ''}>6. Sınıf (Maarif Modeli)</option>
+                    <option value="7" ${state.grade == 7 ? 'selected' : ''}>7. Sınıf</option>
+                    <option value="8" ${state.grade == 8 ? 'selected' : ''}>8. Sınıf (LGS)</option>
+                  </optgroup>
+                  <optgroup label="Lise &amp; YDT (MEB)">
+                    <option value="9" ${state.grade == 9 ? 'selected' : ''}>9. Sınıf</option>
+                    <option value="10" ${state.grade == 10 ? 'selected' : ''}>10. Sınıf</option>
+                    <option value="11" ${state.grade == 11 ? 'selected' : ''}>11. Sınıf</option>
+                    <option value="12" ${state.grade == 12 ? 'selected' : ''}>12. Sınıf</option>
+                  </optgroup>
+                  <optgroup label="Akademik &amp; Uluslararası">
+                    <option value="yds" ${state.grade === 'yds' ? 'selected' : ''}>YDS &amp; YÖKDİL (7.387 Kelime)</option>
+                    <option value="oxford" ${state.grade === 'oxford' ? 'selected' : ''}>The Oxford 5000 (A1-C1)</option>
+                  </optgroup>
+                </select>
+              </div>
+
+              <div class="pdf-field-wrap">
+                <span class="pdf-field-title">Kapsam:</span>
+                <select id="pdf-scope-select" class="pdf-select" onchange="window.APP.updatePdfStudioOption('scope', this.value)">
+                  <option value="mistakes" ${state.scope === 'mistakes' ? 'selected' : ''}>🛑 Yanlışlarım (Hata Defteri)</option>
+                  <option value="current_week" ${state.scope === 'current_week' ? 'selected' : ''}>📅 Bu Haftanın Hedef Kelimeleri</option>
+                  <option value="unit" ${state.scope === 'unit' ? 'selected' : ''}>📖 Seçili Ünite Kelimeleri</option>
+                  <option value="starred" ${state.scope === 'starred' ? 'selected' : ''}>⭐ Yıldızlı / Favorilerim</option>
+                  <option value="all" ${state.scope === 'all' ? 'selected' : ''}>🌐 Sınıf Genel Havuzu</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <!-- 3. Kelime Limiti & Öğrenci Adı -->
+          <div class="pdf-form-group">
+            <div class="pdf-form-row">
+              <div class="pdf-field-wrap">
+                <span class="pdf-field-title">Kelime Sayısı Limiti:</span>
+                <select id="pdf-limit-select" class="pdf-select" onchange="window.APP.updatePdfStudioOption('limit', this.value)">
+                  <option value="10" ${state.limit == 10 ? 'selected' : ''}>10 Kelime (1 Sayfa İdeal)</option>
+                  <option value="15" ${state.limit == 15 ? 'selected' : ''}>15 Kelime</option>
+                  <option value="20" ${state.limit == 20 ? 'selected' : ''}>20 Kelime (2 Sayfa)</option>
+                  <option value="30" ${state.limit == 30 ? 'selected' : ''}>30 Kelime</option>
+                  <option value="all" ${state.limit === 'all' ? 'selected' : ''}>Tüm Liste</option>
+                </select>
+              </div>
+              <div class="pdf-field-wrap">
+                <span class="pdf-field-title">Öğrenci Adı (Opsiyonel):</span>
+                <input type="text" id="pdf-student-input" class="pdf-input" placeholder="Örn: Ahmet Yılmaz" value="${escapeHtml(state.studentName)}" oninput="window.APP.updatePdfStudioOption('studentName', this.value)">
+              </div>
+            </div>
+          </div>
+
+          <!-- 4. İçerik Ayarları -->
+          <div class="pdf-form-group">
+            <label class="pdf-group-label">3. ÇALIŞMA KAĞIDI AYARLARI</label>
+            <div class="pdf-checkbox-grid">
+              <label class="pdf-checkbox-label">
+                <input type="checkbox" ${state.showTr ? 'checked' : ''} onchange="window.APP.updatePdfStudioOption('showTr', this.checked)">
+                <span>Türkçe Anlamları Göster</span>
+              </label>
+              <label class="pdf-checkbox-label">
+                <input type="checkbox" ${state.showExamples ? 'checked' : ''} onchange="window.APP.updatePdfStudioOption('showExamples', this.checked)">
+                <span>Örnek Cümleleri Ekle</span>
+              </label>
+              <label class="pdf-checkbox-label">
+                <input type="checkbox" ${state.showWritingPractice ? 'checked' : ''} onchange="window.APP.updatePdfStudioOption('showWritingPractice', this.checked)">
+                <span>3x Yazım Çizgisi Ekle</span>
+              </label>
+              <label class="pdf-checkbox-label">
+                <input type="checkbox" ${state.showMatching ? 'checked' : ''} onchange="window.APP.updatePdfStudioOption('showMatching', this.checked)">
+                <span>Eşleştirme Bölümü Ekle</span>
+              </label>
+              <label class="pdf-checkbox-label">
+                <input type="checkbox" ${state.includeAnswerKey ? 'checked' : ''} onchange="window.APP.updatePdfStudioOption('includeAnswerKey', this.checked)">
+                <span>Cevap Anahtarı Ekle</span>
+              </label>
+            </div>
+          </div>
+
+          <!-- Eylem Butonları -->
+          <div class="pdf-actions-footer">
+            <button type="button" class="pdf-cta-print-btn" onclick="window.APP.printWorksheet()">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3"><path d="M6 9V2h12v7"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+              <span>PDF Olarak Kaydet / Yazdır</span>
+            </button>
+            <button type="button" class="pdf-secondary-download-btn" onclick="window.APP.downloadWorksheetHtml()">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              <span>HTML İndir</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Sağ Canlı Önizleme Paneli -->
+        <div class="pdf-preview-pane">
+          <div class="pdf-preview-header">
+            <span class="pph-title">📄 Canlı A4 Baskı Önizlemesi</span>
+            <span class="pph-badge" id="pdf-preview-page-count">Standart A4 • 210 x 297 mm</span>
+          </div>
+          <div class="pdf-preview-scroll-wrap">
+            <div class="pdf-a4-preview-viewport" id="pdf-live-preview-viewport">
+              <!-- Rendered dynamically -->
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+
+    renderPdfPreview();
+  }
+
+  function renderPdfPreview() {
+    const previewContainer = document.getElementById('pdf-live-preview-viewport');
+    if (!previewContainer) return;
+    previewContainer.innerHTML = generateWorksheetHTML(PDF_STUDIO_STATE, false);
+  }
+
+  function printWorksheet() {
+    const printContainer = document.getElementById('learnish-printable-sheet');
+    if (!printContainer) return;
+    printContainer.innerHTML = generateWorksheetHTML(PDF_STUDIO_STATE, true);
+    window.print();
+  }
+
+  function downloadWorksheetHtml() {
+    const sheetHtml = generateWorksheetHTML(PDF_STUDIO_STATE, true);
+    const styleContent = document.querySelector('style') ? document.querySelector('style').innerHTML : '';
+    const fullDoc = `<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Learnish - Çalışma Föyü</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    @page { size: A4 portrait; margin: 10mm 12mm; }
+    body { font-family: 'Nunito', -apple-system, sans-serif; background: #ffffff; color: #171e19; margin: 0; padding: 18px; }
+    ${styleContent}
+  </style>
+</head>
+<body>
+  ${sheetHtml}
+</body>
+</html>`;
+    const blob = new Blob([fullDoc], { type: 'text/html;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `learnish-calisma-foyu-${PDF_STUDIO_STATE.template}-${new Date().toISOString().slice(0, 10)}.html`;
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(() => {
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }, 100);
+  }
+
+  // ==========================================================================
   // VIEW 0: KONTROL MERKEZİ / IDE COMMAND CENTER (#home)
   // ==========================================================================
   function retestDebugWord(wordEn) {
@@ -8665,25 +10623,38 @@ if (typeof module !== 'undefined' && module.exports) {
     }
 
     container.innerHTML = `
-      <!-- HERO FEATURE CARD (40px Radius & Atmospheric Depth) -->
-      <article class="hero-feature-card">
-        <!-- 1. Semi-transparent decorative blob (#b7c6c2/20) in top-right -->
+      <!-- 1. HERO ORIENTATION & LIVE STATUS HUB -->
+      <article class="hero-feature-card home-orientation-hero">
         <div class="hero-decorative-blob" aria-hidden="true"></div>
 
-        <!-- 2. 64x64px white square icon holder with an emoji -->
-        <div class="hero-icon-holder" aria-hidden="true">
-          <span>🎯</span>
+        <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 20px; flex-wrap: wrap; position: relative; z-index: 1;">
+          <div style="flex: 1; min-width: 280px;">
+            <div class="hero-icon-holder" aria-hidden="true">
+              <span>🚀</span>
+            </div>
+            <div class="hero-label-wrap">
+              <span class="hero-tag-label">LEARNISH AKILLI İNGİLİZCE EKOSİSTEMİ • KONTROL MERKEZİ</span>
+              <h2 class="hero-card-title" style="margin-top: 6px; font-size: 28px;">Kalıcı İngilizce Öğrenim Merkezine Hoş Geldiniz</h2>
+              <p class="hero-card-desc" style="max-width: 680px; margin-top: 8px; line-height: 1.5; font-size: 13.5px;">
+                MEB Türkiye Yüzyılı Maarif Modeli (1-12. Sınıf), YDS/YÖKDİL akademik sınav hazırlığı ve The Oxford 5000™ uluslararası standartlarını birleştiren bilişsel platform. Aralıklı tekrar (SM-2), yapay zeka telaffuz koçu ve A4 çalışma föyü stüdyosu ile eksiksiz bir öğrenme deneyimi sunar.
+              </p>
+            </div>
+          </div>
+
+          <!-- Quick Actions & Active Route Summary -->
+          <div class="home-hero-summary-box">
+            <span class="hh-status-tag">📍 ŞU ANKİ AKTİF HEDEFİNİZ</span>
+            <div class="hh-status-title">${activeUnitTitle}</div>
+            <div class="hh-status-sub">${activeCurriculumSubtitle}</div>
+            <button type="button" class="hero-primary-cta-btn" onclick="window.APP.switchView('daily')" style="margin-top: 14px; width: 100%;">
+              <span>${module === 'yds' ? "GÜNÜN 20'SİNİ BAŞLAT" : "GÜNÜN 10'LUSUNU BAŞLAT"}</span>
+              <span class="cta-arrow">→</span>
+            </button>
+          </div>
         </div>
 
-        <!-- Labels & Headings -->
-        <div class="hero-label-wrap">
-          <span class="hero-tag-label">${activeCurriculumSubtitle}</span>
-          <h2 class="hero-card-title">${activeUnitTitle}</h2>
-          <p class="hero-card-desc">Günün mikro kelime hedefini tamamlayarak aktif kelime dağarcığını kalıcı kıl.</p>
-        </div>
-
-        <!-- 3. Nested 2-column grid for metrics (Bento Metric Cards) -->
-        <div class="bento-metrics-grid">
+        <!-- Bento Metrics Grid (Live Telemetry) -->
+        <div class="bento-metrics-grid" style="margin-top: 24px;">
           <div class="bento-metric-card">
             <span class="bento-card-title">GÜNLÜK SERİ</span>
             <div class="bento-card-content">
@@ -8716,21 +10687,248 @@ if (typeof module !== 'undefined' && module.exports) {
             </div>
           </div>
         </div>
-
-        <!-- 4. Alert/info box at the bottom using #b7c6c2/20 background -->
-        <div class="hero-alert-box">
-          <span class="alert-icon">💡</span>
-          <span class="alert-text"><strong>Bilişsel Pedagoji:</strong> SM-2 aralıklı tekrar algoritması, kelimeleri unutmaya en yakın olduğunuz anda hatırlatarak hafıza kalıcılığını 4 katına çıkarır.</span>
-        </div>
-
-        <!-- Primary High-Impact CTA in Red (#ca0013) -->
-        <button type="button" class="hero-primary-cta-btn" onclick="window.APP.switchView('daily')">
-          <span>${module === 'yds' ? "GÜNÜN 20'SİNİ BAŞLAT" : "GÜNÜN 10'LUSUNU BAŞLAT"}</span>
-          <span class="cta-arrow">→</span>
-        </button>
       </article>
 
-      <!-- AKILLI PEDAGOJİ & TEKRAR MERKEZİ (Station Cards) -->
+      <!-- 2. SECTION 1: ÖĞRENİM MODÜLLERİ REHBERİ (Hangi Modül Ne İşe Yarar?) -->
+      <section class="home-guide-section" aria-label="Öğrenim Modülleri Rehberi">
+        <div class="home-section-header">
+          <div class="hsh-left">
+            <span class="home-section-badge">🧭 3 FARKLI ÖĞRENİM ROTASI</span>
+            <h3 class="home-section-title">Modüller Ne İşe Yarar &amp; Hangisini Seçmelisiniz?</h3>
+            <p class="home-section-desc">Learnish 3 bağımsız uzmanlık rotası sunar. İhtiyacınıza uygun rotayı seçerek doğrudan ilgili müfredat ve kelime havuzunda çalışabilirsiniz.</p>
+          </div>
+        </div>
+
+        <div class="home-routes-grid">
+          <!-- Rota 1: MEB Maarif Modeli -->
+          <article class="home-route-card ${module === 'maarif' ? 'is-active-route' : ''}">
+            <div class="hrc-header">
+              <span class="hrc-tag tag-maarif">1. – 12. SINIFLAR • K-12 MÜFREDAT</span>
+              <div class="hrc-icon-circle">🏫</div>
+            </div>
+            <h4 class="hrc-title">MEB Türkiye Yüzyılı Maarif Modeli</h4>
+            <p class="hrc-desc">
+              İlkokul (1-4), ortaokul (5-8) ve lise (9-12) düzeyindeki tüm MEB İngilizce müfredatına tam uyumludur. 36 haftalık resmi akademik takvime göre haftanın odak teması, hedef kelimeleri ve resmi kazanım kodları (<code>ENG.5.2.L1</code>) ile çalışılır.
+            </p>
+            <div class="hrc-target-pill">
+              <strong>Kimler İçin:</strong> Okul derslerine destek, LGS &amp; YKS hazırlığı, MEB kazanımlarıyla adım adım ilerlemek isteyen öğrenciler ve veliler.
+            </div>
+            <ul class="hrc-features-list">
+              <li><span>✓</span> 36 haftalık resmi çerçeve planı ve haftanın odağı</li>
+              <li><span>✓</span> Kazanım kodları (Listening, Speaking, Reading, Writing)</li>
+              <li><span>✓</span> Sınıfa özel haftalık kelime listesi, kartlar ve testler</li>
+              <li><span>✓</span> MEB Maarif formatında A4 yazdırılabilir çalışma kağıdı</li>
+            </ul>
+            <div class="hrc-actions">
+              <button type="button" class="hrc-primary-btn" onclick="window.APP.selectModuleAndGo('maarif')">
+                ${module === 'maarif' ? '✓ Aktif Rota • Müfredata Git' : 'Müfredat Moduna Geç →'}
+              </button>
+              <button type="button" class="hrc-secondary-btn" onclick="window.APP.openGradeModal()">
+                🎓 Sınıf Değiştir (${STATE.selectedGrade || 5}. Sınıf)
+              </button>
+            </div>
+          </article>
+
+          <!-- Rota 2: YDS & YÖKDİL -->
+          <article class="home-route-card ${module === 'yds' ? 'is-active-route' : ''}">
+            <div class="hrc-header">
+              <span class="hrc-tag tag-yds">ÖSYM B2–C1 • AKADEMİK SINAVLAR</span>
+              <div class="hrc-icon-circle">🎯</div>
+            </div>
+            <h4 class="hrc-title">YDS, YÖKDİL, YDT &amp; TIPDİL</h4>
+            <p class="hrc-desc">
+              ÖSYM sınavlarında yüksek puan hedefleyenler için B2–C1 seviye yoğun kelime ve kalıp antrenmanıdır. 2020–2026 sınavlarında çıkmış gerçek soru kökleri, akademik paragraf bağlamları, sık sorulan edatlar ve eş anlamlılar içerir.
+            </p>
+            <div class="hrc-target-pill">
+              <strong>Kimler İçin:</strong> Yüksek lisans, doktora, doçentlik, kamu personeli veya üniversite dil sınavlarına hazırlanan yetişkinler ve adaylar.
+            </div>
+            <ul class="hrc-features-list">
+              <li><span>✓</span> 2020–2026 ÖSYM çıkmış cümle ve akademik kaynak etiketleri</li>
+              <li><span>✓</span> Sık sorulan edat kalıpları (Prepositions: in, on, at, by...)</li>
+              <li><span>✓</span> Kritik eş anlamlılar (Synonyms) ve çeldirici analizleri</li>
+              <li><span>✓</span> Günde 20 kelimelik yoğun antrenman &amp; kümülatif sınavlar</li>
+            </ul>
+            <div class="hrc-actions">
+              <button type="button" class="hrc-primary-btn" onclick="window.APP.selectModuleAndGo('yds')">
+                ${module === 'yds' ? '✓ Aktif Rota • YDS Workout' : 'YDS Moduna Geç →'}
+              </button>
+            </div>
+          </article>
+
+          <!-- Rota 3: The Oxford 5000 -->
+          <article class="home-route-card ${module === 'oxford' ? 'is-active-route' : ''}">
+            <div class="hrc-header">
+              <span class="hrc-tag tag-oxford">CEFR A1–C1 • ULUSLARARASI STANDART</span>
+              <div class="hrc-icon-circle">🌐</div>
+            </div>
+            <h4 class="hrc-title">The Oxford 5000™ Kelime Havuzu</h4>
+            <p class="hrc-desc">
+              Oxford Üniversitesi dilbilimcileri tarafından belirlenen, İngilizce konuşulan ve yazılan tüm metinlerin %90'ından fazlasını oluşturan en temel ve ileri düzey 5.000 kelimelik küresel referans veritabanıdır.
+            </p>
+            <div class="hrc-target-pill">
+              <strong>Kimler İçin:</strong> Genel İngilizce konuşma ve anlama becerisini geliştirmek, uluslararası standartta kelime dağarcığı oluşturmak isteyenler.
+            </div>
+            <ul class="hrc-features-list">
+              <li><span>✓</span> CEFR A1, A2, B1, B2 ve C1 seviye etiketleri</li>
+              <li><span>✓</span> Tam IPA fonetik telaffuz transkripsiyonu ve seslendirme</li>
+              <li><span>✓</span> 9.234 kelimelik birleşik arama ve filtreleme kütüphanesi</li>
+              <li><span>✓</span> Serbest tempolu flashcard ve test antrenmanları</li>
+            </ul>
+            <div class="hrc-actions">
+              <button type="button" class="hrc-primary-btn" onclick="window.APP.selectModuleAndGo('oxford')">
+                ${module === 'oxford' ? '✓ Aktif Rota • Oxford 5000' : 'Oxford 5000 Moduna Geç →'}
+              </button>
+              <button type="button" class="hrc-secondary-btn" onclick="window.APP.switchView('directory')">
+                🔍 Sözlükte Ara
+              </button>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <!-- 3. SECTION 2: BU UYGULAMA İLE NASIL ÇALIŞILIR? (4 ADIMLI BİLİŞSEL DÖNGÜ) -->
+      <section class="home-guide-section" aria-label="Bilişsel Çalışma Döngüsü">
+        <div class="home-section-header">
+          <div class="hsh-left">
+            <span class="home-section-badge">📈 BİLİŞSEL ÖĞRENME YOL HARİTASI</span>
+            <h3 class="home-section-title">Bu Uygulama ile Nasıl Çalışmalısınız?</h3>
+            <p class="home-section-desc">Hafızada kalıcılığı 4 katına çıkaran 4 adımlı bilişsel çalışma metodolojisi:</p>
+          </div>
+        </div>
+
+        <div class="home-methodology-grid">
+          <!-- Adım 1 -->
+          <div class="home-step-card">
+            <div class="hsc-step-badge">ADIM 01</div>
+            <div class="hsc-icon">📅</div>
+            <h4 class="hsc-title">Günlük Mikro Hedef (Daily Workout)</h4>
+            <p class="hsc-desc">Her gün seviyenize göre 10 veya 20 hedef kelimeyi inceleyin. Fonetik seslendirmeyi dinleyin, Türkçe anlamlarını ve örnek MEB cümlelerini okuyun.</p>
+            <button type="button" class="hsc-link-btn" onclick="window.APP.switchView('daily')">
+              Günün Kelimeleri &rarr;
+            </button>
+          </div>
+
+          <!-- Adım 2 -->
+          <div class="home-step-card">
+            <div class="hsc-step-badge">ADIM 02</div>
+            <div class="hsc-icon">🗂️</div>
+            <h4 class="hsc-title">Aktif Hatırlama (Active Recall Flashcards)</h4>
+            <p class="hsc-desc">Dijital iki yüzlü kartlarla kelimeyi tahmin edin, kartı çevirip kendinizi değerlendirin ("Zor", "İyi", "Kolay"). Beynin aktif geri çağırma kasını çalıştırın.</p>
+            <button type="button" class="hsc-link-btn" onclick="window.APP.switchView('flashcard')">
+              Kartlarla Çalış &rarr;
+            </button>
+          </div>
+
+          <!-- Adım 3 -->
+          <div class="home-step-card">
+            <div class="hsc-step-badge">ADIM 03</div>
+            <div class="hsc-icon">⚡</div>
+            <h4 class="hsc-title">Çok Modlu Test &amp; Telaffuz Koçu (Quiz &amp; Speaking)</h4>
+            <p class="hsc-desc">TR&rarr;EN, EN&rarr;TR, Dinleme, Cümle Tamamlama ve Mikrofona Telaffuz testleriyle kelimeyi çok yönlü pekiştirin. Telaffuz koçuyla aksan skoru alın.</p>
+            <button type="button" class="hsc-link-btn" onclick="window.APP.switchView('quiz')">
+              Testi Başlat &rarr;
+            </button>
+          </div>
+
+          <!-- Adım 4 -->
+          <div class="home-step-card">
+            <div class="hsc-step-badge">ADIM 04</div>
+            <div class="hsc-icon">🧠</div>
+            <h4 class="hsc-title">Aralıklı Tekrar (SM-2) &amp; Hata Defteri</h4>
+            <p class="hsc-desc">Ebbinghaus unutma eğrisine göre kelimeler tam unutmaya yaklaştığınız 1, 3, 7, 14. günlerde tekrar kuyruğunuza gelir. Hatalar otomatik Hata Kampına aktarılır.</p>
+            <button type="button" class="hsc-link-btn" onclick="window.APP.startSRSDueFlashcards()">
+              Tekrar İstasyonu &rarr;
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- 4. SECTION 3: UYGULAMADA NELER YAPABİLİRSİNİZ? (TEMEL YETENEKLER & ARAÇLAR) -->
+      <section class="home-guide-section" aria-label="Temel Yetenekler ve Araçlar">
+        <div class="home-section-header">
+          <div class="hsh-left">
+            <span class="home-section-badge">🛠️ GÜÇLÜ ÖĞRENME ARAÇLARI</span>
+            <h3 class="home-section-title">Learnish Araç Seti ile Neler Yapabilirsiniz?</h3>
+            <p class="home-section-desc">Öğrenme sürecinizi destekleyen yapay zeka ve materyal araçları:</p>
+          </div>
+        </div>
+
+        <div class="home-features-grid">
+          <!-- Özellik 1: Speaking Coach -->
+          <div class="home-feature-box">
+            <div class="hfb-icon-wrap" style="background: rgba(202, 0, 19, 0.08); color: var(--dp-color-red); border-color: rgba(202, 0, 19, 0.2);">🎙️</div>
+            <div class="hfb-content">
+              <h4 class="hfb-title">AI Speaking &amp; Telaffuz Koçu</h4>
+              <p class="hfb-desc">Web Speech API ile mikrofondan sesinizi dinler, fonetik transkripsiyonla eşleştirir ve anlık telaffuz doğruluğunuzu puanlar. US/UK aksanı seçebilirsiniz.</p>
+              <button type="button" class="hfb-btn" onclick="window.APP.openSpeechCoach('pronunciation')">
+                🎙️ Telaffuz Koçunu Aç &rarr;
+              </button>
+            </div>
+          </div>
+
+          <!-- Özellik 2: PDF Studio -->
+          <div class="home-feature-box">
+            <div class="hfb-icon-wrap" style="background: rgba(2, 132, 199, 0.08); color: var(--dp-color-blue); border-color: rgba(2, 132, 199, 0.2);">📄</div>
+            <div class="hfb-content">
+              <h4 class="hfb-title">PDF &amp; Çalışma Kağıdı Stüdyosu</h4>
+              <p class="hfb-desc">Seçtiğiniz sınıfın haftalık föyünü, 10 soruluk cevap anahtarlı testini, fiziksel kes-katla flashcardlarını veya yanlış yaptığınız kelimeleri A4 PDF olarak çıkartın.</p>
+              <button type="button" class="hfb-btn" onclick="window.APP.openPdfStudio()">
+                📄 PDF Stüdyosunu Başlat &rarr;
+              </button>
+            </div>
+          </div>
+
+          <!-- Özellik 3: Hata Defteri -->
+          <div class="home-feature-box">
+            <div class="hfb-icon-wrap" style="background: rgba(217, 119, 6, 0.08); color: var(--dp-color-amber); border-color: rgba(217, 119, 6, 0.2);">🛑</div>
+            <div class="hfb-content">
+              <h4 class="hfb-title">Akıllı Hata Defteri &amp; Kurtarma Kampı</h4>
+              <p class="hfb-desc">Quizlerde veya kartlarda yanlış yaptığınız kelimeler otomatik kaydedilir. 2 ardışık doğru cevapla kelimeyi ustalık seviyesine çıkarıp temizleyebilirsiniz.</p>
+              <button type="button" class="hfb-btn" onclick="window.APP.startMistakeQuiz()">
+                🎯 Hata Kampına Git &rarr;
+              </button>
+            </div>
+          </div>
+
+          <!-- Özellik 4: SM-2 Aralıklı Tekrar -->
+          <div class="home-feature-box">
+            <div class="hfb-icon-wrap" style="background: rgba(0, 135, 68, 0.08); color: var(--dp-color-green); border-color: rgba(0, 135, 68, 0.2);">🔁</div>
+            <div class="hfb-content">
+              <h4 class="hfb-title">SM-2 Aralıklı Tekrar Motoru</h4>
+              <p class="hfb-desc">Kelimeleri ne zaman unutacağınızı hesaplayan bilişsel aralıklı tekrar motoru. Zamanı gelen kelimeleri tek tıkla flashcard veya testle pekiştirin.</p>
+              <button type="button" class="hfb-btn" onclick="window.APP.startSRSDueFlashcards()">
+                🃏 Tekrarları Başlat &rarr;
+              </button>
+            </div>
+          </div>
+
+          <!-- Özellik 5: Gelişmiş Dizin -->
+          <div class="home-feature-box">
+            <div class="hfb-icon-wrap" style="background: rgba(82, 96, 86, 0.08); color: var(--dp-color-ink-muted); border-color: rgba(82, 96, 86, 0.2);">📚</div>
+            <div class="hfb-content">
+              <h4 class="hfb-title">9.234 Kelimelik Gelişmiş Sözlük</h4>
+              <p class="hfb-desc">Kelime türü (isim, fiil, sıfat), CEFR seviyesi (A1-C1) ve MEB temalarına göre anında arama yapın, yıldızlayın veya öğrenildi işaretleyin.</p>
+              <button type="button" class="hfb-btn" onclick="window.APP.switchView('directory')">
+                🔍 Kütüphaneyi Aç &rarr;
+              </button>
+            </div>
+          </div>
+
+          <!-- Özellik 6: İstatistikler & Heatmap -->
+          <div class="home-feature-box">
+            <div class="hfb-icon-wrap" style="background: rgba(202, 0, 19, 0.08); color: var(--dp-color-red); border-color: rgba(202, 0, 19, 0.2);">📊</div>
+            <div class="hfb-content">
+              <h4 class="hfb-title">Öğrenim Telemetrisi &amp; Kazanım Haritası</h4>
+              <p class="hfb-desc">Günlük serinizi, doğruluk yüzdesini, tema bazlı kazanım matrisini (Heatmap) ve son çalışma oturumlarınızı canlı analiz edin.</p>
+              <button type="button" class="hfb-btn" onclick="window.APP.switchView('stats')">
+                📈 İstatistikleri Gör &rarr;
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 5. SECTION 4: CANLI PEDAGOJİ & HATA AYIKLAMA İSTASYONU (Canlı Veriler) -->
       <section class="pedagogy-station-section" aria-label="Akıllı Hafıza &amp; Tekrar İstasyonu">
         <div class="pedagogy-station-header">
           <div>
@@ -8792,80 +10990,11 @@ if (typeof module !== 'undefined' && module.exports) {
               <button type="button" class="ped-btn ped-btn-secondary" onclick="window.APP.startMistakeFlashcards()" ${activeMistakes.length === 0 ? 'disabled' : ''}>
                 🃏 Hata Kartları
               </button>
+              <button type="button" class="ped-btn ped-btn-pdf" onclick="window.APP.openPdfStudio('mistakes')" title="Yanlışlarımı PDF / Yazdırılabilir Çalışma Kağıdı Olarak İndir">
+                📄 Yanlışları PDF Çıkart
+              </button>
             </div>
           </div>
-        </div>
-      </section>
-
-      <!-- SECONDARY FEED ITEMS (24px Radius, White, #b7c6c2/30 Border) -->
-      <section class="secondary-feed-section" aria-label="Öğrenim Akışı ve Aktiviteler">
-        <div class="feed-section-heading">
-          <span>ÖĞRENİM AKIŞI &amp; AKTİVİTELER</span>
-          <span class="feed-section-badge">GÜNLÜK MODÜLLER</span>
-        </div>
-
-        <!-- Feed Item 1: Tekrar Kuyruğu -->
-        <div class="secondary-feed-card">
-          <div class="feed-icon-box">🔁</div>
-          <div class="feed-content-wrap">
-            <h4 class="feed-card-title">Hata Ayıklama &amp; Tekrar Kuyruğu</h4>
-            <p class="feed-card-desc">
-              ${reviewWords.length > 0
-                ? `${reviewWords.length} kelime tekrar bekliyor: <strong>${reviewWords.map(w => w.en).join(', ')}</strong>`
-                : 'Tekrar listeniz temiz, harika gidiyorsunuz!'}
-            </p>
-          </div>
-          <button type="button" class="feed-trailing-btn" onclick="window.APP.switchView('flashcard')" aria-label="Tekrarı Başlat" title="Tekrarı Başlat">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
-          </button>
-        </div>
-
-        <!-- Feed Item 2: Flashcard -->
-        <div class="secondary-feed-card">
-          <div class="feed-icon-box">🗂️</div>
-          <div class="feed-content-wrap">
-            <h4 class="feed-card-title">Flashcard İnceleme Kartları</h4>
-            <p class="feed-card-desc">İki yüzlü interaktif kartlar, fonetik telaffuz ve örnek cümle bağlamları.</p>
-          </div>
-          <button type="button" class="feed-trailing-btn" onclick="window.APP.switchView('flashcard')" aria-label="Kartları İncele" title="Kartları İncele">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
-          </button>
-        </div>
-
-        <!-- Feed Item 3: Quiz Test -->
-        <div class="secondary-feed-card">
-          <div class="feed-icon-box">⚡</div>
-          <div class="feed-content-wrap">
-            <h4 class="feed-card-title">Kazanım Sınavı &amp; Aktif Hatırlama</h4>
-            <p class="feed-card-desc">Çoktan seçmeli, dinleme ve anlam eşleştirme sorularıyla kendini sına.</p>
-          </div>
-          <button type="button" class="feed-trailing-btn" onclick="window.APP.switchView('quiz')" aria-label="Testi Başlat" title="Testi Başlat">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
-          </button>
-        </div>
-
-        <!-- Feed Item 4: Kelime Havuzu -->
-        <div class="secondary-feed-card">
-          <div class="feed-icon-box">📚</div>
-          <div class="feed-content-wrap">
-            <h4 class="feed-card-title">Kelime Kütüphanesi &amp; Arama</h4>
-            <p class="feed-card-desc">${WORDS_DATA.length.toLocaleString('tr-TR')} kelimelik birleşik sözlük veritabanında anında arama ve filtreleme.</p>
-          </div>
-          <button type="button" class="feed-trailing-btn" onclick="window.APP.switchView('directory')" aria-label="Kütüphaneye Git" title="Kütüphaneye Git">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
-          </button>
-        </div>
-
-        <!-- Feed Item 5: İstatistikler -->
-        <div class="secondary-feed-card">
-          <div class="feed-icon-box">📊</div>
-          <div class="feed-content-wrap">
-            <h4 class="feed-card-title">Öğrenim Telemetrisi &amp; Analiz</h4>
-            <p class="feed-card-desc">Tema bazlı ilerleme, başarı grafiği ve çalışma oturumu geçmişi.</p>
-          </div>
-          <button type="button" class="feed-trailing-btn" onclick="window.APP.switchView('stats')" aria-label="İstatistikleri İncele" title="İstatistikleri İncele">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
-          </button>
         </div>
       </section>
     `;
@@ -9091,6 +11220,9 @@ if (typeof module !== 'undefined' && module.exports) {
             </button>
             <button type="button" class="fc-action-btn learned-btn" onclick="window.APP.startDailyQuiz()">
               ⚡ <span>Haftalık Kazanım Testi &rarr;</span>
+            </button>
+            <button type="button" class="fc-action-btn pdf-btn" onclick="window.APP.openPdfStudio('daily')" title="Bu haftanın çalışma föyünü PDF olarak çıkart" style="background: rgba(202, 0, 19, 0.08); color: var(--dp-color-red); border-color: rgba(202, 0, 19, 0.25);">
+              📄 <span>Haftalık Föyü İndir (PDF)</span>
             </button>
           </div>
 
@@ -9387,6 +11519,9 @@ if (typeof module !== 'undefined' && module.exports) {
           </button>
           <button type="button" class="fc-action-btn learned-btn" onclick="window.APP.startDailyQuiz()">
             ⚡ <span>Günün Testini Başlat →</span>
+          </button>
+          <button type="button" class="fc-action-btn pdf-btn" onclick="window.APP.openPdfStudio('daily')" title="Bu günün çalışma föyünü PDF olarak çıkart" style="background: rgba(202, 0, 19, 0.08); color: var(--dp-color-red); border-color: rgba(202, 0, 19, 0.25);">
+            📄 <span>Föyü İndir (PDF)</span>
           </button>
         </div>
       </section>
@@ -9962,6 +12097,15 @@ if (typeof module !== 'undefined' && module.exports) {
               <button class="fc-action-btn" onclick="window.APP.switchView('daily')" style="min-height: 48px; min-width: 160px;">
                 GÜNLÜK ÇALIŞMA
               </button>
+              ${(STATE.userData.mistakes && Object.keys(STATE.userData.mistakes).length > 0) ? `
+                <button class="fc-action-btn pdf-btn" onclick="window.APP.openPdfStudio('mistakes')" style="min-height: 48px; min-width: 160px; background: rgba(202, 0, 19, 0.08); color: var(--dp-color-red); border-color: rgba(202, 0, 19, 0.25);">
+                  📄 Yanlışları PDF Çıkart
+                </button>
+              ` : `
+                <button class="fc-action-btn pdf-btn" onclick="window.APP.openPdfStudio('quiz')" style="min-height: 48px; min-width: 160px; background: rgba(202, 0, 19, 0.08); color: var(--dp-color-red); border-color: rgba(202, 0, 19, 0.25);">
+                  📄 Test Föyünü İndir (PDF)
+                </button>
+              `}
             </div>
           </div>
         </div>
@@ -12118,6 +14262,7 @@ if (typeof module !== 'undefined' && module.exports) {
     openModesModal,
     closeModals,
     switchModuleAndClose,
+    selectModuleAndGo,
     switchViewAndClose,
     startQuizSession,
     toggleLearned,
@@ -12185,6 +14330,14 @@ if (typeof module !== 'undefined' && module.exports) {
     toggleCurriculumOutcomes,
     goHome,
     goBack,
+    openPdfStudio,
+    closePdfStudio,
+    updatePdfStudioOption,
+    printWorksheet,
+    downloadWorksheetHtml,
+    generateWorksheetHTML,
+    getWorksheetTargetWords,
+    PDF_STUDIO_STATE,
     getState: () => STATE
   };
 

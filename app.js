@@ -2244,6 +2244,11 @@
     closeModals();
   }
 
+  function selectModuleAndGo(moduleKey) {
+    switchModule(moduleKey);
+    switchView('daily');
+  }
+
   function switchViewAndClose(viewKey) {
     switchView(viewKey);
     closeModals();
@@ -2632,6 +2637,650 @@
   }
 
   // ==========================================================================
+  // PDF & ÇALIŞMA KAĞIDI STÜDYOSU (Printable Worksheet & PDF Studio)
+  // ==========================================================================
+  const PDF_STUDIO_STATE = {
+    template: 'mistakes', // 'mistakes' | 'curriculum' | 'quiz' | 'flashcards'
+    grade: 5,             // 1-12, 'yds', 'oxford'
+    scope: 'mistakes',     // 'mistakes', 'current_week', 'unit', 'starred', 'all'
+    unitNum: 1,
+    limit: 15,
+    showTr: true,
+    showPhonetic: true,
+    showExamples: true,
+    showWritingPractice: true,
+    showMatching: true,
+    includeAnswerKey: true,
+    studentName: ''
+  };
+
+  function resolveWorksheetWord(rawItem) {
+    if (typeof rawItem === 'object' && rawItem !== null && rawItem.en) return rawItem;
+    const str = String(rawItem || '').trim();
+    const cleanEn = str.replace(/^(verbs?|nouns?|adjectives?|adverbs?):\s*/i, '')
+                       .replace(/^(to|a|an)\s+/i, '')
+                       .replace(/\s*\([^)]*\)/g, '')
+                       .trim();
+    if (!cleanEn) return null;
+    const found = WORDS_DATA.find(w => w.en.toLowerCase() === cleanEn.toLowerCase())
+               || WORDS_DATA.find(w => w.en.toLowerCase().includes(cleanEn.toLowerCase()));
+    if (found) return found;
+    return {
+      id: 990000 + Math.floor(Math.random() * 10000),
+      en: cleanEn,
+      tr: '—',
+      desc: 'kelime',
+      pos: 'other',
+      cefr: 'A1',
+      phonetic: '',
+      example: `Practice using "${cleanEn}" in your own sentences.`
+    };
+  }
+
+  function getWorksheetTargetWords(state = PDF_STUDIO_STATE) {
+    const { template, grade, scope, unitNum, limit } = state;
+    let list = [];
+
+    if (template === 'mistakes' || scope === 'mistakes') {
+      const activeMistakes = getActiveMistakeWords();
+      if (grade && grade !== 'all' && grade !== 'yds' && grade !== 'oxford') {
+        const gNum = parseInt(grade, 10);
+        const gData = window.CURRICULUM_DATA && window.CURRICULUM_DATA[gNum];
+        if (gData && gData.units) {
+          const gKeywords = new Set(gData.units.flatMap(u => (u.targetVocab || []).concat(u.semanticKeywords || [])).map(s => String(s).toLowerCase()));
+          const gradeMistakes = activeMistakes.filter(w => gKeywords.has(w.en.toLowerCase()) || (gNum === 5 && isMaarifWord(w)));
+          list = gradeMistakes.length > 0 ? gradeMistakes : activeMistakes;
+        } else {
+          list = activeMistakes;
+        }
+      } else if (grade === 'yds') {
+        const ydsMistakes = activeMistakes.filter(isYDSWord);
+        list = ydsMistakes.length > 0 ? ydsMistakes : activeMistakes;
+      } else if (grade === 'oxford') {
+        const oxMistakes = activeMistakes.filter(isOxfordWord);
+        list = oxMistakes.length > 0 ? oxMistakes : activeMistakes;
+      } else {
+        list = activeMistakes;
+      }
+
+      if (list.length === 0) {
+        if (grade === 'yds') {
+          list = WORDS_DATA.filter(isYDSWord).slice(0, 20);
+        } else if (grade === 'oxford') {
+          list = WORDS_DATA.filter(isOxfordWord).slice(0, 20);
+        } else {
+          const gNum = parseInt(grade, 10) || 5;
+          const gData = window.CURRICULUM_DATA && window.CURRICULUM_DATA[gNum];
+          const unitWords = (gData && gData.units && gData.units[0]?.targetVocab) || [];
+          list = unitWords.map(resolveWorksheetWord).filter(Boolean);
+          if (list.length === 0) list = WORDS_DATA.filter(isMaarifWord).slice(0, 20);
+        }
+      }
+    } else if (scope === 'current_week') {
+      const gNum = parseInt(grade, 10) || 5;
+      if (window.CURRICULUM_CLASSIFIER) {
+        const sched = window.CURRICULUM_CLASSIFIER.getSchedule(gNum);
+        const rawTargetWords = sched.targetWords || [];
+        list = rawTargetWords.map(resolveWorksheetWord).filter(Boolean);
+      }
+    } else if (scope === 'unit') {
+      const gNum = parseInt(grade, 10) || 5;
+      const gData = window.CURRICULUM_DATA && window.CURRICULUM_DATA[gNum];
+      if (gData && gData.units) {
+        const targetUnit = gData.units.find(u => u.unitNum === parseInt(unitNum, 10)) || gData.units[0];
+        const rawWords = (targetUnit.targetVocab || []).concat(targetUnit.semanticKeywords || []);
+        list = rawWords.map(resolveWorksheetWord).filter(Boolean);
+      }
+    } else if (scope === 'starred') {
+      const starredIds = Array.from(STATE.userData.starred || []);
+      list = WORDS_DATA.filter(w => starredIds.includes(w.id));
+      if (list.length === 0) {
+        list = WORDS_DATA.filter(isMaarifWord).slice(0, 15);
+      }
+    } else { // 'all'
+      const gNum = parseInt(grade, 10);
+      if (gNum >= 1 && gNum <= 12) {
+        const gData = window.CURRICULUM_DATA && window.CURRICULUM_DATA[gNum];
+        if (gData && gData.units) {
+          list = gData.units.flatMap(u => (u.targetVocab || []).map(resolveWorksheetWord)).filter(Boolean);
+        }
+        if (list.length === 0) list = WORDS_DATA.filter(isMaarifWord);
+      } else if (grade === 'yds') {
+        list = WORDS_DATA.filter(isYDSWord);
+      } else if (grade === 'oxford') {
+        list = WORDS_DATA.filter(isOxfordWord);
+      } else {
+        list = WORDS_DATA.slice(0, 50);
+      }
+    }
+
+    const seen = new Set();
+    const unique = [];
+    for (const w of list) {
+      if (!w || !w.en) continue;
+      const key = w.en.toLowerCase().trim();
+      if (!seen.has(key)) {
+        seen.add(key);
+        unique.push(w);
+      }
+    }
+
+    const numLimit = parseInt(limit, 10);
+    return !isNaN(numLimit) && numLimit > 0 ? unique.slice(0, numLimit) : unique;
+  }
+
+  function generateWorksheetHTML(state = PDF_STUDIO_STATE, isForPrint = false) {
+    const words = getWorksheetTargetWords(state);
+    const dateFormatted = new Date().toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' });
+    const gNum = parseInt(state.grade, 10);
+    let gradeLabel = '5. Sınıf (MEB)';
+    if (gNum >= 1 && gNum <= 12) {
+      gradeLabel = `${gNum}. Sınıf (${gNum <= 4 ? 'İlkokul' : gNum <= 8 ? 'Ortaokul' : 'Lise'})`;
+    } else if (state.grade === 'yds') {
+      gradeLabel = 'YDS &amp; YÖKDİL';
+    } else if (state.grade === 'oxford') {
+      gradeLabel = 'The Oxford 5000';
+    }
+
+    let titleMain = 'KAZANIM VE KELİME ÇALIŞMA FÖYÜ';
+    let subTitle = `MEB İngilizce Maarif Modeli • ${gradeLabel}`;
+    let bannerHtml = '';
+
+    if (state.template === 'mistakes') {
+      titleMain = 'AKILLI HATA DEFTERİ &amp; KURTARMA ÇALIŞMA FÖYÜ';
+      subTitle = `Bilişsel Hata Analizi • ${gradeLabel} • Toplam ${words.length} Kritik Kelime`;
+      bannerHtml = `
+        <div class="ws-banner">
+          <span class="ws-banner-title">🛑 BİLİŞSEL GELİŞİM VE HATA AYIKLAMA YÖNERGESİ:</span>
+          <span class="ws-banner-desc">Bu çalışma föyü testlerde yanlış cevaplanan kelimelerinizden derlenmiştir. Anlamları inceleyiniz, kelimeleri 3 kez yazım alanına yazınız ve örnek cümle kurarak kalıcı hafızaya aktarınız.</span>
+        </div>
+      `;
+    } else if (state.template === 'curriculum') {
+      let focusText = 'Haftalık hedef kelimeler ve iletişimsel dil işlevleri.';
+      if (window.CURRICULUM_CLASSIFIER && gNum >= 1 && gNum <= 12) {
+        const sched = window.CURRICULUM_CLASSIFIER.getSchedule(gNum);
+        if (sched && sched.focus) focusText = sched.focus;
+      }
+      titleMain = 'MEB MAARİF MODELİ HAFTALIK ÇALIŞMA FÖYÜ';
+      subTitle = `${gradeLabel} • Hedef Müfredat Kelimeleri`;
+      bannerHtml = `
+        <div class="ws-banner banner-curriculum">
+          <span class="ws-banner-title">📚 HAFTANIN ODAĞI &amp; KAZANIMI:</span>
+          <span class="ws-banner-desc">${escapeHtml(focusText)}</span>
+        </div>
+      `;
+    } else if (state.template === 'quiz') {
+      titleMain = 'KELİME KAZANIM DEĞERLENDİRME TESTİ (QUIZ)';
+      subTitle = `${gradeLabel} • Süre: 20 Dakika • Puan: 100`;
+      bannerHtml = `
+        <div class="ws-banner banner-quiz">
+          <span class="ws-banner-title">📝 SINAV YÖNERGESİ:</span>
+          <span class="ws-banner-desc">Soruları dikkatle okuyunuz ve doğru seçeneği işaretleyiniz. Cevap anahtarı sayfanın en altında yer almaktadır.</span>
+        </div>
+      `;
+    } else if (state.template === 'flashcards') {
+      titleMain = 'YAZDIRILABİLİR KES &amp; KATLA KELİME KARTLARI';
+      subTitle = `${gradeLabel} • Çift Taraflı Çalışma Kartları`;
+      bannerHtml = `
+        <div class="ws-banner banner-flashcards">
+          <span class="ws-banner-title">✂️ KULLANIM KILAVUZU:</span>
+          <span class="ws-banner-desc">Kesik çizgilerden (---) kesiniz, ortadaki noktalı çizgiden (:::) ikiye katlayınız. Bir yüzü İngilizce, diğer yüzü Türkçe taşınabilir kartınız hazır!</span>
+        </div>
+      `;
+    }
+
+    const studentTableHtml = `
+      <table class="ws-student-table">
+        <tr>
+          <td style="width: 50%;">
+            <span class="ws-field-label">ÖĞRENCİ ADI SOYADI:</span>
+            <span class="ws-field-blank">${state.studentName ? escapeHtml(state.studentName) : '...................................................'}</span>
+          </td>
+          <td style="width: 25%;">
+            <span class="ws-field-label">SINIF / ŞUBE:</span>
+            <span class="ws-field-blank">........... / ...........</span>
+          </td>
+          <td style="width: 25%;">
+            <span class="ws-field-label">TARİH:</span>
+            <span class="ws-field-blank">${dateFormatted}</span>
+          </td>
+        </tr>
+      </table>
+    `;
+
+    let bodyHtml = '';
+
+    if (state.template === 'mistakes' || state.template === 'curriculum') {
+      bodyHtml += `<div class="ws-cards-list">`;
+      words.forEach((w, idx) => {
+        const mistakeData = STATE.userData.mistakes[w.id];
+        const mistakeCount = (mistakeData && mistakeData.wrongCount) || 1;
+        const posText = w.pos || w.desc || 'kelime';
+
+        bodyHtml += `
+          <div class="ws-word-card">
+            <div class="ws-wc-top">
+              <div class="ws-wc-left">
+                <span class="ws-wc-index">#${idx + 1}</span>
+                <span class="ws-wc-en">${escapeHtml(w.en)}</span>
+                ${state.showPhonetic && w.phonetic ? `<span class="ws-wc-phonetic">${escapeHtml(w.phonetic)}</span>` : ''}
+                <span class="ws-wc-pos">${escapeHtml(posText)}</span>
+                ${w.cefr ? `<span class="ws-wc-pos" style="background:#fef3c7; border-color:#fde68a; color:#b45309;">${escapeHtml(w.cefr)}</span>` : ''}
+              </div>
+              ${state.template === 'mistakes' ? `<span class="ws-wc-badge">⚠️ ${mistakeCount}x Yanlış Yapıldı</span>` : ''}
+            </div>
+
+            ${state.showTr ? `<div class="ws-wc-tr"><strong>Türkçe Anlamı:</strong> ${escapeHtml(w.tr || '—')}</div>` : ''}
+            ${state.showExamples && (w.example || w.definition) ? `
+              <div class="ws-wc-example"><strong>Örnek Cümle:</strong> “${escapeHtml(w.example || w.definition)}”</div>
+            ` : ''}
+
+            ${state.showWritingPractice ? `
+              <div class="ws-practice-grid">
+                <div class="ws-practice-line-row">
+                  <span>Doğru Yazım (3x):</span>
+                  <span class="ws-dotted-blank"></span>
+                  <span class="ws-dotted-blank"></span>
+                  <span class="ws-dotted-blank"></span>
+                </div>
+                <div class="ws-practice-line-row" style="margin-top:2px;">
+                  <span>Kendi Cümleniz:</span>
+                  <span class="ws-dotted-blank"></span>
+                </div>
+              </div>
+            ` : ''}
+          </div>
+        `;
+      });
+      bodyHtml += `</div>`;
+
+      if (state.showMatching && words.length >= 4) {
+        const matchSlice = words.slice(0, Math.min(6, words.length));
+        const shuffledTr = matchSlice.map((w, i) => ({ tr: w.tr, originalIndex: i }))
+                                     .sort(() => 0.5 - Math.random());
+
+        bodyHtml += `
+          <div class="ws-matching-section">
+            <div class="ws-matching-title">BÖLÜM B: HIZLI EŞLEŞTİRME ALIŞTIRMASI (MATCHING CHALLENGE)</div>
+            <div style="font-size:10.5px; color:#64748b; margin-bottom:8px;">Sol taraftaki İngilizce kelimeleri sağ taraftaki doğru Türkçe karşılıkları ile ok çekerek eşleştiriniz:</div>
+            <div class="ws-matching-columns">
+              <div>
+                ${matchSlice.map((w, i) => `
+                  <div class="ws-match-item">
+                    <span class="ws-match-bullet"></span>
+                    <strong>${i + 1}.</strong>
+                    <span>${escapeHtml(w.en)}</span>
+                  </div>
+                `).join('')}
+              </div>
+              <div>
+                ${shuffledTr.map((item, i) => `
+                  <div class="ws-match-item">
+                    <span class="ws-match-bullet"></span>
+                    <strong>${String.fromCharCode(65 + i)})</strong>
+                    <span>${escapeHtml(item.tr)}</span>
+                  </div>
+                `).join('')}
+              </div>
+            </div>
+          </div>
+        `;
+      }
+    } else if (state.template === 'quiz') {
+      const quizWords = words.slice(0, Math.min(10, words.length));
+      const answerKey = [];
+
+      bodyHtml += `<div class="ws-quiz-list">`;
+      quizWords.forEach((w, qIdx) => {
+        const distractors = WORDS_DATA
+          .filter(other => other.id !== w.id && other.tr && other.tr !== w.tr)
+          .sort(() => 0.5 - Math.random())
+          .slice(0, 3)
+          .map(d => d.tr);
+
+        const correctLetterIdx = Math.floor(Math.random() * 4);
+        const letters = ['A', 'B', 'C', 'D'];
+        answerKey.push(`${qIdx + 1}-${letters[correctLetterIdx]}`);
+
+        const options = [];
+        let dIdx = 0;
+        for (let i = 0; i < 4; i++) {
+          if (i === correctLetterIdx) {
+            options.push(w.tr);
+          } else {
+            options.push(distractors[dIdx++] || '—');
+          }
+        }
+
+        bodyHtml += `
+          <div class="ws-quiz-item">
+            <div class="ws-quiz-q-title">${qIdx + 1}. "${escapeHtml(w.en)}" kelimesinin Türkçe karşılığı aşağıdakilerden hangisidir?</div>
+            <div class="ws-quiz-options-grid">
+              ${options.map((opt, oIdx) => `
+                <div class="ws-quiz-opt">
+                  <span class="ws-opt-letter">${letters[oIdx]})</span>
+                  <span>${escapeHtml(opt)}</span>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+        `;
+      });
+      bodyHtml += `</div>`;
+
+      if (state.includeAnswerKey) {
+        bodyHtml += `
+          <div class="ws-answer-key-box">
+            <div class="ws-answer-key-title">✂️ CEVAP ANAHTARI (ANSWER KEY):</div>
+            <div class="ws-answer-key-content">${answerKey.join('   •   ')}</div>
+          </div>
+        `;
+      }
+    } else if (state.template === 'flashcards') {
+      const fcWords = words.slice(0, Math.min(8, words.length));
+      bodyHtml += `<div class="ws-flashcards-grid">`;
+      fcWords.forEach((w, idx) => {
+        bodyHtml += `
+          <div class="ws-fc-cut-card">
+            <div class="ws-fc-side-en">
+              <span style="font-size:9px; font-weight:800; color:#94a3b8;">KART #${idx + 1}</span>
+              <div style="font-size:16px; font-weight:900; color:#171e19; margin:4px 0 2px 0;">${escapeHtml(w.en)}</div>
+              ${w.phonetic ? `<div style="font-size:10px; color:#64748b; font-style:italic;">${escapeHtml(w.phonetic)}</div>` : ''}
+              <div style="font-size:9.5px; font-weight:700; color:#0284c7; margin-top:4px;">${escapeHtml(w.desc || w.pos || 'kelime')}</div>
+            </div>
+            <div class="ws-fc-side-tr">
+              <span style="font-size:9px; font-weight:800; color:#94a3b8;">TÜRKÇE / ÖRNEK</span>
+              <div style="font-size:13px; font-weight:800; color:#334155; margin:4px 0 2px 0;">${escapeHtml(w.tr || '—')}</div>
+              ${w.example ? `<div style="font-size:10px; color:#475569; font-style:italic; line-height:1.3;">“${escapeHtml(w.example)}”</div>` : ''}
+            </div>
+          </div>
+        `;
+      });
+      bodyHtml += `</div>`;
+    }
+
+    return `
+      <div class="ws-doc">
+        <header class="ws-header">
+          <div class="ws-brand-wrap">
+            <span class="ws-logo-text">LEARNISH</span>
+            <span style="font-size:10px; font-weight:800; background:#ca0013; color:#fff; padding:2px 6px; border-radius:4px;">STUDY SHEET</span>
+          </div>
+          <div class="ws-title-wrap">
+            <h1 class="ws-main-title">${titleMain}</h1>
+            <p class="ws-sub-title">${subTitle}</p>
+          </div>
+        </header>
+
+        ${studentTableHtml}
+        ${bannerHtml}
+        ${bodyHtml}
+
+        <footer class="ws-footer">
+          <span>Learnish Akıllı İngilizce Öğrenim Sistemi • MEB Maarif Modeli</span>
+          <span>${dateFormatted} • Başarılar Dileriz!</span>
+        </footer>
+      </div>
+    `;
+  }
+
+  function openPdfStudio(presetMode = null) {
+    if (presetMode === 'mistakes') {
+      PDF_STUDIO_STATE.template = 'mistakes';
+      PDF_STUDIO_STATE.scope = 'mistakes';
+    } else if (presetMode === 'daily') {
+      PDF_STUDIO_STATE.template = 'curriculum';
+      PDF_STUDIO_STATE.scope = 'current_week';
+      PDF_STUDIO_STATE.grade = STATE.selectedGrade || 5;
+    } else if (presetMode === 'quiz') {
+      PDF_STUDIO_STATE.template = 'quiz';
+    } else if (presetMode === 'flashcards') {
+      PDF_STUDIO_STATE.template = 'flashcards';
+    }
+
+    const dialog = document.getElementById('pdf-dialog');
+    const backdrop = document.getElementById('pdf-modal-backdrop');
+    if (!dialog || !backdrop) return;
+
+    renderPdfStudio();
+    backdrop.classList.add('active');
+    dialog.classList.add('active');
+  }
+
+  function closePdfStudio() {
+    const dialog = document.getElementById('pdf-dialog');
+    const backdrop = document.getElementById('pdf-modal-backdrop');
+    if (dialog) dialog.classList.remove('active');
+    if (backdrop) backdrop.classList.remove('active');
+  }
+
+  function updatePdfStudioOption(key, value) {
+    PDF_STUDIO_STATE[key] = value;
+    if (key === 'template' && value === 'mistakes') {
+      PDF_STUDIO_STATE.scope = 'mistakes';
+    }
+    renderPdfPreview();
+    if (key === 'template' || key === 'grade') {
+      renderPdfStudio();
+    }
+  }
+
+  function renderPdfStudio() {
+    const body = document.getElementById('pdf-dialog-body');
+    if (!body) return;
+    const state = PDF_STUDIO_STATE;
+
+    body.innerHTML = `
+      <div class="pdf-studio-layout">
+        <!-- Sol Kontrol Paneli -->
+        <div class="pdf-controls-pane">
+          <!-- 1. Şablon Seçimi -->
+          <div class="pdf-form-group">
+            <label class="pdf-group-label">1. ÇALIŞMA ŞABLONU SEÇİN</label>
+            <div class="pdf-template-grid">
+              <button type="button" class="pdf-template-btn ${state.template === 'mistakes' ? 'active' : ''}" onclick="window.APP.updatePdfStudioOption('template', 'mistakes')">
+                <span class="ptb-icon">🛑</span>
+                <div class="ptb-info">
+                  <span class="ptb-title">Hata Kampı &amp; Yanlışlar</span>
+                  <span class="ptb-desc">Yanlış yapılan kelimeler, 3x yazım &amp; kurtarma</span>
+                </div>
+              </button>
+              <button type="button" class="pdf-template-btn ${state.template === 'curriculum' ? 'active' : ''}" onclick="window.APP.updatePdfStudioOption('template', 'curriculum')">
+                <span class="ptb-icon">📚</span>
+                <div class="ptb-info">
+                  <span class="ptb-title">Sınıf Müfredat Föyü</span>
+                  <span class="ptb-desc">Seçilen sınıf ve haftanın hedef kelimeleri</span>
+                </div>
+              </button>
+              <button type="button" class="pdf-template-btn ${state.template === 'quiz' ? 'active' : ''}" onclick="window.APP.updatePdfStudioOption('template', 'quiz')">
+                <span class="ptb-icon">📝</span>
+                <div class="ptb-info">
+                  <span class="ptb-title">Yazdırılabilir Test &amp; Quiz</span>
+                  <span class="ptb-desc">Çoktan seçmeli sınav kağıdı + Cevap Anahtarı</span>
+                </div>
+              </button>
+              <button type="button" class="pdf-template-btn ${state.template === 'flashcards' ? 'active' : ''}" onclick="window.APP.updatePdfStudioOption('template', 'flashcards')">
+                <span class="ptb-icon">✂️</span>
+                <div class="ptb-info">
+                  <span class="ptb-title">Kes &amp; Katla Kartları</span>
+                  <span class="ptb-desc">A4 basılıp katlanan çift taraflı cep kartları</span>
+                </div>
+              </button>
+            </div>
+          </div>
+
+          <!-- 2. Sınıf ve Kapsam -->
+          <div class="pdf-form-group">
+            <label class="pdf-group-label">2. SINIF VE KAPSAM AYARI</label>
+            <div class="pdf-form-row">
+              <div class="pdf-field-wrap">
+                <span class="pdf-field-title">Sınıf / Havuz:</span>
+                <select id="pdf-grade-select" class="pdf-select" onchange="window.APP.updatePdfStudioOption('grade', this.value)">
+                  <optgroup label="İlkokul (MEB)">
+                    <option value="1" ${state.grade == 1 ? 'selected' : ''}>1. Sınıf</option>
+                    <option value="2" ${state.grade == 2 ? 'selected' : ''}>2. Sınıf</option>
+                    <option value="3" ${state.grade == 3 ? 'selected' : ''}>3. Sınıf</option>
+                    <option value="4" ${state.grade == 4 ? 'selected' : ''}>4. Sınıf</option>
+                  </optgroup>
+                  <optgroup label="Ortaokul &amp; LGS (MEB)">
+                    <option value="5" ${state.grade == 5 ? 'selected' : ''}>5. Sınıf (Maarif Modeli)</option>
+                    <option value="6" ${state.grade == 6 ? 'selected' : ''}>6. Sınıf (Maarif Modeli)</option>
+                    <option value="7" ${state.grade == 7 ? 'selected' : ''}>7. Sınıf</option>
+                    <option value="8" ${state.grade == 8 ? 'selected' : ''}>8. Sınıf (LGS)</option>
+                  </optgroup>
+                  <optgroup label="Lise &amp; YDT (MEB)">
+                    <option value="9" ${state.grade == 9 ? 'selected' : ''}>9. Sınıf</option>
+                    <option value="10" ${state.grade == 10 ? 'selected' : ''}>10. Sınıf</option>
+                    <option value="11" ${state.grade == 11 ? 'selected' : ''}>11. Sınıf</option>
+                    <option value="12" ${state.grade == 12 ? 'selected' : ''}>12. Sınıf</option>
+                  </optgroup>
+                  <optgroup label="Akademik &amp; Uluslararası">
+                    <option value="yds" ${state.grade === 'yds' ? 'selected' : ''}>YDS &amp; YÖKDİL (7.387 Kelime)</option>
+                    <option value="oxford" ${state.grade === 'oxford' ? 'selected' : ''}>The Oxford 5000 (A1-C1)</option>
+                  </optgroup>
+                </select>
+              </div>
+
+              <div class="pdf-field-wrap">
+                <span class="pdf-field-title">Kapsam:</span>
+                <select id="pdf-scope-select" class="pdf-select" onchange="window.APP.updatePdfStudioOption('scope', this.value)">
+                  <option value="mistakes" ${state.scope === 'mistakes' ? 'selected' : ''}>🛑 Yanlışlarım (Hata Defteri)</option>
+                  <option value="current_week" ${state.scope === 'current_week' ? 'selected' : ''}>📅 Bu Haftanın Hedef Kelimeleri</option>
+                  <option value="unit" ${state.scope === 'unit' ? 'selected' : ''}>📖 Seçili Ünite Kelimeleri</option>
+                  <option value="starred" ${state.scope === 'starred' ? 'selected' : ''}>⭐ Yıldızlı / Favorilerim</option>
+                  <option value="all" ${state.scope === 'all' ? 'selected' : ''}>🌐 Sınıf Genel Havuzu</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <!-- 3. Kelime Limiti & Öğrenci Adı -->
+          <div class="pdf-form-group">
+            <div class="pdf-form-row">
+              <div class="pdf-field-wrap">
+                <span class="pdf-field-title">Kelime Sayısı Limiti:</span>
+                <select id="pdf-limit-select" class="pdf-select" onchange="window.APP.updatePdfStudioOption('limit', this.value)">
+                  <option value="10" ${state.limit == 10 ? 'selected' : ''}>10 Kelime (1 Sayfa İdeal)</option>
+                  <option value="15" ${state.limit == 15 ? 'selected' : ''}>15 Kelime</option>
+                  <option value="20" ${state.limit == 20 ? 'selected' : ''}>20 Kelime (2 Sayfa)</option>
+                  <option value="30" ${state.limit == 30 ? 'selected' : ''}>30 Kelime</option>
+                  <option value="all" ${state.limit === 'all' ? 'selected' : ''}>Tüm Liste</option>
+                </select>
+              </div>
+              <div class="pdf-field-wrap">
+                <span class="pdf-field-title">Öğrenci Adı (Opsiyonel):</span>
+                <input type="text" id="pdf-student-input" class="pdf-input" placeholder="Örn: Ahmet Yılmaz" value="${escapeHtml(state.studentName)}" oninput="window.APP.updatePdfStudioOption('studentName', this.value)">
+              </div>
+            </div>
+          </div>
+
+          <!-- 4. İçerik Ayarları -->
+          <div class="pdf-form-group">
+            <label class="pdf-group-label">3. ÇALIŞMA KAĞIDI AYARLARI</label>
+            <div class="pdf-checkbox-grid">
+              <label class="pdf-checkbox-label">
+                <input type="checkbox" ${state.showTr ? 'checked' : ''} onchange="window.APP.updatePdfStudioOption('showTr', this.checked)">
+                <span>Türkçe Anlamları Göster</span>
+              </label>
+              <label class="pdf-checkbox-label">
+                <input type="checkbox" ${state.showExamples ? 'checked' : ''} onchange="window.APP.updatePdfStudioOption('showExamples', this.checked)">
+                <span>Örnek Cümleleri Ekle</span>
+              </label>
+              <label class="pdf-checkbox-label">
+                <input type="checkbox" ${state.showWritingPractice ? 'checked' : ''} onchange="window.APP.updatePdfStudioOption('showWritingPractice', this.checked)">
+                <span>3x Yazım Çizgisi Ekle</span>
+              </label>
+              <label class="pdf-checkbox-label">
+                <input type="checkbox" ${state.showMatching ? 'checked' : ''} onchange="window.APP.updatePdfStudioOption('showMatching', this.checked)">
+                <span>Eşleştirme Bölümü Ekle</span>
+              </label>
+              <label class="pdf-checkbox-label">
+                <input type="checkbox" ${state.includeAnswerKey ? 'checked' : ''} onchange="window.APP.updatePdfStudioOption('includeAnswerKey', this.checked)">
+                <span>Cevap Anahtarı Ekle</span>
+              </label>
+            </div>
+          </div>
+
+          <!-- Eylem Butonları -->
+          <div class="pdf-actions-footer">
+            <button type="button" class="pdf-cta-print-btn" onclick="window.APP.printWorksheet()">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3"><path d="M6 9V2h12v7"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+              <span>PDF Olarak Kaydet / Yazdır</span>
+            </button>
+            <button type="button" class="pdf-secondary-download-btn" onclick="window.APP.downloadWorksheetHtml()">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              <span>HTML İndir</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Sağ Canlı Önizleme Paneli -->
+        <div class="pdf-preview-pane">
+          <div class="pdf-preview-header">
+            <span class="pph-title">📄 Canlı A4 Baskı Önizlemesi</span>
+            <span class="pph-badge" id="pdf-preview-page-count">Standart A4 • 210 x 297 mm</span>
+          </div>
+          <div class="pdf-preview-scroll-wrap">
+            <div class="pdf-a4-preview-viewport" id="pdf-live-preview-viewport">
+              <!-- Rendered dynamically -->
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+
+    renderPdfPreview();
+  }
+
+  function renderPdfPreview() {
+    const previewContainer = document.getElementById('pdf-live-preview-viewport');
+    if (!previewContainer) return;
+    previewContainer.innerHTML = generateWorksheetHTML(PDF_STUDIO_STATE, false);
+  }
+
+  function printWorksheet() {
+    const printContainer = document.getElementById('learnish-printable-sheet');
+    if (!printContainer) return;
+    printContainer.innerHTML = generateWorksheetHTML(PDF_STUDIO_STATE, true);
+    window.print();
+  }
+
+  function downloadWorksheetHtml() {
+    const sheetHtml = generateWorksheetHTML(PDF_STUDIO_STATE, true);
+    const styleContent = document.querySelector('style') ? document.querySelector('style').innerHTML : '';
+    const fullDoc = `<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Learnish - Çalışma Föyü</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    @page { size: A4 portrait; margin: 10mm 12mm; }
+    body { font-family: 'Nunito', -apple-system, sans-serif; background: #ffffff; color: #171e19; margin: 0; padding: 18px; }
+    ${styleContent}
+  </style>
+</head>
+<body>
+  ${sheetHtml}
+</body>
+</html>`;
+    const blob = new Blob([fullDoc], { type: 'text/html;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `learnish-calisma-foyu-${PDF_STUDIO_STATE.template}-${new Date().toISOString().slice(0, 10)}.html`;
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(() => {
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }, 100);
+  }
+
+  // ==========================================================================
   // VIEW 0: KONTROL MERKEZİ / IDE COMMAND CENTER (#home)
   // ==========================================================================
   function retestDebugWord(wordEn) {
@@ -2813,25 +3462,38 @@
     }
 
     container.innerHTML = `
-      <!-- HERO FEATURE CARD (40px Radius & Atmospheric Depth) -->
-      <article class="hero-feature-card">
-        <!-- 1. Semi-transparent decorative blob (#b7c6c2/20) in top-right -->
+      <!-- 1. HERO ORIENTATION & LIVE STATUS HUB -->
+      <article class="hero-feature-card home-orientation-hero">
         <div class="hero-decorative-blob" aria-hidden="true"></div>
 
-        <!-- 2. 64x64px white square icon holder with an emoji -->
-        <div class="hero-icon-holder" aria-hidden="true">
-          <span>🎯</span>
+        <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 20px; flex-wrap: wrap; position: relative; z-index: 1;">
+          <div style="flex: 1; min-width: 280px;">
+            <div class="hero-icon-holder" aria-hidden="true">
+              <span>🚀</span>
+            </div>
+            <div class="hero-label-wrap">
+              <span class="hero-tag-label">LEARNISH AKILLI İNGİLİZCE EKOSİSTEMİ • KONTROL MERKEZİ</span>
+              <h2 class="hero-card-title" style="margin-top: 6px; font-size: 28px;">Kalıcı İngilizce Öğrenim Merkezine Hoş Geldiniz</h2>
+              <p class="hero-card-desc" style="max-width: 680px; margin-top: 8px; line-height: 1.5; font-size: 13.5px;">
+                MEB Türkiye Yüzyılı Maarif Modeli (1-12. Sınıf), YDS/YÖKDİL akademik sınav hazırlığı ve The Oxford 5000™ uluslararası standartlarını birleştiren bilişsel platform. Aralıklı tekrar (SM-2), yapay zeka telaffuz koçu ve A4 çalışma föyü stüdyosu ile eksiksiz bir öğrenme deneyimi sunar.
+              </p>
+            </div>
+          </div>
+
+          <!-- Quick Actions & Active Route Summary -->
+          <div class="home-hero-summary-box">
+            <span class="hh-status-tag">📍 ŞU ANKİ AKTİF HEDEFİNİZ</span>
+            <div class="hh-status-title">${activeUnitTitle}</div>
+            <div class="hh-status-sub">${activeCurriculumSubtitle}</div>
+            <button type="button" class="hero-primary-cta-btn" onclick="window.APP.switchView('daily')" style="margin-top: 14px; width: 100%;">
+              <span>${module === 'yds' ? "GÜNÜN 20'SİNİ BAŞLAT" : "GÜNÜN 10'LUSUNU BAŞLAT"}</span>
+              <span class="cta-arrow">→</span>
+            </button>
+          </div>
         </div>
 
-        <!-- Labels & Headings -->
-        <div class="hero-label-wrap">
-          <span class="hero-tag-label">${activeCurriculumSubtitle}</span>
-          <h2 class="hero-card-title">${activeUnitTitle}</h2>
-          <p class="hero-card-desc">Günün mikro kelime hedefini tamamlayarak aktif kelime dağarcığını kalıcı kıl.</p>
-        </div>
-
-        <!-- 3. Nested 2-column grid for metrics (Bento Metric Cards) -->
-        <div class="bento-metrics-grid">
+        <!-- Bento Metrics Grid (Live Telemetry) -->
+        <div class="bento-metrics-grid" style="margin-top: 24px;">
           <div class="bento-metric-card">
             <span class="bento-card-title">GÜNLÜK SERİ</span>
             <div class="bento-card-content">
@@ -2864,21 +3526,248 @@
             </div>
           </div>
         </div>
-
-        <!-- 4. Alert/info box at the bottom using #b7c6c2/20 background -->
-        <div class="hero-alert-box">
-          <span class="alert-icon">💡</span>
-          <span class="alert-text"><strong>Bilişsel Pedagoji:</strong> SM-2 aralıklı tekrar algoritması, kelimeleri unutmaya en yakın olduğunuz anda hatırlatarak hafıza kalıcılığını 4 katına çıkarır.</span>
-        </div>
-
-        <!-- Primary High-Impact CTA in Red (#ca0013) -->
-        <button type="button" class="hero-primary-cta-btn" onclick="window.APP.switchView('daily')">
-          <span>${module === 'yds' ? "GÜNÜN 20'SİNİ BAŞLAT" : "GÜNÜN 10'LUSUNU BAŞLAT"}</span>
-          <span class="cta-arrow">→</span>
-        </button>
       </article>
 
-      <!-- AKILLI PEDAGOJİ & TEKRAR MERKEZİ (Station Cards) -->
+      <!-- 2. SECTION 1: ÖĞRENİM MODÜLLERİ REHBERİ (Hangi Modül Ne İşe Yarar?) -->
+      <section class="home-guide-section" aria-label="Öğrenim Modülleri Rehberi">
+        <div class="home-section-header">
+          <div class="hsh-left">
+            <span class="home-section-badge">🧭 3 FARKLI ÖĞRENİM ROTASI</span>
+            <h3 class="home-section-title">Modüller Ne İşe Yarar &amp; Hangisini Seçmelisiniz?</h3>
+            <p class="home-section-desc">Learnish 3 bağımsız uzmanlık rotası sunar. İhtiyacınıza uygun rotayı seçerek doğrudan ilgili müfredat ve kelime havuzunda çalışabilirsiniz.</p>
+          </div>
+        </div>
+
+        <div class="home-routes-grid">
+          <!-- Rota 1: MEB Maarif Modeli -->
+          <article class="home-route-card ${module === 'maarif' ? 'is-active-route' : ''}">
+            <div class="hrc-header">
+              <span class="hrc-tag tag-maarif">1. – 12. SINIFLAR • K-12 MÜFREDAT</span>
+              <div class="hrc-icon-circle">🏫</div>
+            </div>
+            <h4 class="hrc-title">MEB Türkiye Yüzyılı Maarif Modeli</h4>
+            <p class="hrc-desc">
+              İlkokul (1-4), ortaokul (5-8) ve lise (9-12) düzeyindeki tüm MEB İngilizce müfredatına tam uyumludur. 36 haftalık resmi akademik takvime göre haftanın odak teması, hedef kelimeleri ve resmi kazanım kodları (<code>ENG.5.2.L1</code>) ile çalışılır.
+            </p>
+            <div class="hrc-target-pill">
+              <strong>Kimler İçin:</strong> Okul derslerine destek, LGS &amp; YKS hazırlığı, MEB kazanımlarıyla adım adım ilerlemek isteyen öğrenciler ve veliler.
+            </div>
+            <ul class="hrc-features-list">
+              <li><span>✓</span> 36 haftalık resmi çerçeve planı ve haftanın odağı</li>
+              <li><span>✓</span> Kazanım kodları (Listening, Speaking, Reading, Writing)</li>
+              <li><span>✓</span> Sınıfa özel haftalık kelime listesi, kartlar ve testler</li>
+              <li><span>✓</span> MEB Maarif formatında A4 yazdırılabilir çalışma kağıdı</li>
+            </ul>
+            <div class="hrc-actions">
+              <button type="button" class="hrc-primary-btn" onclick="window.APP.selectModuleAndGo('maarif')">
+                ${module === 'maarif' ? '✓ Aktif Rota • Müfredata Git' : 'Müfredat Moduna Geç →'}
+              </button>
+              <button type="button" class="hrc-secondary-btn" onclick="window.APP.openGradeModal()">
+                🎓 Sınıf Değiştir (${STATE.selectedGrade || 5}. Sınıf)
+              </button>
+            </div>
+          </article>
+
+          <!-- Rota 2: YDS & YÖKDİL -->
+          <article class="home-route-card ${module === 'yds' ? 'is-active-route' : ''}">
+            <div class="hrc-header">
+              <span class="hrc-tag tag-yds">ÖSYM B2–C1 • AKADEMİK SINAVLAR</span>
+              <div class="hrc-icon-circle">🎯</div>
+            </div>
+            <h4 class="hrc-title">YDS, YÖKDİL, YDT &amp; TIPDİL</h4>
+            <p class="hrc-desc">
+              ÖSYM sınavlarında yüksek puan hedefleyenler için B2–C1 seviye yoğun kelime ve kalıp antrenmanıdır. 2020–2026 sınavlarında çıkmış gerçek soru kökleri, akademik paragraf bağlamları, sık sorulan edatlar ve eş anlamlılar içerir.
+            </p>
+            <div class="hrc-target-pill">
+              <strong>Kimler İçin:</strong> Yüksek lisans, doktora, doçentlik, kamu personeli veya üniversite dil sınavlarına hazırlanan yetişkinler ve adaylar.
+            </div>
+            <ul class="hrc-features-list">
+              <li><span>✓</span> 2020–2026 ÖSYM çıkmış cümle ve akademik kaynak etiketleri</li>
+              <li><span>✓</span> Sık sorulan edat kalıpları (Prepositions: in, on, at, by...)</li>
+              <li><span>✓</span> Kritik eş anlamlılar (Synonyms) ve çeldirici analizleri</li>
+              <li><span>✓</span> Günde 20 kelimelik yoğun antrenman &amp; kümülatif sınavlar</li>
+            </ul>
+            <div class="hrc-actions">
+              <button type="button" class="hrc-primary-btn" onclick="window.APP.selectModuleAndGo('yds')">
+                ${module === 'yds' ? '✓ Aktif Rota • YDS Workout' : 'YDS Moduna Geç →'}
+              </button>
+            </div>
+          </article>
+
+          <!-- Rota 3: The Oxford 5000 -->
+          <article class="home-route-card ${module === 'oxford' ? 'is-active-route' : ''}">
+            <div class="hrc-header">
+              <span class="hrc-tag tag-oxford">CEFR A1–C1 • ULUSLARARASI STANDART</span>
+              <div class="hrc-icon-circle">🌐</div>
+            </div>
+            <h4 class="hrc-title">The Oxford 5000™ Kelime Havuzu</h4>
+            <p class="hrc-desc">
+              Oxford Üniversitesi dilbilimcileri tarafından belirlenen, İngilizce konuşulan ve yazılan tüm metinlerin %90'ından fazlasını oluşturan en temel ve ileri düzey 5.000 kelimelik küresel referans veritabanıdır.
+            </p>
+            <div class="hrc-target-pill">
+              <strong>Kimler İçin:</strong> Genel İngilizce konuşma ve anlama becerisini geliştirmek, uluslararası standartta kelime dağarcığı oluşturmak isteyenler.
+            </div>
+            <ul class="hrc-features-list">
+              <li><span>✓</span> CEFR A1, A2, B1, B2 ve C1 seviye etiketleri</li>
+              <li><span>✓</span> Tam IPA fonetik telaffuz transkripsiyonu ve seslendirme</li>
+              <li><span>✓</span> 9.234 kelimelik birleşik arama ve filtreleme kütüphanesi</li>
+              <li><span>✓</span> Serbest tempolu flashcard ve test antrenmanları</li>
+            </ul>
+            <div class="hrc-actions">
+              <button type="button" class="hrc-primary-btn" onclick="window.APP.selectModuleAndGo('oxford')">
+                ${module === 'oxford' ? '✓ Aktif Rota • Oxford 5000' : 'Oxford 5000 Moduna Geç →'}
+              </button>
+              <button type="button" class="hrc-secondary-btn" onclick="window.APP.switchView('directory')">
+                🔍 Sözlükte Ara
+              </button>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <!-- 3. SECTION 2: BU UYGULAMA İLE NASIL ÇALIŞILIR? (4 ADIMLI BİLİŞSEL DÖNGÜ) -->
+      <section class="home-guide-section" aria-label="Bilişsel Çalışma Döngüsü">
+        <div class="home-section-header">
+          <div class="hsh-left">
+            <span class="home-section-badge">📈 BİLİŞSEL ÖĞRENME YOL HARİTASI</span>
+            <h3 class="home-section-title">Bu Uygulama ile Nasıl Çalışmalısınız?</h3>
+            <p class="home-section-desc">Hafızada kalıcılığı 4 katına çıkaran 4 adımlı bilişsel çalışma metodolojisi:</p>
+          </div>
+        </div>
+
+        <div class="home-methodology-grid">
+          <!-- Adım 1 -->
+          <div class="home-step-card">
+            <div class="hsc-step-badge">ADIM 01</div>
+            <div class="hsc-icon">📅</div>
+            <h4 class="hsc-title">Günlük Mikro Hedef (Daily Workout)</h4>
+            <p class="hsc-desc">Her gün seviyenize göre 10 veya 20 hedef kelimeyi inceleyin. Fonetik seslendirmeyi dinleyin, Türkçe anlamlarını ve örnek MEB cümlelerini okuyun.</p>
+            <button type="button" class="hsc-link-btn" onclick="window.APP.switchView('daily')">
+              Günün Kelimeleri &rarr;
+            </button>
+          </div>
+
+          <!-- Adım 2 -->
+          <div class="home-step-card">
+            <div class="hsc-step-badge">ADIM 02</div>
+            <div class="hsc-icon">🗂️</div>
+            <h4 class="hsc-title">Aktif Hatırlama (Active Recall Flashcards)</h4>
+            <p class="hsc-desc">Dijital iki yüzlü kartlarla kelimeyi tahmin edin, kartı çevirip kendinizi değerlendirin ("Zor", "İyi", "Kolay"). Beynin aktif geri çağırma kasını çalıştırın.</p>
+            <button type="button" class="hsc-link-btn" onclick="window.APP.switchView('flashcard')">
+              Kartlarla Çalış &rarr;
+            </button>
+          </div>
+
+          <!-- Adım 3 -->
+          <div class="home-step-card">
+            <div class="hsc-step-badge">ADIM 03</div>
+            <div class="hsc-icon">⚡</div>
+            <h4 class="hsc-title">Çok Modlu Test &amp; Telaffuz Koçu (Quiz &amp; Speaking)</h4>
+            <p class="hsc-desc">TR&rarr;EN, EN&rarr;TR, Dinleme, Cümle Tamamlama ve Mikrofona Telaffuz testleriyle kelimeyi çok yönlü pekiştirin. Telaffuz koçuyla aksan skoru alın.</p>
+            <button type="button" class="hsc-link-btn" onclick="window.APP.switchView('quiz')">
+              Testi Başlat &rarr;
+            </button>
+          </div>
+
+          <!-- Adım 4 -->
+          <div class="home-step-card">
+            <div class="hsc-step-badge">ADIM 04</div>
+            <div class="hsc-icon">🧠</div>
+            <h4 class="hsc-title">Aralıklı Tekrar (SM-2) &amp; Hata Defteri</h4>
+            <p class="hsc-desc">Ebbinghaus unutma eğrisine göre kelimeler tam unutmaya yaklaştığınız 1, 3, 7, 14. günlerde tekrar kuyruğunuza gelir. Hatalar otomatik Hata Kampına aktarılır.</p>
+            <button type="button" class="hsc-link-btn" onclick="window.APP.startSRSDueFlashcards()">
+              Tekrar İstasyonu &rarr;
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- 4. SECTION 3: UYGULAMADA NELER YAPABİLİRSİNİZ? (TEMEL YETENEKLER & ARAÇLAR) -->
+      <section class="home-guide-section" aria-label="Temel Yetenekler ve Araçlar">
+        <div class="home-section-header">
+          <div class="hsh-left">
+            <span class="home-section-badge">🛠️ GÜÇLÜ ÖĞRENME ARAÇLARI</span>
+            <h3 class="home-section-title">Learnish Araç Seti ile Neler Yapabilirsiniz?</h3>
+            <p class="home-section-desc">Öğrenme sürecinizi destekleyen yapay zeka ve materyal araçları:</p>
+          </div>
+        </div>
+
+        <div class="home-features-grid">
+          <!-- Özellik 1: Speaking Coach -->
+          <div class="home-feature-box">
+            <div class="hfb-icon-wrap" style="background: rgba(202, 0, 19, 0.08); color: var(--dp-color-red); border-color: rgba(202, 0, 19, 0.2);">🎙️</div>
+            <div class="hfb-content">
+              <h4 class="hfb-title">AI Speaking &amp; Telaffuz Koçu</h4>
+              <p class="hfb-desc">Web Speech API ile mikrofondan sesinizi dinler, fonetik transkripsiyonla eşleştirir ve anlık telaffuz doğruluğunuzu puanlar. US/UK aksanı seçebilirsiniz.</p>
+              <button type="button" class="hfb-btn" onclick="window.APP.openSpeechCoach('pronunciation')">
+                🎙️ Telaffuz Koçunu Aç &rarr;
+              </button>
+            </div>
+          </div>
+
+          <!-- Özellik 2: PDF Studio -->
+          <div class="home-feature-box">
+            <div class="hfb-icon-wrap" style="background: rgba(2, 132, 199, 0.08); color: var(--dp-color-blue); border-color: rgba(2, 132, 199, 0.2);">📄</div>
+            <div class="hfb-content">
+              <h4 class="hfb-title">PDF &amp; Çalışma Kağıdı Stüdyosu</h4>
+              <p class="hfb-desc">Seçtiğiniz sınıfın haftalık föyünü, 10 soruluk cevap anahtarlı testini, fiziksel kes-katla flashcardlarını veya yanlış yaptığınız kelimeleri A4 PDF olarak çıkartın.</p>
+              <button type="button" class="hfb-btn" onclick="window.APP.openPdfStudio()">
+                📄 PDF Stüdyosunu Başlat &rarr;
+              </button>
+            </div>
+          </div>
+
+          <!-- Özellik 3: Hata Defteri -->
+          <div class="home-feature-box">
+            <div class="hfb-icon-wrap" style="background: rgba(217, 119, 6, 0.08); color: var(--dp-color-amber); border-color: rgba(217, 119, 6, 0.2);">🛑</div>
+            <div class="hfb-content">
+              <h4 class="hfb-title">Akıllı Hata Defteri &amp; Kurtarma Kampı</h4>
+              <p class="hfb-desc">Quizlerde veya kartlarda yanlış yaptığınız kelimeler otomatik kaydedilir. 2 ardışık doğru cevapla kelimeyi ustalık seviyesine çıkarıp temizleyebilirsiniz.</p>
+              <button type="button" class="hfb-btn" onclick="window.APP.startMistakeQuiz()">
+                🎯 Hata Kampına Git &rarr;
+              </button>
+            </div>
+          </div>
+
+          <!-- Özellik 4: SM-2 Aralıklı Tekrar -->
+          <div class="home-feature-box">
+            <div class="hfb-icon-wrap" style="background: rgba(0, 135, 68, 0.08); color: var(--dp-color-green); border-color: rgba(0, 135, 68, 0.2);">🔁</div>
+            <div class="hfb-content">
+              <h4 class="hfb-title">SM-2 Aralıklı Tekrar Motoru</h4>
+              <p class="hfb-desc">Kelimeleri ne zaman unutacağınızı hesaplayan bilişsel aralıklı tekrar motoru. Zamanı gelen kelimeleri tek tıkla flashcard veya testle pekiştirin.</p>
+              <button type="button" class="hfb-btn" onclick="window.APP.startSRSDueFlashcards()">
+                🃏 Tekrarları Başlat &rarr;
+              </button>
+            </div>
+          </div>
+
+          <!-- Özellik 5: Gelişmiş Dizin -->
+          <div class="home-feature-box">
+            <div class="hfb-icon-wrap" style="background: rgba(82, 96, 86, 0.08); color: var(--dp-color-ink-muted); border-color: rgba(82, 96, 86, 0.2);">📚</div>
+            <div class="hfb-content">
+              <h4 class="hfb-title">9.234 Kelimelik Gelişmiş Sözlük</h4>
+              <p class="hfb-desc">Kelime türü (isim, fiil, sıfat), CEFR seviyesi (A1-C1) ve MEB temalarına göre anında arama yapın, yıldızlayın veya öğrenildi işaretleyin.</p>
+              <button type="button" class="hfb-btn" onclick="window.APP.switchView('directory')">
+                🔍 Kütüphaneyi Aç &rarr;
+              </button>
+            </div>
+          </div>
+
+          <!-- Özellik 6: İstatistikler & Heatmap -->
+          <div class="home-feature-box">
+            <div class="hfb-icon-wrap" style="background: rgba(202, 0, 19, 0.08); color: var(--dp-color-red); border-color: rgba(202, 0, 19, 0.2);">📊</div>
+            <div class="hfb-content">
+              <h4 class="hfb-title">Öğrenim Telemetrisi &amp; Kazanım Haritası</h4>
+              <p class="hfb-desc">Günlük serinizi, doğruluk yüzdesini, tema bazlı kazanım matrisini (Heatmap) ve son çalışma oturumlarınızı canlı analiz edin.</p>
+              <button type="button" class="hfb-btn" onclick="window.APP.switchView('stats')">
+                📈 İstatistikleri Gör &rarr;
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 5. SECTION 4: CANLI PEDAGOJİ & HATA AYIKLAMA İSTASYONU (Canlı Veriler) -->
       <section class="pedagogy-station-section" aria-label="Akıllı Hafıza &amp; Tekrar İstasyonu">
         <div class="pedagogy-station-header">
           <div>
@@ -2940,80 +3829,11 @@
               <button type="button" class="ped-btn ped-btn-secondary" onclick="window.APP.startMistakeFlashcards()" ${activeMistakes.length === 0 ? 'disabled' : ''}>
                 🃏 Hata Kartları
               </button>
+              <button type="button" class="ped-btn ped-btn-pdf" onclick="window.APP.openPdfStudio('mistakes')" title="Yanlışlarımı PDF / Yazdırılabilir Çalışma Kağıdı Olarak İndir">
+                📄 Yanlışları PDF Çıkart
+              </button>
             </div>
           </div>
-        </div>
-      </section>
-
-      <!-- SECONDARY FEED ITEMS (24px Radius, White, #b7c6c2/30 Border) -->
-      <section class="secondary-feed-section" aria-label="Öğrenim Akışı ve Aktiviteler">
-        <div class="feed-section-heading">
-          <span>ÖĞRENİM AKIŞI &amp; AKTİVİTELER</span>
-          <span class="feed-section-badge">GÜNLÜK MODÜLLER</span>
-        </div>
-
-        <!-- Feed Item 1: Tekrar Kuyruğu -->
-        <div class="secondary-feed-card">
-          <div class="feed-icon-box">🔁</div>
-          <div class="feed-content-wrap">
-            <h4 class="feed-card-title">Hata Ayıklama &amp; Tekrar Kuyruğu</h4>
-            <p class="feed-card-desc">
-              ${reviewWords.length > 0
-                ? `${reviewWords.length} kelime tekrar bekliyor: <strong>${reviewWords.map(w => w.en).join(', ')}</strong>`
-                : 'Tekrar listeniz temiz, harika gidiyorsunuz!'}
-            </p>
-          </div>
-          <button type="button" class="feed-trailing-btn" onclick="window.APP.switchView('flashcard')" aria-label="Tekrarı Başlat" title="Tekrarı Başlat">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
-          </button>
-        </div>
-
-        <!-- Feed Item 2: Flashcard -->
-        <div class="secondary-feed-card">
-          <div class="feed-icon-box">🗂️</div>
-          <div class="feed-content-wrap">
-            <h4 class="feed-card-title">Flashcard İnceleme Kartları</h4>
-            <p class="feed-card-desc">İki yüzlü interaktif kartlar, fonetik telaffuz ve örnek cümle bağlamları.</p>
-          </div>
-          <button type="button" class="feed-trailing-btn" onclick="window.APP.switchView('flashcard')" aria-label="Kartları İncele" title="Kartları İncele">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
-          </button>
-        </div>
-
-        <!-- Feed Item 3: Quiz Test -->
-        <div class="secondary-feed-card">
-          <div class="feed-icon-box">⚡</div>
-          <div class="feed-content-wrap">
-            <h4 class="feed-card-title">Kazanım Sınavı &amp; Aktif Hatırlama</h4>
-            <p class="feed-card-desc">Çoktan seçmeli, dinleme ve anlam eşleştirme sorularıyla kendini sına.</p>
-          </div>
-          <button type="button" class="feed-trailing-btn" onclick="window.APP.switchView('quiz')" aria-label="Testi Başlat" title="Testi Başlat">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
-          </button>
-        </div>
-
-        <!-- Feed Item 4: Kelime Havuzu -->
-        <div class="secondary-feed-card">
-          <div class="feed-icon-box">📚</div>
-          <div class="feed-content-wrap">
-            <h4 class="feed-card-title">Kelime Kütüphanesi &amp; Arama</h4>
-            <p class="feed-card-desc">${WORDS_DATA.length.toLocaleString('tr-TR')} kelimelik birleşik sözlük veritabanında anında arama ve filtreleme.</p>
-          </div>
-          <button type="button" class="feed-trailing-btn" onclick="window.APP.switchView('directory')" aria-label="Kütüphaneye Git" title="Kütüphaneye Git">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
-          </button>
-        </div>
-
-        <!-- Feed Item 5: İstatistikler -->
-        <div class="secondary-feed-card">
-          <div class="feed-icon-box">📊</div>
-          <div class="feed-content-wrap">
-            <h4 class="feed-card-title">Öğrenim Telemetrisi &amp; Analiz</h4>
-            <p class="feed-card-desc">Tema bazlı ilerleme, başarı grafiği ve çalışma oturumu geçmişi.</p>
-          </div>
-          <button type="button" class="feed-trailing-btn" onclick="window.APP.switchView('stats')" aria-label="İstatistikleri İncele" title="İstatistikleri İncele">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
-          </button>
         </div>
       </section>
     `;
@@ -3239,6 +4059,9 @@
             </button>
             <button type="button" class="fc-action-btn learned-btn" onclick="window.APP.startDailyQuiz()">
               ⚡ <span>Haftalık Kazanım Testi &rarr;</span>
+            </button>
+            <button type="button" class="fc-action-btn pdf-btn" onclick="window.APP.openPdfStudio('daily')" title="Bu haftanın çalışma föyünü PDF olarak çıkart" style="background: rgba(202, 0, 19, 0.08); color: var(--dp-color-red); border-color: rgba(202, 0, 19, 0.25);">
+              📄 <span>Haftalık Föyü İndir (PDF)</span>
             </button>
           </div>
 
@@ -3535,6 +4358,9 @@
           </button>
           <button type="button" class="fc-action-btn learned-btn" onclick="window.APP.startDailyQuiz()">
             ⚡ <span>Günün Testini Başlat →</span>
+          </button>
+          <button type="button" class="fc-action-btn pdf-btn" onclick="window.APP.openPdfStudio('daily')" title="Bu günün çalışma föyünü PDF olarak çıkart" style="background: rgba(202, 0, 19, 0.08); color: var(--dp-color-red); border-color: rgba(202, 0, 19, 0.25);">
+            📄 <span>Föyü İndir (PDF)</span>
           </button>
         </div>
       </section>
@@ -4110,6 +4936,15 @@
               <button class="fc-action-btn" onclick="window.APP.switchView('daily')" style="min-height: 48px; min-width: 160px;">
                 GÜNLÜK ÇALIŞMA
               </button>
+              ${(STATE.userData.mistakes && Object.keys(STATE.userData.mistakes).length > 0) ? `
+                <button class="fc-action-btn pdf-btn" onclick="window.APP.openPdfStudio('mistakes')" style="min-height: 48px; min-width: 160px; background: rgba(202, 0, 19, 0.08); color: var(--dp-color-red); border-color: rgba(202, 0, 19, 0.25);">
+                  📄 Yanlışları PDF Çıkart
+                </button>
+              ` : `
+                <button class="fc-action-btn pdf-btn" onclick="window.APP.openPdfStudio('quiz')" style="min-height: 48px; min-width: 160px; background: rgba(202, 0, 19, 0.08); color: var(--dp-color-red); border-color: rgba(202, 0, 19, 0.25);">
+                  📄 Test Föyünü İndir (PDF)
+                </button>
+              `}
             </div>
           </div>
         </div>
@@ -6266,6 +7101,7 @@
     openModesModal,
     closeModals,
     switchModuleAndClose,
+    selectModuleAndGo,
     switchViewAndClose,
     startQuizSession,
     toggleLearned,
@@ -6333,6 +7169,14 @@
     toggleCurriculumOutcomes,
     goHome,
     goBack,
+    openPdfStudio,
+    closePdfStudio,
+    updatePdfStudioOption,
+    printWorksheet,
+    downloadWorksheetHtml,
+    generateWorksheetHTML,
+    getWorksheetTargetWords,
+    PDF_STUDIO_STATE,
     getState: () => STATE
   };
 

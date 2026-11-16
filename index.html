@@ -55,12 +55,18 @@
         <span class="header-greeting-label" id="header-greeting-label">GÜNLÜK HEDEF • LEARNISH</span>
         <h1 class="header-greeting-title" id="header-user-title">MEB Müfredatı</h1>
       </div>
-      <button type="button" class="header-profile-btn" id="header-profile-trigger" onclick="window.APP.openSettingsModal()" aria-label="Ayarlar ve Profil">
-        <div class="header-avatar-circle">
-          <img src="icon-192.png" alt="Learnish Profil" class="header-avatar-img">
-          <span class="header-notification-badge" aria-label="Aktif bildirim"></span>
-        </div>
-      </button>
+      <div class="header-right-actions">
+        <button type="button" class="header-action-btn pdf-header-btn" onclick="window.APP.openPdfStudio()" title="PDF &amp; Çalışma Kağıdı Stüdyosu" aria-label="PDF Çalışma Föyü">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+          <span class="pdf-btn-label">PDF Föyü</span>
+        </button>
+        <button type="button" class="header-profile-btn" id="header-profile-trigger" onclick="window.APP.openSettingsModal()" aria-label="Ayarlar ve Profil">
+          <div class="header-avatar-circle">
+            <img src="icon-192.png" alt="Learnish Profil" class="header-avatar-img">
+            <span class="header-notification-badge" aria-label="Aktif bildirim"></span>
+          </div>
+        </button>
+      </div>
     </header>
 
     <!-- 1.5 DESKTOP TOP NAVIGATION (Visible on Desktop >= 768px, Hidden on Mobile) -->
@@ -88,6 +94,10 @@
       <button type="button" class="desktop-nav-btn nav-btn" data-view="stats">
         <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
         <span>İstatistik &amp; Analiz</span>
+      </button>
+      <button type="button" class="desktop-nav-btn nav-btn" onclick="window.APP.openPdfStudio()" title="PDF Çalışma Kağıdı &amp; Hata Kampı">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+        <span>PDF &amp; Yazdır</span>
       </button>
     </nav>
 
@@ -319,6 +329,24 @@
       <!-- Populated dynamically by window.APP.openClassifierForWord -->
     </div>
   </div>
+
+  <!-- 9. PDF & WORKSHEET STUDIO MODAL ("PDF & ÇALIŞMA KAĞIDI STÜDYOSU") -->
+  <div class="pdf-modal-backdrop" id="pdf-modal-backdrop" onclick="window.APP.closePdfStudio()" aria-hidden="true"></div>
+  <div class="pdf-dialog-card" id="pdf-dialog" role="dialog" aria-modal="true" aria-labelledby="pdf-dialog-title">
+    <div class="pdf-dialog-header">
+      <div class="pdf-dialog-title-wrap">
+        <span class="pdf-dialog-eyebrow">YAZDIRILABİLİR MATERYAL MERKEZİ</span>
+        <h2 id="pdf-dialog-title" class="pdf-dialog-title">PDF &amp; Çalışma Kağıdı Stüdyosu</h2>
+      </div>
+      <button type="button" class="settings-close-circle-btn" onclick="window.APP.closePdfStudio()" aria-label="Pencereyi Kapat">✕</button>
+    </div>
+    <div class="pdf-dialog-body" id="pdf-dialog-body">
+      <!-- Populated dynamically by window.APP.renderPdfStudio -->
+    </div>
+  </div>
+
+  <!-- Dedicated Hidden Printable Container (Rendered during @media print) -->
+  <div id="learnish-printable-sheet" class="learnish-printable-sheet" aria-hidden="true"></div>
 
   <!-- Data & Application Logic -->
   <script src="curriculum-data.js?v=v11-k12"></script>

@@ -124,6 +124,16 @@ class MockElement {
       this.classList = new MockClassList(sVal);
     } else if (name === 'value') {
       this._value = sVal;
+    } else if (name === 'style') {
+      sVal.split(';').forEach(rule => {
+        const parts = rule.split(':');
+        const k = parts[0] ? parts[0].trim() : '';
+        const v = parts[1] ? parts.slice(1).join(':').trim() : '';
+        if (k && v) {
+          const camelK = k.replace(/-([a-z])/g, (_, c) => c.toUpperCase());
+          this.style[camelK] = v;
+        }
+      });
     }
   }
 
@@ -321,12 +331,14 @@ function createFreshAppEnvironment(options = {}) {
     const dataModuleMatch = attrs.match(/data-module=[\"']([^\"']+)[\"']/);
     const nameMatch = attrs.match(/name=[\"']([^\"']+)[\"']/);
     const contentMatch = attrs.match(/content=[\"']([^\"']+)[\"']/);
+    const styleMatch = attrs.match(/style=[\"']([^\"']+)[\"']/);
 
     const el = new MockElement(tagName, idMatch ? idMatch[1] : '', classMatch ? classMatch[1] : '', elementRegistry);
     if (dataViewMatch) el.setAttribute('data-view', dataViewMatch[1]);
     if (dataModuleMatch) el.setAttribute('data-module', dataModuleMatch[1]);
     if (nameMatch) el.setAttribute('name', nameMatch[1]);
     if (contentMatch) el.setAttribute('content', contentMatch[1]);
+    if (styleMatch) el.setAttribute('style', styleMatch[1]);
     bodyElement.children.push(el);
     allElements.push(el);
   }
@@ -426,6 +438,17 @@ function createFreshAppEnvironment(options = {}) {
     confirm: () => true,
     alert: (msg) => { windowMock.__lastAlert = msg; },
     prompt: () => '',
+    print: () => { windowMock.__printed = true; },
+    URL: {
+      createObjectURL: (blob) => 'blob:mock-url-' + Math.random().toString(36).slice(2),
+      revokeObjectURL: () => {}
+    },
+    Blob: class {
+      constructor(parts, opts) {
+        this.parts = parts;
+        this.opts = opts;
+      }
+    },
     addEventListener: (evt, fn) => {
       if (!domListeners[evt]) domListeners[evt] = [];
       domListeners[evt].push(fn);
@@ -465,6 +488,8 @@ function createFreshAppEnvironment(options = {}) {
     speechSynthesis: windowMock.speechSynthesis,
     SpeechSynthesisUtterance: windowMock.SpeechSynthesisUtterance,
     Audio: windowMock.Audio,
+    Blob: windowMock.Blob,
+    URL: windowMock.URL,
     confirm: windowMock.confirm,
     alert: windowMock.alert,
     setTimeout: windowMock.setTimeout,
@@ -565,6 +590,30 @@ registerTest(1, 'Navigation & Canopy', 'test_nav_home_view_activation', () => {
   assert(homeSection.classList.contains('active'), '#view-home section should have active class');
   const canopyView = env.document.getElementById('canopy-view-name');
   assertEqual(canopyView.textContent, 'Kontrol Merkezi', 'Canopy should display Kontrol Merkezi');
+});
+
+registerTest(1, 'Navigation & Canopy', 'test_nav_home_view_orientation_and_modules_guide', () => {
+  const env = createFreshAppEnvironment();
+  env.APP.switchView('home');
+  const homeSection = env.document.getElementById('view-home');
+  assert(homeSection.innerHTML.includes('Öğrenim Modülleri Rehberi'), 'Home view should contain module guide section');
+  assert(homeSection.innerHTML.includes('MEB Türkiye Yüzyılı Maarif Modeli'), 'Home view should describe MEB module');
+  assert(homeSection.innerHTML.includes('YDS, YÖKDİL, YDT'), 'Home view should describe YDS module');
+  assert(homeSection.innerHTML.includes('The Oxford 5000'), 'Home view should describe Oxford module');
+  assert(homeSection.innerHTML.includes('Bilişsel Öğrenme Yol Haritası') || homeSection.innerHTML.includes('Nasıl Çalışmalısınız'), 'Home view should provide methodology guide');
+  assert(homeSection.innerHTML.includes('AI Speaking &amp; Telaffuz Koçu') || homeSection.innerHTML.includes('Telaffuz Koçu'), 'Home view should showcase speaking coach feature');
+  assert(homeSection.innerHTML.includes('PDF &amp; Çalışma Kağıdı Stüdyosu') || homeSection.innerHTML.includes('PDF'), 'Home view should showcase PDF studio feature');
+});
+
+registerTest(1, 'Navigation & Canopy', 'test_home_route_card_select_module_action', () => {
+  const env = createFreshAppEnvironment();
+  env.APP.switchView('home');
+  assertEqual(env.APP.getState().activeModule, 'maarif', 'Default module should be maarif');
+  
+  // Select YDS from home guide card
+  env.APP.selectModuleAndGo('yds');
+  assertEqual(env.APP.getState().activeModule, 'yds', 'activeModule should switch to yds');
+  assertEqual(env.APP.getState().currentView, 'daily', 'currentView should transition to daily');
 });
 
 registerTest(1, 'Navigation & Canopy', 'test_nav_daily_view_activation', () => {
@@ -1047,6 +1096,120 @@ registerTest(1, 'Audio & Speech', 'test_audio_sound_fx_toggle', () => {
   soundBtn.click(); // Toggle sound to false
   assertEqual(env.APP.getState().settings.soundEffects, false, 'Sound effects should be disabled');
   assertEqual(env.localStorage.getItem('mk_sound'), 'false', 'mk_sound in localStorage should be false');
+});
+
+// --- 1.8 PDF & Worksheet Studio (6 Tests) ---
+
+registerTest(1, 'PDF & Worksheet Studio', 'test_pdf_studio_open_and_close', () => {
+  const env = createFreshAppEnvironment();
+  const backdrop = env.document.getElementById('pdf-modal-backdrop');
+  const dialog = env.document.getElementById('pdf-dialog');
+  const body = env.document.getElementById('pdf-dialog-body');
+  assert(backdrop, '#pdf-modal-backdrop should exist');
+  assert(dialog, '#pdf-dialog should exist');
+  assert(body, '#pdf-dialog-body should exist');
+  assert(!backdrop.classList.contains('active'), 'Backdrop should initially not have active class');
+
+  env.APP.openPdfStudio('mistakes');
+  assert(backdrop.classList.contains('active'), 'openPdfStudio should activate backdrop');
+  assert(dialog.classList.contains('active'), 'openPdfStudio should activate dialog');
+  assert(body.innerHTML.includes('Hata Kampı &amp; Yanlışlar') || body.innerHTML.includes('Hata Kampı & Yanlışlar'), 'Dialog body should have template options');
+  assert(body.innerHTML.includes('ÇALIŞMA ŞABLONU'), 'Dialog body should contain studio controls');
+
+  env.APP.closePdfStudio();
+  assert(!backdrop.classList.contains('active'), 'closePdfStudio should deactivate backdrop');
+  assert(!dialog.classList.contains('active'), 'closePdfStudio should deactivate dialog');
+});
+
+registerTest(1, 'PDF & Worksheet Studio', 'test_pdf_worksheet_generation_mistakes', () => {
+  const env = createFreshAppEnvironment();
+  // Simulate recorded mistakes
+  const sampleWord = env.window.WORDS_DATA[0];
+  env.APP.getState().userData.mistakes[sampleWord.id] = {
+    wordId: sampleWord.id,
+    wrongCount: 3,
+    lastMistakeAt: Date.now(),
+    wrongAnswers: ['wrong_choice'],
+    cleared: false
+  };
+
+  env.APP.openPdfStudio('mistakes');
+  const words = env.APP.getWorksheetTargetWords(env.APP.PDF_STUDIO_STATE);
+  assert(words.length > 0, 'Target words for mistakes template should contain at least 1 word');
+  assertEqual(words[0].en.toLowerCase(), sampleWord.en.toLowerCase(), 'First target word should match mistake word');
+
+  const html = env.APP.generateWorksheetHTML(env.APP.PDF_STUDIO_STATE);
+  assert(html.includes('HATA DEFTERİ &amp; KURTARMA') || html.includes('HATA DEFTERİ'), 'Worksheet HTML should contain mistake sheet title');
+  assert(html.includes('3x Yanlış Yapıldı') || html.includes('Hata'), 'Worksheet HTML should display error frequency badge');
+  assert(html.includes('Doğru Yazım (3x)'), 'Worksheet HTML should include writing practice lines');
+  assert(html.includes('Kendi Cümleniz:'), 'Worksheet HTML should include sentence drafting line');
+});
+
+registerTest(1, 'PDF & Worksheet Studio', 'test_pdf_worksheet_generation_curriculum', () => {
+  const env = createFreshAppEnvironment();
+  env.APP.updatePdfStudioOption('template', 'curriculum');
+  env.APP.updatePdfStudioOption('grade', 5);
+
+  const words = env.APP.getWorksheetTargetWords(env.APP.PDF_STUDIO_STATE);
+  assert(words.length > 0, '5th grade curriculum target words should not be empty');
+
+  const html = env.APP.generateWorksheetHTML(env.APP.PDF_STUDIO_STATE);
+  assert(html.includes('MEB MAARİF MODELİ') || html.includes('5. Sınıf'), 'Worksheet HTML should contain curriculum header and grade');
+  assert(html.includes('EŞLEŞTİRME ALIŞTIRMASI'), 'Worksheet HTML should contain exercises');
+});
+
+registerTest(1, 'PDF & Worksheet Studio', 'test_pdf_worksheet_generation_quiz_with_answer_key', () => {
+  const env = createFreshAppEnvironment();
+  env.APP.updatePdfStudioOption('template', 'quiz');
+  env.APP.updatePdfStudioOption('grade', 6);
+
+  const html = env.APP.generateWorksheetHTML(env.APP.PDF_STUDIO_STATE);
+  assert(html.includes('KELİME KAZANIM DEĞERLENDİRME TESTİ'), 'Quiz worksheet should contain test title');
+  assert(html.includes('1.') && html.includes('kelimesinin Türkçe karşılığı'), 'Quiz worksheet should contain numbered questions');
+  assert(html.includes('CEVAP ANAHTARI'), 'Quiz worksheet should contain answer key at the bottom');
+});
+
+registerTest(1, 'PDF & Worksheet Studio', 'test_pdf_worksheet_generation_cut_fold_flashcards', () => {
+  const env = createFreshAppEnvironment();
+  env.APP.updatePdfStudioOption('template', 'flashcards');
+
+  const html = env.APP.generateWorksheetHTML(env.APP.PDF_STUDIO_STATE);
+  assert(html.includes('KES &amp; KATLA') || html.includes('KES & KATLA'), 'Flashcard worksheet should contain cut and fold title');
+  assert(html.includes('---') && html.includes(':::'), 'Flashcard worksheet should display cutting scissors and fold line indicator');
+  assert(html.includes('ws-fc-cut-card'), 'Flashcard worksheet should contain cut card elements');
+});
+
+registerTest(1, 'PDF & Worksheet Studio', 'test_pdf_print_and_download_handlers', () => {
+  const env = createFreshAppEnvironment();
+  env.APP.openPdfStudio('mistakes');
+  
+  // Test print worksheet
+  env.APP.printWorksheet();
+  assertEqual(env.window.__printed, true, 'printWorksheet should invoke window.print()');
+  const printSheet = env.document.getElementById('learnish-printable-sheet');
+  assert(printSheet, '#learnish-printable-sheet should exist in DOM');
+  assert(printSheet.innerHTML.length > 50, '#learnish-printable-sheet should be populated with worksheet HTML');
+
+  // Test HTML file download
+  let downloadedData = null;
+  const originalCreate = env.document.createElement;
+  env.document.createElement = function(tag) {
+    const el = originalCreate.call(env.document, tag);
+    if (tag === 'a') {
+      el.click = function() {
+        downloadedData = {
+          href: this.getAttribute('href') || this.href,
+          download: this.getAttribute('download') || this.download
+        };
+      };
+    }
+    return el;
+  };
+
+  env.APP.downloadWorksheetHtml();
+  assert(downloadedData, 'downloadWorksheetHtml should create and click download anchor');
+  assert(downloadedData.download && downloadedData.download.endsWith('.html'), 'Download filename should end with .html');
+  assert(downloadedData.download && downloadedData.download.startsWith('learnish-calisma-foyu'), 'Download filename should begin with learnish-calisma-foyu');
 });
 
 // ============================================================================
