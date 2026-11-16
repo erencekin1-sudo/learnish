@@ -53,9 +53,12 @@
   --dp-typography-mono: 'Nunito', monospace;
 
   /* Radii */
-  --dp-radius-card: 40px;       /* 2.5rem for main cards */
-  --dp-radius-nested: 24px;     /* 1.5rem for secondary feed cards */
-  --dp-radius-bento: 16px;      /* 1.0rem for bento metrics & category squares */
+  --dp-radius-card: 40px;
+  /* 2.5rem for main cards */
+  --dp-radius-nested: 24px;
+  /* 1.5rem for secondary feed cards */
+  --dp-radius-bento: 16px;
+  /* 1.0rem for bento metrics & category squares */
   --dp-radius-pill: 9999px;
   --dp-radius-circle: 50%;
 
@@ -105,7 +108,9 @@
 /* ==========================================================================
    RESET & GLOBAL BASELINE
    ========================================================================== */
-*, *::before, *::after {
+*,
+*::before,
+*::after {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
@@ -154,9 +159,11 @@ body {
 }
 
 /* ==========================================================================
+   1. TOP-ALIGNED HEADER (56px Top Padding)
    1. TOP-ALIGNED HEADER
    ========================================================================== */
 .app-top-header {
+  padding-top: 56px;
   padding-top: 24px;
   padding-bottom: 20px;
   display: flex;
@@ -316,11 +323,13 @@ body {
   .hrp-eyebrow {
     display: none;
   }
+
   .header-route-pill-btn {
     height: 36px;
     padding: 0 10px 0 8px;
     gap: 6px;
   }
+
   .hrp-label {
     font-size: 12px;
   }
@@ -1835,6 +1844,7 @@ body {
     flex-wrap: wrap;
     gap: 8px;
   }
+
   .theme-stat-label {
     flex: 1 1 100%;
   }
@@ -1934,7 +1944,8 @@ body {
   letter-spacing: 0.04em;
 }
 
-.theme-pill, .yds-prep-tag {
+.theme-pill,
+.yds-prep-tag {
   font-size: 10px;
   font-weight: 800;
   padding: 3px 7px;
@@ -2029,9 +2040,25 @@ body {
 
 /* ==========================================================================
    CONTEXT CANOPY / "İŞTE BURADASINIZ" HABER VERİCİ ÇİZGİSİ
+   (Mobile-First Floating Orientation Veil & Module Indicator)
    (Replaced by Top-Header Route Pill)
    ========================================================================== */
 .context-canopy {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  width: 100%;
+  z-index: 1000;
+  background: rgba(246, 245, 241, 0.94);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--dp-color-border);
+  box-shadow: 0 4px 20px -2px rgba(23, 30, 25, 0.08);
+  transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1),
+    opacity 0.25s ease,
+    box-shadow 0.25s ease;
+  user-select: none;
   display: none !important;
 }
 
@@ -2057,6 +2084,7 @@ body {
   .context-canopy {
     position: sticky;
   }
+
   .context-canopy-content {
     max-width: 1080px;
     padding-left: 20px;
@@ -2086,10 +2114,13 @@ body {
 }
 
 @keyframes beaconPulse {
-  0%, 100% {
+
+  0%,
+  100% {
     transform: scale(1);
     box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.25);
   }
+
   50% {
     transform: scale(1.2);
     box-shadow: 0 0 0 6px rgba(16, 185, 129, 0.08);
@@ -2198,9 +2229,11 @@ body {
   background: #1d4ed8;
   color: #ffffff;
 }
+
 .context-canopy.mod-maarif .context-accent-line {
   background: linear-gradient(90deg, #1e3a8a, #3b82f6 50%, #60a5fa);
 }
+
 .context-canopy.mod-maarif .context-view-name {
   color: #1d4ed8;
 }
@@ -2209,9 +2242,11 @@ body {
   background: #7c3aed;
   color: #ffffff;
 }
+
 .context-canopy.mod-yds .context-accent-line {
   background: linear-gradient(90deg, #5b21b6, #8b5cf6 50%, #c084fc);
 }
+
 .context-canopy.mod-yds .context-view-name {
   color: #7c3aed;
 }
@@ -2220,9 +2255,11 @@ body {
   background: #0284c7;
   color: #ffffff;
 }
+
 .context-canopy.mod-oxford .context-accent-line {
   background: linear-gradient(90deg, #0369a1, #38bdf8 50%, #7dd3fc);
 }
+
 .context-canopy.mod-oxford .context-view-name {
   color: #0284c7;
 }
@@ -2231,9 +2268,11 @@ body {
   background: #d97706;
   color: #ffffff;
 }
+
 .context-canopy.mod-all .context-accent-line {
   background: linear-gradient(90deg, #b45309, #f59e0b 50%, #fcd34d);
 }
+
 .context-canopy.mod-all .context-view-name {
   color: #d97706;
 }
@@ -2260,10 +2299,12 @@ body {
     transform: translateY(-100%);
     opacity: 0;
   }
+
   60% {
     transform: translateY(3px);
     opacity: 1;
   }
+
   100% {
     transform: translateY(0);
     opacity: 1;
@@ -2271,14 +2312,21 @@ body {
 }
 
 @keyframes canopyShimmer {
-  0% { left: -100%; }
-  100% { left: 100%; }
+  0% {
+    left: -100%;
+  }
+
+  100% {
+    left: 100%;
+  }
 }
 
 @media (max-width: 767px) {
   .app-shell {
+    padding-top: calc(env(safe-area-inset-top, 0px) + 38px);
     padding-top: calc(env(safe-area-inset-top, 0px) + 8px);
   }
+
   .app-top-header {
     padding-top: 14px;
   }
@@ -2518,7 +2566,8 @@ body {
   transition: all 0.2s ease;
 }
 
-.star-btn:hover, .star-btn.starred {
+.star-btn:hover,
+.star-btn.starred {
   color: #f59e0b;
   border-color: #f59e0b;
   transform: scale(1.08);
@@ -2749,8 +2798,15 @@ body {
 }
 
 @keyframes feedbackPop {
-  from { opacity: 0; transform: translateY(6px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .feedback-header {
@@ -3143,44 +3199,56 @@ mark.pedagogy-word-highlight {
 }
 
 @media (max-width: 600px) {
+
   .card-scene,
   .flashcard-inner,
   .card-face {
     min-height: 310px;
   }
+
   .card-face {
     padding: 20px 18px;
   }
+
   .flashcard-toolbar {
     padding: 8px 12px;
     gap: 8px;
   }
+
   .flashcard-wrapper {
     gap: 10px;
   }
+
   .fc-controls-srs {
     grid-template-columns: repeat(3, 1fr);
   }
+
   .fc-controls-srs .fc-btn-prev,
   .fc-controls-srs .fc-btn-next {
     display: none !important;
   }
+
   .fc-controls-srs .fc-action-btn {
     min-height: 48px;
     padding: 6px 4px;
   }
+
   .fc-btn-top {
     font-size: 10.5px;
   }
+
   .fc-btn-sub {
     font-size: 9px;
   }
+
   .fc-hint-desktop {
     display: none !important;
   }
+
   .fc-hint-mobile {
     display: inline !important;
   }
+
   .fc-kbd-inline,
   .quiz-kbd-hint,
   .fc-controls-srs .fc-action-btn .kbd-badge {
@@ -3451,6 +3519,7 @@ mark.pedagogy-word-highlight {
     opacity: 0;
     transform: translate(-50%, 20px);
   }
+
   to {
     opacity: 1;
     transform: translate(-50%, 0);
@@ -3484,7 +3553,8 @@ mark.pedagogy-word-highlight {
     grid-template-columns: repeat(2, 1fr);
   }
 
-  .flashcard-card, .card-face {
+  .flashcard-card,
+  .card-face {
     max-width: 620px;
     margin: 0 auto;
   }
@@ -3814,6 +3884,7 @@ mark.pedagogy-word-highlight {
     transform: scale(0.6);
     opacity: 0.9;
   }
+
   100% {
     transform: scale(1.6);
     opacity: 0;
@@ -3850,6 +3921,7 @@ mark.pedagogy-word-highlight {
   0% {
     box-shadow: 0 0 0 0 rgba(202, 0, 19, 0.4);
   }
+
   100% {
     box-shadow: 0 0 0 16px rgba(202, 0, 19, 0);
   }
@@ -3881,17 +3953,42 @@ mark.pedagogy-word-highlight {
   animation: wavePulse 1s ease-in-out infinite alternate;
 }
 
-.coach-waveform.active .wave-bar.bar-1 { animation-delay: 0.1s; }
-.coach-waveform.active .wave-bar.bar-2 { animation-delay: 0.3s; }
-.coach-waveform.active .wave-bar.bar-3 { animation-delay: 0.5s; }
-.coach-waveform.active .wave-bar.bar-4 { animation-delay: 0.2s; }
-.coach-waveform.active .wave-bar.bar-5 { animation-delay: 0.4s; }
-.coach-waveform.active .wave-bar.bar-6 { animation-delay: 0.15s; }
-.coach-waveform.active .wave-bar.bar-7 { animation-delay: 0.35s; }
+.coach-waveform.active .wave-bar.bar-1 {
+  animation-delay: 0.1s;
+}
+
+.coach-waveform.active .wave-bar.bar-2 {
+  animation-delay: 0.3s;
+}
+
+.coach-waveform.active .wave-bar.bar-3 {
+  animation-delay: 0.5s;
+}
+
+.coach-waveform.active .wave-bar.bar-4 {
+  animation-delay: 0.2s;
+}
+
+.coach-waveform.active .wave-bar.bar-5 {
+  animation-delay: 0.4s;
+}
+
+.coach-waveform.active .wave-bar.bar-6 {
+  animation-delay: 0.15s;
+}
+
+.coach-waveform.active .wave-bar.bar-7 {
+  animation-delay: 0.35s;
+}
 
 @keyframes wavePulse {
-  0% { height: 6px; }
-  100% { height: 26px; }
+  0% {
+    height: 6px;
+  }
+
+  100% {
+    height: 26px;
+  }
 }
 
 /* Gerçek mikrofon seviyesi: CSS animasyonu yerine canlı ses düzeyi */
@@ -3995,6 +4092,7 @@ mark.pedagogy-word-highlight {
     opacity: 0;
     transform: translateY(10px);
   }
+
   100% {
     opacity: 1;
     transform: translateY(0);
@@ -4182,11 +4280,25 @@ mark.pedagogy-word-highlight {
   animation: wavePulse 1s ease-in-out infinite alternate;
 }
 
-.quiz-speaking-waveform.active .wave-bar:nth-child(1) { animation-delay: 0.1s; }
-.quiz-speaking-waveform.active .wave-bar:nth-child(2) { animation-delay: 0.3s; }
-.quiz-speaking-waveform.active .wave-bar:nth-child(3) { animation-delay: 0.5s; }
-.quiz-speaking-waveform.active .wave-bar:nth-child(4) { animation-delay: 0.2s; }
-.quiz-speaking-waveform.active .wave-bar:nth-child(5) { animation-delay: 0.4s; }
+.quiz-speaking-waveform.active .wave-bar:nth-child(1) {
+  animation-delay: 0.1s;
+}
+
+.quiz-speaking-waveform.active .wave-bar:nth-child(2) {
+  animation-delay: 0.3s;
+}
+
+.quiz-speaking-waveform.active .wave-bar:nth-child(3) {
+  animation-delay: 0.5s;
+}
+
+.quiz-speaking-waveform.active .wave-bar:nth-child(4) {
+  animation-delay: 0.2s;
+}
+
+.quiz-speaking-waveform.active .wave-bar:nth-child(5) {
+  animation-delay: 0.4s;
+}
 
 .quiz-speaking-status {
   font-size: 0.88rem;
@@ -4340,11 +4452,12 @@ mark.pedagogy-word-highlight {
   letter-spacing: -0.01em;
   color: var(--dp-color-ink);
 }
-  margin: 0;
-  font-size: 18px;
-  font-weight: 800;
-  letter-spacing: -0.01em;
-  color: var(--dp-color-ink);
+
+margin: 0;
+font-size: 18px;
+font-weight: 800;
+letter-spacing: -0.01em;
+color: var(--dp-color-ink);
 }
 
 .grade-dialog-body,
@@ -5117,6 +5230,7 @@ mark.pedagogy-word-highlight {
   .pdf-btn-label {
     display: none;
   }
+
   .pdf-header-btn {
     padding: 7px;
     border-radius: 50%;
@@ -5423,11 +5537,13 @@ mark.pedagogy-word-highlight {
     grid-template-columns: 1fr;
     overflow-y: auto;
   }
+
   .pdf-controls-pane {
     border-right: none;
     border-bottom: 1px solid var(--dp-color-border-subtle);
     overflow: visible;
   }
+
   .pdf-preview-pane {
     min-height: 500px;
   }
@@ -6296,7 +6412,8 @@ mark.pedagogy-word-highlight {
     margin: 8mm 10mm 10mm 10mm;
   }
 
-  html, body {
+  html,
+  body {
     background: #ffffff !important;
     color: #171e19 !important;
     font-size: 11pt !important;

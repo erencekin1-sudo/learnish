@@ -600,7 +600,7 @@ registerTest(1, 'Navigation & Canopy', 'test_nav_home_view_orientation_and_modul
   assert(homeSection.innerHTML.includes('Öğrenim Modülleri Rehberi'), 'Home view should contain module guide section');
   assert(homeSection.innerHTML.includes('MEB Türkiye Yüzyılı Maarif Modeli'), 'Home view should describe MEB module');
   assert(homeSection.innerHTML.includes('YDS, YÖKDİL, YDT'), 'Home view should describe YDS module');
-  assert(homeSection.innerHTML.includes('The Oxford 5000'), 'Home view should describe Oxford module');
+  assert(homeSection.innerHTML.includes('Kelime Kütüphanesi'), 'Home view should describe Library module');
   assert(homeSection.innerHTML.includes('Bilişsel Öğrenme Yol Haritası') || homeSection.innerHTML.includes('Nasıl Çalışmalısınız'), 'Home view should provide methodology guide');
   assert(homeSection.innerHTML.includes('AI Speaking &amp; Telaffuz Koçu') || homeSection.innerHTML.includes('Telaffuz Koçu'), 'Home view should showcase speaking coach feature');
   assert(homeSection.innerHTML.includes('PDF &amp; Çalışma Kağıdı Stüdyosu') || homeSection.innerHTML.includes('PDF'), 'Home view should showcase PDF studio feature');
@@ -698,8 +698,8 @@ registerTest(1, 'Navigation & Canopy', 'test_header_route_and_telemetry_reflects
   assertEqual(hrIcon.textContent, '🎯', 'Header route pill icon should update to 🎯');
   
   env.APP.switchModule('oxford');
-  assertEqual(hrLabel.textContent, 'Oxford 5000', 'Header route pill label should update to Oxford 5000');
-  assertEqual(hrIcon.textContent, '🌐', 'Header route pill icon should update to 🌐');
+  assertEqual(hrLabel.textContent, 'Kütüphane', 'Header route pill label should update to Kütüphane');
+  assertEqual(hrIcon.textContent, '📚', 'Header route pill icon should update to 📚');
 
   env.APP.switchModule('maarif');
   assertEqual(hrIcon.textContent, '🏫', 'Header route pill icon should update to 🏫');
@@ -731,8 +731,8 @@ registerTest(1, 'Navigation & Canopy', 'test_header_route_pill_replaces_horizont
   assertEqual(hrLabel.textContent, 'YDS / YÖKDİL', 'Route pill label should be YDS / YÖKDİL');
 
   env.APP.switchModule('oxford');
-  assertEqual(hrIcon.textContent, '🌐', 'Route pill icon should be globe for Oxford');
-  assertEqual(hrLabel.textContent, 'Oxford 5000', 'Route pill label should be Oxford 5000');
+  assertEqual(hrIcon.textContent, '📚', 'Route pill icon should be books for Library');
+  assertEqual(hrLabel.textContent, 'Kütüphane', 'Route pill label should be Kütüphane');
 
   env.APP.switchGrade(8);
   assertEqual(hrIcon.textContent, '🏫', 'Route pill icon should be school for MEB grade');
@@ -759,6 +759,64 @@ registerTest(1, 'Navigation & Canopy', 'test_header_route_pill_replaces_horizont
   assertIncludes(dialogBody.innerHTML, 'ORTAOKUL', 'Dialog body should contain Ortaokul stage');
   assertIncludes(dialogBody.innerHTML, 'LİSE', 'Dialog body should contain Lise stage');
   assertIncludes(dialogBody.innerHTML, 'AKADEMİK &amp; GENEL HAVUZLAR', 'Dialog body should contain Academic & General pools');
+});
+
+registerTest(1, 'Navigation & Canopy', 'test_grade_modal_all_modules_clickable_and_scrollable', () => {
+  // 1. Validate app.css brace balance & scrollable .grade-dialog-body rule
+  const cssNoComments = rawAppCss.replace(/\/\*[\s\S]*?\*\//g, m => '\n'.repeat(m.split('\n').length - 1));
+  let depth = 0;
+  cssNoComments.split('\n').forEach((line, idx) => {
+    for (const ch of line) {
+      if (ch === '{') depth++;
+      else if (ch === '}') {
+        depth--;
+        if (depth < 0) {
+          throw new Error(`CSS unmatched closing brace at line ${idx + 1}: ${line.trim()}`);
+        }
+      }
+    }
+    if (depth === 0 && line.includes(':') && !line.includes('{') && !line.trim().startsWith('@') && line.trim().endsWith(';')) {
+      throw new Error(`CSS orphan declaration outside block at line ${idx + 1}: ${line.trim()}`);
+    }
+  });
+  assertEqual(depth, 0, 'app.css must have balanced braces');
+
+  const bodyRuleMatch = cssNoComments.match(/(^|\})\s*\.grade-dialog-body\s*,\s*\.classifier-dialog-body\s*\{([^}]*)\}/m);
+  assert(bodyRuleMatch, '.grade-dialog-body rule must not be corrupted by preceding tokens');
+  assertIncludes(bodyRuleMatch[2], 'overflow-y: auto', '.grade-dialog-body must enable overflow-y: auto');
+  assertIncludes(bodyRuleMatch[2], 'min-height: 0', '.grade-dialog-body must set min-height: 0 inside flex column');
+
+  // 2. Validate every --dp-* CSS variable used in CSS and JS is defined
+  const definedVars = new Set([...cssNoComments.matchAll(/(--dp-[a-zA-Z0-9_-]+)\s*:/g)].map(m => m[1]));
+  const usedCssVars = [...cssNoComments.matchAll(/var\(\s*(--dp-[a-zA-Z0-9_-]+)/g)].map(m => m[1]);
+  const usedJsVars = [...rawAppJsCode.matchAll(/var\(\s*(--dp-[a-zA-Z0-9_-]+)/g)].map(m => m[1]);
+  const undefinedVars = [...new Set([...usedCssVars, ...usedJsVars])].filter(v => !definedVars.has(v));
+  assertEqual(undefinedVars.length, 0, `All CSS custom properties must be defined (missing: ${undefinedVars.join(', ')})`);
+
+  // 3. Open modal, verify ordering & body scroll lock, and verify clicking each module switches AND closes modal
+  const env = createFreshAppEnvironment();
+  const dialog = env.document.getElementById('grade-dialog');
+  const backdrop = env.document.getElementById('grade-modal-backdrop');
+  const body = env.document.getElementById('grade-dialog-body');
+
+  env.APP.openGradeModal();
+  assert(dialog.classList.contains('active'), '#grade-dialog should open');
+  assert(backdrop.classList.contains('active'), '#grade-modal-backdrop should open');
+  assert(env.document.body.classList.contains('modal-open'), 'body should receive modal-open class');
+
+  const akIdx = body.innerHTML.indexOf('AKADEMİK &amp; GENEL HAVUZLAR');
+  const ilkIdx = body.innerHTML.indexOf('İLKOKUL');
+  assert(akIdx !== -1 && ilkIdx !== -1 && akIdx < ilkIdx, 'AKADEMİK & GENEL HAVUZLAR must render before K-12 stage groups for instant access');
+
+  for (const mod of ['yds', 'oxford', 'all']) {
+    env.APP.openGradeModal();
+    assert(dialog.classList.contains('active'), `#grade-dialog should open before selecting ${mod}`);
+    env.APP.switchModuleAndClose(mod);
+    assertEqual(env.APP.getState().activeModule, mod, `switchModuleAndClose should switch activeModule to ${mod}`);
+    assert(!dialog.classList.contains('active'), `#grade-dialog must close after switchModuleAndClose('${mod}')`);
+    assert(!backdrop.classList.contains('active'), `#grade-modal-backdrop must close after switchModuleAndClose('${mod}')`);
+    assert(!env.document.body.classList.contains('modal-open'), 'body modal-open lock should clear after closing modal');
+  }
 });
 
 // --- 1.2 Theme Toggle & Tokens (6 Tests) ---
@@ -1064,7 +1122,7 @@ registerTest(1, 'Word Directory', 'test_directory_absence_of_redundant_grade_fil
   const dirSection = env.document.getElementById('view-directory');
   assert(!dirSection.innerHTML.includes('MEB: 5. SINIF MAARİF'), 'Directory must not contain redundant 5. Sınıf filter chip');
   assert(dirSection.innerHTML.includes('TÜM KÜTÜPHANELER'), 'Directory should offer unified library chip');
-  assert(dirSection.innerHTML.includes('THE OXFORD 5000'), 'Directory should offer Oxford 5000 chip');
+  assert(dirSection.innerHTML.includes('KÜTÜPHANE'), 'Directory should offer Kütüphane chip');
   assert(dirSection.innerHTML.includes('YDS &amp; YÖKDİL') || dirSection.innerHTML.includes('YDS & YÖKDİL'), 'Directory should offer YDS chip');
 });
 

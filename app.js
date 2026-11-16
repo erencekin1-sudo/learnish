@@ -20,7 +20,7 @@
     "6": { num: 6, code: "THEME 6", title: "LIFE IN THE WORLD", titleTr: "Dünyada Yaşam — Beslenme & Kültür", full: "THEME 6: LIFE IN THE WORLD", color: "#15803d", badgeBg: "#16a34a", border: "#22c55e" },
     "7": { num: 7, code: "THEME 7", title: "LIFE IN NATURE", titleTr: "Doğada Yaşam — Hayvanlar, Bitkiler & Çevre", full: "THEME 7: LIFE IN NATURE", color: "#047857", badgeBg: "#059669", border: "#10b981" },
     "8": { num: 8, code: "THEME 8", title: "LIFE IN THE UNIVERSE AND FUTURE", titleTr: "Evrende ve Gelecekte Yaşam & İleri Kavramlar", full: "THEME 8: LIFE IN THE UNIVERSE AND FUTURE", color: "#6b21a8", badgeBg: "#9333ea", border: "#a855f7" },
-    "9": { num: 9, code: "OXFORD 5000", title: "THE OXFORD 5000", titleTr: "The Oxford 5000 (A1-C1 Dünya Standardı)", full: "THE OXFORD 5000 (A1-C1)", color: "#0284c7", badgeBg: "#0284c7", border: "#38bdf8" },
+    "9": { num: 9, code: "KÜTÜPHANE", title: "KELİME KÜTÜPHANESİ", titleTr: "Kelime Kütüphanesi (A1-C1 Dünya Standardı)", full: "KELİME KÜTÜPHANESİ (A1-C1)", color: "#0284c7", badgeBg: "#0284c7", border: "#38bdf8" },
     "10": { num: 10, code: "YDS/YÖKDİL", title: "YDS & YÖKDİL AKADEMİK", titleTr: "YDS & YÖKDİL Akademik Sınav Hazırlık (2020–2026)", full: "YDS & YÖKDİL AKADEMİK (B2-C1)", color: "#7c3aed", badgeBg: "#8b5cf6", border: "#a78bfa" }
   };
 
@@ -1756,7 +1756,7 @@
       const modMap = {
         maarif: 'MEB 5. SINIF MAARİF',
         yds: 'YDS & YÖKDİL AKADEMİK',
-        oxford: 'THE OXFORD 5000',
+        oxford: 'KELİME KÜTÜPHANESİ',
         all: 'TÜM KÜTÜPHANE'
       };
       const modTitle = modMap[STATE.activeModule] || '5. SINIF MAARİF MODELİ';
@@ -2211,12 +2211,26 @@
   // ==========================================================================
   // BAUHAUS MOBİL PENCERELERİ (MODÜL & MÜFREDAT MODAL DIALOGLARI)
   // ==========================================================================
+  function isAnyModalOpen() {
+    const modalIds = ['settings-dialog', 'grade-dialog', 'classifier-dialog', 'pdf-dialog', 'speech-coach-dialog'];
+    return modalIds.some(id => {
+      const el = document.getElementById(id);
+      return !!(el && el.classList && el.classList.contains('active'));
+    });
+  }
+
+  function syncBodyModalLock() {
+    if (document.body && document.body.classList) {
+      document.body.classList.toggle('modal-open', isAnyModalOpen());
+    }
+  }
+
   function openSettingsModal() {
     const backdrop = document.getElementById('settings-modal-backdrop');
     const dialog = document.getElementById('settings-dialog');
     if (backdrop) backdrop.classList.add('active');
     if (dialog) dialog.classList.add('active');
-    document.body.classList.add('modal-open');
+    syncBodyModalLock();
   }
 
   function closeSettingsModal() {
@@ -2224,7 +2238,7 @@
     const dialog = document.getElementById('settings-dialog');
     if (backdrop) backdrop.classList.remove('active');
     if (dialog) dialog.classList.remove('active');
-    document.body.classList.remove('modal-open');
+    syncBodyModalLock();
   }
 
   function openCurriculumModal() {
@@ -2237,11 +2251,18 @@
 
   function closeModals() {
     closeSettingsModal();
+    closeGradeModal();
+    closeClassifierModal();
+    closePdfStudio();
+    if (typeof closeSpeechCoach === 'function' && COACH_STATE && COACH_STATE.active) {
+      closeSpeechCoach();
+    }
   }
 
   function switchModuleAndClose(moduleKey) {
+    closeGradeModal();
+    closeSettingsModal();
     switchModule(moduleKey);
-    closeModals();
   }
 
   function selectModuleAndGo(moduleKey) {
@@ -2279,7 +2300,7 @@
     const modTitles = {
       maarif: `${gData.name} Müfredatı`,
       yds: 'YDS & YÖKDİL Akademik',
-      oxford: 'The Oxford 5000',
+      oxford: 'Kelime Kütüphanesi',
       all: 'Tüm Kütüphane'
     };
     if (titleEl && STATE.currentView === 'home') {
@@ -2304,7 +2325,7 @@
     const modTitles = {
       maarif: `${gData.name} Müfredatı`,
       yds: 'YDS & YÖKDİL Akademik',
-      oxford: 'The Oxford 5000',
+      oxford: 'Kelime Kütüphanesi',
       all: 'Tüm Kütüphane'
     };
     const titleEl = document.getElementById('header-user-title');
@@ -2317,7 +2338,7 @@
     if (brandSub) {
       if (moduleName === 'maarif') brandSub.innerText = `MEB Müfredatı • ${gData.name} (${gData.units.length} Ünite • 36 Hafta Planı)`;
       else if (moduleName === 'yds') brandSub.innerText = 'YDS & YÖKDİL Akademik • Günlük Hedef: 20 Kelime';
-      else if (moduleName === 'oxford') brandSub.innerText = 'The Oxford 5000 • Günlük Hedef: 25 Kelime';
+      else if (moduleName === 'oxford') brandSub.innerText = 'Kelime Kütüphanesi • Günlük Hedef: 25 Kelime';
       else brandSub.innerText = 'Tüm Kütüphane • Akademik Kelime Arşivi';
     }
 
@@ -2330,11 +2351,11 @@
     const hrIcon = document.getElementById('header-route-icon');
     const hrLabel = document.getElementById('header-route-label');
     const hrPill = document.getElementById('header-route-pill-btn');
-    if (hrIcon) hrIcon.textContent = moduleName === 'maarif' ? '🏫' : (moduleName === 'yds' ? '🎯' : (moduleName === 'oxford' ? '🌐' : '📚'));
+    if (hrIcon) hrIcon.textContent = moduleName === 'maarif' ? '🏫' : (moduleName === 'yds' ? '🎯' : (moduleName === 'oxford' ? '📚' : '📖'));
     if (hrLabel) {
       if (moduleName === 'maarif') hrLabel.textContent = `${gData.name} MEB`;
       else if (moduleName === 'yds') hrLabel.textContent = 'YDS / YÖKDİL';
-      else if (moduleName === 'oxford') hrLabel.textContent = 'Oxford 5000';
+      else if (moduleName === 'oxford') hrLabel.textContent = 'Kütüphane';
       else hrLabel.textContent = 'Tüm Kütüphane';
     }
     if (hrPill) hrPill.setAttribute('data-active-module', moduleName);
@@ -2370,10 +2391,10 @@
       STATE.flashcardSource = 'daily';
     } else if (moduleName === 'oxford') {
       if (dailyText) dailyText.innerText = "Günün Kelimeleri";
-      if (flashText) flashText.innerText = "CEFR Kartları";
+      if (flashText) flashText.innerText = "Kütüphane Kartları";
       if (quizText) quizText.innerText = "Seviye Testi";
-      if (dirText) dirText.innerText = "Oxford 5000";
-      if (statsText) statsText.innerText = "CEFR Analizi";
+      if (dirText) dirText.innerText = "Kütüphane";
+      if (statsText) statsText.innerText = "Kütüphane Analizi";
       STATE.directoryFilters.dataset = 'oxford';
       STATE.directoryFilters.cefr = 'all';
       STATE.directoryFilters.search = '';
@@ -2431,7 +2452,37 @@
       }
     ];
 
-    let html = '';
+    let html = `
+      <div class="stage-group-card">
+        <div class="stage-group-header">
+          <span class="stage-group-title">AKADEMİK &amp; GENEL HAVUZLAR</span>
+          <span class="stage-group-badge stage-badge-akademik">SINAV &amp; DÜNYA</span>
+        </div>
+        <div class="stage-grade-grid">
+          <button type="button" class="stage-grade-btn ${curMod === 'yds' ? 'active' : ''}" onclick="window.APP.switchModuleAndClose('yds')">
+            <div class="sgb-info">
+              <span class="sgb-name">YDS &amp; YÖKDİL</span>
+              <span class="sgb-meta">B2–C1 • 7.387 Kelime</span>
+            </div>
+            <span class="sgb-check">✓</span>
+          </button>
+          <button type="button" class="stage-grade-btn ${curMod === 'oxford' ? 'active' : ''}" onclick="window.APP.switchModuleAndClose('oxford')">
+            <div class="sgb-info">
+              <span class="sgb-name">Kelime Kütüphanesi</span>
+              <span class="sgb-meta">A1–C1 • 4.886 Kelime</span>
+            </div>
+            <span class="sgb-check">✓</span>
+          </button>
+          <button type="button" class="stage-grade-btn ${curMod === 'all' ? 'active' : ''}" onclick="window.APP.switchModuleAndClose('all')">
+            <div class="sgb-info">
+              <span class="sgb-name">Tüm Kütüphane</span>
+              <span class="sgb-meta">Birleşik 9.234 Kelime</span>
+            </div>
+            <span class="sgb-check">✓</span>
+          </button>
+        </div>
+      </div>
+    `;
 
     for (const st of stages) {
       html += `
@@ -2464,42 +2515,11 @@
       `;
     }
 
-    // Ek Modüller (YDS, Oxford, Tüm Kütüphane)
-    html += `
-      <div class="stage-group-card">
-        <div class="stage-group-header">
-          <span class="stage-group-title">AKADEMİK &amp; GENEL HAVUZLAR</span>
-          <span class="stage-group-badge stage-badge-akademik">SINAV &amp; DÜNYA</span>
-        </div>
-        <div class="stage-grade-grid">
-          <button type="button" class="stage-grade-btn ${curMod === 'yds' ? 'active' : ''}" onclick="window.APP.switchModuleAndClose('yds')">
-            <div class="sgb-info">
-              <span class="sgb-name">YDS &amp; YÖKDİL</span>
-              <span class="sgb-meta">B2–C1 • 7.387 Kelime</span>
-            </div>
-            <span class="sgb-check">✓</span>
-          </button>
-          <button type="button" class="stage-grade-btn ${curMod === 'oxford' ? 'active' : ''}" onclick="window.APP.switchModuleAndClose('oxford')">
-            <div class="sgb-info">
-              <span class="sgb-name">The Oxford 5000</span>
-              <span class="sgb-meta">A1–C1 • 4.886 Kelime</span>
-            </div>
-            <span class="sgb-check">✓</span>
-          </button>
-          <button type="button" class="stage-grade-btn ${curMod === 'all' ? 'active' : ''}" onclick="window.APP.switchModuleAndClose('all')">
-            <div class="sgb-info">
-              <span class="sgb-name">Tüm Kütüphane</span>
-              <span class="sgb-meta">Birleşik 9.234 Kelime</span>
-            </div>
-            <span class="sgb-check">✓</span>
-          </button>
-        </div>
-      </div>
-    `;
-
     body.innerHTML = html;
+    body.scrollTop = 0;
     backdrop.classList.add('active');
     dialog.classList.add('active');
+    syncBodyModalLock();
   }
 
   function closeGradeModal() {
@@ -2507,6 +2527,7 @@
     const backdrop = document.getElementById('grade-modal-backdrop');
     if (dialog) dialog.classList.remove('active');
     if (backdrop) backdrop.classList.remove('active');
+    syncBodyModalLock();
   }
 
   function switchGrade(gradeNum) {
@@ -2597,6 +2618,7 @@
 
     backdrop.classList.add('active');
     dialog.classList.add('active');
+    syncBodyModalLock();
   }
 
   function closeClassifierModal() {
@@ -2604,6 +2626,7 @@
     const backdrop = document.getElementById('classifier-modal-backdrop');
     if (dialog) dialog.classList.remove('active');
     if (backdrop) backdrop.classList.remove('active');
+    syncBodyModalLock();
   }
 
   function goToCurriculumUnit(grade, unitNum) {
@@ -2792,7 +2815,7 @@
     } else if (state.grade === 'yds') {
       gradeLabel = 'YDS &amp; YÖKDİL';
     } else if (state.grade === 'oxford') {
-      gradeLabel = 'The Oxford 5000';
+      gradeLabel = 'Kelime Kütüphanesi (A1-C1)';
     }
 
     let titleMain = 'KAZANIM VE KELİME ÇALIŞMA FÖYÜ';
@@ -3058,6 +3081,7 @@
     renderPdfStudio();
     backdrop.classList.add('active');
     dialog.classList.add('active');
+    syncBodyModalLock();
   }
 
   function closePdfStudio() {
@@ -3065,6 +3089,7 @@
     const backdrop = document.getElementById('pdf-modal-backdrop');
     if (dialog) dialog.classList.remove('active');
     if (backdrop) backdrop.classList.remove('active');
+    syncBodyModalLock();
   }
 
   function updatePdfStudioOption(key, value) {
@@ -3147,9 +3172,9 @@
                     <option value="11" ${state.grade == 11 ? 'selected' : ''}>11. Sınıf</option>
                     <option value="12" ${state.grade == 12 ? 'selected' : ''}>12. Sınıf</option>
                   </optgroup>
-                  <optgroup label="Akademik &amp; Uluslararası">
+                  <optgroup label="Akademik &amp; Kütüphane">
                     <option value="yds" ${state.grade === 'yds' ? 'selected' : ''}>YDS &amp; YÖKDİL (7.387 Kelime)</option>
-                    <option value="oxford" ${state.grade === 'oxford' ? 'selected' : ''}>The Oxford 5000 (A1-C1)</option>
+                    <option value="oxford" ${state.grade === 'oxford' ? 'selected' : ''}>Kelime Kütüphanesi (A1-C1)</option>
                   </optgroup>
                 </select>
               </div>
@@ -3367,7 +3392,7 @@
     const curriculumSubtitles = {
       maarif: 'MEB MÜFREDATI • 5. SINIF MAARİF MODELİ',
       yds: 'HEDEF MÜFREDAT • YDS & YÖKDİL AKADEMİK',
-      oxford: 'HEDEF MÜFREDAT • THE OXFORD 5000',
+      oxford: 'HEDEF MÜFREDAT • KELİME KÜTÜPHANESİ',
       all: 'HEDEF MÜFREDAT • TÜM AKADEMİK KÜTÜPHANE'
     };
     const activeCurriculumSubtitle = curriculumSubtitles[module] || 'MEB MÜFREDATI • 5. SINIF MAARİF MODELİ';
@@ -3382,7 +3407,7 @@
     const unitTitles = {
       maarif: `MEB 5. Sınıf Maarif • ${curMaarifTheme.code}: ${curMaarifTheme.titleTr}`,
       yds: 'YDS/YÖKDİL • 2020–2026 Akademik Sınav Soruları & Kalıpları',
-      oxford: 'Oxford 5000 • CEFR A1–C1 Uluslararası Standart',
+      oxford: 'Kelime Kütüphanesi • CEFR A1–C1 Kapsamlı Arşiv',
       all: `Learnish Arşiv: ${WORDS_DATA.length.toLocaleString('tr-TR')} Kelimelik Birleşik Kütüphane`
     };
     const activeUnitTitle = unitTitles[module] || unitTitles.maarif;
@@ -3488,7 +3513,7 @@
               <span class="hero-tag-label">LEARNISH AKILLI İNGİLİZCE EKOSİSTEMİ • KONTROL MERKEZİ</span>
               <h2 class="hero-card-title" style="margin-top: 6px; font-size: 28px;">Kalıcı İngilizce Öğrenim Merkezine Hoş Geldiniz</h2>
               <p class="hero-card-desc" style="max-width: 680px; margin-top: 8px; line-height: 1.5; font-size: 13.5px;">
-                MEB Türkiye Yüzyılı Maarif Modeli (1-12. Sınıf), YDS/YÖKDİL akademik sınav hazırlığı ve The Oxford 5000™ uluslararası standartlarını birleştiren bilişsel platform. Aralıklı tekrar (SM-2), yapay zeka telaffuz koçu ve A4 çalışma föyü stüdyosu ile eksiksiz bir öğrenme deneyimi sunar.
+                MEB Türkiye Yüzyılı Maarif Modeli (1-12. Sınıf), YDS/YÖKDİL akademik sınav hazırlığı ve A1-C1 Kelime Kütüphanesini birleştiren bilişsel platform. Aralıklı tekrar (SM-2), yapay zeka telaffuz koçu ve A4 çalışma föyü stüdyosu ile eksiksiz bir öğrenme deneyimi sunar.
               </p>
             </div>
           </div>
@@ -3607,15 +3632,15 @@
             </div>
           </article>
 
-          <!-- Rota 3: The Oxford 5000 -->
+          <!-- Rota 3: Kelime Kütüphanesi -->
           <article class="home-route-card ${module === 'oxford' ? 'is-active-route' : ''}">
             <div class="hrc-header">
-              <span class="hrc-tag tag-oxford">CEFR A1–C1 • ULUSLARARASI STANDART</span>
-              <div class="hrc-icon-circle">🌐</div>
+              <span class="hrc-tag tag-oxford">CEFR A1–C1 • KÜTÜPHANE</span>
+              <div class="hrc-icon-circle">📚</div>
             </div>
-            <h4 class="hrc-title">The Oxford 5000™ Kelime Havuzu</h4>
+            <h4 class="hrc-title">Kelime Kütüphanesi (A1–C1)</h4>
             <p class="hrc-desc">
-              Oxford Üniversitesi dilbilimcileri tarafından belirlenen, İngilizce konuşulan ve yazılan tüm metinlerin %90'ından fazlasını oluşturan en temel ve ileri düzey 5.000 kelimelik küresel referans veritabanıdır.
+              İngilizce konuşulan ve yazılan tüm metinlerin %90'ından fazlasını kapsayan, A1'den C1'e uluslararası standartlarda 4.886 temel ve ileri düzey kelimelik zengin başvuru kütüphanesidir.
             </p>
             <div class="hrc-target-pill">
               <strong>Kimler İçin:</strong> Genel İngilizce konuşma ve anlama becerisini geliştirmek, uluslararası standartta kelime dağarcığı oluşturmak isteyenler.
@@ -3628,7 +3653,7 @@
             </ul>
             <div class="hrc-actions">
               <button type="button" class="hrc-primary-btn" onclick="window.APP.selectModuleAndGo('oxford')">
-                ${module === 'oxford' ? '✓ Aktif Rota • Oxford 5000' : 'Oxford 5000 Moduna Geç →'}
+                ${module === 'oxford' ? '✓ Aktif Rota • Kütüphane' : 'Kütüphane Moduna Geç →'}
               </button>
               <button type="button" class="hrc-secondary-btn" onclick="window.APP.switchView('directory')">
                 🔍 Sözlükte Ara
@@ -4567,10 +4592,10 @@
         <option value="past_cumulative" ${sourceVal === 'past_cumulative' ? 'selected' : ''}>Geçmiş Günler Havuzu (1–${STATE.currentDay}. Gün)</option>
         <option value="maarif_all" ${sourceVal === 'maarif_all' ? 'selected' : ''}>MEB: 5. Sınıf Maarif Modeli (${WORDS_DATA.filter(isMaarifWord).length.toLocaleString('tr-TR')} Kelime)</option>
         <option value="yds_all" ${sourceVal === 'yds_all' ? 'selected' : ''}>YDS &amp; YÖKDİL Akademik (${WORDS_DATA.filter(isYDSWord).length.toLocaleString('tr-TR')} Kelime)</option>
-        <option value="oxford_all" ${sourceVal === 'oxford_all' ? 'selected' : ''}>The Oxford 5000 (Tümü - ${WORDS_DATA.filter(isOxfordWord).length.toLocaleString('tr-TR')})</option>
-        <option value="oxford_a1" ${sourceVal === 'oxford_a1' ? 'selected' : ''}>Oxford 5000: A1 Başlangıç</option>
-        <option value="oxford_a2" ${sourceVal === 'oxford_a2' ? 'selected' : ''}>Oxford 5000: A2 Temel</option>
-        <option value="oxford_b1" ${sourceVal === 'oxford_b1' ? 'selected' : ''}>Oxford 5000: B1 Orta</option>
+        <option value="oxford_all" ${sourceVal === 'oxford_all' ? 'selected' : ''}>Kelime Kütüphanesi (Tümü - ${WORDS_DATA.filter(isOxfordWord).length.toLocaleString('tr-TR')})</option>
+        <option value="oxford_a1" ${sourceVal === 'oxford_a1' ? 'selected' : ''}>Kütüphane: A1 Başlangıç</option>
+        <option value="oxford_a2" ${sourceVal === 'oxford_a2' ? 'selected' : ''}>Kütüphane: A2 Temel</option>
+        <option value="oxford_b1" ${sourceVal === 'oxford_b1' ? 'selected' : ''}>Kütüphane: B1 Orta</option>
       `}
       <option value="all" ${sourceVal === 'all' ? 'selected' : ''}>Tüm Kelime Havuzu (${WORDS_DATA.length.toLocaleString('tr-TR')})</option>
       <option value="review" ${sourceVal === 'review' ? 'selected' : ''}>Tekrar Edilecekler (${STATE.userData.review.size})</option>
@@ -4843,7 +4868,7 @@
                     <option value="daily">Günün 10 Kelimesi (Gün ${STATE.currentDay})</option>
                     <option value="past_cumulative">Geçmiş Günler Havuzu (1–${STATE.currentDay}. Gün)</option>
                     <option value="maarif">MEB: 5. Sınıf Maarif Modeli</option>
-                    <option value="oxford_all">The Oxford 5000 (Tüm Havuz)</option>
+                    <option value="oxford_all">Kelime Kütüphanesi (Tüm Havuz)</option>
                     <option value="all">Tüm Kelime Havuzu (${WORDS_DATA.length})</option>
                   `}
                   <option value="review">Tekrar Edilecekler (${STATE.userData.review.size})</option>
@@ -5326,7 +5351,7 @@
             <div class="filter-chips-group" id="dataset-chips">
               <button class="filter-chip ${filters.dataset === 'all' ? 'active' : ''}" data-val="all">TÜM KÜTÜPHANELER (${WORDS_DATA.length.toLocaleString('tr-TR')})</button>
               <button class="filter-chip ${filters.dataset === 'yds' ? 'active' : ''}" data-val="yds">YDS &amp; YÖKDİL (${WORDS_DATA.filter(isYDSWord).length.toLocaleString('tr-TR')})</button>
-              <button class="filter-chip ${filters.dataset === 'oxford' ? 'active' : ''}" data-val="oxford">THE OXFORD 5000 (${WORDS_DATA.filter(isOxfordWord).length.toLocaleString('tr-TR')})</button>
+              <button class="filter-chip ${filters.dataset === 'oxford' ? 'active' : ''}" data-val="oxford">KÜTÜPHANE (${WORDS_DATA.filter(isOxfordWord).length.toLocaleString('tr-TR')})</button>
             </div>
           </div>
         `}
@@ -5548,7 +5573,7 @@
       activeLearned = ydsLearned;
       activePct = ydsPct;
     } else if (STATE.activeModule === 'oxford') {
-      activeCurriculumTitle = 'The Oxford 5000™ Kelime Standartları';
+      activeCurriculumTitle = 'Kelime Kütüphanesi Standartları';
       activeFocusName = 'A1 - C1 Düzey CEFR Kelimeleri';
       activeWords = oxfordWords;
       activeLearned = oxfordLearned;
@@ -5612,7 +5637,7 @@
         </div>
         <div class="stat-metric-card glass-panel">
           <div class="metric-val">${oxfordLearned} <span style="font-size: 0.9rem; color: var(--dp-color-ink-muted);">/ ${oxfordWords.length}</span></div>
-          <div class="metric-title">THE OXFORD 5000 (%${oxfordPct})</div>
+          <div class="metric-title">KELİME KÜTÜPHANESİ (%${oxfordPct})</div>
         </div>
         <div class="stat-metric-card glass-panel">
           <div class="metric-val" style="color: var(--dp-color-emphasis);">${quizAccuracy}%</div>
@@ -5636,7 +5661,7 @@
 
       <div class="themes-breakdown-card glass-panel" style="margin-bottom: 20px;">
         <h3 style="margin-bottom: 14px; text-transform: uppercase; letter-spacing: 0.03em;">
-          THE OXFORD 5000 (CEFR SEVİYE DAĞILIMI)
+          KELİME KÜTÜPHANESİ (CEFR SEVİYE DAĞILIMI)
         </h3>
         ${oxfordBreakdownHtml}
       </div>
@@ -5823,7 +5848,7 @@
     const hrIcon = document.getElementById('header-route-icon');
     const hrLabel = document.getElementById('header-route-label');
     const hrPill = document.getElementById('header-route-pill-btn');
-    if (hrIcon) hrIcon.textContent = mod === 'maarif' ? '🏫' : (mod === 'yds' ? '🎯' : (mod === 'oxford' ? '🌐' : '📚'));
+    if (hrIcon) hrIcon.textContent = mod === 'maarif' ? '🏫' : (mod === 'yds' ? '🎯' : (mod === 'oxford' ? '📚' : '📖'));
     if (hrLabel) {
       if (mod === 'maarif') {
         const gNum = STATE.selectedGrade || 5;
@@ -5831,7 +5856,7 @@
       } else if (mod === 'yds') {
         hrLabel.textContent = 'YDS / YÖKDİL';
       } else if (mod === 'oxford') {
-        hrLabel.textContent = 'Oxford 5000';
+        hrLabel.textContent = 'Kütüphane';
       } else {
         hrLabel.textContent = 'Tüm Kütüphane';
       }
@@ -5845,14 +5870,14 @@
     const modBadges = {
       maarif: 'MEB',
       yds: 'YDS',
-      oxford: 'OXF',
+      oxford: 'KÜT',
       all: 'TÜM'
     };
 
     const modFullNames = {
       maarif: 'K-12 MEB Müfredatı',
       yds: 'YDS & YÖKDİL Akademik',
-      oxford: 'The Oxford 5000',
+      oxford: 'Kelime Kütüphanesi',
       all: 'Tüm Kütüphane'
     };
 
@@ -5920,7 +5945,7 @@
     const moduleNames = {
       maarif: 'MEB MÜFREDATI • 5. SINIF',
       yds: 'YDS & YÖKDİL AKADEMİK',
-      oxford: 'THE OXFORD 5000',
+      oxford: 'KELİME KÜTÜPHANESİ',
       all: 'TÜM KÜTÜPHANE'
     };
 
@@ -6032,7 +6057,7 @@
         badgeContainer.style.display = 'inline-flex';
 
       } else {
-        const label = STATE.activeModule === 'yds' ? 'YDS/YÖKDİL' : (STATE.activeModule === 'oxford' ? 'OXFORD 5000' : 'MAARİF MODELİ');
+        const label = STATE.activeModule === 'yds' ? 'YDS/YÖKDİL' : (STATE.activeModule === 'oxford' ? 'KÜTÜPHANE' : 'MAARİF MODELİ');
         badgeContainer.innerHTML = `
           <span class="badge-day">${label}</span>
         `;
@@ -6109,7 +6134,7 @@
     const modTitles = {
       maarif: 'MEB Müfredatı',
       yds: 'YDS & YÖKDİL Akademik',
-      oxford: 'The Oxford 5000',
+      oxford: 'Kelime Kütüphanesi',
       all: 'Tüm Kütüphane'
     };
     const viewLabels = {
@@ -6713,7 +6738,7 @@
     const modMap = {
       maarif: '5. SINIF MAARİF MODELİ',
       yds: 'YDS & YÖKDİL AKADEMİK',
-      oxford: 'THE OXFORD 5000',
+      oxford: 'KELİME KÜTÜPHANESİ',
       all: 'TÜM KÜTÜPHANE'
     };
     const modTitle = modMap[STATE.activeModule] || '5. SINIF MAARİF MODELİ';
@@ -6909,6 +6934,12 @@
   // KEYBOARD SHORTCUTS (Home, Flashcard & Quiz Mechanical Ergonomics)
   // ==========================================================================
   window.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && (COACH_STATE.active || isAnyModalOpen())) {
+      e.preventDefault();
+      closeModals();
+      return;
+    }
+
     if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT' || e.target.tagName === 'TEXTAREA') {
       return;
     }
@@ -6916,17 +6947,17 @@
     const onButton = !!(e.target && e.target.closest && e.target.closest('button'));
 
     if (COACH_STATE.active) {
-      if (e.key === 'Escape') {
-        e.preventDefault();
-        closeSpeechCoach();
-        return;
-      }
       if (e.code === 'Space') {
         if (onButton || e.repeat) return;
         e.preventDefault();
         toggleCoachListening();
         return;
       }
+      return;
+    }
+
+    if (isAnyModalOpen()) {
+      return;
     }
 
     if (STATE.currentView === 'home') {
