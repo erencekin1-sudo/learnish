@@ -523,6 +523,7 @@ function createFreshAppEnvironment(options = {}) {
     document: documentMock,
     APP: windowMock.APP,
     localStorage: localStorageMock,
+    navigator: windowMock.navigator,
     spokenUtterances,
     soundPlayedLog,
     elementRegistry
@@ -803,6 +804,9 @@ registerTest(1, 'Navigation & Canopy', 'test_grade_modal_all_modules_clickable_a
   assert(dialog.classList.contains('active'), '#grade-dialog should open');
   assert(backdrop.classList.contains('active'), '#grade-modal-backdrop should open');
   assert(env.document.body.classList.contains('modal-open'), 'body should receive modal-open class');
+  assertEqual(body.style.overflowY, 'auto', '#grade-dialog-body must enforce inline overflowY: auto');
+  assertEqual(body.style.maxHeight, 'calc(86vh - 82px)', '#grade-dialog-body must enforce inline maxHeight for desktop scrolling');
+  assertIncludes(rawAppCss, '.grade-dialog-body::-webkit-scrollbar', 'app.css should style desktop custom scrollbar for .grade-dialog-body');
 
   const akIdx = body.innerHTML.indexOf('AKADEMİK &amp; GENEL HAVUZLAR');
   const ilkIdx = body.innerHTML.indexOf('İLKOKUL');
@@ -1344,6 +1348,127 @@ registerTest(1, 'PDF & Worksheet Studio', 'test_pdf_print_and_download_handlers'
   assert(downloadedData, 'downloadWorksheetHtml should create and click download anchor');
   assert(downloadedData.download && downloadedData.download.endsWith('.html'), 'Download filename should end with .html');
   assert(downloadedData.download && downloadedData.download.startsWith('learnish-calisma-foyu'), 'Download filename should begin with learnish-calisma-foyu');
+});
+
+// --- 1.9 Feedback & Bug Reporter (5 Tests) ---
+
+registerTest(1, 'Feedback & Bug Reporter', 'test_feedback_modal_elements_and_open_close', () => {
+  const env = createFreshAppEnvironment();
+  const backdrop = env.document.getElementById('feedback-modal-backdrop');
+  const dialog = env.document.getElementById('feedback-dialog');
+  const topicSelect = env.document.getElementById('feedback-topic');
+  const messageArea = env.document.getElementById('feedback-message');
+  const senderInput = env.document.getElementById('feedback-sender');
+  const headerBtn = env.document.getElementById('header-feedback-btn');
+
+  assert(backdrop, '#feedback-modal-backdrop should exist');
+  assert(dialog, '#feedback-dialog should exist');
+  assert(topicSelect, '#feedback-topic should exist');
+  assert(messageArea, '#feedback-message should exist');
+  assert(senderInput, '#feedback-sender should exist');
+  assert(headerBtn, '#header-feedback-btn should exist');
+
+  // Open modal
+  env.APP.openFeedbackModal();
+  assert(dialog.classList.contains('active'), 'Dialog should have active class when opened');
+  assert(backdrop.classList.contains('active'), 'Backdrop should have active class when opened');
+  assert(env.document.body.classList.contains('modal-open'), 'Body should have modal-open class');
+
+  // Close modal
+  env.APP.closeFeedbackModal();
+  assert(!dialog.classList.contains('active'), 'Dialog should not have active class when closed');
+  assert(!backdrop.classList.contains('active'), 'Backdrop should not have active class when closed');
+  assert(!env.document.body.classList.contains('modal-open'), 'Body should remove modal-open class');
+
+  // Test closeModals() also closes feedback dialog
+  env.APP.openFeedbackModal();
+  assert(dialog.classList.contains('active'), 'Dialog active before closeModals');
+  env.APP.openGradeModal(); // opens grade modal
+  env.APP.closeFeedbackModal();
+});
+
+registerTest(1, 'Feedback & Bug Reporter', 'test_feedback_topic_and_sender_handling', () => {
+  const env = createFreshAppEnvironment();
+  const topicSelect = env.document.getElementById('feedback-topic');
+  const senderInput = env.document.getElementById('feedback-sender');
+
+  env.APP.openFeedbackModal('Kelime / Çeviri Hatası');
+  assert(topicSelect.value.includes('Kelime'), 'Feedback topic should be set to Kelime');
+
+  senderInput.value = 'Ahmet Öğretmen';
+  assertEqual(senderInput.value, 'Ahmet Öğretmen', 'Sender input should retain entered name');
+  env.APP.closeFeedbackModal();
+});
+
+registerTest(1, 'Feedback & Bug Reporter', 'test_feedback_telemetry_generation', () => {
+  const env = createFreshAppEnvironment();
+  env.APP.switchModule('maarif');
+  env.APP.switchGrade(5);
+  env.APP.switchView('quiz');
+
+  const telemetryStr = env.APP.getFeedbackTelemetryString();
+  assert(telemetryStr.includes('MEB Maarif Modeli (5. Sınıf)'), 'Telemetry should include active module and grade');
+  assert(telemetryStr.includes('Quiz & Test'), 'Telemetry should include active view');
+  assert(telemetryStr.includes('Learnish v12'), 'Telemetry should include app version');
+
+  // Test preview update
+  env.APP.openFeedbackModal();
+  const preview = env.document.getElementById('feedback-telemetry-preview');
+  assert(preview && preview.textContent.includes('MEB Maarif'), 'Telemetry preview box should be populated');
+  env.APP.closeFeedbackModal();
+});
+
+registerTest(1, 'Feedback & Bug Reporter', 'test_feedback_report_validation_and_building', () => {
+  const env = createFreshAppEnvironment();
+  env.APP.openFeedbackModal();
+
+  const msgArea = env.document.getElementById('feedback-message');
+  const statusBanner = env.document.getElementById('feedback-status-banner');
+
+  // Test empty validation
+  msgArea.value = '   ';
+  const invalidReport = env.APP.buildFeedbackReport();
+  assertEqual(invalidReport, null, 'Empty feedback message should fail validation');
+  assert(statusBanner.style.display !== 'none', 'Status banner should be displayed on error');
+
+  // Test valid report building
+  msgArea.value = 'Test ekranında 3. soruda seslendirme butonu tepki vermedi.';
+  const validReport = env.APP.buildFeedbackReport();
+  assert(validReport !== null, 'Valid message should generate feedback report object');
+  assert(validReport.fullText.includes('Test ekranında 3. soruda'), 'Report text should include user message');
+  assert(validReport.fullText.includes('LEARNISH ÖĞRETMEN & KULLANICI GERİ BİLDİRİM RAPORU'), 'Report should have header banner');
+  env.APP.closeFeedbackModal();
+});
+
+registerTest(1, 'Feedback & Bug Reporter', 'test_feedback_actions_mailto_whatsapp_and_clipboard', () => {
+  const env = createFreshAppEnvironment();
+  env.APP.openFeedbackModal();
+
+  const msgArea = env.document.getElementById('feedback-message');
+  msgArea.value = 'Öğretmenler odasında test ettik, 6. sınıf kelime kartları çok başarılı.';
+
+  // Test mailto action
+  env.APP.sendFeedbackViaMail();
+  const statusBanner = env.document.getElementById('feedback-status-banner');
+  assert(statusBanner.textContent.includes('E-posta'), 'Status banner should indicate email action');
+
+  // Test whatsapp action
+  let openedUrl = null;
+  env.window.open = function(url) { openedUrl = url; };
+  env.APP.sendFeedbackViaWhatsApp();
+  assert(openedUrl && openedUrl.startsWith('https://wa.me/?text='), 'WhatsApp url should be generated with wa.me scheme');
+
+  // Test clipboard action
+  let clipboardCopied = null;
+  env.navigator.clipboard = {
+    writeText: (txt) => {
+      clipboardCopied = txt;
+      return Promise.resolve();
+    }
+  };
+  env.APP.copyFeedbackToClipboard();
+  assert(clipboardCopied && clipboardCopied.includes('6. sınıf kelime kartları'), 'Clipboard text should receive full report');
+  env.APP.closeFeedbackModal();
 });
 
 // ============================================================================

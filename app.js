@@ -2212,7 +2212,7 @@
   // BAUHAUS MOBİL PENCERELERİ (MODÜL & MÜFREDAT MODAL DIALOGLARI)
   // ==========================================================================
   function isAnyModalOpen() {
-    const modalIds = ['settings-dialog', 'grade-dialog', 'classifier-dialog', 'pdf-dialog', 'speech-coach-dialog'];
+    const modalIds = ['settings-dialog', 'grade-dialog', 'classifier-dialog', 'pdf-dialog', 'feedback-dialog', 'speech-coach-dialog'];
     return modalIds.some(id => {
       const el = document.getElementById(id);
       return !!(el && el.classList && el.classList.contains('active'));
@@ -2254,6 +2254,7 @@
     closeGradeModal();
     closeClassifierModal();
     closePdfStudio();
+    closeFeedbackModal();
     if (typeof closeSpeechCoach === 'function' && COACH_STATE && COACH_STATE.active) {
       closeSpeechCoach();
     }
@@ -2516,6 +2517,11 @@
     }
 
     body.innerHTML = html;
+    body.style.overflowY = 'auto';
+    body.style.maxHeight = 'calc(86vh - 82px)';
+    body.style.flex = '1 1 auto';
+    body.style.minHeight = '0';
+    body.style.overscrollBehavior = 'contain';
     body.scrollTop = 0;
     backdrop.classList.add('active');
     dialog.classList.add('active');
@@ -3319,6 +3325,223 @@
   }
 
   // ==========================================================================
+  // BİZE ULAŞIN & GERİ BİLDİRİM / HATA RAPORLAMA MODÜLÜ (Feedback & Bug Reporter)
+  // ==========================================================================
+  function openFeedbackModal(initialTopic = null) {
+    closeSettingsModal();
+    const backdrop = document.getElementById('feedback-modal-backdrop');
+    const dialog = document.getElementById('feedback-dialog');
+    if (!backdrop || !dialog) return;
+
+    // Reset status toast
+    const statusBanner = document.getElementById('feedback-status-banner');
+    if (statusBanner) {
+      statusBanner.style.display = 'none';
+      statusBanner.textContent = '';
+      statusBanner.className = 'feedback-status-banner';
+    }
+
+    // Set topic if provided
+    const topicSelect = document.getElementById('feedback-topic');
+    if (topicSelect && initialTopic) {
+      const opts = topicSelect.options || topicSelect.children || [];
+      let matched = false;
+      for (let i = 0; i < opts.length; i++) {
+        const optVal = opts[i].value || (opts[i].getAttribute && opts[i].getAttribute('value')) || opts[i].textContent || '';
+        if (optVal.toLowerCase().includes(initialTopic.toLowerCase())) {
+          topicSelect.selectedIndex = i;
+          topicSelect.value = optVal;
+          matched = true;
+          break;
+        }
+      }
+      if (!matched && initialTopic.trim()) {
+        topicSelect.value = initialTopic;
+      }
+    }
+
+    // Update telemetry diagnostics preview
+    updateFeedbackTelemetryPreview();
+
+    backdrop.classList.add('active');
+    dialog.classList.add('active');
+    syncBodyModalLock();
+
+    // Auto-focus message textarea after transition
+    setTimeout(() => {
+      const msgArea = document.getElementById('feedback-message');
+      if (msgArea) msgArea.focus();
+    }, 150);
+  }
+
+  function closeFeedbackModal() {
+    const backdrop = document.getElementById('feedback-modal-backdrop');
+    const dialog = document.getElementById('feedback-dialog');
+    if (backdrop) backdrop.classList.remove('active');
+    if (dialog) dialog.classList.remove('active');
+    syncBodyModalLock();
+  }
+
+  function toggleTelemetryInReport(isChecked) {
+    const previewBox = document.getElementById('feedback-telemetry-preview');
+    if (previewBox) {
+      previewBox.style.opacity = isChecked ? '1' : '0.4';
+    }
+  }
+
+  function getFeedbackTelemetryString() {
+    const moduleNames = {
+      maarif: `MEB Maarif Modeli (${STATE.selectedGrade || 5}. Sınıf)`,
+      yds: 'YDS/YÖKDİL Akademik Sınav Modülü',
+      oxford: 'Kelime Kütüphanesi (A1-C1)',
+      all: 'Tüm Kütüphane Birleşik Havuz'
+    };
+    const viewNames = {
+      home: 'Kontrol Merkezi (Home)',
+      daily: 'Günün Çalışması (Daily)',
+      flashcard: 'Flashcard Kartları',
+      quiz: 'Quiz & Test',
+      directory: 'Kelime Havuzu & Sözlük',
+      stats: 'İstatistik & Analiz'
+    };
+
+    const activeModName = moduleNames[STATE.activeModule] || STATE.activeModule || 'MEB Maarif';
+    const activeViewName = viewNames[STATE.currentView] || STATE.currentView || 'home';
+    const learnedCount = (STATE.userData && STATE.userData.learned) ? STATE.userData.learned.size : 0;
+    const reviewCount = (STATE.userData && STATE.userData.review) ? STATE.userData.review.size : 0;
+    const streak = (STATE.quizState && STATE.quizState.streak) || 0;
+    const screenRes = typeof window !== 'undefined' ? `${window.innerWidth}x${window.innerHeight}` : 'N/A';
+    const userAgent = typeof navigator !== 'undefined' ? navigator.userAgent : 'N/A';
+    const timestamp = new Date().toLocaleString('tr-TR');
+
+    return [
+      `[Sistem & Telemetri Tanı Bilgileri]`,
+      `• Aktif Rota      : ${activeModName}`,
+      `• Açık Ekran      : ${activeViewName}`,
+      `• İlerleme        : ${learnedCount} kelime öğrenildi, ${reviewCount} tekrar kuyruğunda`,
+      `• Günlük Seri     : ${streak} gün`,
+      `• Cihaz / Ekran   : ${screenRes}`,
+      `• Zaman Damgası   : ${timestamp}`,
+      `• Sürüm & Motor   : Learnish v12 (Web / PWA)`,
+      `• Tarayıcı / UA   : ${userAgent}`
+    ].join('\n');
+  }
+
+  function updateFeedbackTelemetryPreview() {
+    const previewEl = document.getElementById('feedback-telemetry-preview');
+    if (!previewEl) return;
+    previewEl.textContent = getFeedbackTelemetryString();
+  }
+
+  function showFeedbackStatus(message, type = 'info') {
+    const banner = document.getElementById('feedback-status-banner');
+    if (!banner) return;
+    banner.className = `feedback-status-banner status-${type}`;
+    banner.textContent = message;
+    banner.style.display = 'block';
+  }
+
+  function buildFeedbackReport() {
+    const topicEl = document.getElementById('feedback-topic');
+    const senderEl = document.getElementById('feedback-sender');
+    const messageEl = document.getElementById('feedback-message');
+    const includeTelemetryEl = document.getElementById('feedback-include-telemetry');
+
+    const topic = topicEl ? topicEl.value : 'Hata / Teknik Problem';
+    const sender = senderEl && senderEl.value.trim() ? senderEl.value.trim() : 'Belirtilmedi (Anonim Kullanıcı)';
+    const message = messageEl ? messageEl.value.trim() : '';
+    const includeTelemetry = includeTelemetryEl ? includeTelemetryEl.checked : true;
+
+    if (!message || message.length < 5) {
+      showFeedbackStatus('⚠️ Lütfen iletmek istediğiniz hata veya deneyim açıklamasını en az 5 karakter olarak yazınız.', 'warning');
+      if (messageEl) messageEl.focus();
+      return null;
+    }
+
+    const lines = [
+      '====================================================',
+      'LEARNISH ÖĞRETMEN & KULLANICI GERİ BİLDİRİM RAPORU',
+      '====================================================',
+      `Konu     : ${topic}`,
+      `Gönderen : ${sender}`,
+      `Tarih    : ${new Date().toLocaleString('tr-TR')}`,
+      '',
+      'AÇIKLAMA / YAŞANAN DENEYİM & HATA:',
+      '----------------------------------------------------',
+      message,
+      '----------------------------------------------------'
+    ];
+
+    if (includeTelemetry) {
+      lines.push('', getFeedbackTelemetryString(), '====================================================');
+    } else {
+      lines.push('====================================================');
+    }
+
+    return {
+      topic,
+      sender,
+      message,
+      fullText: lines.join('\n')
+    };
+  }
+
+  function sendFeedbackViaMail() {
+    const report = buildFeedbackReport();
+    if (!report) return;
+
+    const targetEmail = 'erencekin@gmail.com';
+    const subject = `[Learnish Bildirim] ${report.topic} - ${report.sender}`;
+    const body = report.fullText;
+    const mailtoUrl = `mailto:${encodeURIComponent(targetEmail)}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+
+    showFeedbackStatus('📧 E-posta istemciniz açılıyor... Gönder butonuna basarak bize iletebilirsiniz.', 'success');
+    window.location.href = mailtoUrl;
+  }
+
+  function sendFeedbackViaWhatsApp() {
+    const report = buildFeedbackReport();
+    if (!report) return;
+
+    const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(report.fullText)}`;
+    showFeedbackStatus('💬 WhatsApp açılıyor... Mesajı dilediğiniz kişiye veya gruba iletebilirsiniz.', 'success');
+    window.open(whatsappUrl, '_blank');
+  }
+
+  function fallbackCopyText(text) {
+    try {
+      const tempArea = document.createElement('textarea');
+      tempArea.value = text;
+      tempArea.style.position = 'fixed';
+      tempArea.style.left = '-9999px';
+      document.body.appendChild(tempArea);
+      tempArea.focus();
+      tempArea.select();
+      document.execCommand('copy');
+      document.body.removeChild(tempArea);
+      showFeedbackStatus('📋 Rapor panoya kopyalandı! WhatsApp veya dilediğiniz kanaldan iletebilirsiniz.', 'success');
+    } catch (e) {
+      showFeedbackStatus('⚠️ Kopyalama başarısız oldu, lütfen metni seçip manuel kopyalayınız.', 'warning');
+    }
+  }
+
+  function copyFeedbackToClipboard() {
+    const report = buildFeedbackReport();
+    if (!report) return;
+
+    const text = report.fullText;
+    if (navigator && navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(() => {
+        showFeedbackStatus('📋 Rapor panoya kopyalandı! WhatsApp, e-posta veya dilediğiniz kanaldan iletebilirsiniz.', 'success');
+      }).catch(() => {
+        fallbackCopyText(text);
+      });
+    } else {
+      fallbackCopyText(text);
+    }
+  }
+
+  // ==========================================================================
   // VIEW 0: KONTROL MERKEZİ / IDE COMMAND CENTER (#home)
   // ==========================================================================
   function retestDebugWord(wordEn) {
@@ -3799,6 +4022,18 @@
               <p class="hfb-desc">Günlük serinizi, doğruluk yüzdesini, tema bazlı kazanım matrisini (Heatmap) ve son çalışma oturumlarınızı canlı analiz edin.</p>
               <button type="button" class="hfb-btn" onclick="window.APP.switchView('stats')">
                 📈 İstatistikleri Gör &rarr;
+              </button>
+            </div>
+          </div>
+
+          <!-- Özellik 7: Bize Ulaşın & Hata Bildirimi -->
+          <div class="home-feature-box">
+            <div class="hfb-icon-wrap" style="background: rgba(2, 132, 199, 0.08); color: var(--dp-color-blue); border-color: rgba(2, 132, 199, 0.2);">💬</div>
+            <div class="hfb-content">
+              <h4 class="hfb-title">Bize Ulaşın &amp; Hata Raporlama</h4>
+              <p class="hfb-desc">Öğretmenlerimizin ve öğrencilerimizin geri bildirimleri bizim için çok değerli. Karşılaştığınız hataları, kelime önerilerini veya deneyimlerinizi tek tıkla iletin.</p>
+              <button type="button" class="hfb-btn" onclick="window.APP.openFeedbackModal()">
+                💬 Geri Bildirim Gönder &rarr;
               </button>
             </div>
           </div>
@@ -7240,6 +7475,16 @@
     generateWorksheetHTML,
     getWorksheetTargetWords,
     PDF_STUDIO_STATE,
+    openFeedbackModal,
+    closeFeedbackModal,
+    updateFeedbackTelemetryPreview,
+    getFeedbackTelemetryString,
+    toggleTelemetryInReport,
+    showFeedbackStatus,
+    buildFeedbackReport,
+    sendFeedbackViaMail,
+    sendFeedbackViaWhatsApp,
+    copyFeedbackToClipboard,
     getState: () => STATE
   };
 

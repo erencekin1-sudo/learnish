@@ -38,10 +38,16 @@
   /* Additional Semantic Tokens (Sophisticated Playful System) */
   --dp-color-amber: #d97706;
   --dp-color-amber-light: rgba(217, 119, 6, 0.12);
+  --dp-color-surface-1: #f7f5f0;
   --dp-color-surface-2: #e6e2d8;
+  --dp-color-surface-3: #ded9ce;
+  --dp-color-surface-subtle: #f5f3ed;
   --dp-color-bg: #eeebe3;
   --dp-color-emphasis: #171e19;
   --dp-color-sand: #d8d3c5;
+  --dp-color-ink-faint: rgba(23, 30, 25, 0.28);
+  --dp-color-green: #008744;
+  --dp-color-blue: #0284c7;
   --dp-border-rule: 1px;
   --dp-color-field: #ca0013;
   --dp-color-field-support: #ffffff;
@@ -50,6 +56,7 @@
 
   /* Typography */
   --dp-typography-face: 'Nunito', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --dp-typography-family: var(--dp-typography-face);
   --dp-typography-mono: 'Nunito', monospace;
 
   /* Radii */
@@ -66,6 +73,7 @@
   --dp-shadow-soft-lg: 0 20px 50px -12px rgba(23, 30, 25, 0.08);
   --dp-shadow-soft-md: 0 10px 30px -6px rgba(23, 30, 25, 0.06);
   --dp-shadow-soft-sm: 0 4px 16px -2px rgba(23, 30, 25, 0.04);
+  --dp-shadow-soft-xs: 0 2px 8px -1px rgba(23, 30, 25, 0.05);
   --dp-shadow-red: 0 10px 25px -4px rgba(202, 0, 19, 0.35);
   --dp-shadow-floating-nav: 0 20px 40px -8px rgba(23, 30, 25, 0.28);
 
@@ -91,10 +99,16 @@
   /* Additional Semantic Tokens (Dark Mode) */
   --dp-color-amber: #f59e0b;
   --dp-color-amber-light: rgba(251, 191, 36, 0.15);
+  --dp-color-surface-1: #1c241f;
   --dp-color-surface-2: #242c26;
+  --dp-color-surface-3: #2c3630;
+  --dp-color-surface-subtle: #26302a;
   --dp-color-bg: #111713;
   --dp-color-emphasis: #fdfcf9;
   --dp-color-sand: #333d36;
+  --dp-color-ink-faint: rgba(238, 235, 227, 0.32);
+  --dp-color-green: #34d399;
+  --dp-color-blue: #38bdf8;
   --dp-border-rule: 1px;
   --dp-color-field: #e02438;
   --dp-color-field-support: #1f2722;
@@ -102,6 +116,7 @@
   --dp-color-error: #ef4444;
   --dp-shadow-soft-lg: 0 20px 50px -12px rgba(0, 0, 0, 0.40);
   --dp-shadow-soft-md: 0 10px 30px -6px rgba(0, 0, 0, 0.35);
+  --dp-shadow-soft-xs: 0 2px 8px -1px rgba(0, 0, 0, 0.30);
   --dp-shadow-floating-nav: 0 20px 40px -8px rgba(0, 0, 0, 0.60);
 }
 
@@ -159,11 +174,9 @@ body {
 }
 
 /* ==========================================================================
-   1. TOP-ALIGNED HEADER (56px Top Padding)
    1. TOP-ALIGNED HEADER
    ========================================================================== */
 .app-top-header {
-  padding-top: 56px;
   padding-top: 24px;
   padding-bottom: 20px;
   display: flex;
@@ -265,10 +278,12 @@ body {
   flex-shrink: 0;
 }
 
-.header-route-pill-btn:hover {
+.header-route-pill-btn:hover,
+.header-route-pill-btn:focus-visible {
   border-color: var(--dp-color-red);
   transform: translateY(-1px);
   box-shadow: 0 4px 14px rgba(202, 0, 19, 0.16);
+  outline: none;
 }
 
 .header-route-pill-btn:active {
@@ -4364,7 +4379,8 @@ mark.pedagogy-word-highlight {
 /* 1. Grade & Curriculum Selector Modal */
 .grade-modal-backdrop,
 .classifier-modal-backdrop,
-.pdf-modal-backdrop {
+.pdf-modal-backdrop,
+.feedback-modal-backdrop {
   position: fixed;
   inset: 0;
   background: rgba(12, 17, 14, 0.78);
@@ -4378,14 +4394,16 @@ mark.pedagogy-word-highlight {
 
 .grade-modal-backdrop.active,
 .classifier-modal-backdrop.active,
-.pdf-modal-backdrop.active {
+.pdf-modal-backdrop.active,
+.feedback-modal-backdrop.active {
   opacity: 1;
   pointer-events: auto;
 }
 
 .grade-dialog-card,
 .classifier-dialog-card,
-.pdf-dialog-card {
+.pdf-dialog-card,
+.feedback-dialog-card {
   display: none;
   position: fixed;
   top: 50%;
@@ -4393,7 +4411,8 @@ mark.pedagogy-word-highlight {
   transform: translate(-50%, -50%) scale(0.96);
   width: calc(100% - 32px);
   max-width: 540px;
-  max-height: 88vh;
+  max-height: 86vh;
+  max-height: 86dvh;
   border-radius: 20px;
   background: var(--dp-color-surface);
   border: 1px solid var(--dp-color-border);
@@ -4405,6 +4424,10 @@ mark.pedagogy-word-highlight {
   opacity: 0;
 }
 
+.feedback-dialog-card {
+  max-width: 600px;
+}
+
 .pdf-dialog-card {
   max-width: 1160px;
   max-height: 92vh;
@@ -4413,10 +4436,15 @@ mark.pedagogy-word-highlight {
 
 .grade-dialog-card.active,
 .classifier-dialog-card.active,
-.pdf-dialog-card.active {
+.pdf-dialog-card.active,
+.feedback-dialog-card.active {
   display: flex;
   transform: translate(-50%, -50%) scale(1);
   opacity: 1;
+}
+
+body.modal-open {
+  overflow: hidden;
 }
 
 .grade-dialog-header,
@@ -4428,6 +4456,7 @@ mark.pedagogy-word-highlight {
   justify-content: space-between;
   border-bottom: 1px solid var(--dp-color-border-subtle);
   background: var(--dp-color-surface-2);
+  flex-shrink: 0;
 }
 
 .grade-dialog-eyebrow,
@@ -4453,21 +4482,42 @@ mark.pedagogy-word-highlight {
   color: var(--dp-color-ink);
 }
 
-margin: 0;
-font-size: 18px;
-font-weight: 800;
-letter-spacing: -0.01em;
-color: var(--dp-color-ink);
-}
-
 .grade-dialog-body,
 .classifier-dialog-body {
-  padding: 20px;
-  overflow-y: auto;
-  flex: 1;
+  padding: 20px 20px 28px 20px;
+  overflow-y: auto !important;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+  flex: 1 1 auto;
+  min-height: 0;
+  max-height: calc(86vh - 82px);
   display: flex;
   flex-direction: column;
-  gap: 18px;
+  gap: 16px;
+  scrollbar-width: thin;
+  scrollbar-color: var(--dp-color-sage) transparent;
+}
+
+.grade-dialog-body::-webkit-scrollbar,
+.classifier-dialog-body::-webkit-scrollbar {
+  width: 8px;
+}
+
+.grade-dialog-body::-webkit-scrollbar-track,
+.classifier-dialog-body::-webkit-scrollbar-track {
+  background: rgba(183, 198, 194, 0.12);
+  border-radius: 999px;
+}
+
+.grade-dialog-body::-webkit-scrollbar-thumb,
+.classifier-dialog-body::-webkit-scrollbar-thumb {
+  background: rgba(183, 198, 194, 0.65);
+  border-radius: 999px;
+}
+
+.grade-dialog-body::-webkit-scrollbar-thumb:hover,
+.classifier-dialog-body::-webkit-scrollbar-thumb:hover {
+  background: var(--dp-color-red);
 }
 
 /* Stage Group Cards in Grade Modal */
@@ -4476,6 +4526,7 @@ color: var(--dp-color-ink);
   border: 1px solid var(--dp-color-border-subtle);
   border-radius: 14px;
   padding: 14px;
+  flex-shrink: 0;
 }
 
 .stage-group-header {
@@ -4508,26 +4559,42 @@ color: var(--dp-color-ink);
 
 .stage-badge-ilkokul {
   background: rgba(2, 132, 199, 0.15);
-  color: #38bdf8;
+  color: #0369a1;
   border: 1px solid rgba(2, 132, 199, 0.35);
 }
 
 .stage-badge-ortaokul {
   background: rgba(217, 119, 6, 0.15);
-  color: #fbbf24;
+  color: #b45309;
   border: 1px solid rgba(217, 119, 6, 0.35);
 }
 
 .stage-badge-lise {
   background: rgba(124, 58, 237, 0.15);
-  color: #c084fc;
+  color: #6d28d9;
   border: 1px solid rgba(124, 58, 237, 0.35);
 }
 
 .stage-badge-akademik {
   background: rgba(5, 150, 105, 0.15);
-  color: #34d399;
+  color: #047857;
   border: 1px solid rgba(5, 150, 105, 0.35);
+}
+
+[data-theme="dark"] .stage-badge-ilkokul {
+  color: #38bdf8;
+}
+
+[data-theme="dark"] .stage-badge-ortaokul {
+  color: #fbbf24;
+}
+
+[data-theme="dark"] .stage-badge-lise {
+  color: #c084fc;
+}
+
+[data-theme="dark"] .stage-badge-akademik {
+  color: #34d399;
 }
 
 .stage-grade-grid {
@@ -4542,7 +4609,17 @@ color: var(--dp-color-ink);
   }
 }
 
+@media (min-width: 441px) {
+  .stage-grade-grid > .stage-grade-btn:last-child:nth-child(odd) {
+    grid-column: 1 / -1;
+  }
+}
+
 .stage-grade-btn {
+  position: relative;
+  z-index: 1;
+  pointer-events: auto;
+  width: 100%;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -4555,16 +4632,19 @@ color: var(--dp-color-ink);
   transition: all 0.18s ease;
 }
 
-.stage-grade-btn:hover {
-  background: rgba(255, 255, 255, 0.03);
-  border-color: var(--dp-color-amber);
+.stage-grade-btn:hover,
+.stage-grade-btn:focus-visible {
+  background: var(--dp-color-surface-subtle);
+  border-color: var(--dp-color-red);
   transform: translateY(-1px);
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(202, 0, 19, 0.25);
 }
 
 .stage-grade-btn.active {
-  background: rgba(217, 119, 6, 0.12);
-  border-color: var(--dp-color-amber);
-  box-shadow: 0 0 0 1px var(--dp-color-amber);
+  background: var(--dp-color-red-light);
+  border-color: var(--dp-color-red);
+  box-shadow: 0 0 0 1px var(--dp-color-red);
 }
 
 .sgb-info {
@@ -4587,7 +4667,7 @@ color: var(--dp-color-ink);
 
 .sgb-check {
   font-size: 14px;
-  color: var(--dp-color-amber);
+  color: var(--dp-color-red);
   font-weight: 800;
   display: none;
 }
@@ -5226,12 +5306,35 @@ color: var(--dp-color-ink);
   box-shadow: 0 4px 14px rgba(202, 0, 19, 0.25);
 }
 
+.feedback-header-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(2, 132, 199, 0.08);
+  color: var(--dp-color-blue, #0284c7);
+  border: 1px solid rgba(2, 132, 199, 0.28);
+  border-radius: 9999px;
+  padding: 6px 14px;
+  font-size: 12px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.feedback-header-btn:hover {
+  background: rgba(2, 132, 199, 0.16);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 14px rgba(2, 132, 199, 0.25);
+}
+
 @media (max-width: 600px) {
-  .pdf-btn-label {
+  .pdf-btn-label,
+  .feedback-btn-label {
     display: none;
   }
 
-  .pdf-header-btn {
+  .pdf-header-btn,
+  .feedback-header-btn {
     padding: 7px;
     border-radius: 50%;
   }
@@ -6404,6 +6507,311 @@ color: var(--dp-color-ink);
 }
 
 /* ==========================================================================
+   BİZE ULAŞIN & HATA BİLDİRİMİ MODÜLÜ (Feedback & Bug Reporting Module)
+   ========================================================================== */
+.feedback-dialog-header {
+  padding: 18px 22px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--dp-color-border);
+  background: var(--dp-color-surface);
+  flex-shrink: 0;
+}
+
+.feedback-dialog-title-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.feedback-dialog-eyebrow {
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--dp-color-red);
+}
+
+.feedback-dialog-title {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--dp-color-ink);
+  letter-spacing: -0.01em;
+}
+
+.feedback-dialog-subtitle {
+  margin: 2px 0 0 0;
+  font-size: 12px;
+  color: var(--dp-color-ink-muted);
+}
+
+.feedback-dialog-body {
+  padding: 20px 22px;
+  overflow-y: auto;
+  max-height: calc(86vh - 82px);
+  overscroll-behavior: contain;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.feedback-dialog-body::-webkit-scrollbar {
+  width: 6px;
+}
+
+.feedback-dialog-body::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.feedback-dialog-body::-webkit-scrollbar-thumb {
+  background: rgba(183, 198, 194, 0.45);
+  border-radius: 9999px;
+}
+
+.feedback-form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.feedback-label {
+  display: flex;
+  align-items: center;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--dp-color-ink);
+}
+
+.feedback-required {
+  color: var(--dp-color-red);
+  font-weight: 800;
+  margin-left: 4px;
+}
+
+.feedback-optional {
+  color: var(--dp-color-ink-muted);
+  font-size: 11px;
+  font-weight: 500;
+  margin-left: 6px;
+}
+
+.feedback-select-wrap {
+  position: relative;
+  width: 100%;
+}
+
+.feedback-select,
+.feedback-input,
+.feedback-textarea {
+  width: 100%;
+  font-family: inherit;
+  font-size: 13.5px;
+  color: var(--dp-color-ink);
+  background: var(--dp-color-surface-subtle);
+  border: 1.5px solid var(--dp-color-border);
+  border-radius: 12px;
+  padding: 10px 14px;
+  outline: none;
+  box-sizing: border-box;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+}
+
+.feedback-select {
+  appearance: none;
+  -webkit-appearance: none;
+  cursor: pointer;
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23526056' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+  background-repeat: no-repeat;
+  background-position: right 14px center;
+  background-size: 16px;
+  padding-right: 36px;
+}
+
+.feedback-textarea {
+  resize: vertical;
+  min-height: 90px;
+  line-height: 1.5;
+}
+
+.feedback-select:focus,
+.feedback-input:focus,
+.feedback-textarea:focus {
+  border-color: var(--dp-color-red);
+  background: var(--dp-color-surface);
+  box-shadow: 0 0 0 3px rgba(202, 0, 19, 0.12);
+}
+
+.feedback-telemetry-box {
+  background: var(--dp-color-surface-subtle);
+  border: 1px dashed var(--dp-color-border);
+  border-radius: 14px;
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.feedback-telemetry-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.feedback-checkbox-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--dp-color-ink);
+  cursor: pointer;
+  user-select: none;
+}
+
+.feedback-checkbox-label input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--dp-color-red);
+  cursor: pointer;
+}
+
+.feedback-telemetry-badge {
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  background: rgba(0, 135, 68, 0.1);
+  color: var(--dp-color-green, #008744);
+  padding: 3px 8px;
+  border-radius: 9999px;
+}
+
+.feedback-telemetry-preview {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', monospace;
+  font-size: 11px;
+  color: var(--dp-color-ink-muted);
+  line-height: 1.55;
+  background: rgba(0, 0, 0, 0.04);
+  padding: 8px 12px;
+  border-radius: 8px;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+[data-theme="dark"] .feedback-telemetry-preview {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.feedback-actions-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 10px;
+}
+
+.feedback-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  border-radius: 12px;
+  padding: 12px 14px;
+  font-size: 12.5px;
+  font-weight: 800;
+  cursor: pointer;
+  border: none;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  white-space: nowrap;
+}
+
+.feedback-btn:hover {
+  transform: translateY(-1px);
+}
+
+.feedback-btn-primary {
+  background: var(--dp-color-red);
+  color: #ffffff;
+  box-shadow: 0 4px 14px rgba(202, 0, 19, 0.28);
+}
+
+.feedback-btn-primary:hover {
+  background: #b50011;
+  box-shadow: 0 6px 18px rgba(202, 0, 19, 0.38);
+}
+
+.feedback-btn-whatsapp {
+  background: #25D366;
+  color: #ffffff;
+  box-shadow: 0 4px 14px rgba(37, 211, 102, 0.28);
+}
+
+.feedback-btn-whatsapp:hover {
+  background: #20bd5a;
+  box-shadow: 0 6px 18px rgba(37, 211, 102, 0.38);
+}
+
+.feedback-btn-copy {
+  background: var(--dp-color-surface);
+  border: 1.5px solid var(--dp-color-border);
+  color: var(--dp-color-ink);
+}
+
+.feedback-btn-copy:hover {
+  background: var(--dp-color-surface-subtle);
+  border-color: var(--dp-color-ink-muted);
+}
+
+.feedback-status-banner {
+  padding: 10px 14px;
+  border-radius: 10px;
+  font-size: 12.5px;
+  font-weight: 700;
+  line-height: 1.45;
+  text-align: center;
+}
+
+.feedback-status-banner.status-success {
+  background: rgba(0, 135, 68, 0.12);
+  color: var(--dp-color-green, #008744);
+  border: 1px solid rgba(0, 135, 68, 0.3);
+}
+
+.feedback-status-banner.status-warning {
+  background: rgba(217, 119, 6, 0.12);
+  color: var(--dp-color-amber, #d97706);
+  border: 1px solid rgba(217, 119, 6, 0.3);
+}
+
+.feedback-status-banner.status-info {
+  background: rgba(2, 132, 199, 0.12);
+  color: var(--dp-color-blue, #0284c7);
+  border: 1px solid rgba(2, 132, 199, 0.3);
+}
+
+.feedback-footer-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: 11.5px;
+  color: var(--dp-color-ink-muted);
+  line-height: 1.45;
+  padding-top: 4px;
+}
+
+.feedback-footer-note p {
+  margin: 0;
+}
+
+@media (max-width: 600px) {
+  .feedback-actions-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ==========================================================================
    @MEDIA PRINT — Clean Vector A4 Output (Zero Web Chrome)
    ========================================================================== */
 @media print {
@@ -6434,6 +6842,8 @@ color: var(--dp-color-ink);
   .classifier-dialog-card,
   .pdf-modal-backdrop,
   .pdf-dialog-card,
+  .feedback-modal-backdrop,
+  .feedback-dialog-card,
   .speech-coach-dialog {
     display: none !important;
   }

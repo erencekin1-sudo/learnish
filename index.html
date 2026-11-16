@@ -24,7 +24,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Nunito:ital,wght@0,400;0,600;0,700;0,800;0,900;1,400;1,700;1,900&display=swap" rel="stylesheet">
 
   <!-- Stylesheets -->
-  <link rel="stylesheet" href="app.css?v=v10-opt">
+  <link rel="stylesheet" href="app.css?v=v13-feedback">
 </head>
 <body>
 
@@ -49,6 +49,10 @@
         <button type="button" class="header-action-btn pdf-header-btn" onclick="window.APP.openPdfStudio()" title="PDF &amp; Çalışma Kağıdı Stüdyosu" aria-label="PDF Çalışma Föyü">
           <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
           <span class="pdf-btn-label">PDF Föyü</span>
+        </button>
+        <button type="button" class="header-action-btn feedback-header-btn" id="header-feedback-btn" onclick="window.APP.openFeedbackModal()" title="Bize Ulaşın &amp; Hata Bildir" aria-label="Bize Ulaşın &amp; Hata Bildir">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+          <span class="feedback-btn-label">Bize Ulaşın</span>
         </button>
         <button type="button" class="header-profile-btn" id="header-profile-trigger" onclick="window.APP.openSettingsModal()" aria-label="Ayarlar ve Profil">
           <div class="header-avatar-circle">
@@ -197,6 +201,14 @@
           </div>
           <span class="s-arrow">→</span>
         </button>
+        <button type="button" class="settings-shortcut-btn" onclick="window.APP.openFeedbackModal()">
+          <span class="s-icon">💬</span>
+          <div class="s-text">
+            <strong>Bize Ulaşın &amp; Hata Bildir</strong>
+            <span>Öğretmen ve kullanıcı geri bildirimi iletin</span>
+          </div>
+          <span class="s-arrow">→</span>
+        </button>
       </div>
 
       <!-- System Toggles -->
@@ -292,12 +304,100 @@
     </div>
   </div>
 
+  <!-- 10. FEEDBACK & BUG REPORT MODAL ("BİZE ULAŞIN & HATA BİLDİR") -->
+  <div class="feedback-modal-backdrop" id="feedback-modal-backdrop" onclick="window.APP.closeFeedbackModal()" aria-hidden="true"></div>
+  <div class="feedback-dialog-card" id="feedback-dialog" role="dialog" aria-modal="true" aria-labelledby="feedback-dialog-title">
+    <div class="feedback-dialog-header">
+      <div class="feedback-dialog-title-wrap">
+        <span class="feedback-dialog-eyebrow">ÖĞRETMEN &amp; KULLANICI DESTEK HATTI</span>
+        <h2 id="feedback-dialog-title" class="feedback-dialog-title">Bize Ulaşın &amp; Hata Bildir</h2>
+        <p class="feedback-dialog-subtitle">Deneyimlerinizi, hata bildirimlerinizi ve önerilerinizi bizimle paylaşın.</p>
+      </div>
+      <button type="button" class="settings-close-circle-btn" onclick="window.APP.closeFeedbackModal()" aria-label="Pencereyi Kapat">✕</button>
+    </div>
+
+    <div class="feedback-dialog-body" id="feedback-dialog-body">
+      <!-- Topic Selector -->
+      <div class="feedback-form-group">
+        <label for="feedback-topic" class="feedback-label">
+          <span>Konu Başlığı</span>
+          <span class="feedback-required">*</span>
+        </label>
+        <div class="feedback-select-wrap">
+          <select id="feedback-topic" class="feedback-select" aria-label="Konu Başlığı Seçiniz">
+            <option value="Hata / Teknik Problem">🐞 Hata / Teknik Problem</option>
+            <option value="Kelime / Çeviri Hatası">📖 Kelime / Çeviri / İçerik Hatası</option>
+            <option value="Yeni Özellik / Geliştirme Önerisi">💡 Yeni Özellik / Geliştirme Önerisi</option>
+            <option value="Öğretmen &amp; Müfredat Görüşü">🎓 Öğretmen &amp; Müfredat Görüşü</option>
+            <option value="Genel Deneyim &amp; Diğer">💬 Genel Deneyim &amp; Diğer</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Sender Info (Optional) -->
+      <div class="feedback-form-group">
+        <label for="feedback-sender" class="feedback-label">
+          <span>Adınız veya E-postanız</span>
+          <span class="feedback-optional">(İsteğe bağlı, geri dönüş yapabilmemiz için)</span>
+        </label>
+        <input type="text" id="feedback-sender" class="feedback-input" placeholder="Örn: Ayşe Öğretmen veya ornek@okul.k12.tr" autocomplete="name">
+      </div>
+
+      <!-- Message Area -->
+      <div class="feedback-form-group">
+        <label for="feedback-message" class="feedback-label">
+          <span>Mesajınız &amp; Yaşadığınız Deneyim</span>
+          <span class="feedback-required">*</span>
+        </label>
+        <textarea id="feedback-message" class="feedback-textarea" rows="4" placeholder="Lütfen karşılaştığınız hatayı, hangi modül/sınıfta olduğunu veya eklenmesini istediğiniz öneriyi detaylandırın..."></textarea>
+      </div>
+
+      <!-- Telemetry Diagnostics Preview Box -->
+      <div class="feedback-telemetry-box">
+        <div class="feedback-telemetry-header">
+          <label class="feedback-checkbox-label">
+            <input type="checkbox" id="feedback-include-telemetry" checked onchange="window.APP.toggleTelemetryInReport(this.checked)">
+            <span>Sistem Tanı &amp; Cihaz Bilgilerini Ekle</span>
+          </label>
+          <span class="feedback-telemetry-badge">Hızlı Çözüm İçin Önerilir</span>
+        </div>
+        <div class="feedback-telemetry-preview" id="feedback-telemetry-preview">
+          <!-- Populated by window.APP.updateFeedbackTelemetryPreview -->
+        </div>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="feedback-actions-row">
+        <button type="button" class="feedback-btn feedback-btn-primary" onclick="window.APP.sendFeedbackViaMail()" title="Varsayılan e-posta istemciniz ile gönderin">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+          <span>E-posta ile Gönder</span>
+        </button>
+        <button type="button" class="feedback-btn feedback-btn-whatsapp" onclick="window.APP.sendFeedbackViaWhatsApp()" title="WhatsApp üzerinden hızlıca paylaşın">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
+          <span>WhatsApp ile İlet</span>
+        </button>
+        <button type="button" class="feedback-btn feedback-btn-copy" onclick="window.APP.copyFeedbackToClipboard()" title="Raporu panoya kopyalayıp dilediğiniz yere yapıştırın">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+          <span>Raporu Kopyala</span>
+        </button>
+      </div>
+
+      <!-- Status Toast / Note -->
+      <div id="feedback-status-banner" class="feedback-status-banner" style="display: none;" role="status" aria-live="polite"></div>
+
+      <div class="feedback-footer-note">
+        <span>💡</span>
+        <p>Geri bildirimleriniz doğrudan geliştirici öğretmen ekibine ulaşır ve bir sonraki güncellemede değerlendirilir. Desteğiniz için teşekkür ederiz!</p>
+      </div>
+    </div>
+  </div>
+
   <!-- Dedicated Hidden Printable Container (Rendered during @media print) -->
   <div id="learnish-printable-sheet" class="learnish-printable-sheet" aria-hidden="true"></div>
 
   <!-- Data & Application Logic -->
   <script src="curriculum-data.js?v=v11-k12"></script>
   <script src="words-data.js?v=v11-k12"></script>
-  <script src="app.js?v=v11-k12"></script>
+  <script src="app.js?v=v13-feedback"></script>
 </body>
 </html>
