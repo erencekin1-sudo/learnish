@@ -12,6 +12,9 @@ import json
 import zipfile
 import xml.etree.ElementTree as ET
 
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from curriculum_dictionary_definitions import CURRICULUM_DEFINITIONS
+
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 EXCEL_PATH = os.path.join(BASE_DIR, 'belgeler', 'İNGİLİZCE (2-8. SINIF) TASLAK YILLIK ÇERÇEVE PLAN.xlsx')
 OUTPUT_JS_PATH = os.path.join(BASE_DIR, 'curriculum-data.js')
@@ -92,7 +95,7 @@ def parse_learning_outcomes(raw):
 
 def is_valid_vocab_word(w):
     w = clean_text(w)
-    if not w or len(w) < 2 or len(w) > 40:
+    if not w or len(w) < 2 or len(w) > 35:
         return False
     lower = w.lower()
     blacklist = [
@@ -102,13 +105,19 @@ def is_valid_vocab_word(w):
         'expressing', 'identifying', 'telling', 'following', 'accepting', 'refusing', 'apologizing',
         'suggested', 'contexts', 'tasks', 'assignments', 'measurement', 'evaluation',
         'out-of-school', 'learning activities', 'students will', 'listening', 'speaking',
-        'reading', 'writing', 'indicators', 'intercurricular', 'expansion objective'
+        'reading', 'writing', 'indicators', 'intercurricular', 'expansion objective',
+        'reflecting', 'turkish social', 'cultural', 'grammatical', 'without explaining',
+        'considerations', 'activities related', 'national and religious', 'festivals, and',
+        'appropriate', 'tense', 'modal', 'present continuous', 'simple present',
+        'to be for', 'questions', 'prepositions', 'demonstrative', 'pronouns', 'quantifiers'
     ]
     if any(b in lower for b in blacklist):
         return False
-    if lower.startswith('http') or lower.startswith('unit') or lower.startswith('theme') or lower.startswith('week'):
+    if lower.startswith('http') or lower.startswith('unit') or lower.startswith('theme') or lower.startswith('week') or lower.startswith('-'):
         return False
-    if not re.search(r'[a-zA-Z]', w):
+    if ':' in w or '?' in w or '!' in w or ';' in w or '.' in w:
+        return False
+    if not re.match(r'^[a-zA-Z\s\'-]+$', w):
         return False
     return True
 
@@ -116,26 +125,21 @@ def extract_vocab_from_text(text):
     words = []
     if not text:
         return words
-    lines = text.split('\n')
-    if 'Target Vocabulary' in text or 'Vocabulary for' in text:
-        in_vocab = False
-        for l in lines:
-            if 'Target Vocabulary' in l or 'Vocabulary for' in l:
-                in_vocab = True
-            elif in_vocab and ('Target Language Chunks' in l or 'Target Social Language' in l or 'Target Phonological' in l or 'Sub-themes:' in l):
-                in_vocab = False
-            elif in_vocab:
-                cleaned = re.sub(r'^(Nouns|Verbs|Adjectives|People in the school|Places in the school|Classroom furniture|Classroom objects|Classroom devices|Basic colours|Numbers|Parts of the body):\s*', '', l.strip())
-                for item in re.split(r'[,;]\s*', cleaned):
-                    w = re.sub(r'^(a|an|to)\s+', '', item.strip(), flags=re.IGNORECASE)
-                    w = re.sub(r'\s*\([^)]*\)', '', w).strip()
-                    if is_valid_vocab_word(w):
-                        words.append(w.lower())
-    else:
-        for l in lines:
-            l_str = l.strip()
-            if re.match(r'^[a-zA-Z\s\'-]+(,\s*-[a-z]+)?$', l_str) and not l_str.startswith('—') and not l_str.endswith('?'):
-                w = re.sub(r',\s*-[a-z]+', '', l_str).strip()
+    # Stop before cultural considerations, chunks, or national days
+    m = re.search(r'Target\s+Vocabulary[^\n]*\n(.*?)(?=\n\s*(?:\*|Target\s+Language|Target\s+Social|Target\s+Phonological|Target\s+Grammatical|\Z))', text, re.DOTALL | re.IGNORECASE)
+    if m:
+        sec = m.group(1)
+        for line in sec.splitlines():
+            line = line.strip()
+            if not line or line.startswith('*') or line.startswith('—'):
+                continue
+            # Strip category headings like "-people at school: a classmate"
+            line_clean = re.sub(r'^[—\-\*•\s]*[A-Za-z0-9\s/&]+:\s*', '', line)
+            for part in re.split(r'[,;]\s*', line_clean):
+                w = re.sub(r'^(a|an|to)\s+', '', part.strip(), flags=re.IGNORECASE)
+                w = re.sub(r'\s*\([^)]*\)', '', w)
+                w = re.sub(r'[\'\"“”‘’]', '', w)
+                w = w.strip().rstrip('.,;:!?')
                 if is_valid_vocab_word(w):
                     words.append(w.lower())
     return list(dict.fromkeys(words))
@@ -285,12 +289,12 @@ UNIT_KEYWORDS = {
     (2, 5): ['house', 'home', 'room', 'bedroom', 'living room', 'kitchen', 'bathroom', 'garden', 'furniture', 'bed', 'sofa', 'table'],
     (2, 6): ['city', 'street', 'park', 'shop', 'food', 'meal', 'breakfast', 'lunch', 'dinner', 'bread', 'cheese', 'soup', 'salad'],
     # Grade 3
-    (3, 1): ['classmate', 'librarian', 'school nurse', 'janitor', 'months', 'january', 'february', 'march', 'april', 'may', 'june', 'july', 'august', 'september', 'october', 'november', 'december'],
-    (3, 2): ['classroom', 'instruction', 'listen', 'quiet', 'repeat', 'pencil case', 'marker', 'tablet', 'computer'],
-    (3, 3): ['feelings', 'happy', 'sad', 'angry', 'surprised', 'tired', 'sunny', 'windy', 'snowy', 'rainy', 'weather', 'jacket', 'coat', 'boots'],
-    (3, 4): ['routine', 'wake up', 'breakfast', 'wash', 'brush', 'teeth', 'hobby', 'painting', 'reading', 'swimming', 'cycling'],
-    (3, 5): ['countryside', 'farm', 'barn', 'tractor', 'cow', 'horse', 'sheep', 'goat', 'donkey', 'rooster', 'hen', 'feed', 'farm animals'],
-    (3, 6): ['restaurant', 'cafe', 'order', 'menu', 'waiter', 'pizza', 'pasta', 'burger', 'drink', 'water', 'juice', 'dessert'],
+    (3, 1): ['classmate', 'librarian', 'school nurse', 'headteacher', 'janitor', 'caretaker', 'art room', 'music room', 'meeting room', 'office', 'sports field', 'corridor', 'gym', 'birthday', 'birthday party', 'candle', 'cake', 'balloon', 'gift', 'summer holiday', 'surprise', 'months', 'january', 'february', 'march', 'april', 'may', 'june', 'july', 'august', 'september', 'october', 'november', 'december'],
+    (3, 2): ['classroom', 'instruction', 'listen', 'quiet', 'repeat', 'pencil case', 'marker', 'tablet', 'computer', 'ruler', 'bookshelf', 'paintbrush', 'pencil sharpener', 'eraser', 'desk', 'pen'],
+    (3, 3): ['feelings', 'happy', 'sad', 'angry', 'surprised', 'tired', 'sunny', 'windy', 'snowy', 'rainy', 'weather', 'jacket', 'coat', 'boots', 'hair', 'curly', 'straight', 'eyes', 'teeth', 'feet'],
+    (3, 4): ['routine', 'wake up', 'breakfast', 'wash', 'brush', 'teeth', 'brush teeth', 'hobby', 'painting', 'reading', 'swimming', 'cycling', 'cousin', 'aunt', 'uncle', 'grandparent', 'chores', 'help'],
+    (3, 5): ['countryside', 'farm', 'barn', 'tractor', 'cow', 'horse', 'sheep', 'goat', 'donkey', 'rooster', 'hen', 'feed', 'farm animals', 'farmhouse', 'cottage', 'field', 'duck', 'turkey', 'rabbit'],
+    (3, 6): ['restaurant', 'cafe', 'order', 'menu', 'waiter', 'waitress', 'pizza', 'pasta', 'burger', 'drink', 'water', 'juice', 'dessert', 'salad', 'sandwich', 'pancake', 'toast', 'olive', 'cheese', 'bread'],
     # Grade 4
     (4, 1): ['permission', 'may i', 'can i', 'come in', 'go out', 'open the door', 'close the window', 'quiet', 'ruler', 'pencil sharpener', 'eraser'],
     (4, 2): ['nationality', 'country', 'turkey', 'turkish', 'germany', 'german', 'britain', 'british', 'japan', 'japanese', 'russia', 'russian', 'flag', 'north', 'south', 'east', 'west'],
@@ -671,10 +675,20 @@ def build_full_curriculum_registry():
 
         for u in g_units:
             u_kw = UNIT_KEYWORDS.get((g_num, u['unitNum']), [])
-            for k in u_kw:
-                if k.lower() not in [w.lower() for w in u['targetVocab']]:
-                    u['targetVocab'].append(k.lower())
-            u['semanticKeywords'] = list(dict.fromkeys(u_kw + [w.lower() for w in u['targetVocab'][:15]]))
+            valid_existing = [w.lower().strip() for w in u['targetVocab'] if is_valid_vocab_word(w)]
+            u['targetVocab'] = list(dict.fromkeys([k.lower().strip() for k in u_kw] + valid_existing))
+            u['semanticKeywords'] = list(dict.fromkeys([k.lower().strip() for k in u_kw] + u['targetVocab'][:15]))
+
+        for wk in g_calendar:
+            u_match = next((u for u in g_units if u['unitNum'] == wk['unitNum']), None)
+            if u_match and u_match['targetVocab']:
+                valid_wk = [w.lower().strip() for w in wk.get('targetWords', []) if is_valid_vocab_word(w)]
+                if not valid_wk or len(valid_wk) < 4:
+                    u_v = u_match['targetVocab']
+                    offset = ((wk['weekNum'] - 1) % 4) * 5
+                    wk['targetWords'] = u_v[offset:offset + 8] if len(u_v) > offset else u_v[:8]
+                else:
+                    wk['targetWords'] = valid_wk
 
         full_registry[g_num] = {
             'grade': g_num,
@@ -710,6 +724,7 @@ def generate_curriculum_javascript(registry):
 
     registry_json = json.dumps(registry, ensure_ascii=False, separators=(',', ':'))
     canonical_index_json = json.dumps(canonical_index, ensure_ascii=False, separators=(',', ':'))
+    curriculum_dict_json = json.dumps(CURRICULUM_DEFINITIONS, ensure_ascii=False, separators=(',', ':'))
 
     js_code = f"""/**
  * Learnish - K-12 MEB İngilizce Müfredatı ve Bağlama (Curriculum Context Classifier) Motoru
@@ -726,7 +741,10 @@ def generate_curriculum_javascript(registry):
   // 2. Kanonik Kelime Ters Dizin (O(1) Hızlı Erişim)
   const CANONICAL_VOCAB_INDEX = {canonical_index_json};
 
-  // 3. Semantik Konu Küme Vektörleri (Domain Clusters)
+  // 3. Müfredat Hedef Kelimeleri Sözlüğü (Özgün Türkçe Sözlük Karşılıkları)
+  const CURRICULUM_DICTIONARY = {curriculum_dict_json};
+
+  // 4. Semantik Konu Küme Vektörleri (Domain Clusters)
   const DOMAIN_CLUSTERS = [
     {{
       id: 'food_kitchen',
@@ -845,7 +863,7 @@ def generate_curriculum_javascript(registry):
             unitTitleTr: canon.unitTitleTr,
             confidence: 0.99,
             matchType: 'canonical_curriculum',
-            rationale: `"${{cleanWord}}" kelimesi doğrudan ${{canon.gradeName}} ${{canon.unitTitle}} (${{canon.unitTitleTr}}) ünitesinin resmi müfredat hedef kelimesidir.`,
+            rationale: `"${{cleanWord}}" kelimesi ${{canon.gradeName}} ${{canon.unitTitle}} (${{canon.unitTitleTr}}) ünitesinin temel kazanım kelimeleri arasındadır.`,
             alternateMatches: []
           }};
         }}
@@ -1079,9 +1097,10 @@ def generate_curriculum_javascript(registry):
   if (typeof window !== 'undefined') {{
     window.CURRICULUM_DATA = CURRICULUM_DATA;
     window.CURRICULUM_CLASSIFIER = CURRICULUM_CLASSIFIER;
+    window.CURRICULUM_DICTIONARY = CURRICULUM_DICTIONARY;
   }}
   if (typeof module !== 'undefined' && module.exports) {{
-    module.exports = {{ CURRICULUM_DATA, CURRICULUM_CLASSIFIER }};
+    module.exports = {{ CURRICULUM_DATA, CURRICULUM_CLASSIFIER, CURRICULUM_DICTIONARY }};
   }}
 
 }})();

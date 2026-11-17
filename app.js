@@ -2745,27 +2745,77 @@
     studentName: ''
   };
 
-  function resolveWorksheetWord(rawItem) {
-    if (typeof rawItem === 'object' && rawItem !== null && rawItem.en) return rawItem;
-    const str = String(rawItem || '').trim();
-    const cleanEn = str.replace(/^(verbs?|nouns?|adjectives?|adverbs?):\s*/i, '')
-                       .replace(/^(to|a|an)\s+/i, '')
-                       .replace(/\s*\([^)]*\)/g, '')
-                       .trim();
+  function resolveCurriculumWord(wStr, gNum = 5, idx = 0) {
+    if (!wStr) return null;
+    if (typeof wStr === 'object' && wStr !== null && wStr.en) return wStr;
+    const raw = String(wStr || '').trim();
+    // Aggressively clean any accidental prefixes e.g. "-people at school: a classmate" -> "classmate"
+    const cleanEn = raw
+      .replace(/^[—\-\*•\s]*[A-Za-z0-9\s/&]+:\s*/, '')
+      .replace(/^(verbs?|nouns?|adjectives?|adverbs?):\s*/i, '')
+      .replace(/^(to|a|an)\s+/i, '')
+      .replace(/\s*\([^)]*\)/g, '')
+      .replace(/[.,;:!?]+$/, '')
+      .trim();
     if (!cleanEn) return null;
-    const found = WORDS_DATA.find(w => w.en.toLowerCase() === cleanEn.toLowerCase())
-               || WORDS_DATA.find(w => w.en.toLowerCase().includes(cleanEn.toLowerCase()));
+    const cleanLower = cleanEn.toLowerCase();
+
+    // 1. Direct match in WORDS_DATA
+    const found = WORDS_DATA.find(w => w.en.toLowerCase() === cleanLower);
     if (found) return found;
+
+    // 2. Direct match in CURRICULUM_DICTIONARY
+    const dict = (typeof window !== 'undefined' && window.CURRICULUM_DICTIONARY)
+              || (typeof CURRICULUM_DICTIONARY !== 'undefined' ? CURRICULUM_DICTIONARY : null);
+    if (dict && dict[cleanLower]) {
+      const entry = dict[cleanLower];
+      const gData = (typeof window !== 'undefined' && window.CURRICULUM_DATA && window.CURRICULUM_DATA[gNum]) || null;
+      return {
+        id: 800000 + (gNum * 1000) + idx,
+        no: idx + 1,
+        en: entry.en || (cleanEn.charAt(0).toUpperCase() + cleanEn.slice(1)),
+        tr: entry.tr,
+        phonetic: entry.phonetic || '',
+        cefr: entry.cefr || (gData ? gData.cefr : 'A1'),
+        desc: entry.desc || 'hedef kelime',
+        pos: entry.pos || 'noun',
+        example: entry.example || `In our English class, we learn the word "${cleanEn}".`,
+        dataset: 'maarif',
+        isMaarif: true
+      };
+    }
+
+    // 3. Fallback partial/compound match in WORDS_DATA
+    const partial = WORDS_DATA.find(w => w.en.toLowerCase() === cleanLower || w.en.toLowerCase().includes(cleanLower))
+                 || WORDS_DATA.find(w => cleanLower.includes(w.en.toLowerCase()) && w.en.length > 3);
+    if (partial) {
+      return {
+        ...partial,
+        id: 800000 + (gNum * 1000) + idx,
+        no: idx + 1,
+        en: cleanEn.charAt(0).toUpperCase() + cleanEn.slice(1)
+      };
+    }
+
+    // 4. Safe fallback: show clean term, never show placeholder
+    const gData = (typeof window !== 'undefined' && window.CURRICULUM_DATA && window.CURRICULUM_DATA[gNum]) || null;
     return {
-      id: 990000 + Math.floor(Math.random() * 10000),
-      en: cleanEn,
-      tr: '—',
-      desc: 'kelime',
-      pos: 'other',
-      cefr: 'A1',
+      id: 800000 + (gNum * 1000) + idx,
+      no: idx + 1,
+      en: cleanEn.charAt(0).toUpperCase() + cleanEn.slice(1),
+      tr: cleanEn,
       phonetic: '',
-      example: `Practice using "${cleanEn}" in your own sentences.`
+      cefr: gData ? gData.cefr : 'A1',
+      desc: 'hedef kelime',
+      pos: 'noun',
+      example: `In our English class, we learn the word "${cleanEn}".`,
+      dataset: 'maarif',
+      isMaarif: true
     };
+  }
+
+  function resolveWorksheetWord(rawItem) {
+    return resolveCurriculumWord(rawItem, 5, 0);
   }
 
   function getWorksheetTargetWords(state = PDF_STUDIO_STATE) {
@@ -4240,15 +4290,15 @@
       let weekLearnedCount = 0;
 
       targetWordsList.forEach((wStr, idx) => {
-        const clean = wStr.toLowerCase().trim();
-        const found = WORDS_DATA.find(w => w.en.toLowerCase() === clean);
-        const wId = found ? found.id : (800000 + (gNum * 1000) + idx);
-        const wEn = found ? found.en : (wStr.charAt(0).toUpperCase() + wStr.slice(1));
-        const wTr = found ? found.tr : 'Resmi Müfredat Hedef Kelimesi';
-        const wPhonetic = found ? found.phonetic : '';
-        const wCefr = found ? found.cefr : (gData ? gData.cefr : 'A1');
-        const wDesc = found ? found.desc : 'hedef kelime';
-        const wExample = found ? found.example : `In our English class, we learn the word "${wEn}".`;
+        const item = resolveCurriculumWord(wStr, gNum, idx);
+        if (!item) return;
+        const wId = item.id;
+        const wEn = item.en;
+        const wTr = item.tr;
+        const wPhonetic = item.phonetic || '';
+        const wCefr = item.cefr || (gData ? gData.cefr : 'A1');
+        const wDesc = item.desc || 'hedef kelime';
+        const wExample = item.example || `In our English class, we learn the word "${wEn}".`;
 
         const isLearned = STATE.userData.learned.has(wId);
         const isStarred = STATE.userData.starred.has(wId);
@@ -4813,23 +4863,7 @@
           }
           const targetWordsList = (sched && sched.targetWords) ? sched.targetWords : [];
           if (targetWordsList.length > 0) {
-            const gData = (typeof window !== 'undefined' && window.CURRICULUM_DATA && window.CURRICULUM_DATA[gNum]) || null;
-            pool = targetWordsList.map((wStr, idx) => {
-              const clean = wStr.toLowerCase().trim();
-              const found = WORDS_DATA.find(w => w.en.toLowerCase() === clean);
-              if (found) return found;
-              return {
-                id: 800000 + (gNum * 1000) + idx,
-                no: idx + 1,
-                en: wStr.charAt(0).toUpperCase() + wStr.slice(1),
-                tr: 'Resmi Müfredat Hedef Kelimesi',
-                phonetic: '',
-                cefr: gData ? gData.cefr : 'A1',
-                desc: 'hedef kelime',
-                example: `In our English class, we learn the word "${wStr}".`,
-                dataset: 'maarif'
-              };
-            });
+            pool = targetWordsList.map((wStr, idx) => resolveCurriculumWord(wStr, gNum, idx)).filter(Boolean);
           } else {
             const targetPool = WORDS_DATA.filter(isMaarifWord);
             const bSize = 10;
@@ -7584,6 +7618,7 @@
     downloadWorksheetHtml,
     generateWorksheetHTML,
     getWorksheetTargetWords,
+    resolveCurriculumWord,
     PDF_STUDIO_STATE,
     openFeedbackModal,
     closeFeedbackModal,

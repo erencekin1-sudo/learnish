@@ -908,6 +908,28 @@ registerTest(1, 'Flashcard & SRS', 'test_flashcard_renders_target_word', () => {
   assertIncludes(fcSection.innerHTML, currentWord.en, 'Flashcard DOM should render target English word');
 });
 
+registerTest(1, 'Flashcard & SRS', 'test_curriculum_flashcards_have_authentic_turkish_definitions_and_no_placeholders', () => {
+  const env = createFreshAppEnvironment();
+  env.APP.switchGrade(3);
+  env.APP.switchView('flashcard');
+  const state = env.APP.getState();
+  assert(state.filteredFlashcards && state.filteredFlashcards.length > 0, 'Grade 3 flashcards must not be empty');
+  
+  for (const w of state.filteredFlashcards) {
+    assert(w.tr && w.tr.trim().length > 0, `Turkish definition of "${w.en}" must not be empty`);
+    assert(!w.tr.toLowerCase().includes('resmi müfredat'), `Turkish definition of "${w.en}" must not contain placeholder: "${w.tr}"`);
+    assert(w.tr !== '—', `Turkish definition of "${w.en}" must not be dash`);
+  }
+
+  // Explicitly check key Grade 3 curriculum terms
+  const testTerms = ['classmate', 'librarian', 'school nurse', 'headteacher', 'caretaker', 'art room', 'music room', 'birthday party', 'summer holiday', 'pencil case', 'vegetables'];
+  for (const term of testTerms) {
+    const resolved = env.APP.resolveCurriculumWord(term, 3, 0);
+    assert(resolved, `Term "${term}" must resolve successfully`);
+    assert(resolved.tr && !resolved.tr.toLowerCase().includes('resmi müfredat'), `Resolved "${term}" translation must be authentic: "${resolved.tr}"`);
+  }
+});
+
 registerTest(1, 'Flashcard & SRS', 'test_flashcard_flip_toggles_state', () => {
   const env = createFreshAppEnvironment();
   env.APP.switchView('flashcard');
