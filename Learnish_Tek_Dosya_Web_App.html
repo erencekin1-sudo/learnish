@@ -7274,11 +7274,11 @@ h1, h2, h3 { text-wrap: balance; line-height: 1.2; }
           <span class="hrp-arrow" aria-hidden="true">▾</span>
         </button>
         <button type="button" class="header-action-btn pdf-header-btn" onclick="window.APP.openPdfStudio()" title="PDF &amp; Çalışma Kağıdı Stüdyosu" aria-label="PDF Çalışma Föyü">
-          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9V2h12v7"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
           <span class="pdf-btn-label">PDF Föyü</span>
         </button>
         <button type="button" class="header-action-btn feedback-header-btn" id="header-feedback-btn" onclick="window.APP.openFeedbackModal()" title="Bize Ulaşın &amp; Hata Bildir" aria-label="Bize Ulaşın &amp; Hata Bildir">
-          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
           <span class="feedback-btn-label">Bize Ulaşın</span>
         </button>
         <button type="button" class="header-profile-btn" id="header-profile-trigger" onclick="window.APP.openSettingsModal()" aria-label="Ayarlar ve Profil">
@@ -8258,7 +8258,9 @@ if (typeof module !== 'undefined' && module.exports) {
     bug: '<rect x="8" y="9" width="8" height="10" rx="4"/><path d="m19 7-3 2"/><path d="m5 7 3 2"/><path d="m19 19-3-2"/><path d="m5 19 3-2"/><path d="M20 13h-4"/><path d="M4 13h4"/><path d="m10 4 1 2"/><path d="m14 4-1 2"/>',
     headphones: '<path d="M3 18v-6a9 9 0 0 1 18 0v6"/><path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3zM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"/>',
     circleDot: '<circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/>',
-    lock: '<rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>'
+    lock: '<rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>',
+    printer: '<path d="M6 9V2h12v7"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/>',
+    mail: '<path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/>'
   };
 
   function renderIcon(name, size = 18, className = '', strokeWidth = 2.2) {
@@ -12361,7 +12363,7 @@ if (typeof module !== 'undefined' && module.exports) {
           <button type="button" class="home-qa-btn" onclick="window.APP.startMistakeQuiz()">${renderIcon('alert', 20)}<span>Hatalar</span></button>
           <button type="button" class="home-qa-btn" onclick="window.APP.switchView('directory')">${renderIcon('search', 20)}<span>Sözlük</span></button>
           <button type="button" class="home-qa-btn" onclick="window.APP.openSpeechCoach('pronunciation')">${renderIcon('mic', 20)}<span>Telaffuz</span></button>
-          <button type="button" class="home-qa-btn" onclick="window.APP.openPdfStudio()">${renderIcon('fileText', 20)}<span>PDF</span></button>
+          <button type="button" class="home-qa-btn" onclick="window.APP.openPdfStudio()">${renderIcon('printer', 20)}<span>PDF</span></button>
         </div>
       </section>
 

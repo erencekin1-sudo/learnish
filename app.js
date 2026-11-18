@@ -70,7 +70,9 @@
     bug: '<rect x="8" y="9" width="8" height="10" rx="4"/><path d="m19 7-3 2"/><path d="m5 7 3 2"/><path d="m19 19-3-2"/><path d="m5 19 3-2"/><path d="M20 13h-4"/><path d="M4 13h4"/><path d="m10 4 1 2"/><path d="m14 4-1 2"/>',
     headphones: '<path d="M3 18v-6a9 9 0 0 1 18 0v6"/><path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3zM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"/>',
     circleDot: '<circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/>',
-    lock: '<rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>'
+    lock: '<rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>',
+    printer: '<path d="M6 9V2h12v7"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/>',
+    mail: '<path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/>'
   };
 
   function renderIcon(name, size = 18, className = '', strokeWidth = 2.2) {
@@ -4173,7 +4175,7 @@
           <button type="button" class="home-qa-btn" onclick="window.APP.startMistakeQuiz()">${renderIcon('alert', 20)}<span>Hatalar</span></button>
           <button type="button" class="home-qa-btn" onclick="window.APP.switchView('directory')">${renderIcon('search', 20)}<span>Sözlük</span></button>
           <button type="button" class="home-qa-btn" onclick="window.APP.openSpeechCoach('pronunciation')">${renderIcon('mic', 20)}<span>Telaffuz</span></button>
-          <button type="button" class="home-qa-btn" onclick="window.APP.openPdfStudio()">${renderIcon('fileText', 20)}<span>PDF</span></button>
+          <button type="button" class="home-qa-btn" onclick="window.APP.openPdfStudio()">${renderIcon('printer', 20)}<span>PDF</span></button>
         </div>
       </section>
 
