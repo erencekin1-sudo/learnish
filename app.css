@@ -7049,3 +7049,29 @@ h1, h2, h3 { text-wrap: balance; line-height: 1.2; }
 .mistake-preview-pill { width: auto; font-family: var(--font-mono); font-size: 11.5px; }
 .ced-word-body { display: flex; flex-direction: column; min-inline-size: 0; }
 .ced-word-tr { display: block; color: var(--dp-color-ink-muted); font-size: 11px; }
+
+/* ==========================================================================
+   STUDY SHEET — two-column page (preview + print)
+   Container query: wide sheets (A4, desktop preview) use 2 columns; phones stay 1.
+   ========================================================================== */
+.ws-doc { container-type: inline-size; }
+.ws-practice-line-row { flex-wrap: wrap; }
+.ws-dotted-blank { min-inline-size: 48px; }
+
+@container (min-width: 440px) {
+  .ws-cards-list, .ws-quiz-list {
+    display: block;
+    column-count: 2;
+    column-gap: 12px;
+  }
+  .ws-word-card, .ws-quiz-item { margin-bottom: 10px; break-inside: avoid; }
+  .ws-quiz-item { padding: 6px 10px; }
+  .ws-quiz-q-title { font-size: 11px; line-height: 1.35; }
+  .ws-quiz-options-grid { grid-template-columns: 1fr; gap: 3px; }
+  .ws-quiz-opt { align-items: flex-start; }
+  .ws-wc-en { font-size: 14px; }
+  .ws-word-card { padding: 6px 10px; }
+  .ws-header { margin-bottom: 10px; }
+}
+
+.pdf-a4-preview-viewport.a4-scaled { width: 718px; max-width: none; flex-shrink: 0; min-height: 1015px; }

@@ -3362,6 +3362,7 @@
     renderPdfStudio();
     backdrop.classList.add('active');
     dialog.classList.add('active');
+    fitPdfPreview();
     syncBodyModalLock();
   }
 
@@ -3554,7 +3555,22 @@
     const previewContainer = document.getElementById('pdf-live-preview-viewport');
     if (!previewContainer) return;
     previewContainer.innerHTML = generateWorksheetHTML(PDF_STUDIO_STATE, false);
+    fitPdfPreview();
   }
+
+  // Show the preview as a real A4 page (≈718px between print margins), scaled to fit the pane.
+  // Very narrow panes (phones) keep a readable single-column sheet instead of a tiny page.
+  const A4_PREVIEW_PX = 718;
+  function fitPdfPreview() {
+    const sheet = document.getElementById('pdf-live-preview-viewport');
+    const wrap = sheet && sheet.parentElement;
+    if (!wrap) return;
+    const avail = wrap.clientWidth - 40;
+    const fits = avail >= 340;
+    sheet.classList.toggle('a4-scaled', fits);
+    sheet.style.zoom = fits ? String(Math.min(1, avail / A4_PREVIEW_PX)) : '';
+  }
+  window.addEventListener('resize', fitPdfPreview);
 
   function printWorksheet() {
     const printContainer = document.getElementById('learnish-printable-sheet');

@@ -7077,6 +7077,32 @@ h1, h2, h3 { text-wrap: balance; line-height: 1.2; }
 .ced-word-body { display: flex; flex-direction: column; min-inline-size: 0; }
 .ced-word-tr { display: block; color: var(--dp-color-ink-muted); font-size: 11px; }
 
+/* ==========================================================================
+   STUDY SHEET — two-column page (preview + print)
+   Container query: wide sheets (A4, desktop preview) use 2 columns; phones stay 1.
+   ========================================================================== */
+.ws-doc { container-type: inline-size; }
+.ws-practice-line-row { flex-wrap: wrap; }
+.ws-dotted-blank { min-inline-size: 48px; }
+
+@container (min-width: 440px) {
+  .ws-cards-list, .ws-quiz-list {
+    display: block;
+    column-count: 2;
+    column-gap: 12px;
+  }
+  .ws-word-card, .ws-quiz-item { margin-bottom: 10px; break-inside: avoid; }
+  .ws-quiz-item { padding: 6px 10px; }
+  .ws-quiz-q-title { font-size: 11px; line-height: 1.35; }
+  .ws-quiz-options-grid { grid-template-columns: 1fr; gap: 3px; }
+  .ws-quiz-opt { align-items: flex-start; }
+  .ws-wc-en { font-size: 14px; }
+  .ws-word-card { padding: 6px 10px; }
+  .ws-header { margin-bottom: 10px; }
+}
+
+.pdf-a4-preview-viewport.a4-scaled { width: 718px; max-width: none; flex-shrink: 0; min-height: 1015px; }
+
 </style>
 </head>
 <body>
@@ -11359,6 +11385,7 @@ if (typeof module !== 'undefined' && module.exports) {
     renderPdfStudio();
     backdrop.classList.add('active');
     dialog.classList.add('active');
+    fitPdfPreview();
     syncBodyModalLock();
   }
 
@@ -11551,7 +11578,22 @@ if (typeof module !== 'undefined' && module.exports) {
     const previewContainer = document.getElementById('pdf-live-preview-viewport');
     if (!previewContainer) return;
     previewContainer.innerHTML = generateWorksheetHTML(PDF_STUDIO_STATE, false);
+    fitPdfPreview();
   }
+
+  // Show the preview as a real A4 page (≈718px between print margins), scaled to fit the pane.
+  // Very narrow panes (phones) keep a readable single-column sheet instead of a tiny page.
+  const A4_PREVIEW_PX = 718;
+  function fitPdfPreview() {
+    const sheet = document.getElementById('pdf-live-preview-viewport');
+    const wrap = sheet && sheet.parentElement;
+    if (!wrap) return;
+    const avail = wrap.clientWidth - 40;
+    const fits = avail >= 340;
+    sheet.classList.toggle('a4-scaled', fits);
+    sheet.style.zoom = fits ? String(Math.min(1, avail / A4_PREVIEW_PX)) : '';
+  }
+  window.addEventListener('resize', fitPdfPreview);
 
   function printWorksheet() {
     const printContainer = document.getElementById('learnish-printable-sheet');
