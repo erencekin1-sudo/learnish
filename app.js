@@ -436,7 +436,7 @@
   // State Management
   const STATE = {
     activeModule: lsGet('learnish_active_module') || 'maarif', // 'maarif' | 'yds' | 'oxford' | 'all'
-    selectedGrade: parseInt(lsGet('learnish_selected_grade'), 10) || 5, // 1-12
+    selectedGrade: Math.max(2, Math.min(12, parseInt(lsGet('learnish_selected_grade'), 10) || 5)), // 2-12
     activeCurriculumWeek: null, // null = current academic week, or 1-36
     currentView: 'home', // 'home', 'daily', 'flashcard', 'quiz', 'directory', 'stats'
     viewHistory: ['home'],
@@ -1445,7 +1445,7 @@
           <button type="button" class="coach-accent-btn" onclick="window.APP.toggleCoachAccent()" title="Aksanı Değiştir (UK / US)">
             ${accentCode} (${accentCode === 'US' ? 'en-US' : 'en-GB'})
           </button>
-          <button type="button" class="coach-close-btn" onclick="window.APP.closeSpeechCoach()" aria-label="Kapat">✕</button>
+          <button type="button" class="coach-close-btn" onclick="window.APP.closeSpeechCoach()" aria-label="Kapat">${renderIcon('cross', 18)}</button>
         </div>
       </div>
 
@@ -1470,7 +1470,7 @@
 
         ${!isSupported ? `
           <div class="coach-unsupported-alert">
-            <span style="font-size:1.4rem;">⚠️</span>
+            <span style="display:inline-flex;">${renderIcon('alert', 22)}</span>
             <div>
               <strong>Web Speech API Desteği Gerekli</strong>
               <p>Tarayıcınız mikrofonla konuşma tanıma API'sini doğrudan desteklemiyor olabilir. En iyi deneyim için Chrome, Edge veya Safari kullanabilirsiniz. Yine de yukarıdaki butonla doğru telaffuzu dinleyebilirsiniz!</p>
@@ -1505,7 +1505,7 @@
               <span class="wave-bar bar-7"></span>
             </div>
 
-            <div class="coach-status-text" id="coach-status-text" ${(!COACH_STATE.isListening && COACH_STATE.errorMessage) ? 'role="alert" style="color: var(--dp-color-red); font-weight: 600;"' : 'aria-live="polite"'}>
+            <div class="coach-status-text" id="coach-status-text" ${(!COACH_STATE.isListening && COACH_STATE.errorMessage) ? 'role="alert" style="color: var(--dp-color-accent-ink); font-weight: 600;"' : 'aria-live="polite"'}>
               ${COACH_STATE.isListening 
                 ? (COACH_PHASE_TEXT[COACH_STATE.phase] || COACH_PHASE_TEXT.preparing) 
                 : (COACH_STATE.errorMessage ? escapeHtml(COACH_STATE.errorMessage) : 'Mikrofona dokunun ve kelimeyi okuyun')}
@@ -1732,7 +1732,8 @@
           } else if (btn.classList && btn.classList.contains('feed-trailing-btn')) {
             btn.classList.toggle('active', isStarred);
             btn.title = isStarred ? 'Favorilerden Çıkar' : 'Favorilere Ekle';
-            btn.innerText = isStarred ? '★' : '☆';
+            btn.innerHTML = renderIcon(isStarred ? 'starFilled' : 'starOutline', 16);
+            btn.setAttribute('aria-pressed', String(!!isStarred));
           }
         }
       });
@@ -1764,7 +1765,8 @@
         } else if (btn.classList && btn.classList.contains('feed-trailing-btn')) {
           btn.classList.toggle('active', isStarred);
           btn.title = isStarred ? 'Favorilerden Çıkar' : 'Favorilere Ekle';
-          btn.innerText = isStarred ? '★' : '☆';
+          btn.innerHTML = renderIcon(isStarred ? 'starFilled' : 'starOutline', 16);
+            btn.setAttribute('aria-pressed', String(!!isStarred));
         }
       }
     });
@@ -2695,21 +2697,21 @@
               <span class="sgb-name">YDS &amp; YÖKDİL</span>
               <span class="sgb-meta">B2–C1 • 7.387 Kelime</span>
             </div>
-            <span class="sgb-check">✓</span>
+            <span class="sgb-check">${renderIcon('check', 14, '', 3)}</span>
           </button>
           <button type="button" class="stage-grade-btn ${curMod === 'oxford' ? 'active' : ''}" onclick="window.APP.switchModuleAndClose('oxford')">
             <div class="sgb-info">
               <span class="sgb-name">Kelime Kütüphanesi</span>
               <span class="sgb-meta">A1–C1 • 4.886 Kelime</span>
             </div>
-            <span class="sgb-check">✓</span>
+            <span class="sgb-check">${renderIcon('check', 14, '', 3)}</span>
           </button>
           <button type="button" class="stage-grade-btn ${curMod === 'all' ? 'active' : ''}" onclick="window.APP.switchModuleAndClose('all')">
             <div class="sgb-info">
               <span class="sgb-name">Tüm Kütüphane</span>
               <span class="sgb-meta">Birleşik 9.234 Kelime</span>
             </div>
-            <span class="sgb-check">✓</span>
+            <span class="sgb-check">${renderIcon('check', 14, '', 3)}</span>
           </button>
         </div>
       </div>
@@ -2736,7 +2738,7 @@
               <span class="sgb-name">${gData.name}</span>
               <span class="sgb-meta">CEFR ${gData.cefr} • ${gData.units.length} Ünite</span>
             </div>
-            <span class="sgb-check">✓</span>
+            <span class="sgb-check">${renderIcon('check', 14, '', 3)}</span>
           </button>
         ` : `
           <button type="button" class="stage-grade-btn disabled" disabled style="opacity:.45;cursor:not-allowed">
@@ -2879,6 +2881,7 @@
   }
 
   function goToCurriculumUnit(grade, unitNum) {
+    grade = Math.max(2, Math.min(12, parseInt(grade, 10) || 5));
     STATE.selectedGrade = grade;
     STATE.activeModule = 'maarif';
     const gData = window.CURRICULUM_DATA && window.CURRICULUM_DATA[grade];
@@ -3888,10 +3891,6 @@
     };
     const activeCurriculumSubtitle = curriculumSubtitles[module] || curriculumSubtitles.maarif;
 
-    const maarifPool = getActiveGradePool();
-    const ydsPool = WORDS_DATA.filter(isYDSWord);
-    const oxfordPool = WORDS_DATA.filter(isOxfordWord);
-
     const todaySched = getMEBCalendarInfo().schedule;
     const curMaarifTheme = todaySched ? { code: todaySched.unitCode, titleTr: todaySched.unitTitleTr || todaySched.unitTitle } : { code: '', titleTr: '' };
 
@@ -3903,23 +3902,10 @@
     };
     const activeUnitTitle = unitTitles[module] || unitTitles.maarif;
 
-    const moduleTotalDays = {
-      maarif: Math.ceil(maarifPool.length / 10),
-      yds: Math.ceil(ydsPool.length / 20),
-      oxford: Math.ceil(oxfordPool.length / 25),
-      all: Math.ceil(WORDS_DATA.length / 25)
-    };
-    const totalDayCount = moduleTotalDays[module] || 82;
-
     // Telemetry Metrics (Live Data)
-    const learnedCount = STATE.userData.learned.size;
     const quizStats = STATE.userData.stats || { quizzesPlayed: 0, correctAnswers: 0, totalQuestions: 0, bestStreak: 0 };
     const streakDays = Math.max(STATE.quizState.streak || 0, quizStats.bestStreak || 0);
     const streakFormatted = String(streakDays).padStart(2, '0') + ' GÜN';
-    const accuracyVal = quizStats.totalQuestions > 0
-      ? Math.round((quizStats.correctAnswers / quizStats.totalQuestions) * 100)
-      : 0;
-    const accuracyText = quizStats.totalQuestions > 0 ? `%${accuracyVal} DOĞRULUK` : '%0 DOĞRULUK';
 
     const srsDueWords = getSRSDueWords();
     const activeMistakes = getActiveMistakeWords();
@@ -4224,7 +4210,7 @@
         <div class="home-features-grid">
           <!-- Özellik 1: Speaking Coach -->
           <div class="home-feature-box">
-            <div class="hfb-icon-wrap" style="background: rgba(202, 0, 19, 0.08); color: var(--dp-color-red); border-color: rgba(202, 0, 19, 0.2);">${renderIcon('mic', 24)}</div>
+            <div class="hfb-icon-wrap" style="background: rgba(202, 0, 19, 0.08); color: var(--dp-color-accent-ink); border-color: rgba(202, 0, 19, 0.2);">${renderIcon('mic', 24)}</div>
             <div class="hfb-content">
               <h4 class="hfb-title">AI Speaking &amp; Telaffuz Koçu</h4>
               <p class="hfb-desc">Web Speech API ile mikrofondan sesinizi dinler, fonetik transkripsiyonla eşleştirir ve anlık telaffuz doğruluğunuzu puanlar. US/UK aksanı seçebilirsiniz.</p>
@@ -4284,7 +4270,7 @@
 
           <!-- Özellik 6: İstatistikler & Heatmap -->
           <div class="home-feature-box">
-            <div class="hfb-icon-wrap" style="background: rgba(202, 0, 19, 0.08); color: var(--dp-color-red); border-color: rgba(202, 0, 19, 0.2);">${renderIcon('chart', 24)}</div>
+            <div class="hfb-icon-wrap" style="background: rgba(202, 0, 19, 0.08); color: var(--dp-color-accent-ink); border-color: rgba(202, 0, 19, 0.2);">${renderIcon('chart', 24)}</div>
             <div class="hfb-content">
               <h4 class="hfb-title">Öğrenim Telemetrisi &amp; Kazanım Haritası</h4>
               <p class="hfb-desc">Günlük serinizi, doğruluk yüzdesini, tema bazlı kazanım matrisini (Heatmap) ve son çalışma oturumlarınızı canlı analiz edin.</p>
@@ -4358,7 +4344,7 @@
               <div class="mistake-chips-preview">
                 ${activeMistakes.slice(0, 3).map(w => {
                   const m = STATE.userData.mistakes[w.id];
-                  return `<span class="mistake-preview-pill" onclick="window.APP.retestDebugWord('${w.en.replace(/'/g, "\\'")}')" title="Bu kelimeyi test et"><strong>${w.en}</strong> (${m ? m.wrongCount : 1}x hata) ↺</span>`;
+                  return `<button type="button" class="mistake-preview-pill" onclick="window.APP.retestDebugWord('${w.en.replace(/'/g, "\\'")}')" title="Bu kelimeyi test et"><strong>${w.en}</strong> (${m ? m.wrongCount : 1}x hata) ↺</button>`;
                 }).join('')}
               </div>
             ` : ''}
@@ -4431,7 +4417,7 @@
               <button type="button" class="feed-icon-box speak-btn" data-word="${escapeHtml(wEn)}" title="Sesli Telaffuz (${STATE.settings.accent})" aria-label="Dinle: ${escapeHtml(wEn)}">
                 ${renderIcon('speaker', 15)}
               </button>
-              <button type="button" class="feed-icon-box coach-mic-btn" onclick="event.stopPropagation(); window.APP.openSpeechCoach('${escapeHtml(wEn)}')" title="Speaking Koçu ile Telaffuz Et" aria-label="Telaffuz Koçu: ${escapeHtml(wEn)}" style="background: rgba(202, 0, 19, 0.08); color: var(--dp-color-red); border-color: rgba(202, 0, 19, 0.2);">
+              <button type="button" class="feed-icon-box coach-mic-btn" onclick="event.stopPropagation(); window.APP.openSpeechCoach('${escapeHtml(wEn)}')" title="Speaking Koçu ile Telaffuz Et" aria-label="Telaffuz Koçu: ${escapeHtml(wEn)}" style="background: rgba(202, 0, 19, 0.08); color: var(--dp-color-accent-ink); border-color: rgba(202, 0, 19, 0.2);">
                 ${renderIcon('mic', 15)}
               </button>
             </div>
@@ -4450,8 +4436,8 @@
 
             <div style="display: flex; flex-direction: column; gap: 8px; align-items: center;">
               <button type="button" class="feed-trailing-btn ${isLearned ? 'checked' : ''}" onclick="window.APP.toggleLearned(${wId})" title="${isLearned ? 'Öğrenildi' : 'Öğrenildi Olarak İşaretle'}" aria-label="Öğrenildi"></button>
-              <button type="button" class="feed-trailing-btn ${isStarred ? 'active' : ''}" onclick="window.APP.toggleStarred(${wId})" title="${isStarred ? 'Favorilerden Çıkar' : 'Favorilere Ekle'}" aria-label="Favori" style="font-size: 14px;">
-                ${isStarred ? '★' : '☆'}
+              <button type="button" class="feed-trailing-btn ${isStarred ? 'active' : ''}" onclick="window.APP.toggleStarred(${wId})" title="${isStarred ? 'Favorilerden Çıkar' : 'Favorilere Ekle'}" aria-label="Favori" aria-pressed="${isStarred ? 'true' : 'false'}" style="font-size: 14px;">
+                ${renderIcon(isStarred ? 'starFilled' : 'starOutline', 16)}
               </button>
             </div>
           </article>
@@ -4486,13 +4472,13 @@
               </p>
               <div class="ced-grid">
                 ${enrichedList.map(item => `
-                  <div class="ced-word-chip" onclick="window.APP.openClassifierForWord('${escapeHtml(item.word.en)}')">
-                    <div>
+                  <button type="button" class="ced-word-chip" onclick="window.APP.openClassifierForWord('${escapeHtml(item.word.en)}')">
+                    <span class="ced-word-body">
                       <span class="ced-word-en">${escapeHtml(item.word.en)}</span>
-                      <div class="ced-word-tr">${escapeHtml(item.word.tr ? item.word.tr.slice(0, 24) + '...' : '')}</div>
-                    </div>
-                    <span style="font-family: var(--dp-typography-mono); font-size: 10px; font-weight: 800; color: #38bdf8;">%${Math.round(item.confidence * 100)}</span>
-                  </div>
+                      <span class="ced-word-tr">${escapeHtml(item.word.tr ? item.word.tr.slice(0, 24) + '...' : '')}</span>
+                    </span>
+                    <span style="font-family: var(--dp-typography-mono); font-size: 10px; font-weight: 800; color: var(--dp-ink-sky);">%${Math.round(item.confidence * 100)}</span>
+                  </button>
                 `).join('')}
               </div>
             </div>
@@ -4601,7 +4587,7 @@
             <button type="button" class="fc-action-btn learned-btn" onclick="window.APP.startDailyQuiz()">
               ${renderIcon('zap', 15)} <span>Haftalık Kazanım Testi &rarr;</span>
             </button>
-            <button type="button" class="fc-action-btn pdf-btn" onclick="window.APP.openPdfStudio('daily')" title="Bu haftanın çalışma föyünü PDF olarak çıkart" style="background: rgba(202, 0, 19, 0.08); color: var(--dp-color-red); border-color: rgba(202, 0, 19, 0.25);">
+            <button type="button" class="fc-action-btn pdf-btn" onclick="window.APP.openPdfStudio('daily')" title="Bu haftanın çalışma föyünü PDF olarak çıkart" style="background: rgba(202, 0, 19, 0.08); color: var(--dp-color-accent-ink); border-color: rgba(202, 0, 19, 0.25);">
               ${renderIcon('fileText', 15)} <span>Haftalık Föyü İndir (PDF)</span>
             </button>
           </div>
@@ -4609,7 +4595,7 @@
           <!-- Target Words List -->
           <div class="section-header-row" style="margin-top: 14px;">
             <span class="section-title">HAFTALIK HEDEF KELİMELER (${targetWordsList.length} KELİME)</span>
-            <span style="font-family:var(--dp-typography-mono); font-size:11px; font-weight:800; color:var(--dp-color-amber);">%${weekPercent} TAMAMLANDI</span>
+            <span style="font-family:var(--dp-typography-mono); font-size:11px; font-weight:800; color:var(--dp-color-amber-ink);">%${weekPercent} TAMAMLANDI</span>
           </div>
 
           <div class="daily-feed-column">
@@ -4796,7 +4782,7 @@
               <button type="button" class="feed-icon-box speak-btn" data-word="${w.en}" title="Sesli Telaffuz (${STATE.settings.accent})" aria-label="Dinle: ${w.en}">
                 ${renderIcon('speaker', 15)}
               </button>
-              <button type="button" class="feed-icon-box coach-mic-btn" onclick="event.stopPropagation(); window.APP.openSpeechCoach('${escapeHtml(w.en)}')" title="Speaking Koçu ile Telaffuz Et" aria-label="Telaffuz Koçu: ${w.en}" style="background: rgba(202, 0, 19, 0.08); color: var(--dp-color-red); border-color: rgba(202, 0, 19, 0.2);">
+              <button type="button" class="feed-icon-box coach-mic-btn" onclick="event.stopPropagation(); window.APP.openSpeechCoach('${escapeHtml(w.en)}')" title="Speaking Koçu ile Telaffuz Et" aria-label="Telaffuz Koçu: ${w.en}" style="background: rgba(202, 0, 19, 0.08); color: var(--dp-color-accent-ink); border-color: rgba(202, 0, 19, 0.2);">
                 ${renderIcon('mic', 15)}
               </button>
             </div>
@@ -4814,7 +4800,7 @@
               <div class="feed-card-tr">${w.tr || '<span style="color:var(--dp-color-ink-muted); font-style:italic;">(Anlamı ekleniyor)</span>'}</div>
               <div class="feed-card-meta">${w.desc || ''} ${w.cat ? '• ' + w.cat : ''}</div>
               ${w.definition && w.definition.toLowerCase().trim() !== (w.tr || '').toLowerCase().trim() ? `<div class="feed-card-desc">"${w.definition}"</div>` : ''}
-              ${syn ? `<div class="feed-card-meta" style="color:var(--dp-color-red);"><strong>EŞ ANLAM:</strong> ${syn}</div>` : ''}
+              ${syn ? `<div class="feed-card-meta" style="color:var(--dp-color-accent-ink);"><strong>EŞ ANLAM:</strong> ${syn}</div>` : ''}
               ${w.example ? `<div class="feed-card-example">“${highlightWordInText(w.example.replace(/^["“”]|["“”]$/g, ''), w.en)}”</div>` : ''}
             </div>
 
@@ -4823,8 +4809,8 @@
               <!-- 40px Circular Trailing Learned Checkbox Button -->
               <button type="button" class="feed-trailing-btn ${isLearned ? 'checked' : ''}" onclick="window.APP.toggleLearned(${w.id})" title="${isLearned ? 'Öğrenildi' : 'Öğrenildi Olarak İşaretle'}" aria-label="Öğrenildi"></button>
               <!-- Star / Repeat toggle -->
-              <button type="button" class="feed-trailing-btn ${isStarred ? 'active' : ''}" onclick="window.APP.toggleStarred(${w.id})" title="${isStarred ? 'Favorilerden Çıkar' : 'Favorilere Ekle'}" aria-label="Favori" style="font-size: 14px;">
-                ${isStarred ? '★' : '☆'}
+              <button type="button" class="feed-trailing-btn ${isStarred ? 'active' : ''}" onclick="window.APP.toggleStarred(${w.id})" title="${isStarred ? 'Favorilerden Çıkar' : 'Favorilere Ekle'}" aria-label="Favori" aria-pressed="${isStarred ? 'true' : 'false'}" style="font-size: 14px;">
+                ${renderIcon(isStarred ? 'starFilled' : 'starOutline', 16)}
               </button>
             </div>
           </article>
@@ -4907,7 +4893,7 @@
           <button type="button" class="fc-action-btn learned-btn" onclick="window.APP.startDailyQuiz()">
             ${renderIcon('zap', 15)} <span>Günün Testini Başlat →</span>
           </button>
-          <button type="button" class="fc-action-btn pdf-btn" onclick="window.APP.openPdfStudio('daily')" title="Bu günün çalışma föyünü PDF olarak çıkart" style="background: rgba(202, 0, 19, 0.08); color: var(--dp-color-red); border-color: rgba(202, 0, 19, 0.25);">
+          <button type="button" class="fc-action-btn pdf-btn" onclick="window.APP.openPdfStudio('daily')" title="Bu günün çalışma föyünü PDF olarak çıkart" style="background: rgba(202, 0, 19, 0.08); color: var(--dp-color-accent-ink); border-color: rgba(202, 0, 19, 0.25);">
             ${renderIcon('fileText', 15)} <span>Föyü İndir (PDF)</span>
           </button>
         </div>
@@ -5468,11 +5454,11 @@
                 GÜNLÜK ÇALIŞMA
               </button>
               ${(STATE.userData.mistakes && Object.keys(STATE.userData.mistakes).length > 0) ? `
-                <button class="fc-action-btn pdf-btn" onclick="window.APP.openPdfStudio('mistakes')" style="min-height: 48px; min-width: 160px; background: rgba(202, 0, 19, 0.08); color: var(--dp-color-red); border-color: rgba(202, 0, 19, 0.25);">
+                <button class="fc-action-btn pdf-btn" onclick="window.APP.openPdfStudio('mistakes')" style="min-height: 48px; min-width: 160px; background: rgba(202, 0, 19, 0.08); color: var(--dp-color-accent-ink); border-color: rgba(202, 0, 19, 0.25);">
                   ${renderIcon('fileText', 14)} <span>Yanlışları PDF Çıkart</span>
                 </button>
               ` : `
-                <button class="fc-action-btn pdf-btn" onclick="window.APP.openPdfStudio('quiz')" style="min-height: 48px; min-width: 160px; background: rgba(202, 0, 19, 0.08); color: var(--dp-color-red); border-color: rgba(202, 0, 19, 0.25);">
+                <button class="fc-action-btn pdf-btn" onclick="window.APP.openPdfStudio('quiz')" style="min-height: 48px; min-width: 160px; background: rgba(202, 0, 19, 0.08); color: var(--dp-color-accent-ink); border-color: rgba(202, 0, 19, 0.25);">
                   ${renderIcon('fileText', 14)} <span>Test Föyünü İndir (PDF)</span>
                 </button>
               `}
@@ -6097,7 +6083,7 @@
       <div class="stats-curriculum-station" style="border: var(--dp-border-rule) solid var(--dp-color-border); border-radius: var(--dp-radius-card); background: var(--dp-color-surface); padding: 24px; box-shadow: 0 4px 16px -2px rgba(23, 30, 25, 0.06); margin-bottom: 24px;">
         <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 16px; margin-bottom: 16px;">
           <div>
-            <div style="font-family: var(--dp-typography-mono); font-size: 0.78rem; font-weight: 800; color: var(--dp-color-field); text-transform: uppercase; margin-bottom: 4px; letter-spacing: 0.04em; display: flex; align-items: center; gap: 6px;">
+            <div style="font-family: var(--dp-typography-mono); font-size: 0.78rem; font-weight: 800; color: var(--dp-color-accent-ink); text-transform: uppercase; margin-bottom: 4px; letter-spacing: 0.04em; display: flex; align-items: center; gap: 6px;">
               ${renderIcon('target', 15)} <span>[ AKTİF HEDEF MÜFREDAT KAZANIM İSTASYONU ]</span>
             </div>
             <h2 style="font-size: 1.5rem; font-weight: 800; margin: 0; letter-spacing: -0.02em;">
@@ -6122,7 +6108,7 @@
             <span style="font-family: var(--dp-typography-mono); font-size: 0.76rem; font-weight: 800; text-transform: uppercase;">
               MÜFREDAT TAMAMLANMA ORANI
             </span>
-            <span style="font-family: var(--dp-typography-mono); font-size: 0.95rem; font-weight: 900; color: var(--dp-color-accent);">
+            <span style="font-family: var(--dp-typography-mono); font-size: 0.95rem; font-weight: 900; color: var(--dp-color-accent-ink);">
               %${activePct} (${activeLearned} / ${activeWords.length} KELİME)
             </span>
           </div>
@@ -6238,7 +6224,7 @@
             <div class="metric-title">TOPLAM HATA OLAYI</div>
           </div>
           <div class="stat-metric-card glass-panel" style="padding:14px;">
-            <div class="metric-val" style="font-size:1.4rem; color:var(--dp-color-red);">${mistakeStats.activeMistakes}</div>
+            <div class="metric-val" style="font-size:1.4rem; color: var(--dp-color-accent-ink);">${mistakeStats.activeMistakes}</div>
             <div class="metric-title">AKTİF BEKLEYEN ZAYIF NOKTA</div>
           </div>
           <div class="stat-metric-card glass-panel" style="padding:14px;">
@@ -6246,7 +6232,7 @@
             <div class="metric-title">KURTARILAN / TEMİZLENEN</div>
           </div>
           <div class="stat-metric-card glass-panel" style="padding:14px;">
-            <div class="metric-val" style="font-size:1.4rem; color:var(--dp-color-field);">%${mistakeStats.recoveryRate}</div>
+            <div class="metric-val" style="font-size:1.4rem; color: var(--dp-color-accent-ink);">%${mistakeStats.recoveryRate}</div>
             <div class="metric-title">HATA KURTARMA ORANI</div>
           </div>
         </div>
@@ -6320,7 +6306,7 @@
             <div class="metric-title">TELAFFUZ BAŞARI ORANI</div>
           </div>
           <div class="stat-metric-card glass-panel" style="padding:14px;">
-            <div class="metric-val" style="font-size:1.4rem; color:var(--dp-color-field);">
+            <div class="metric-val" style="font-size:1.4rem; color: var(--dp-color-accent-ink);">
               ${isSpeechRecognitionSupported() ? 'AKTİF ✓' : 'DESTEKLENMİYOR ✕'}
             </div>
             <div class="metric-title">TARAYICI SES MOTORU</div>
@@ -6336,9 +6322,6 @@
       </div>
     `;
   }
-
-  // No-op: confetti disabled per Sophisticated Playful spec
-  function triggerConfetti() {}
 
   // ==========================================================================
   // TOP CONTEXT CANOPY ("İŞTE BURADASINIZ" HABER VERİCİ ÇİZGİSİ)
@@ -6607,10 +6590,13 @@
     const viewAliases = { 'word-list': 'directory', 'words': 'directory' };
     const resolved = viewAliases[viewName] || viewName;
     cancelQuizSpeaking();
-    if (document.startViewTransition) {
-      document.startViewTransition(() => {
+    if (document.startViewTransition && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      const vt = document.startViewTransition(() => {
         executeSwitchView(resolved, pushHash);
       });
+      // rapid switches skip the previous transition; swallow the expected aborts
+      vt.ready.catch(() => {});
+      vt.finished.catch(() => {});
     } else {
       executeSwitchView(resolved, pushHash);
     }
@@ -6856,6 +6842,14 @@
     renderQuizView();
   }
 
+  // Screen-reader live region: colour-independent answer feedback
+  function announceStatus(msg) {
+    const el = document.getElementById('sr-live');
+    if (!el) return;
+    el.textContent = '';
+    setTimeout(() => { el.textContent = msg; }, 30);
+  }
+
   function handleQuizAnswer(optionIdx) {
     if (STATE.quizState.answered || STATE.quizState.waitingFeedback) return;
     STATE.quizState.answered = true;
@@ -6872,6 +6866,8 @@
         btn.classList.add('wrong');
       }
     });
+
+    announceStatus(selectedOpt.isCorrect ? 'Doğru cevap' : 'Yanlış cevap. Doğru seçenek vurgulandı');
 
     if (selectedOpt.isCorrect) {
       STATE.quizState.score++;
@@ -7433,6 +7429,12 @@
   // ==========================================================================
   // KEYBOARD SHORTCUTS (Home, Flashcard & Quiz Mechanical Ergonomics)
   // ==========================================================================
+  // Backdrop click closes the open modal (replaces inline onclick on non-interactive divs)
+  document.addEventListener('click', (e) => {
+    const t = e.target;
+    if (t && t.id && /-backdrop$/.test(t.id)) closeModals();
+  });
+
   window.addEventListener('keydown', (e) => {
     if (e.key === 'Escape' && (COACH_STATE.active || isAnyModalOpen())) {
       e.preventDefault();

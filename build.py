@@ -945,6 +945,38 @@ def bundle_single_file(words_js=None, output_path=SINGLE_HTML_PATH, write_to_dis
 
     return bundle_html
 
+def stamp_asset_versions():
+    """index.html'deki ?v= etiketlerini ve service-worker önbellek adını dosya içeriğinden türetir.
+    Sabit etiketler yüzünden Vercel'in 7 günlük önbelleği eski app.css/app.js/words-data.js sunabiliyordu."""
+    import hashlib
+    assets = ['app.css', 'app.js', 'words-data.js', 'curriculum-data.js']
+    digests = {}
+    for name in assets:
+        path = os.path.join(BASE_DIR, name)
+        if os.path.exists(path):
+            with open(path, 'rb') as f:
+                digests[name] = hashlib.sha1(f.read()).hexdigest()[:8]
+
+    index_path = os.path.join(BASE_DIR, 'index.html')
+    with open(index_path, 'r', encoding='utf-8') as f:
+        original = text = f.read()
+    for name, digest in digests.items():
+        text = re.sub(rf'((?:href|src)=["\']{re.escape(name)})\?v=[^"\']*(["\'])', rf'\g<1>?v={digest}\g<2>', text)
+    if text != original:
+        with open(index_path, 'w', encoding='utf-8') as f:
+            f.write(text)
+        log("✅ index.html varlık sürüm etiketleri içerik özetiyle güncellendi.")
+
+    if os.path.exists(SERVICE_WORKER_PATH):
+        cache_id = hashlib.sha1(''.join(digests[n] for n in assets if n in digests).encode()).hexdigest()[:8]
+        with open(SERVICE_WORKER_PATH, 'r', encoding='utf-8') as f:
+            sw_original = sw_text = f.read()
+        sw_text = re.sub(r"const CACHE_NAME = ['\"][^'\"]+['\"];", f"const CACHE_NAME = 'learnish-{cache_id}';", sw_text)
+        if sw_text != sw_original:
+            with open(SERVICE_WORKER_PATH, 'w', encoding='utf-8') as f:
+                f.write(sw_text)
+            log(f"✅ service-worker.js önbellek adı learnish-{cache_id} olarak güncellendi.")
+
 def check_bundle_sync():
     """
     Checks whether Learnish_Tek_Dosya_Web_App.html is 100% in sync with the source files.
@@ -1014,11 +1046,13 @@ def main():
         is_synced = check_bundle_sync()
         sys.exit(0 if is_synced else 1)
     elif args.bundle:
+        stamp_asset_versions()
         bundle_single_file(write_to_disk=True, inline_assets=True)
         sys.exit(0)
     else:
         # Default behavior: full database extraction and bundling
         build_combined_database()
+        stamp_asset_versions()
 
 if __name__ == '__main__':
     main()
