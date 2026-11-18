@@ -23,7 +23,7 @@ if git diff --staged --quiet; then
     echo "ℹ️  Yeni bir değişiklik bulunamadı, mevcut kodlar zaten güncel."
 else
     ZAMAN=$(date '+%d.%m.%Y %H:%M')
-    COMMIT_MSG="feat: veritabani ve uygulama guncellemesi (9,234 kelime - $ZAMAN)"
+    COMMIT_MSG="feat: veritabani ve uygulama guncellemesi ($ZAMAN)"
     git commit -m "$COMMIT_MSG"
     echo "✅ Değişiklikler commit edildi: $COMMIT_MSG"
 fi
@@ -38,7 +38,7 @@ if [ $? -eq 0 ]; then
     echo "=========================================================="
     echo "🎉 TEBRİKLER! Kodlar GitHub'a başarıyla yüklendi!"
     echo "⚡ Vercel yaklaşık 10-15 saniye içinde canlıda güncellenecektir."
-    echo "🌐 Canlı siteniz güncel 9,234 kelimelik veritabanıyla hazır!"
+    echo "🌐 Canlı siteniz güncellendi!"
     echo "=========================================================="
 else
     echo ""
