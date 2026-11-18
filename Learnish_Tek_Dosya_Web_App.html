@@ -12,7 +12,18 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <meta name="apple-mobile-web-app-title" content="Learnish">
-  
+
+  <!-- Open Graph & Social Sharing -->
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Learnish • İngilizce Kelime Platformu">
+  <meta property="og:description" content="MEB Müfredatı (1-12. Sınıf), YDS/YÖKDİL Akademik Hazırlık ve A1-C1 Kelime Kütüphanesi ile 9.234 kelimelik interaktif İngilizce çalışma platformu.">
+  <meta property="og:image" content="icon-512.png">
+  <meta property="og:site_name" content="Learnish">
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="Learnish • İngilizce Kelime Platformu">
+  <meta name="twitter:description" content="MEB 1-12. Sınıf müfredatı, YDS/YÖKDİL hazırlık ve Oxford 5000 kelime havuzuyla akıllı İngilizce öğrenme platformu.">
+  <meta name="twitter:image" content="icon-512.png">
+
   <!-- App Icons & Manifest -->
   <link rel="icon" type="image/png" href="data:image/png;base64,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">
   <link rel="apple-touch-icon" href="data:image/png;base64,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">
@@ -6187,6 +6198,49 @@ body.modal-open {
   margin-top: 4px;
 }
 
+/* Quick Actions Grid */
+.home-quick-actions-grid {
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  gap: 10px;
+}
+
+@media (max-width: 700px) {
+  .home-quick-actions-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+.home-qa-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 14px 8px;
+  background: var(--dp-color-surface-subtle);
+  border: 1.5px solid var(--dp-color-border);
+  border-radius: 14px;
+  cursor: pointer;
+  color: var(--dp-color-ink-secondary);
+  font-family: var(--dp-typography-face);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  transition: background 0.15s, border-color 0.15s, color 0.15s, transform 0.1s;
+}
+
+.home-qa-btn:hover {
+  background: var(--dp-color-surface-1);
+  border-color: var(--dp-color-accent);
+  color: var(--dp-color-ink);
+  transform: translateY(-2px);
+}
+
+.home-qa-btn svg {
+  flex-shrink: 0;
+}
+
 /* Section Header */
 .home-guide-section {
   margin: 32px 0;
@@ -7103,10 +7157,101 @@ h1, h2, h3 { text-wrap: balance; line-height: 1.2; }
 
 .pdf-a4-preview-viewport.a4-scaled { width: 718px; max-width: none; flex-shrink: 0; min-height: 1015px; }
 
+/* ==========================================================================
+   SW UPDATE BANNER
+   ========================================================================== */
+.sw-update-banner {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: var(--z-toast);
+  background: var(--dp-color-emphasis);
+  color: #fff;
+  padding: 10px 16px;
+  align-items: center;
+  gap: 12px;
+  font-size: 0.88rem;
+  font-weight: 600;
+  box-shadow: 0 2px 12px rgba(0,0,0,.18);
+}
+.sw-update-text { flex: 1; }
+.sw-update-btn {
+  background: #fff;
+  color: var(--dp-color-emphasis);
+  border: none;
+  border-radius: 6px;
+  padding: 6px 14px;
+  font-weight: 700;
+  font-size: 0.82rem;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.sw-update-dismiss {
+  background: none;
+  border: none;
+  color: rgba(255,255,255,.8);
+  font-size: 1rem;
+  cursor: pointer;
+  padding: 4px 6px;
+  line-height: 1;
+}
+
+/* ==========================================================================
+   DATA MANAGEMENT BUTTONS (Settings Dialog)
+   ========================================================================== */
+.settings-data-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 4px 0 8px;
+}
+.setting-data-btn {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 10px 14px;
+  border-radius: 10px;
+  border: 1.5px solid var(--dp-color-border);
+  background: var(--dp-color-surface);
+  color: var(--dp-color-ink);
+  font-size: 0.88rem;
+  font-weight: 600;
+  font-family: var(--dp-typography-face);
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+  text-align: left;
+}
+.setting-data-btn:hover { background: var(--dp-color-surface-1); border-color: var(--dp-color-ink-muted); }
+.setting-data-btn--reset { color: var(--dp-color-emphasis); border-color: color-mix(in srgb, var(--dp-color-emphasis) 30%, transparent); }
+.setting-data-btn--reset:hover { background: color-mix(in srgb, var(--dp-color-emphasis) 8%, var(--dp-color-surface)); }
+
+/* YDS cloze cözüm kartı extras */
+.feedback-cloze-extras {
+  margin-top: 10px;
+  padding: 8px 10px;
+  background: var(--dp-color-surface-1);
+  border-radius: 8px;
+  border-left: 3px solid var(--dp-color-emphasis);
+  font-size: 0.85rem;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
 </style>
 </head>
 <body>
   <div id="sr-live" class="sr-only" role="status" aria-live="polite" aria-atomic="true"></div>
+
+  <!-- SW Update Notification Banner -->
+  <div id="sw-update-banner" class="sw-update-banner" style="display:none;" role="alert" aria-live="assertive">
+    <span class="sw-update-text">Yeni Learnish sürümü hazır!</span>
+    <button type="button" class="sw-update-btn" onclick="window.APP.applySwUpdate()">Şimdi Güncelle</button>
+    <button type="button" class="sw-update-dismiss" onclick="document.getElementById('sw-update-banner').style.display='none'" aria-label="Kapat">✕</button>
+  </div>
 
   <!-- SINGLE-COLUMN APP SHELL -->
   <div class="app-shell">
@@ -7297,6 +7442,26 @@ h1, h2, h3 { text-wrap: balance; line-height: 1.2; }
           </div>
           <span class="s-arrow">→</span>
         </button>
+      </div>
+
+      <!-- Data Management -->
+      <div class="settings-toggles-section">
+        <div class="settings-section-title">VERİ YÖNETİMİ</div>
+        <div class="settings-data-actions">
+          <button type="button" class="setting-data-btn setting-data-btn--export" onclick="window.APP.exportProgress()">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            <span>İlerlemeyi Dışa Aktar</span>
+          </button>
+          <button type="button" class="setting-data-btn setting-data-btn--import" onclick="window.APP.importProgress()">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10" transform="rotate(180 12 12)"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+            <span>Yedekten Geri Yükle</span>
+          </button>
+          <button type="button" class="setting-data-btn setting-data-btn--reset" onclick="window.APP.resetProgress()">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.51"/></svg>
+            <span>Tüm İlerlemeyi Sıfırla</span>
+          </button>
+        </div>
+        <input type="file" id="import-file-input" accept=".json" style="display:none" onchange="window.APP.handleImportFile(this)">
       </div>
 
       <!-- System Toggles -->
@@ -8432,10 +8597,16 @@ if (typeof module !== 'undefined' && module.exports) {
     'widespread': 'pervasive, prevalent, extensive'
   };
 
+  // Veri şema sürümü — artırıldığında localStorage'daki eski yapı güvenle taşınır.
+  const SCHEMA_VERSION = 3;
+
   // Güvenli localStorage okuma: depolama engelliyse (gizli sekme, kısıtlı okul tarayıcısı) ya da
   // kayıtlı veri bozulmuşsa uygulama açılışta çökmesin; varsayılan değerle devam edilsin.
   function lsGet(key, fallback = null) {
     try { const v = localStorage.getItem(key); return v === null ? fallback : v; } catch (e) { return fallback; }
+  }
+  function lsSet(key, value) {
+    try { localStorage.setItem(key, value); } catch (e) { console.warn('[Learnish] localStorage yazma hatası:', key); }
   }
   function lsJSON(key, fallback) {
     try {
@@ -8450,6 +8621,24 @@ if (typeof module !== 'undefined' && module.exports) {
       return fallback;
     }
   }
+
+  // Şema versiyonu kontrolü: eski yapı varsa güvenli sıfırlama yerine sadece eksik alanları tamamla.
+  (function migrateSchema() {
+    try {
+      const storedVer = parseInt(lsGet('mk_schema_version', '0'), 10);
+      if (storedVer < 1) {
+        // v0→v1: mk_srs ve mk_mistakes anahtarları eklendi; varsa koru, yoksa default bırak.
+      }
+      if (storedVer < 2) {
+        // v1→v2: activityLog yapısı değişti; bozuk array ise sıfırla.
+        const log = lsJSON('mk_activity_log', null);
+        if (log !== null && (!Array.isArray(log) || (log.length > 0 && typeof log[0] !== 'object'))) {
+          lsSet('mk_activity_log', '[]');
+        }
+      }
+      lsSet('mk_schema_version', String(SCHEMA_VERSION));
+    } catch (e) { /* sessiz devam */ }
+  })();
 
   // Sınıf havuzu önbellekleri (bkz. getActiveGradePool) — açılışta takvim hesaplanırken hazır olmalı
   const _wordIndex = new Map();          // küçük harf İngilizce → kelime
@@ -8640,19 +8829,45 @@ if (typeof module !== 'undefined' && module.exports) {
   }
 
   // ==========================================================================
-  // Web Speech API (Native TTS Pronunciation)
+  // Web Speech API (Native TTS Pronunciation) — Güvenilir ses servisi
   // ==========================================================================
   let synthVoices = [];
+  let _ttsSupported = null; // null = henüz test edilmedi
+
+  // Yüksek kaliteli İngilizce ses öncelik sırası (yerel > Google > genel)
+  const _VOICE_PRIORITY = ['Daniel', 'Karen', 'Moira', 'Samantha', 'Google UK English', 'Google US English', 'Google English', 'Natural'];
+
+  function _selectBestVoice(lang) {
+    if (!synthVoices.length) return null;
+    const prefix = lang.substring(0, 2).toLowerCase(); // 'en'
+    // Önce tam eşleşme + öncelikli isimler
+    for (const name of _VOICE_PRIORITY) {
+      const v = synthVoices.find(v => v.lang.toLowerCase().startsWith(prefix) && v.name.includes(name));
+      if (v) return v;
+    }
+    // Sonra yerel (localService) ses
+    const local = synthVoices.find(v => v.lang.toLowerCase().startsWith(prefix) && v.localService);
+    if (local) return local;
+    // Herhangi bir İngilizce ses
+    return synthVoices.find(v => v.lang.toLowerCase().startsWith(prefix)) || null;
+  }
 
   function loadVoices() {
-    if ('speechSynthesis' in window && window.speechSynthesis) {
-      synthVoices = typeof window.speechSynthesis.getVoices === 'function' ? window.speechSynthesis.getVoices() : [];
-      if (window.speechSynthesis.onvoiceschanged !== undefined) {
-        window.speechSynthesis.onvoiceschanged = () => {
-          synthVoices = typeof window.speechSynthesis.getVoices === 'function' ? window.speechSynthesis.getVoices() : [];
-        };
-      }
+    if (!('speechSynthesis' in window && window.speechSynthesis)) {
+      _ttsSupported = false;
+      return;
     }
+    _ttsSupported = true;
+    const update = () => {
+      synthVoices = window.speechSynthesis.getVoices ? window.speechSynthesis.getVoices() : [];
+    };
+    update();
+    // Bazı tarayıcılarda sesler asenkron yüklenir
+    if (window.speechSynthesis.onvoiceschanged !== undefined) {
+      window.speechSynthesis.onvoiceschanged = update;
+    }
+    // Chrome'da onvoiceschanged bazen tetiklenmez; 500ms sonra bir kez daha kontrol et
+    setTimeout(update, 500);
   }
   loadVoices();
 
@@ -8663,10 +8878,12 @@ if (typeof module !== 'undefined' && module.exports) {
     }
     if (!('speechSynthesis' in window && window.speechSynthesis)) {
       if (onEndCallback) onEndCallback();
+      _showNoTtsHint();
       return;
     }
 
     try {
+      // Kuyruk kilitlenmesini önle: yeni istek başlamadan önce mevcut sesi iptal et
       window.speechSynthesis.cancel();
       const cleanWord = text.replace(/\[.*?\]/g, '').replace(/[\/\\()]/g, '').trim();
       const utterance = new SpeechSynthesisUtterance(cleanWord);
@@ -8674,23 +8891,29 @@ if (typeof module !== 'undefined' && module.exports) {
       utterance.rate = STATE.settings.speed || 1.0;
       utterance.pitch = 1.0;
 
-      if (synthVoices.length > 0) {
-        const preferred = synthVoices.find(v => v.lang.startsWith(utterance.lang.substring(0, 2)) && (v.name.includes('Google') || v.name.includes('Natural') || v.name.includes('Daniel') || v.name.includes('Samantha')));
-        if (preferred) utterance.voice = preferred;
-      }
+      const bestVoice = _selectBestVoice(utterance.lang);
+      if (bestVoice) utterance.voice = bestVoice;
 
-      utterance.onend = () => {
-        if (onEndCallback) onEndCallback();
-      };
-      utterance.onerror = () => {
-        if (onEndCallback) onEndCallback();
-      };
+      utterance.onend = () => { if (onEndCallback) onEndCallback(); };
+      utterance.onerror = () => { if (onEndCallback) onEndCallback(); };
 
       window.speechSynthesis.speak(utterance);
     } catch (err) {
       console.warn('Speech synthesis error:', err);
       if (onEndCallback) onEndCallback();
     }
+  }
+
+  // Cihazda TTS yoksa veya sesler henüz yoksa tek seferlik ipucu göster
+  let _noTtsHintShown = false;
+  function _showNoTtsHint() {
+    if (_noTtsHintShown) return;
+    _noTtsHintShown = true;
+    const banner = document.createElement('div');
+    banner.style.cssText = 'position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:var(--dp-color-surface-1);border:1px solid var(--dp-color-border);color:var(--dp-color-ink);padding:10px 18px;border-radius:8px;font-size:0.85rem;z-index:var(--z-toast);box-shadow:0 4px 16px rgba(0,0,0,.18);';
+    banner.textContent = 'Bu cihazda telaffuz sesi desteklenmiyor.';
+    document.body.appendChild(banner);
+    setTimeout(() => banner.remove(), 4000);
   }
 
   // ==========================================================================
@@ -9693,9 +9916,119 @@ if (typeof module !== 'undefined' && module.exports) {
       localStorage.setItem('mk_current_day', STATE.currentDay.toString());
       localStorage.setItem('mk_srs', JSON.stringify(STATE.userData.srs || {}));
       localStorage.setItem('mk_mistakes', JSON.stringify(STATE.userData.mistakes || {}));
+      localStorage.setItem('mk_schema_version', String(SCHEMA_VERSION));
     } catch (e) {
       console.warn('LocalStorage save error:', e);
     }
+  }
+
+  // ==========================================================================
+  // VERİ YEDEKLEME, GERİ YÜKLEME VE SIFIRLAMA
+  // ==========================================================================
+
+  function exportProgress() {
+    try {
+      const payload = {
+        learnish_backup: true,
+        schema: SCHEMA_VERSION,
+        exportedAt: new Date().toISOString(),
+        settings: {
+          accent: STATE.settings.accent,
+          speed: STATE.settings.speed,
+          theme: STATE.settings.theme,
+          soundEffects: STATE.settings.soundEffects
+        },
+        userData: {
+          learned: Array.from(STATE.userData.learned),
+          review: Array.from(STATE.userData.review),
+          starred: Array.from(STATE.userData.starred),
+          stats: STATE.userData.stats,
+          activityLog: STATE.userData.activityLog,
+          srs: STATE.userData.srs,
+          mistakes: STATE.userData.mistakes
+        },
+        currentDay: STATE.currentDay,
+        activeModule: STATE.activeModule,
+        selectedGrade: STATE.selectedGrade
+      };
+      const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `learnish-yedek-${new Date().toISOString().slice(0, 10)}.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      _showToast('İlerleme yedeği indirildi.', 'success');
+    } catch (e) {
+      _showToast('Dışa aktarma hatası: ' + e.message, 'error');
+    }
+  }
+
+  function importProgress() {
+    document.getElementById('import-file-input')?.click();
+  }
+
+  function handleImportFile(input) {
+    const file = input.files && input.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const data = JSON.parse(e.target.result);
+        if (!data || !data.learnish_backup) throw new Error('Geçersiz Learnish yedeği.');
+        if (!confirm('Bu yedek mevcut tüm ilerlemenizin üzerine yazacak. Devam etmek istiyor musunuz?')) { input.value = ''; return; }
+
+        // Veriyi yükle
+        const ud = data.userData || {};
+        STATE.userData.learned = new Set(Array.isArray(ud.learned) ? ud.learned : []);
+        STATE.userData.review = new Set(Array.isArray(ud.review) ? ud.review : []);
+        STATE.userData.starred = new Set(Array.isArray(ud.starred) ? ud.starred : []);
+        STATE.userData.stats = Object.assign({ quizzesPlayed: 0, correctAnswers: 0, totalQuestions: 0, bestStreak: 0 }, ud.stats || {});
+        STATE.userData.activityLog = Array.isArray(ud.activityLog) ? ud.activityLog : [];
+        STATE.userData.srs = ud.srs && typeof ud.srs === 'object' ? ud.srs : {};
+        STATE.userData.mistakes = ud.mistakes && typeof ud.mistakes === 'object' ? ud.mistakes : {};
+
+        if (data.settings) {
+          if (data.settings.accent) STATE.settings.accent = data.settings.accent;
+          if (data.settings.theme) {
+            STATE.settings.theme = data.settings.theme;
+            document.documentElement.setAttribute('data-theme', STATE.settings.theme);
+          }
+        }
+        if (data.currentDay) STATE.currentDay = data.currentDay;
+        if (data.activeModule) STATE.activeModule = data.activeModule;
+        if (data.selectedGrade) STATE.selectedGrade = data.selectedGrade;
+
+        saveUserData();
+        input.value = '';
+        _showToast('Yedek başarıyla geri yüklendi!', 'success');
+        setTimeout(() => location.reload(), 1200);
+      } catch (err) {
+        _showToast('Geri yükleme hatası: ' + err.message, 'error');
+        input.value = '';
+      }
+    };
+    reader.readAsText(file);
+  }
+
+  function resetProgress() {
+    if (!confirm('Tüm öğrenme ilerlemeniz, hata defteriniz ve istatistikleriniz silinecek.\nBu işlem GERİ ALINAMAZ. Devam etmek istiyor musunuz?')) return;
+    if (!confirm('Emin misiniz? Bu işlemi geri alamazsınız.')) return;
+    const keysToRemove = ['mk_learned', 'mk_review', 'mk_starred', 'mk_stats', 'mk_activity_log', 'mk_srs', 'mk_mistakes', 'mk_current_day', 'mk_schema_version'];
+    keysToRemove.forEach(k => { try { localStorage.removeItem(k); } catch (_) {} });
+    _showToast('Tüm ilerleme sıfırlandı. Sayfa yenileniyor...', 'success');
+    setTimeout(() => location.reload(), 1000);
+  }
+
+  function _showToast(msg, type = 'info') {
+    const el = document.createElement('div');
+    const bg = type === 'success' ? '#047857' : type === 'error' ? '#ca0013' : '#374151';
+    el.style.cssText = `position:fixed;bottom:88px;left:50%;transform:translateX(-50%);background:${bg};color:#fff;padding:10px 20px;border-radius:8px;font-size:0.88rem;font-weight:600;z-index:var(--z-toast);box-shadow:0 4px 16px rgba(0,0,0,.22);white-space:nowrap;`;
+    el.textContent = msg;
+    document.body.appendChild(el);
+    setTimeout(() => el.remove(), 3500);
   }
 
   function logActivity(moduleTitle, resultText) {
@@ -10423,6 +10756,38 @@ if (typeof module !== 'undefined' && module.exports) {
       }
     }
     return picked;
+  }
+
+  /**
+   * Esnek cevap karşılaştırma: büyük/küçük harf, baş/son boşluk, tek karakter yazım hataları
+   * ve kısa kelimeler için Levenshtein mesafesi ile toleranslı eşleşme sağlar.
+   * Kullanım: checkFlexibleAnswer(userInput, correctAnswer) → boolean
+   */
+  function checkFlexibleAnswer(input, correct) {
+    if (!input || !correct) return false;
+    const norm = s => String(s).trim().toLowerCase().replace(/[''`]/g, "'").replace(/\s+/g, ' ');
+    const a = norm(input);
+    const b = norm(correct);
+    if (a === b) return true;
+    // Tek karakter fark toleransı (ör. "abondon" = "abandon")
+    if (Math.abs(a.length - b.length) > 2) return false;
+    return _levenshtein(a, b) <= 1;
+  }
+
+  function _levenshtein(a, b) {
+    const m = a.length, n = b.length;
+    if (m === 0) return n;
+    if (n === 0) return m;
+    const dp = Array.from({ length: m + 1 }, (_, i) => [i, ...Array(n).fill(0)]);
+    for (let j = 1; j <= n; j++) dp[0][j] = j;
+    for (let i = 1; i <= m; i++) {
+      for (let j = 1; j <= n; j++) {
+        dp[i][j] = a[i - 1] === b[j - 1]
+          ? dp[i - 1][j - 1]
+          : 1 + Math.min(dp[i - 1][j], dp[i][j - 1], dp[i - 1][j - 1]);
+      }
+    }
+    return dp[m][n];
   }
 
   function extractPreposition(w) {
@@ -11922,173 +12287,90 @@ if (typeof module !== 'undefined' && module.exports) {
     if (!container) return;
 
     const module = STATE.activeModule;
-    const curriculumSubtitles = {
-      maarif: `MEB MÜFREDATI • ${getActiveGrade()}. SINIF`,
-      yds: 'HEDEF MÜFREDAT • YDS & YÖKDİL AKADEMİK',
-      oxford: 'HEDEF MÜFREDAT • KELİME KÜTÜPHANESİ',
-      all: 'HEDEF MÜFREDAT • TÜM AKADEMİK KÜTÜPHANE'
+
+    const moduleLabels = {
+      maarif: `MEB ${getActiveGrade()}. Sınıf`,
+      yds: 'YDS/YÖKDİL Akademik',
+      oxford: 'Kelime Kütüphanesi (A1–C1)',
+      all: `Tüm Kütüphane (${WORDS_DATA.length.toLocaleString('tr-TR')} kelime)`
     };
-    const activeCurriculumSubtitle = curriculumSubtitles[module] || curriculumSubtitles.maarif;
 
-    const todaySched = getMEBCalendarInfo().schedule;
-    const curMaarifTheme = todaySched ? { code: todaySched.unitCode, titleTr: todaySched.unitTitleTr || todaySched.unitTitle } : { code: '', titleTr: '' };
-
-    const unitTitles = {
-      maarif: `MEB ${getActiveGrade()}. Sınıf • ${curMaarifTheme.code}: ${curMaarifTheme.titleTr}`,
-      yds: 'YDS/YÖKDİL • 2020–2026 Akademik Sınav Soruları & Kalıpları',
-      oxford: 'Kelime Kütüphanesi • CEFR A1–C1 Kapsamlı Arşiv',
-      all: `Learnish Arşiv: ${WORDS_DATA.length.toLocaleString('tr-TR')} Kelimelik Birleşik Kütüphane`
-    };
-    const activeUnitTitle = unitTitles[module] || unitTitles.maarif;
-
-    // Telemetry Metrics (Live Data)
     const quizStats = STATE.userData.stats || { quizzesPlayed: 0, correctAnswers: 0, totalQuestions: 0, bestStreak: 0 };
     const streakDays = Math.max(STATE.quizState.streak || 0, quizStats.bestStreak || 0);
-    const streakFormatted = String(streakDays).padStart(2, '0') + ' GÜN';
 
     const srsDueWords = getSRSDueWords();
     const activeMistakes = getActiveMistakeWords();
     const srsStats = getSRSStats();
 
-    // Row 3 Block A: Debug Queue (Zayıf Halkalar - Gerçek Tekrar Verileri)
-    const reviewWords = WORDS_DATA.filter(w => STATE.userData.review.has(w.id)).slice(0, 3);
-    let debugListHtml = '';
-    if (reviewWords.length === 0) {
-      debugListHtml = `
-        <div style="padding: 24px 12px; color: var(--dp-color-ink-muted); font-size: 0.85rem; text-align: center; display: flex; align-items: center; justify-content: center; gap: 8px;">
-          ${renderIcon('sparkles', 16)} <span>Şu an tekrar kuyruğunuz temiz. Testlerde yanlış cevaplanan kelimeler anında buraya eklenir.</span>
-        </div>
-      `;
-    } else {
-      debugListHtml = reviewWords.map(item => `
-        <div class="dash-debug-row">
-          <div class="dash-debug-word-group">
-            <span class="dash-debug-en">${item.en}</span>
-            <span class="dash-debug-tr">${item.tr}</span>
-          </div>
-          <button type="button" class="dash-retest-btn" onclick="window.APP.retestDebugWord('${item.en.replace(/'/g, "\\'")}')">
-            Yeniden Test Et ↺
-          </button>
-        </div>
-      `).join('');
-    }
-
-    // Row 3 Block B: Mastery Heatmap (Gerçek Tema & Kazanım İlerlemesi)
-    const heatmapCategories = ['Nouns', 'Verbs', 'Adjectives', 'Phrases', 'Collocations', 'Review'];
-    const totalSquares = 48; // 8 tema x 6 kazanım hücresi
-    let heatmapSquaresHtml = '';
-    for (let i = 0; i < totalSquares; i++) {
-      const unitNum = Math.floor(i / 6) + 1;
-      const catName = heatmapCategories[i % heatmapCategories.length];
-      const themeWords = WORDS_DATA.filter(w => w.themeNum === unitNum);
-      const learnedInTheme = themeWords.filter(w => STATE.userData.learned.has(w.id)).length;
-      const stepThreshold = Math.max(1, Math.ceil((themeWords.length / 6) * ((i % 6) + 1)));
-      const isMastered = learnedInTheme >= stepThreshold && learnedInTheme > 0;
-      const statusLabel = isMastered ? 'Kazanıldı' : 'Bekliyor';
-      const themeName = THEMES_DATA[unitNum]?.titleTr || `Tema ${unitNum}`;
-      const titleText = `Tema ${unitNum} (${themeName}) - ${catName}: ${statusLabel} (${learnedInTheme}/${themeWords.length} kelime)`;
-      heatmapSquaresHtml += `<button type="button" class="heatmap-cell ${isMastered ? 'mastered' : ''}" title="${titleText}" aria-label="${titleText}" onclick="window.APP.selectHeatmapUnit(${unitNum})"></button>`;
-    }
-
-    // Row 4: Terminal Log / Recent Activity (Gerçek Aktivite Günlüğü)
-    const savedLogs = Array.isArray(STATE.userData.activityLog) && STATE.userData.activityLog.length > 0
-      ? STATE.userData.activityLog.slice(0, 5)
-      : [];
-
-    let terminalRowsHtml = '';
-    if (savedLogs.length === 0) {
-      terminalRowsHtml = `
-        <tr>
-          <td colspan="4" style="text-align: center; padding: 24px; color: var(--dp-color-ink-muted); font-size: 0.85rem;">
-            Henüz bir aktivite kaydı bulunmuyor. Günün kelimelerini veya test modüllerini tamamladıkça kayıtlar buraya işlenir.
-          </td>
-        </tr>
-      `;
-    } else {
-      terminalRowsHtml = savedLogs.map(row => `
-        <tr>
-          <td>${row.date}</td>
-          <td>${row.module}</td>
-          <td>${row.action || 'Öğrenme Oturumu'}</td>
-          <td class="dash-terminal-result">${row.result}</td>
-        </tr>
-      `).join('');
-    }
-
     container.innerHTML = `
-      <!-- 1. HERO ORIENTATION & LIVE STATUS HUB -->
+      <!-- HERO: Aktif Rota + CTA + 4 Metrik -->
       <article class="hero-feature-card home-orientation-hero">
         <div class="hero-decorative-blob" aria-hidden="true"></div>
-
-        <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 20px; flex-wrap: wrap; position: relative; z-index: 1;">
-          <div style="flex: 1; min-width: 280px;">
-            <div class="hero-icon-holder" aria-hidden="true">
-              <span>${renderIcon('rocket', 28)}</span>
+        <div style="position:relative;z-index:1;">
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;">
+            <div>
+              <span class="hero-tag-label">AKTİF ROTA</span>
+              <h2 class="hero-card-title" style="font-size:22px;margin-top:4px;">${escapeHtml(moduleLabels[module] || moduleLabels.maarif)}</h2>
             </div>
-            <div class="hero-label-wrap">
-              <span class="hero-tag-label">LEARNISH AKILLI İNGİLİZCE EKOSİSTEMİ • KONTROL MERKEZİ</span>
-              <h2 class="hero-card-title" style="margin-top: 6px; font-size: 28px;">Kalıcı İngilizce Öğrenim Merkezine Hoş Geldiniz</h2>
-              <p class="hero-card-desc" style="max-width: 680px; margin-top: 8px; line-height: 1.5; font-size: 13.5px;">
-                MEB Türkiye Yüzyılı Maarif Modeli (1-12. Sınıf), YDS/YÖKDİL akademik sınav hazırlığı ve A1-C1 Kelime Kütüphanesini birleştiren bilişsel platform. Aralıklı tekrar (SM-2), yapay zeka telaffuz koçu ve A4 çalışma föyü stüdyosu ile eksiksiz bir öğrenme deneyimi sunar.
-              </p>
-            </div>
-          </div>
-
-          <!-- Quick Actions & Active Route Summary -->
-          <div class="home-hero-summary-box">
-            <span class="hh-status-tag">${renderIcon('pin', 12)} ŞU ANKİ AKTİF HEDEFİNİZ</span>
-            <div class="hh-status-title">${activeUnitTitle}</div>
-            <div class="hh-status-sub">${activeCurriculumSubtitle}</div>
-            <button type="button" class="hero-primary-cta-btn" onclick="window.APP.switchView('daily')" style="margin-top: 14px; width: 100%;">
+            <button type="button" class="hero-primary-cta-btn" onclick="window.APP.switchView('daily')">
               <span>${module === 'yds' ? "GÜNÜN 20'SİNİ BAŞLAT" : "GÜNÜN 10'LUSUNU BAŞLAT"}</span>
               <span class="cta-arrow">→</span>
             </button>
           </div>
-        </div>
 
-        <!-- Bento Metrics Grid (Live Telemetry) -->
-        <div class="bento-metrics-grid" style="margin-top: 24px;">
-          <div class="bento-metric-card">
-            <span class="bento-card-title">GÜNLÜK SERİ</span>
-            <div class="bento-card-content">
-              <div class="bento-circular-icon">${renderIcon('flame', 18)}</div>
-              <span class="bento-val">${streakFormatted}</span>
+          <div class="bento-metrics-grid" style="margin-top:20px;">
+            <div class="bento-metric-card">
+              <span class="bento-card-title">GÜNLÜK SERİ</span>
+              <div class="bento-card-content">
+                <div class="bento-circular-icon">${renderIcon('flame', 18)}</div>
+                <span class="bento-val">${String(streakDays).padStart(2, '0')} GÜN</span>
+              </div>
             </div>
-          </div>
-
-          <div class="bento-metric-card">
-            <span class="bento-card-title">HAFIZA KALICILIĞI</span>
-            <div class="bento-card-content">
-              <div class="bento-circular-icon">${renderIcon('brain', 18)}</div>
-              <span class="bento-val">%${srsStats.retentionRate} (${srsStats.masteredCount} USTA)</span>
+            <div class="bento-metric-card">
+              <span class="bento-card-title">HAFIZA KALICILIĞI</span>
+              <div class="bento-card-content">
+                <div class="bento-circular-icon">${renderIcon('brain', 18)}</div>
+                <span class="bento-val">%${srsStats.retentionRate} (${srsStats.masteredCount} USTA)</span>
+              </div>
             </div>
-          </div>
-
-          <div class="bento-metric-card ${srsDueWords.length > 0 ? 'metric-highlight-due' : ''}">
-            <span class="bento-card-title">ARALIKLI TEKRAR</span>
-            <div class="bento-card-content">
-              <div class="bento-circular-icon">${renderIcon('repeat', 18)}</div>
-              <span class="bento-val">${srsDueWords.length} BEKLEYEN</span>
+            <div class="bento-metric-card ${srsDueWords.length > 0 ? 'metric-highlight-due' : ''}">
+              <span class="bento-card-title">ARALIKLI TEKRAR</span>
+              <div class="bento-card-content">
+                <div class="bento-circular-icon">${renderIcon('repeat', 18)}</div>
+                <span class="bento-val">${srsDueWords.length} BEKLEYEN</span>
+              </div>
             </div>
-          </div>
-
-          <div class="bento-metric-card ${activeMistakes.length > 0 ? 'metric-highlight-mistake' : ''}">
-            <span class="bento-card-title">HATA DEFTERİ</span>
-            <div class="bento-card-content">
-              <div class="bento-circular-icon">${renderIcon('alert', 18)}</div>
-              <span class="bento-val">${activeMistakes.length} ZAYIF NOKTA</span>
+            <div class="bento-metric-card ${activeMistakes.length > 0 ? 'metric-highlight-mistake' : ''}">
+              <span class="bento-card-title">HATA DEFTERİ</span>
+              <div class="bento-card-content">
+                <div class="bento-circular-icon">${renderIcon('alert', 18)}</div>
+                <span class="bento-val">${activeMistakes.length} ZAYIF NOKTA</span>
+              </div>
             </div>
           </div>
         </div>
       </article>
 
-      <!-- 2. SECTION 1: ÖĞRENİM MODÜLLERİ REHBERİ (Hangi Modül Ne İşe Yarar?) -->
-      <section class="home-guide-section" aria-label="Öğrenim Modülleri Rehberi">
+      <!-- HIZLI ERİŞİM -->
+      <section class="home-guide-section" aria-label="Hızlı Erişim">
+        <div class="home-quick-actions-grid">
+          <button type="button" class="home-qa-btn" onclick="window.APP.switchView('daily')">${renderIcon('calendar', 20)}<span>Günlük</span></button>
+          <button type="button" class="home-qa-btn" onclick="window.APP.switchView('flashcard')">${renderIcon('layers', 20)}<span>Kartlar</span></button>
+          <button type="button" class="home-qa-btn" onclick="window.APP.switchView('quiz')">${renderIcon('zap', 20)}<span>Quiz</span></button>
+          <button type="button" class="home-qa-btn" onclick="window.APP.startSRSDueFlashcards()">${renderIcon('repeat', 20)}<span>Tekrar</span></button>
+          <button type="button" class="home-qa-btn" onclick="window.APP.startMistakeQuiz()">${renderIcon('alert', 20)}<span>Hatalar</span></button>
+          <button type="button" class="home-qa-btn" onclick="window.APP.switchView('directory')">${renderIcon('search', 20)}<span>Sözlük</span></button>
+          <button type="button" class="home-qa-btn" onclick="window.APP.openSpeechCoach('pronunciation')">${renderIcon('mic', 20)}<span>Telaffuz</span></button>
+          <button type="button" class="home-qa-btn" onclick="window.APP.openPdfStudio()">${renderIcon('fileText', 20)}<span>PDF</span></button>
+        </div>
+      </section>
+
+      <!-- ÖĞRENME ROTALARI -->
+      <section class="home-guide-section" aria-label="Öğrenim Rotaları">
         <div class="home-section-header">
           <div class="hsh-left">
-            <span class="home-section-badge">${renderIcon('compass', 13)} 3 FARKLI ÖĞRENİM ROTASI</span>
-            <h3 class="home-section-title">Modüller Ne İşe Yarar &amp; Hangisini Seçmelisiniz?</h3>
-            <p class="home-section-desc">Learnish 3 bağımsız uzmanlık rotası sunar. İhtiyacınıza uygun rotayı seçerek doğrudan ilgili müfredat ve kelime havuzunda çalışabilirsiniz.</p>
+            <span class="home-section-badge">${renderIcon('compass', 13)} ÖĞRENME ROTASI</span>
+            <h3 class="home-section-title">Aktif Rotanı Seç</h3>
           </div>
         </div>
 
@@ -12179,161 +12461,7 @@ if (typeof module !== 'undefined' && module.exports) {
         </div>
       </section>
 
-      <!-- 3. SECTION 2: BU UYGULAMA İLE NASIL ÇALIŞILIR? (4 ADIMLI BİLİŞSEL DÖNGÜ) -->
-      <section class="home-guide-section" aria-label="Bilişsel Çalışma Döngüsü">
-        <div class="home-section-header">
-          <div class="hsh-left">
-            <span class="home-section-badge">${renderIcon('chart', 13)} BİLİŞSEL ÖĞRENME YOL HARİTASI</span>
-            <h3 class="home-section-title">Bu Uygulama ile Nasıl Çalışmalısınız?</h3>
-            <p class="home-section-desc">Hafızada kalıcılığı 4 katına çıkaran 4 adımlı bilişsel çalışma metodolojisi:</p>
-          </div>
-        </div>
-
-        <div class="home-methodology-grid">
-          <!-- Adım 1 -->
-          <div class="home-step-card">
-            <div class="hsc-step-badge">ADIM 01</div>
-            <div class="hsc-icon">${renderIcon('calendar', 26)}</div>
-            <h4 class="hsc-title">Günlük Mikro Hedef (Daily Workout)</h4>
-            <p class="hsc-desc">Her gün seviyenize göre 10 veya 20 hedef kelimeyi inceleyin. Fonetik seslendirmeyi dinleyin, Türkçe anlamlarını ve örnek MEB cümlelerini okuyun.</p>
-            <button type="button" class="hsc-link-btn" onclick="window.APP.switchView('daily')">
-              Günün Kelimeleri &rarr;
-            </button>
-          </div>
-
-          <!-- Adım 2 -->
-          <div class="home-step-card">
-            <div class="hsc-step-badge">ADIM 02</div>
-            <div class="hsc-icon">${renderIcon('layers', 26)}</div>
-            <h4 class="hsc-title">Aktif Hatırlama (Active Recall Flashcards)</h4>
-            <p class="hsc-desc">Dijital iki yüzlü kartlarla kelimeyi tahmin edin, kartı çevirip kendinizi değerlendirin ("Zor", "İyi", "Kolay"). Beynin aktif geri çağırma kasını çalıştırın.</p>
-            <button type="button" class="hsc-link-btn" onclick="window.APP.switchView('flashcard')">
-              Kartlarla Çalış &rarr;
-            </button>
-          </div>
-
-          <!-- Adım 3 -->
-          <div class="home-step-card">
-            <div class="hsc-step-badge">ADIM 03</div>
-            <div class="hsc-icon">${renderIcon('zap', 26)}</div>
-            <h4 class="hsc-title">Çok Modlu Test &amp; Telaffuz Koçu (Quiz &amp; Speaking)</h4>
-            <p class="hsc-desc">TR&rarr;EN, EN&rarr;TR, Dinleme, Cümle Tamamlama ve Mikrofona Telaffuz testleriyle kelimeyi çok yönlü pekiştirin. Telaffuz koçuyla aksan skoru alın.</p>
-            <button type="button" class="hsc-link-btn" onclick="window.APP.switchView('quiz')">
-              Testi Başlat &rarr;
-            </button>
-          </div>
-
-          <!-- Adım 4 -->
-          <div class="home-step-card">
-            <div class="hsc-step-badge">ADIM 04</div>
-            <div class="hsc-icon">${renderIcon('brain', 26)}</div>
-            <h4 class="hsc-title">Aralıklı Tekrar (SM-2) &amp; Hata Defteri</h4>
-            <p class="hsc-desc">Ebbinghaus unutma eğrisine göre kelimeler tam unutmaya yaklaştığınız 1, 3, 7, 14. günlerde tekrar kuyruğunuza gelir. Hatalar otomatik Hata Kampına aktarılır.</p>
-            <button type="button" class="hsc-link-btn" onclick="window.APP.startSRSDueFlashcards()">
-              Tekrar İstasyonu &rarr;
-            </button>
-          </div>
-        </div>
-      </section>
-
-      <!-- 4. SECTION 3: UYGULAMADA NELER YAPABİLİRSİNİZ? (TEMEL YETENEKLER & ARAÇLAR) -->
-      <section class="home-guide-section" aria-label="Temel Yetenekler ve Araçlar">
-        <div class="home-section-header">
-          <div class="hsh-left">
-            <span class="home-section-badge">${renderIcon('tools', 13)} GÜÇLÜ ÖĞRENME ARAÇLARI</span>
-            <h3 class="home-section-title">Learnish Araç Seti ile Neler Yapabilirsiniz?</h3>
-            <p class="home-section-desc">Öğrenme sürecinizi destekleyen yapay zeka ve materyal araçları:</p>
-          </div>
-        </div>
-
-        <div class="home-features-grid">
-          <!-- Özellik 1: Speaking Coach -->
-          <div class="home-feature-box">
-            <div class="hfb-icon-wrap" style="background: rgba(202, 0, 19, 0.08); color: var(--dp-color-accent-ink); border-color: rgba(202, 0, 19, 0.2);">${renderIcon('mic', 24)}</div>
-            <div class="hfb-content">
-              <h4 class="hfb-title">AI Speaking &amp; Telaffuz Koçu</h4>
-              <p class="hfb-desc">Web Speech API ile mikrofondan sesinizi dinler, fonetik transkripsiyonla eşleştirir ve anlık telaffuz doğruluğunuzu puanlar. US/UK aksanı seçebilirsiniz.</p>
-              <button type="button" class="hfb-btn" onclick="window.APP.openSpeechCoach('pronunciation')">
-                ${renderIcon('mic', 15)} Telaffuz Koçunu Aç &rarr;
-              </button>
-            </div>
-          </div>
-
-          <!-- Özellik 2: PDF Studio -->
-          <div class="home-feature-box">
-            <div class="hfb-icon-wrap" style="background: rgba(2, 132, 199, 0.08); color: var(--dp-color-blue); border-color: rgba(2, 132, 199, 0.2);">${renderIcon('fileText', 24)}</div>
-            <div class="hfb-content">
-              <h4 class="hfb-title">PDF &amp; Çalışma Kağıdı Stüdyosu</h4>
-              <p class="hfb-desc">Seçtiğiniz sınıfın haftalık föyünü, 10 soruluk cevap anahtarlı testini, fiziksel kes-katla flashcardlarını veya yanlış yaptığınız kelimeleri A4 PDF olarak çıkartın.</p>
-              <button type="button" class="hfb-btn" onclick="window.APP.openPdfStudio()">
-                ${renderIcon('fileText', 15)} PDF Stüdyosunu Başlat &rarr;
-              </button>
-            </div>
-          </div>
-
-          <!-- Özellik 3: Hata Defteri -->
-          <div class="home-feature-box">
-            <div class="hfb-icon-wrap" style="background: rgba(217, 119, 6, 0.08); color: var(--dp-color-amber); border-color: rgba(217, 119, 6, 0.2);">${renderIcon('alert', 24)}</div>
-            <div class="hfb-content">
-              <h4 class="hfb-title">Akıllı Hata Defteri &amp; Kurtarma Kampı</h4>
-              <p class="hfb-desc">Quizlerde veya kartlarda yanlış yaptığınız kelimeler otomatik kaydedilir. 2 ardışık doğru cevapla kelimeyi ustalık seviyesine çıkarıp temizleyebilirsiniz.</p>
-              <button type="button" class="hfb-btn" onclick="window.APP.startMistakeQuiz()">
-                ${renderIcon('alert', 15)} Hata Kampına Git &rarr;
-              </button>
-            </div>
-          </div>
-
-          <!-- Özellik 4: SM-2 Aralıklı Tekrar -->
-          <div class="home-feature-box">
-            <div class="hfb-icon-wrap" style="background: rgba(0, 135, 68, 0.08); color: var(--dp-color-green); border-color: rgba(0, 135, 68, 0.2);">${renderIcon('repeat', 24)}</div>
-            <div class="hfb-content">
-              <h4 class="hfb-title">SM-2 Aralıklı Tekrar Motoru</h4>
-              <p class="hfb-desc">Kelimeleri ne zaman unutacağınızı hesaplayan bilişsel aralıklı tekrar motoru. Zamanı gelen kelimeleri tek tıkla flashcard veya testle pekiştirin.</p>
-              <button type="button" class="hfb-btn" onclick="window.APP.startSRSDueFlashcards()">
-                ${renderIcon('repeat', 15)} Tekrarları Başlat &rarr;
-              </button>
-            </div>
-          </div>
-
-          <!-- Özellik 5: Gelişmiş Dizin -->
-          <div class="home-feature-box">
-            <div class="hfb-icon-wrap" style="background: rgba(82, 96, 86, 0.08); color: var(--dp-color-ink-muted); border-color: rgba(82, 96, 86, 0.2);">${renderIcon('book', 24)}</div>
-            <div class="hfb-content">
-              <h4 class="hfb-title">9.234 Kelimelik Gelişmiş Sözlük</h4>
-              <p class="hfb-desc">Kelime türü (isim, fiil, sıfat), CEFR seviyesi (A1-C1) ve MEB temalarına göre anında arama yapın, yıldızlayın veya öğrenildi işaretleyin.</p>
-              <button type="button" class="hfb-btn" onclick="window.APP.switchView('directory')">
-                ${renderIcon('search', 15)} Kütüphaneyi Aç &rarr;
-              </button>
-            </div>
-          </div>
-
-          <!-- Özellik 6: İstatistikler & Heatmap -->
-          <div class="home-feature-box">
-            <div class="hfb-icon-wrap" style="background: rgba(202, 0, 19, 0.08); color: var(--dp-color-accent-ink); border-color: rgba(202, 0, 19, 0.2);">${renderIcon('chart', 24)}</div>
-            <div class="hfb-content">
-              <h4 class="hfb-title">Öğrenim Telemetrisi &amp; Kazanım Haritası</h4>
-              <p class="hfb-desc">Günlük serinizi, doğruluk yüzdesini, tema bazlı kazanım matrisini (Heatmap) ve son çalışma oturumlarınızı canlı analiz edin.</p>
-              <button type="button" class="hfb-btn" onclick="window.APP.switchView('stats')">
-                ${renderIcon('chart', 15)} İstatistikleri Gör &rarr;
-              </button>
-            </div>
-          </div>
-
-          <!-- Özellik 7: Bize Ulaşın & Hata Bildirimi -->
-          <div class="home-feature-box">
-            <div class="hfb-icon-wrap" style="background: rgba(2, 132, 199, 0.08); color: var(--dp-color-blue); border-color: rgba(2, 132, 199, 0.2);">${renderIcon('message', 24)}</div>
-            <div class="hfb-content">
-              <h4 class="hfb-title">Bize Ulaşın &amp; Hata Raporlama</h4>
-              <p class="hfb-desc">Öğretmenlerimizin ve öğrencilerimizin geri bildirimleri bizim için çok değerli. Karşılaştığınız hataları, kelime önerilerini veya deneyimlerinizi tek tıkla iletin.</p>
-              <button type="button" class="hfb-btn" onclick="window.APP.openFeedbackModal()">
-                ${renderIcon('message', 15)} Geri Bildirim Gönder &rarr;
-              </button>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <!-- 5. SECTION 4: CANLI PEDAGOJİ & HATA AYIKLAMA İSTASYONU (Canlı Veriler) -->
+      <!-- PEDAGOJİ İSTASYONU -->
       <section class="pedagogy-station-section" aria-label="Akıllı Hafıza &amp; Tekrar İstasyonu">
         <div class="pedagogy-station-header">
           <div>
@@ -13922,10 +14050,13 @@ if (typeof module !== 'undefined' && module.exports) {
 
     const searchInput = document.getElementById('dir-search-input');
     if (searchInput) {
+      let _searchTimer = null;
       searchInput.addEventListener('input', (e) => {
         STATE.directoryFilters.search = e.target.value;
         STATE.directoryPage = 1;
-        renderDirectoryView(true);
+        clearTimeout(_searchTimer);
+        // 250ms debounce: büyük veri setinde her tuş vuruşunda arayüz donmaz
+        _searchTimer = setTimeout(() => renderDirectoryView(true), 250);
       });
     }
 
@@ -14970,22 +15101,32 @@ if (typeof module !== 'undefined' && module.exports) {
           </div>
         </div>
 
-        <div class="feedback-body">
-          <div class="feedback-word-row">
-            <span class="feedback-word-en">${targetWord.en}</span>
-            <button class="speak-btn" style="width:40px; height:40px;" onclick="window.APP.speakCurrentWord('${targetWord.en}')" title="Telaffuzu Dinle" aria-label="Telaffuzu Dinle">${ICONS.speaker}</button>
-            <span class="feedback-word-pos">${targetWord.desc || ''} ${targetWord.cefr ? '• ' + targetWord.cefr : ''}</span>
+        <div class=”feedback-body”>
+          <div class=”feedback-word-row”>
+            <span class=”feedback-word-en”>${escapeHtml(targetWord.en)}</span>
+            <button class=”speak-btn” style=”width:40px; height:40px;” onclick=”window.APP.speakCurrentWord('${escapeHtml(targetWord.en)}')” title=”Telaffuzu Dinle” aria-label=”Telaffuzu Dinle”>${ICONS.speaker}</button>
+            <span class=”feedback-word-pos”>${escapeHtml(targetWord.desc || '')} ${targetWord.cefr ? '• ' + escapeHtml(targetWord.cefr) : ''}</span>
           </div>
-          <div class="feedback-meaning-row">
-            <span class="feedback-meaning-label">DOĞRU ANLAM:</span>
-            <strong class="feedback-meaning-tr">${targetWord.tr}</strong>
+          ${targetWord.phonetic ? `<div style=”font-family:var(--dp-typography-mono);font-size:0.9rem;color:var(--dp-color-ink-muted);margin-bottom:6px;”>/${escapeHtml(targetWord.phonetic)}/</div>` : ''}
+          <div class=”feedback-meaning-row”>
+            <span class=”feedback-meaning-label”>DOĞRU ANLAM:</span>
+            <strong class=”feedback-meaning-tr”>${escapeHtml(targetWord.tr)}</strong>
           </div>
           ${targetWord.example ? `
-            <div class="feedback-example-row">
-              <span class="feedback-ex-label">ÖRNEK KULLANIM:</span>
-              <p class="feedback-example">“${highlightWordInText(targetWord.example, targetWord.en)}”</p>
+            <div class=”feedback-example-row”>
+              <span class=”feedback-ex-label”>ÖRNEK KULLANIM:</span>
+              <p class=”feedback-example”>”${highlightWordInText(targetWord.example, targetWord.en)}”</p>
             </div>
           ` : ''}
+          ${(STATE.quizState.mode === 'cloze' || STATE.quizState.mode === 'definition') ? (() => {
+            const syn = getWordSynonym(targetWord);
+            const prep = extractPreposition(targetWord);
+            if (!syn && !prep) return '';
+            return `<div class=”feedback-cloze-extras”>
+              ${syn ? `<div><span class=”feedback-ex-label”>EŞ ANLAM (YDS):</span> <span style=”color:var(--dp-color-ink)”>${escapeHtml(syn)}</span></div>` : ''}
+              ${prep ? `<div><span class=”feedback-ex-label”>YAPI (EDAT):</span> <span style=”font-weight:700;color:var(--dp-color-emphasis)”>${escapeHtml(targetWord.en)} ${escapeHtml(prep)}</span></div>` : ''}
+            </div>`;
+          })() : ''}
         </div>
         <div class="feedback-footer">
           <button class="ctrl-btn quiz-next-btn" onclick="window.APP.nextQuizQuestion()">
@@ -15688,11 +15829,40 @@ if (typeof module !== 'undefined' && module.exports) {
       }
     });
 
+    // Service Worker kaydı ve güncelleme bildirimi
+    let _swWaitingWorker = null;
     if ('serviceWorker' in navigator && (window.location.protocol === 'https:' || window.location.hostname === 'localhost')) {
-      navigator.serviceWorker.register('./service-worker.js').catch(err => {
+      navigator.serviceWorker.register('./service-worker.js').then(reg => {
+        // Yeni SW yüklendiyse kullanıcıya bildir
+        reg.onupdatefound = () => {
+          const nw = reg.installing;
+          if (!nw) return;
+          nw.onstatechange = () => {
+            if (nw.state === 'installed' && navigator.serviceWorker.controller) {
+              _swWaitingWorker = nw;
+              const banner = document.getElementById('sw-update-banner');
+              if (banner) banner.style.display = 'flex';
+            }
+          };
+        };
+      }).catch(err => {
         console.log('SW registration note:', err);
       });
+
+      // Sayfa, yeni SW'ın kontrolü almasından sonra yenilenir
+      navigator.serviceWorker.addEventListener('controllerchange', () => {
+        window.location.reload();
+      });
     }
+
+    function applySwUpdate() {
+      if (_swWaitingWorker) {
+        _swWaitingWorker.postMessage({ type: 'SKIP_WAITING' });
+      } else {
+        window.location.reload();
+      }
+    }
+    window.APP.applySwUpdate = applySwUpdate;
   }
 
   // Export to Global Scope
@@ -15733,6 +15903,11 @@ if (typeof module !== 'undefined' && module.exports) {
     getActiveMistakeWords,
     getSRSStats,
     getMistakeStats,
+    exportProgress,
+    importProgress,
+    handleImportFile,
+    resetProgress,
+    checkFlexibleAnswer,
     goToTodayMEBDay,
     startQuiz,
     handleQuizAnswer,

@@ -409,10 +409,16 @@
     'widespread': 'pervasive, prevalent, extensive'
   };
 
+  // Veri şema sürümü — artırıldığında localStorage'daki eski yapı güvenle taşınır.
+  const SCHEMA_VERSION = 3;
+
   // Güvenli localStorage okuma: depolama engelliyse (gizli sekme, kısıtlı okul tarayıcısı) ya da
   // kayıtlı veri bozulmuşsa uygulama açılışta çökmesin; varsayılan değerle devam edilsin.
   function lsGet(key, fallback = null) {
     try { const v = localStorage.getItem(key); return v === null ? fallback : v; } catch (e) { return fallback; }
+  }
+  function lsSet(key, value) {
+    try { localStorage.setItem(key, value); } catch (e) { console.warn('[Learnish] localStorage yazma hatası:', key); }
   }
   function lsJSON(key, fallback) {
     try {
@@ -427,6 +433,24 @@
       return fallback;
     }
   }
+
+  // Şema versiyonu kontrolü: eski yapı varsa güvenli sıfırlama yerine sadece eksik alanları tamamla.
+  (function migrateSchema() {
+    try {
+      const storedVer = parseInt(lsGet('mk_schema_version', '0'), 10);
+      if (storedVer < 1) {
+        // v0→v1: mk_srs ve mk_mistakes anahtarları eklendi; varsa koru, yoksa default bırak.
+      }
+      if (storedVer < 2) {
+        // v1→v2: activityLog yapısı değişti; bozuk array ise sıfırla.
+        const log = lsJSON('mk_activity_log', null);
+        if (log !== null && (!Array.isArray(log) || (log.length > 0 && typeof log[0] !== 'object'))) {
+          lsSet('mk_activity_log', '[]');
+        }
+      }
+      lsSet('mk_schema_version', String(SCHEMA_VERSION));
+    } catch (e) { /* sessiz devam */ }
+  })();
 
   // Sınıf havuzu önbellekleri (bkz. getActiveGradePool) — açılışta takvim hesaplanırken hazır olmalı
   const _wordIndex = new Map();          // küçük harf İngilizce → kelime
@@ -617,19 +641,45 @@
   }
 
   // ==========================================================================
-  // Web Speech API (Native TTS Pronunciation)
+  // Web Speech API (Native TTS Pronunciation) — Güvenilir ses servisi
   // ==========================================================================
   let synthVoices = [];
+  let _ttsSupported = null; // null = henüz test edilmedi
+
+  // Yüksek kaliteli İngilizce ses öncelik sırası (yerel > Google > genel)
+  const _VOICE_PRIORITY = ['Daniel', 'Karen', 'Moira', 'Samantha', 'Google UK English', 'Google US English', 'Google English', 'Natural'];
+
+  function _selectBestVoice(lang) {
+    if (!synthVoices.length) return null;
+    const prefix = lang.substring(0, 2).toLowerCase(); // 'en'
+    // Önce tam eşleşme + öncelikli isimler
+    for (const name of _VOICE_PRIORITY) {
+      const v = synthVoices.find(v => v.lang.toLowerCase().startsWith(prefix) && v.name.includes(name));
+      if (v) return v;
+    }
+    // Sonra yerel (localService) ses
+    const local = synthVoices.find(v => v.lang.toLowerCase().startsWith(prefix) && v.localService);
+    if (local) return local;
+    // Herhangi bir İngilizce ses
+    return synthVoices.find(v => v.lang.toLowerCase().startsWith(prefix)) || null;
+  }
 
   function loadVoices() {
-    if ('speechSynthesis' in window && window.speechSynthesis) {
-      synthVoices = typeof window.speechSynthesis.getVoices === 'function' ? window.speechSynthesis.getVoices() : [];
-      if (window.speechSynthesis.onvoiceschanged !== undefined) {
-        window.speechSynthesis.onvoiceschanged = () => {
-          synthVoices = typeof window.speechSynthesis.getVoices === 'function' ? window.speechSynthesis.getVoices() : [];
-        };
-      }
+    if (!('speechSynthesis' in window && window.speechSynthesis)) {
+      _ttsSupported = false;
+      return;
     }
+    _ttsSupported = true;
+    const update = () => {
+      synthVoices = window.speechSynthesis.getVoices ? window.speechSynthesis.getVoices() : [];
+    };
+    update();
+    // Bazı tarayıcılarda sesler asenkron yüklenir
+    if (window.speechSynthesis.onvoiceschanged !== undefined) {
+      window.speechSynthesis.onvoiceschanged = update;
+    }
+    // Chrome'da onvoiceschanged bazen tetiklenmez; 500ms sonra bir kez daha kontrol et
+    setTimeout(update, 500);
   }
   loadVoices();
 
@@ -640,10 +690,12 @@
     }
     if (!('speechSynthesis' in window && window.speechSynthesis)) {
       if (onEndCallback) onEndCallback();
+      _showNoTtsHint();
       return;
     }
 
     try {
+      // Kuyruk kilitlenmesini önle: yeni istek başlamadan önce mevcut sesi iptal et
       window.speechSynthesis.cancel();
       const cleanWord = text.replace(/\[.*?\]/g, '').replace(/[\/\\()]/g, '').trim();
       const utterance = new SpeechSynthesisUtterance(cleanWord);
@@ -651,23 +703,29 @@
       utterance.rate = STATE.settings.speed || 1.0;
       utterance.pitch = 1.0;
 
-      if (synthVoices.length > 0) {
-        const preferred = synthVoices.find(v => v.lang.startsWith(utterance.lang.substring(0, 2)) && (v.name.includes('Google') || v.name.includes('Natural') || v.name.includes('Daniel') || v.name.includes('Samantha')));
-        if (preferred) utterance.voice = preferred;
-      }
+      const bestVoice = _selectBestVoice(utterance.lang);
+      if (bestVoice) utterance.voice = bestVoice;
 
-      utterance.onend = () => {
-        if (onEndCallback) onEndCallback();
-      };
-      utterance.onerror = () => {
-        if (onEndCallback) onEndCallback();
-      };
+      utterance.onend = () => { if (onEndCallback) onEndCallback(); };
+      utterance.onerror = () => { if (onEndCallback) onEndCallback(); };
 
       window.speechSynthesis.speak(utterance);
     } catch (err) {
       console.warn('Speech synthesis error:', err);
       if (onEndCallback) onEndCallback();
     }
+  }
+
+  // Cihazda TTS yoksa veya sesler henüz yoksa tek seferlik ipucu göster
+  let _noTtsHintShown = false;
+  function _showNoTtsHint() {
+    if (_noTtsHintShown) return;
+    _noTtsHintShown = true;
+    const banner = document.createElement('div');
+    banner.style.cssText = 'position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:var(--dp-color-surface-1);border:1px solid var(--dp-color-border);color:var(--dp-color-ink);padding:10px 18px;border-radius:8px;font-size:0.85rem;z-index:var(--z-toast);box-shadow:0 4px 16px rgba(0,0,0,.18);';
+    banner.textContent = 'Bu cihazda telaffuz sesi desteklenmiyor.';
+    document.body.appendChild(banner);
+    setTimeout(() => banner.remove(), 4000);
   }
 
   // ==========================================================================
@@ -1670,9 +1728,119 @@
       localStorage.setItem('mk_current_day', STATE.currentDay.toString());
       localStorage.setItem('mk_srs', JSON.stringify(STATE.userData.srs || {}));
       localStorage.setItem('mk_mistakes', JSON.stringify(STATE.userData.mistakes || {}));
+      localStorage.setItem('mk_schema_version', String(SCHEMA_VERSION));
     } catch (e) {
       console.warn('LocalStorage save error:', e);
     }
+  }
+
+  // ==========================================================================
+  // VERİ YEDEKLEME, GERİ YÜKLEME VE SIFIRLAMA
+  // ==========================================================================
+
+  function exportProgress() {
+    try {
+      const payload = {
+        learnish_backup: true,
+        schema: SCHEMA_VERSION,
+        exportedAt: new Date().toISOString(),
+        settings: {
+          accent: STATE.settings.accent,
+          speed: STATE.settings.speed,
+          theme: STATE.settings.theme,
+          soundEffects: STATE.settings.soundEffects
+        },
+        userData: {
+          learned: Array.from(STATE.userData.learned),
+          review: Array.from(STATE.userData.review),
+          starred: Array.from(STATE.userData.starred),
+          stats: STATE.userData.stats,
+          activityLog: STATE.userData.activityLog,
+          srs: STATE.userData.srs,
+          mistakes: STATE.userData.mistakes
+        },
+        currentDay: STATE.currentDay,
+        activeModule: STATE.activeModule,
+        selectedGrade: STATE.selectedGrade
+      };
+      const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `learnish-yedek-${new Date().toISOString().slice(0, 10)}.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      _showToast('İlerleme yedeği indirildi.', 'success');
+    } catch (e) {
+      _showToast('Dışa aktarma hatası: ' + e.message, 'error');
+    }
+  }
+
+  function importProgress() {
+    document.getElementById('import-file-input')?.click();
+  }
+
+  function handleImportFile(input) {
+    const file = input.files && input.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const data = JSON.parse(e.target.result);
+        if (!data || !data.learnish_backup) throw new Error('Geçersiz Learnish yedeği.');
+        if (!confirm('Bu yedek mevcut tüm ilerlemenizin üzerine yazacak. Devam etmek istiyor musunuz?')) { input.value = ''; return; }
+
+        // Veriyi yükle
+        const ud = data.userData || {};
+        STATE.userData.learned = new Set(Array.isArray(ud.learned) ? ud.learned : []);
+        STATE.userData.review = new Set(Array.isArray(ud.review) ? ud.review : []);
+        STATE.userData.starred = new Set(Array.isArray(ud.starred) ? ud.starred : []);
+        STATE.userData.stats = Object.assign({ quizzesPlayed: 0, correctAnswers: 0, totalQuestions: 0, bestStreak: 0 }, ud.stats || {});
+        STATE.userData.activityLog = Array.isArray(ud.activityLog) ? ud.activityLog : [];
+        STATE.userData.srs = ud.srs && typeof ud.srs === 'object' ? ud.srs : {};
+        STATE.userData.mistakes = ud.mistakes && typeof ud.mistakes === 'object' ? ud.mistakes : {};
+
+        if (data.settings) {
+          if (data.settings.accent) STATE.settings.accent = data.settings.accent;
+          if (data.settings.theme) {
+            STATE.settings.theme = data.settings.theme;
+            document.documentElement.setAttribute('data-theme', STATE.settings.theme);
+          }
+        }
+        if (data.currentDay) STATE.currentDay = data.currentDay;
+        if (data.activeModule) STATE.activeModule = data.activeModule;
+        if (data.selectedGrade) STATE.selectedGrade = data.selectedGrade;
+
+        saveUserData();
+        input.value = '';
+        _showToast('Yedek başarıyla geri yüklendi!', 'success');
+        setTimeout(() => location.reload(), 1200);
+      } catch (err) {
+        _showToast('Geri yükleme hatası: ' + err.message, 'error');
+        input.value = '';
+      }
+    };
+    reader.readAsText(file);
+  }
+
+  function resetProgress() {
+    if (!confirm('Tüm öğrenme ilerlemeniz, hata defteriniz ve istatistikleriniz silinecek.\nBu işlem GERİ ALINAMAZ. Devam etmek istiyor musunuz?')) return;
+    if (!confirm('Emin misiniz? Bu işlemi geri alamazsınız.')) return;
+    const keysToRemove = ['mk_learned', 'mk_review', 'mk_starred', 'mk_stats', 'mk_activity_log', 'mk_srs', 'mk_mistakes', 'mk_current_day', 'mk_schema_version'];
+    keysToRemove.forEach(k => { try { localStorage.removeItem(k); } catch (_) {} });
+    _showToast('Tüm ilerleme sıfırlandı. Sayfa yenileniyor...', 'success');
+    setTimeout(() => location.reload(), 1000);
+  }
+
+  function _showToast(msg, type = 'info') {
+    const el = document.createElement('div');
+    const bg = type === 'success' ? '#047857' : type === 'error' ? '#ca0013' : '#374151';
+    el.style.cssText = `position:fixed;bottom:88px;left:50%;transform:translateX(-50%);background:${bg};color:#fff;padding:10px 20px;border-radius:8px;font-size:0.88rem;font-weight:600;z-index:var(--z-toast);box-shadow:0 4px 16px rgba(0,0,0,.22);white-space:nowrap;`;
+    el.textContent = msg;
+    document.body.appendChild(el);
+    setTimeout(() => el.remove(), 3500);
   }
 
   function logActivity(moduleTitle, resultText) {
@@ -2400,6 +2568,38 @@
       }
     }
     return picked;
+  }
+
+  /**
+   * Esnek cevap karşılaştırma: büyük/küçük harf, baş/son boşluk, tek karakter yazım hataları
+   * ve kısa kelimeler için Levenshtein mesafesi ile toleranslı eşleşme sağlar.
+   * Kullanım: checkFlexibleAnswer(userInput, correctAnswer) → boolean
+   */
+  function checkFlexibleAnswer(input, correct) {
+    if (!input || !correct) return false;
+    const norm = s => String(s).trim().toLowerCase().replace(/[''`]/g, "'").replace(/\s+/g, ' ');
+    const a = norm(input);
+    const b = norm(correct);
+    if (a === b) return true;
+    // Tek karakter fark toleransı (ör. "abondon" = "abandon")
+    if (Math.abs(a.length - b.length) > 2) return false;
+    return _levenshtein(a, b) <= 1;
+  }
+
+  function _levenshtein(a, b) {
+    const m = a.length, n = b.length;
+    if (m === 0) return n;
+    if (n === 0) return m;
+    const dp = Array.from({ length: m + 1 }, (_, i) => [i, ...Array(n).fill(0)]);
+    for (let j = 1; j <= n; j++) dp[0][j] = j;
+    for (let i = 1; i <= m; i++) {
+      for (let j = 1; j <= n; j++) {
+        dp[i][j] = a[i - 1] === b[j - 1]
+          ? dp[i - 1][j - 1]
+          : 1 + Math.min(dp[i - 1][j], dp[i][j - 1], dp[i - 1][j - 1]);
+      }
+    }
+    return dp[m][n];
   }
 
   function extractPreposition(w) {
@@ -3899,173 +4099,90 @@
     if (!container) return;
 
     const module = STATE.activeModule;
-    const curriculumSubtitles = {
-      maarif: `MEB MÜFREDATI • ${getActiveGrade()}. SINIF`,
-      yds: 'HEDEF MÜFREDAT • YDS & YÖKDİL AKADEMİK',
-      oxford: 'HEDEF MÜFREDAT • KELİME KÜTÜPHANESİ',
-      all: 'HEDEF MÜFREDAT • TÜM AKADEMİK KÜTÜPHANE'
+
+    const moduleLabels = {
+      maarif: `MEB ${getActiveGrade()}. Sınıf`,
+      yds: 'YDS/YÖKDİL Akademik',
+      oxford: 'Kelime Kütüphanesi (A1–C1)',
+      all: `Tüm Kütüphane (${WORDS_DATA.length.toLocaleString('tr-TR')} kelime)`
     };
-    const activeCurriculumSubtitle = curriculumSubtitles[module] || curriculumSubtitles.maarif;
 
-    const todaySched = getMEBCalendarInfo().schedule;
-    const curMaarifTheme = todaySched ? { code: todaySched.unitCode, titleTr: todaySched.unitTitleTr || todaySched.unitTitle } : { code: '', titleTr: '' };
-
-    const unitTitles = {
-      maarif: `MEB ${getActiveGrade()}. Sınıf • ${curMaarifTheme.code}: ${curMaarifTheme.titleTr}`,
-      yds: 'YDS/YÖKDİL • 2020–2026 Akademik Sınav Soruları & Kalıpları',
-      oxford: 'Kelime Kütüphanesi • CEFR A1–C1 Kapsamlı Arşiv',
-      all: `Learnish Arşiv: ${WORDS_DATA.length.toLocaleString('tr-TR')} Kelimelik Birleşik Kütüphane`
-    };
-    const activeUnitTitle = unitTitles[module] || unitTitles.maarif;
-
-    // Telemetry Metrics (Live Data)
     const quizStats = STATE.userData.stats || { quizzesPlayed: 0, correctAnswers: 0, totalQuestions: 0, bestStreak: 0 };
     const streakDays = Math.max(STATE.quizState.streak || 0, quizStats.bestStreak || 0);
-    const streakFormatted = String(streakDays).padStart(2, '0') + ' GÜN';
 
     const srsDueWords = getSRSDueWords();
     const activeMistakes = getActiveMistakeWords();
     const srsStats = getSRSStats();
 
-    // Row 3 Block A: Debug Queue (Zayıf Halkalar - Gerçek Tekrar Verileri)
-    const reviewWords = WORDS_DATA.filter(w => STATE.userData.review.has(w.id)).slice(0, 3);
-    let debugListHtml = '';
-    if (reviewWords.length === 0) {
-      debugListHtml = `
-        <div style="padding: 24px 12px; color: var(--dp-color-ink-muted); font-size: 0.85rem; text-align: center; display: flex; align-items: center; justify-content: center; gap: 8px;">
-          ${renderIcon('sparkles', 16)} <span>Şu an tekrar kuyruğunuz temiz. Testlerde yanlış cevaplanan kelimeler anında buraya eklenir.</span>
-        </div>
-      `;
-    } else {
-      debugListHtml = reviewWords.map(item => `
-        <div class="dash-debug-row">
-          <div class="dash-debug-word-group">
-            <span class="dash-debug-en">${item.en}</span>
-            <span class="dash-debug-tr">${item.tr}</span>
-          </div>
-          <button type="button" class="dash-retest-btn" onclick="window.APP.retestDebugWord('${item.en.replace(/'/g, "\\'")}')">
-            Yeniden Test Et ↺
-          </button>
-        </div>
-      `).join('');
-    }
-
-    // Row 3 Block B: Mastery Heatmap (Gerçek Tema & Kazanım İlerlemesi)
-    const heatmapCategories = ['Nouns', 'Verbs', 'Adjectives', 'Phrases', 'Collocations', 'Review'];
-    const totalSquares = 48; // 8 tema x 6 kazanım hücresi
-    let heatmapSquaresHtml = '';
-    for (let i = 0; i < totalSquares; i++) {
-      const unitNum = Math.floor(i / 6) + 1;
-      const catName = heatmapCategories[i % heatmapCategories.length];
-      const themeWords = WORDS_DATA.filter(w => w.themeNum === unitNum);
-      const learnedInTheme = themeWords.filter(w => STATE.userData.learned.has(w.id)).length;
-      const stepThreshold = Math.max(1, Math.ceil((themeWords.length / 6) * ((i % 6) + 1)));
-      const isMastered = learnedInTheme >= stepThreshold && learnedInTheme > 0;
-      const statusLabel = isMastered ? 'Kazanıldı' : 'Bekliyor';
-      const themeName = THEMES_DATA[unitNum]?.titleTr || `Tema ${unitNum}`;
-      const titleText = `Tema ${unitNum} (${themeName}) - ${catName}: ${statusLabel} (${learnedInTheme}/${themeWords.length} kelime)`;
-      heatmapSquaresHtml += `<button type="button" class="heatmap-cell ${isMastered ? 'mastered' : ''}" title="${titleText}" aria-label="${titleText}" onclick="window.APP.selectHeatmapUnit(${unitNum})"></button>`;
-    }
-
-    // Row 4: Terminal Log / Recent Activity (Gerçek Aktivite Günlüğü)
-    const savedLogs = Array.isArray(STATE.userData.activityLog) && STATE.userData.activityLog.length > 0
-      ? STATE.userData.activityLog.slice(0, 5)
-      : [];
-
-    let terminalRowsHtml = '';
-    if (savedLogs.length === 0) {
-      terminalRowsHtml = `
-        <tr>
-          <td colspan="4" style="text-align: center; padding: 24px; color: var(--dp-color-ink-muted); font-size: 0.85rem;">
-            Henüz bir aktivite kaydı bulunmuyor. Günün kelimelerini veya test modüllerini tamamladıkça kayıtlar buraya işlenir.
-          </td>
-        </tr>
-      `;
-    } else {
-      terminalRowsHtml = savedLogs.map(row => `
-        <tr>
-          <td>${row.date}</td>
-          <td>${row.module}</td>
-          <td>${row.action || 'Öğrenme Oturumu'}</td>
-          <td class="dash-terminal-result">${row.result}</td>
-        </tr>
-      `).join('');
-    }
-
     container.innerHTML = `
-      <!-- 1. HERO ORIENTATION & LIVE STATUS HUB -->
+      <!-- HERO: Aktif Rota + CTA + 4 Metrik -->
       <article class="hero-feature-card home-orientation-hero">
         <div class="hero-decorative-blob" aria-hidden="true"></div>
-
-        <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 20px; flex-wrap: wrap; position: relative; z-index: 1;">
-          <div style="flex: 1; min-width: 280px;">
-            <div class="hero-icon-holder" aria-hidden="true">
-              <span>${renderIcon('rocket', 28)}</span>
+        <div style="position:relative;z-index:1;">
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;">
+            <div>
+              <span class="hero-tag-label">AKTİF ROTA</span>
+              <h2 class="hero-card-title" style="font-size:22px;margin-top:4px;">${escapeHtml(moduleLabels[module] || moduleLabels.maarif)}</h2>
             </div>
-            <div class="hero-label-wrap">
-              <span class="hero-tag-label">LEARNISH AKILLI İNGİLİZCE EKOSİSTEMİ • KONTROL MERKEZİ</span>
-              <h2 class="hero-card-title" style="margin-top: 6px; font-size: 28px;">Kalıcı İngilizce Öğrenim Merkezine Hoş Geldiniz</h2>
-              <p class="hero-card-desc" style="max-width: 680px; margin-top: 8px; line-height: 1.5; font-size: 13.5px;">
-                MEB Türkiye Yüzyılı Maarif Modeli (1-12. Sınıf), YDS/YÖKDİL akademik sınav hazırlığı ve A1-C1 Kelime Kütüphanesini birleştiren bilişsel platform. Aralıklı tekrar (SM-2), yapay zeka telaffuz koçu ve A4 çalışma föyü stüdyosu ile eksiksiz bir öğrenme deneyimi sunar.
-              </p>
-            </div>
-          </div>
-
-          <!-- Quick Actions & Active Route Summary -->
-          <div class="home-hero-summary-box">
-            <span class="hh-status-tag">${renderIcon('pin', 12)} ŞU ANKİ AKTİF HEDEFİNİZ</span>
-            <div class="hh-status-title">${activeUnitTitle}</div>
-            <div class="hh-status-sub">${activeCurriculumSubtitle}</div>
-            <button type="button" class="hero-primary-cta-btn" onclick="window.APP.switchView('daily')" style="margin-top: 14px; width: 100%;">
+            <button type="button" class="hero-primary-cta-btn" onclick="window.APP.switchView('daily')">
               <span>${module === 'yds' ? "GÜNÜN 20'SİNİ BAŞLAT" : "GÜNÜN 10'LUSUNU BAŞLAT"}</span>
               <span class="cta-arrow">→</span>
             </button>
           </div>
-        </div>
 
-        <!-- Bento Metrics Grid (Live Telemetry) -->
-        <div class="bento-metrics-grid" style="margin-top: 24px;">
-          <div class="bento-metric-card">
-            <span class="bento-card-title">GÜNLÜK SERİ</span>
-            <div class="bento-card-content">
-              <div class="bento-circular-icon">${renderIcon('flame', 18)}</div>
-              <span class="bento-val">${streakFormatted}</span>
+          <div class="bento-metrics-grid" style="margin-top:20px;">
+            <div class="bento-metric-card">
+              <span class="bento-card-title">GÜNLÜK SERİ</span>
+              <div class="bento-card-content">
+                <div class="bento-circular-icon">${renderIcon('flame', 18)}</div>
+                <span class="bento-val">${String(streakDays).padStart(2, '0')} GÜN</span>
+              </div>
             </div>
-          </div>
-
-          <div class="bento-metric-card">
-            <span class="bento-card-title">HAFIZA KALICILIĞI</span>
-            <div class="bento-card-content">
-              <div class="bento-circular-icon">${renderIcon('brain', 18)}</div>
-              <span class="bento-val">%${srsStats.retentionRate} (${srsStats.masteredCount} USTA)</span>
+            <div class="bento-metric-card">
+              <span class="bento-card-title">HAFIZA KALICILIĞI</span>
+              <div class="bento-card-content">
+                <div class="bento-circular-icon">${renderIcon('brain', 18)}</div>
+                <span class="bento-val">%${srsStats.retentionRate} (${srsStats.masteredCount} USTA)</span>
+              </div>
             </div>
-          </div>
-
-          <div class="bento-metric-card ${srsDueWords.length > 0 ? 'metric-highlight-due' : ''}">
-            <span class="bento-card-title">ARALIKLI TEKRAR</span>
-            <div class="bento-card-content">
-              <div class="bento-circular-icon">${renderIcon('repeat', 18)}</div>
-              <span class="bento-val">${srsDueWords.length} BEKLEYEN</span>
+            <div class="bento-metric-card ${srsDueWords.length > 0 ? 'metric-highlight-due' : ''}">
+              <span class="bento-card-title">ARALIKLI TEKRAR</span>
+              <div class="bento-card-content">
+                <div class="bento-circular-icon">${renderIcon('repeat', 18)}</div>
+                <span class="bento-val">${srsDueWords.length} BEKLEYEN</span>
+              </div>
             </div>
-          </div>
-
-          <div class="bento-metric-card ${activeMistakes.length > 0 ? 'metric-highlight-mistake' : ''}">
-            <span class="bento-card-title">HATA DEFTERİ</span>
-            <div class="bento-card-content">
-              <div class="bento-circular-icon">${renderIcon('alert', 18)}</div>
-              <span class="bento-val">${activeMistakes.length} ZAYIF NOKTA</span>
+            <div class="bento-metric-card ${activeMistakes.length > 0 ? 'metric-highlight-mistake' : ''}">
+              <span class="bento-card-title">HATA DEFTERİ</span>
+              <div class="bento-card-content">
+                <div class="bento-circular-icon">${renderIcon('alert', 18)}</div>
+                <span class="bento-val">${activeMistakes.length} ZAYIF NOKTA</span>
+              </div>
             </div>
           </div>
         </div>
       </article>
 
-      <!-- 2. SECTION 1: ÖĞRENİM MODÜLLERİ REHBERİ (Hangi Modül Ne İşe Yarar?) -->
-      <section class="home-guide-section" aria-label="Öğrenim Modülleri Rehberi">
+      <!-- HIZLI ERİŞİM -->
+      <section class="home-guide-section" aria-label="Hızlı Erişim">
+        <div class="home-quick-actions-grid">
+          <button type="button" class="home-qa-btn" onclick="window.APP.switchView('daily')">${renderIcon('calendar', 20)}<span>Günlük</span></button>
+          <button type="button" class="home-qa-btn" onclick="window.APP.switchView('flashcard')">${renderIcon('layers', 20)}<span>Kartlar</span></button>
+          <button type="button" class="home-qa-btn" onclick="window.APP.switchView('quiz')">${renderIcon('zap', 20)}<span>Quiz</span></button>
+          <button type="button" class="home-qa-btn" onclick="window.APP.startSRSDueFlashcards()">${renderIcon('repeat', 20)}<span>Tekrar</span></button>
+          <button type="button" class="home-qa-btn" onclick="window.APP.startMistakeQuiz()">${renderIcon('alert', 20)}<span>Hatalar</span></button>
+          <button type="button" class="home-qa-btn" onclick="window.APP.switchView('directory')">${renderIcon('search', 20)}<span>Sözlük</span></button>
+          <button type="button" class="home-qa-btn" onclick="window.APP.openSpeechCoach('pronunciation')">${renderIcon('mic', 20)}<span>Telaffuz</span></button>
+          <button type="button" class="home-qa-btn" onclick="window.APP.openPdfStudio()">${renderIcon('fileText', 20)}<span>PDF</span></button>
+        </div>
+      </section>
+
+      <!-- ÖĞRENME ROTALARI -->
+      <section class="home-guide-section" aria-label="Öğrenim Rotaları">
         <div class="home-section-header">
           <div class="hsh-left">
-            <span class="home-section-badge">${renderIcon('compass', 13)} 3 FARKLI ÖĞRENİM ROTASI</span>
-            <h3 class="home-section-title">Modüller Ne İşe Yarar &amp; Hangisini Seçmelisiniz?</h3>
-            <p class="home-section-desc">Learnish 3 bağımsız uzmanlık rotası sunar. İhtiyacınıza uygun rotayı seçerek doğrudan ilgili müfredat ve kelime havuzunda çalışabilirsiniz.</p>
+            <span class="home-section-badge">${renderIcon('compass', 13)} ÖĞRENME ROTASI</span>
+            <h3 class="home-section-title">Aktif Rotanı Seç</h3>
           </div>
         </div>
 
@@ -4156,161 +4273,7 @@
         </div>
       </section>
 
-      <!-- 3. SECTION 2: BU UYGULAMA İLE NASIL ÇALIŞILIR? (4 ADIMLI BİLİŞSEL DÖNGÜ) -->
-      <section class="home-guide-section" aria-label="Bilişsel Çalışma Döngüsü">
-        <div class="home-section-header">
-          <div class="hsh-left">
-            <span class="home-section-badge">${renderIcon('chart', 13)} BİLİŞSEL ÖĞRENME YOL HARİTASI</span>
-            <h3 class="home-section-title">Bu Uygulama ile Nasıl Çalışmalısınız?</h3>
-            <p class="home-section-desc">Hafızada kalıcılığı 4 katına çıkaran 4 adımlı bilişsel çalışma metodolojisi:</p>
-          </div>
-        </div>
-
-        <div class="home-methodology-grid">
-          <!-- Adım 1 -->
-          <div class="home-step-card">
-            <div class="hsc-step-badge">ADIM 01</div>
-            <div class="hsc-icon">${renderIcon('calendar', 26)}</div>
-            <h4 class="hsc-title">Günlük Mikro Hedef (Daily Workout)</h4>
-            <p class="hsc-desc">Her gün seviyenize göre 10 veya 20 hedef kelimeyi inceleyin. Fonetik seslendirmeyi dinleyin, Türkçe anlamlarını ve örnek MEB cümlelerini okuyun.</p>
-            <button type="button" class="hsc-link-btn" onclick="window.APP.switchView('daily')">
-              Günün Kelimeleri &rarr;
-            </button>
-          </div>
-
-          <!-- Adım 2 -->
-          <div class="home-step-card">
-            <div class="hsc-step-badge">ADIM 02</div>
-            <div class="hsc-icon">${renderIcon('layers', 26)}</div>
-            <h4 class="hsc-title">Aktif Hatırlama (Active Recall Flashcards)</h4>
-            <p class="hsc-desc">Dijital iki yüzlü kartlarla kelimeyi tahmin edin, kartı çevirip kendinizi değerlendirin ("Zor", "İyi", "Kolay"). Beynin aktif geri çağırma kasını çalıştırın.</p>
-            <button type="button" class="hsc-link-btn" onclick="window.APP.switchView('flashcard')">
-              Kartlarla Çalış &rarr;
-            </button>
-          </div>
-
-          <!-- Adım 3 -->
-          <div class="home-step-card">
-            <div class="hsc-step-badge">ADIM 03</div>
-            <div class="hsc-icon">${renderIcon('zap', 26)}</div>
-            <h4 class="hsc-title">Çok Modlu Test &amp; Telaffuz Koçu (Quiz &amp; Speaking)</h4>
-            <p class="hsc-desc">TR&rarr;EN, EN&rarr;TR, Dinleme, Cümle Tamamlama ve Mikrofona Telaffuz testleriyle kelimeyi çok yönlü pekiştirin. Telaffuz koçuyla aksan skoru alın.</p>
-            <button type="button" class="hsc-link-btn" onclick="window.APP.switchView('quiz')">
-              Testi Başlat &rarr;
-            </button>
-          </div>
-
-          <!-- Adım 4 -->
-          <div class="home-step-card">
-            <div class="hsc-step-badge">ADIM 04</div>
-            <div class="hsc-icon">${renderIcon('brain', 26)}</div>
-            <h4 class="hsc-title">Aralıklı Tekrar (SM-2) &amp; Hata Defteri</h4>
-            <p class="hsc-desc">Ebbinghaus unutma eğrisine göre kelimeler tam unutmaya yaklaştığınız 1, 3, 7, 14. günlerde tekrar kuyruğunuza gelir. Hatalar otomatik Hata Kampına aktarılır.</p>
-            <button type="button" class="hsc-link-btn" onclick="window.APP.startSRSDueFlashcards()">
-              Tekrar İstasyonu &rarr;
-            </button>
-          </div>
-        </div>
-      </section>
-
-      <!-- 4. SECTION 3: UYGULAMADA NELER YAPABİLİRSİNİZ? (TEMEL YETENEKLER & ARAÇLAR) -->
-      <section class="home-guide-section" aria-label="Temel Yetenekler ve Araçlar">
-        <div class="home-section-header">
-          <div class="hsh-left">
-            <span class="home-section-badge">${renderIcon('tools', 13)} GÜÇLÜ ÖĞRENME ARAÇLARI</span>
-            <h3 class="home-section-title">Learnish Araç Seti ile Neler Yapabilirsiniz?</h3>
-            <p class="home-section-desc">Öğrenme sürecinizi destekleyen yapay zeka ve materyal araçları:</p>
-          </div>
-        </div>
-
-        <div class="home-features-grid">
-          <!-- Özellik 1: Speaking Coach -->
-          <div class="home-feature-box">
-            <div class="hfb-icon-wrap" style="background: rgba(202, 0, 19, 0.08); color: var(--dp-color-accent-ink); border-color: rgba(202, 0, 19, 0.2);">${renderIcon('mic', 24)}</div>
-            <div class="hfb-content">
-              <h4 class="hfb-title">AI Speaking &amp; Telaffuz Koçu</h4>
-              <p class="hfb-desc">Web Speech API ile mikrofondan sesinizi dinler, fonetik transkripsiyonla eşleştirir ve anlık telaffuz doğruluğunuzu puanlar. US/UK aksanı seçebilirsiniz.</p>
-              <button type="button" class="hfb-btn" onclick="window.APP.openSpeechCoach('pronunciation')">
-                ${renderIcon('mic', 15)} Telaffuz Koçunu Aç &rarr;
-              </button>
-            </div>
-          </div>
-
-          <!-- Özellik 2: PDF Studio -->
-          <div class="home-feature-box">
-            <div class="hfb-icon-wrap" style="background: rgba(2, 132, 199, 0.08); color: var(--dp-color-blue); border-color: rgba(2, 132, 199, 0.2);">${renderIcon('fileText', 24)}</div>
-            <div class="hfb-content">
-              <h4 class="hfb-title">PDF &amp; Çalışma Kağıdı Stüdyosu</h4>
-              <p class="hfb-desc">Seçtiğiniz sınıfın haftalık föyünü, 10 soruluk cevap anahtarlı testini, fiziksel kes-katla flashcardlarını veya yanlış yaptığınız kelimeleri A4 PDF olarak çıkartın.</p>
-              <button type="button" class="hfb-btn" onclick="window.APP.openPdfStudio()">
-                ${renderIcon('fileText', 15)} PDF Stüdyosunu Başlat &rarr;
-              </button>
-            </div>
-          </div>
-
-          <!-- Özellik 3: Hata Defteri -->
-          <div class="home-feature-box">
-            <div class="hfb-icon-wrap" style="background: rgba(217, 119, 6, 0.08); color: var(--dp-color-amber); border-color: rgba(217, 119, 6, 0.2);">${renderIcon('alert', 24)}</div>
-            <div class="hfb-content">
-              <h4 class="hfb-title">Akıllı Hata Defteri &amp; Kurtarma Kampı</h4>
-              <p class="hfb-desc">Quizlerde veya kartlarda yanlış yaptığınız kelimeler otomatik kaydedilir. 2 ardışık doğru cevapla kelimeyi ustalık seviyesine çıkarıp temizleyebilirsiniz.</p>
-              <button type="button" class="hfb-btn" onclick="window.APP.startMistakeQuiz()">
-                ${renderIcon('alert', 15)} Hata Kampına Git &rarr;
-              </button>
-            </div>
-          </div>
-
-          <!-- Özellik 4: SM-2 Aralıklı Tekrar -->
-          <div class="home-feature-box">
-            <div class="hfb-icon-wrap" style="background: rgba(0, 135, 68, 0.08); color: var(--dp-color-green); border-color: rgba(0, 135, 68, 0.2);">${renderIcon('repeat', 24)}</div>
-            <div class="hfb-content">
-              <h4 class="hfb-title">SM-2 Aralıklı Tekrar Motoru</h4>
-              <p class="hfb-desc">Kelimeleri ne zaman unutacağınızı hesaplayan bilişsel aralıklı tekrar motoru. Zamanı gelen kelimeleri tek tıkla flashcard veya testle pekiştirin.</p>
-              <button type="button" class="hfb-btn" onclick="window.APP.startSRSDueFlashcards()">
-                ${renderIcon('repeat', 15)} Tekrarları Başlat &rarr;
-              </button>
-            </div>
-          </div>
-
-          <!-- Özellik 5: Gelişmiş Dizin -->
-          <div class="home-feature-box">
-            <div class="hfb-icon-wrap" style="background: rgba(82, 96, 86, 0.08); color: var(--dp-color-ink-muted); border-color: rgba(82, 96, 86, 0.2);">${renderIcon('book', 24)}</div>
-            <div class="hfb-content">
-              <h4 class="hfb-title">9.234 Kelimelik Gelişmiş Sözlük</h4>
-              <p class="hfb-desc">Kelime türü (isim, fiil, sıfat), CEFR seviyesi (A1-C1) ve MEB temalarına göre anında arama yapın, yıldızlayın veya öğrenildi işaretleyin.</p>
-              <button type="button" class="hfb-btn" onclick="window.APP.switchView('directory')">
-                ${renderIcon('search', 15)} Kütüphaneyi Aç &rarr;
-              </button>
-            </div>
-          </div>
-
-          <!-- Özellik 6: İstatistikler & Heatmap -->
-          <div class="home-feature-box">
-            <div class="hfb-icon-wrap" style="background: rgba(202, 0, 19, 0.08); color: var(--dp-color-accent-ink); border-color: rgba(202, 0, 19, 0.2);">${renderIcon('chart', 24)}</div>
-            <div class="hfb-content">
-              <h4 class="hfb-title">Öğrenim Telemetrisi &amp; Kazanım Haritası</h4>
-              <p class="hfb-desc">Günlük serinizi, doğruluk yüzdesini, tema bazlı kazanım matrisini (Heatmap) ve son çalışma oturumlarınızı canlı analiz edin.</p>
-              <button type="button" class="hfb-btn" onclick="window.APP.switchView('stats')">
-                ${renderIcon('chart', 15)} İstatistikleri Gör &rarr;
-              </button>
-            </div>
-          </div>
-
-          <!-- Özellik 7: Bize Ulaşın & Hata Bildirimi -->
-          <div class="home-feature-box">
-            <div class="hfb-icon-wrap" style="background: rgba(2, 132, 199, 0.08); color: var(--dp-color-blue); border-color: rgba(2, 132, 199, 0.2);">${renderIcon('message', 24)}</div>
-            <div class="hfb-content">
-              <h4 class="hfb-title">Bize Ulaşın &amp; Hata Raporlama</h4>
-              <p class="hfb-desc">Öğretmenlerimizin ve öğrencilerimizin geri bildirimleri bizim için çok değerli. Karşılaştığınız hataları, kelime önerilerini veya deneyimlerinizi tek tıkla iletin.</p>
-              <button type="button" class="hfb-btn" onclick="window.APP.openFeedbackModal()">
-                ${renderIcon('message', 15)} Geri Bildirim Gönder &rarr;
-              </button>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <!-- 5. SECTION 4: CANLI PEDAGOJİ & HATA AYIKLAMA İSTASYONU (Canlı Veriler) -->
+      <!-- PEDAGOJİ İSTASYONU -->
       <section class="pedagogy-station-section" aria-label="Akıllı Hafıza &amp; Tekrar İstasyonu">
         <div class="pedagogy-station-header">
           <div>
@@ -5899,10 +5862,13 @@
 
     const searchInput = document.getElementById('dir-search-input');
     if (searchInput) {
+      let _searchTimer = null;
       searchInput.addEventListener('input', (e) => {
         STATE.directoryFilters.search = e.target.value;
         STATE.directoryPage = 1;
-        renderDirectoryView(true);
+        clearTimeout(_searchTimer);
+        // 250ms debounce: büyük veri setinde her tuş vuruşunda arayüz donmaz
+        _searchTimer = setTimeout(() => renderDirectoryView(true), 250);
       });
     }
 
@@ -6947,22 +6913,32 @@
           </div>
         </div>
 
-        <div class="feedback-body">
-          <div class="feedback-word-row">
-            <span class="feedback-word-en">${targetWord.en}</span>
-            <button class="speak-btn" style="width:40px; height:40px;" onclick="window.APP.speakCurrentWord('${targetWord.en}')" title="Telaffuzu Dinle" aria-label="Telaffuzu Dinle">${ICONS.speaker}</button>
-            <span class="feedback-word-pos">${targetWord.desc || ''} ${targetWord.cefr ? '• ' + targetWord.cefr : ''}</span>
+        <div class=”feedback-body”>
+          <div class=”feedback-word-row”>
+            <span class=”feedback-word-en”>${escapeHtml(targetWord.en)}</span>
+            <button class=”speak-btn” style=”width:40px; height:40px;” onclick=”window.APP.speakCurrentWord('${escapeHtml(targetWord.en)}')” title=”Telaffuzu Dinle” aria-label=”Telaffuzu Dinle”>${ICONS.speaker}</button>
+            <span class=”feedback-word-pos”>${escapeHtml(targetWord.desc || '')} ${targetWord.cefr ? '• ' + escapeHtml(targetWord.cefr) : ''}</span>
           </div>
-          <div class="feedback-meaning-row">
-            <span class="feedback-meaning-label">DOĞRU ANLAM:</span>
-            <strong class="feedback-meaning-tr">${targetWord.tr}</strong>
+          ${targetWord.phonetic ? `<div style=”font-family:var(--dp-typography-mono);font-size:0.9rem;color:var(--dp-color-ink-muted);margin-bottom:6px;”>/${escapeHtml(targetWord.phonetic)}/</div>` : ''}
+          <div class=”feedback-meaning-row”>
+            <span class=”feedback-meaning-label”>DOĞRU ANLAM:</span>
+            <strong class=”feedback-meaning-tr”>${escapeHtml(targetWord.tr)}</strong>
           </div>
           ${targetWord.example ? `
-            <div class="feedback-example-row">
-              <span class="feedback-ex-label">ÖRNEK KULLANIM:</span>
-              <p class="feedback-example">“${highlightWordInText(targetWord.example, targetWord.en)}”</p>
+            <div class=”feedback-example-row”>
+              <span class=”feedback-ex-label”>ÖRNEK KULLANIM:</span>
+              <p class=”feedback-example”>”${highlightWordInText(targetWord.example, targetWord.en)}”</p>
             </div>
           ` : ''}
+          ${(STATE.quizState.mode === 'cloze' || STATE.quizState.mode === 'definition') ? (() => {
+            const syn = getWordSynonym(targetWord);
+            const prep = extractPreposition(targetWord);
+            if (!syn && !prep) return '';
+            return `<div class=”feedback-cloze-extras”>
+              ${syn ? `<div><span class=”feedback-ex-label”>EŞ ANLAM (YDS):</span> <span style=”color:var(--dp-color-ink)”>${escapeHtml(syn)}</span></div>` : ''}
+              ${prep ? `<div><span class=”feedback-ex-label”>YAPI (EDAT):</span> <span style=”font-weight:700;color:var(--dp-color-emphasis)”>${escapeHtml(targetWord.en)} ${escapeHtml(prep)}</span></div>` : ''}
+            </div>`;
+          })() : ''}
         </div>
         <div class="feedback-footer">
           <button class="ctrl-btn quiz-next-btn" onclick="window.APP.nextQuizQuestion()">
@@ -7665,11 +7641,40 @@
       }
     });
 
+    // Service Worker kaydı ve güncelleme bildirimi
+    let _swWaitingWorker = null;
     if ('serviceWorker' in navigator && (window.location.protocol === 'https:' || window.location.hostname === 'localhost')) {
-      navigator.serviceWorker.register('./service-worker.js').catch(err => {
+      navigator.serviceWorker.register('./service-worker.js').then(reg => {
+        // Yeni SW yüklendiyse kullanıcıya bildir
+        reg.onupdatefound = () => {
+          const nw = reg.installing;
+          if (!nw) return;
+          nw.onstatechange = () => {
+            if (nw.state === 'installed' && navigator.serviceWorker.controller) {
+              _swWaitingWorker = nw;
+              const banner = document.getElementById('sw-update-banner');
+              if (banner) banner.style.display = 'flex';
+            }
+          };
+        };
+      }).catch(err => {
         console.log('SW registration note:', err);
       });
+
+      // Sayfa, yeni SW'ın kontrolü almasından sonra yenilenir
+      navigator.serviceWorker.addEventListener('controllerchange', () => {
+        window.location.reload();
+      });
     }
+
+    function applySwUpdate() {
+      if (_swWaitingWorker) {
+        _swWaitingWorker.postMessage({ type: 'SKIP_WAITING' });
+      } else {
+        window.location.reload();
+      }
+    }
+    window.APP.applySwUpdate = applySwUpdate;
   }
 
   // Export to Global Scope
@@ -7710,6 +7715,11 @@
     getActiveMistakeWords,
     getSRSStats,
     getMistakeStats,
+    exportProgress,
+    importProgress,
+    handleImportFile,
+    resetProgress,
+    checkFlexibleAnswer,
     goToTodayMEBDay,
     startQuiz,
     handleQuizAnswer,

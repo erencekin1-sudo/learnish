@@ -3,7 +3,7 @@
  * Caches core assets for offline usage on mobile and desktop
  */
 
-const CACHE_NAME = 'learnish-9a6fc6cb';
+const CACHE_NAME = 'learnish-332fca0f';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
@@ -41,6 +41,14 @@ self.addEventListener('activate', (event) => {
 
 // Network-first: güncel kod her zaman önce sunucudan alınır (mobilde eski app.js takılı kalmasın),
 // çevrimdışıyken önbellekteki sürüm kullanılır.
+// Sayfa "Şimdi Güncelle" butonuna basınca SKIP_WAITING mesajı gönderir;
+// SW bunu alınca beklemeyi atlayıp hemen aktif hale geçer.
+self.addEventListener('message', (event) => {
+  if (event.data && event.data.type === 'SKIP_WAITING') {
+    self.skipWaiting();
+  }
+});
+
 self.addEventListener('fetch', (event) => {
   const req = event.request;
   if (req.method !== 'GET' || new URL(req.url).origin !== self.location.origin) return;
