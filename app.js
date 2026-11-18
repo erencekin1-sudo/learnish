@@ -2316,7 +2316,7 @@
   }
 
   function getActiveGrade() {
-    return Math.max(1, Math.min(12, parseInt(STATE.selectedGrade, 10) || 5));
+    return Math.max(2, Math.min(12, parseInt(STATE.selectedGrade, 10) || 5));
   }
 
   function _buildGradePool(gNum) {
@@ -2728,14 +2728,22 @@
       for (const gNum of st.grades) {
         const gData = (window.CURRICULUM_DATA && window.CURRICULUM_DATA[gNum]) || { name: `${gNum}. Sınıf`, cefr: 'A1', units: [] };
         const isCurrentActive = (curMod === 'maarif' && curGrade === gNum);
+        const hasPlan = gData.hasPlan !== false;
 
-        html += `
+        html += hasPlan ? `
           <button type="button" class="stage-grade-btn ${isCurrentActive ? 'active' : ''}" onclick="window.APP.switchGrade(${gNum})">
             <div class="sgb-info">
               <span class="sgb-name">${gData.name}</span>
               <span class="sgb-meta">CEFR ${gData.cefr} • ${gData.units.length} Ünite</span>
             </div>
             <span class="sgb-check">✓</span>
+          </button>
+        ` : `
+          <button type="button" class="stage-grade-btn disabled" disabled style="opacity:.45;cursor:not-allowed">
+            <div class="sgb-info">
+              <span class="sgb-name">${gData.name}</span>
+              <span class="sgb-meta">Plan Yok</span>
+            </div>
           </button>
         `;
       }
@@ -2767,7 +2775,7 @@
   }
 
   function switchGrade(gradeNum) {
-    const gNum = Math.max(1, Math.min(12, parseInt(gradeNum, 10) || 5));
+    const gNum = Math.max(2, Math.min(12, parseInt(gradeNum, 10) || 5));
     STATE.selectedGrade = gNum;
     STATE.activeModule = 'maarif';
     STATE.activeCurriculumWeek = null;
@@ -3425,7 +3433,6 @@
                 <span class="pdf-field-title">Sınıf / Havuz:</span>
                 <select id="pdf-grade-select" class="pdf-select" onchange="window.APP.updatePdfStudioOption('grade', this.value)">
                   <optgroup label="İlkokul (MEB)">
-                    <option value="1" ${state.grade == 1 ? 'selected' : ''}>1. Sınıf</option>
                     <option value="2" ${state.grade == 2 ? 'selected' : ''}>2. Sınıf</option>
                     <option value="3" ${state.grade == 3 ? 'selected' : ''}>3. Sınıf</option>
                     <option value="4" ${state.grade == 4 ? 'selected' : ''}>4. Sınıf</option>

@@ -1596,12 +1596,15 @@ registerTest(2, 'Boundary Cases', 'test_boundary_routing_alias_word_list', () =>
   assertEqual(env.APP.getState().currentView, 'directory', 'Routing alias #word-list should map to directory');
 }, { knownDefect: 'Routing alias #word-list falls back to #home', milestone: 'M2' });
 
-registerTest(2, 'Boundary Cases', 'test_boundary_grade_selection_boundaries_1_and_12', () => {
+registerTest(2, 'Boundary Cases', 'test_boundary_grade_selection_boundaries_2_and_12', () => {
   const env = createFreshAppEnvironment();
   env.APP.switchGrade(1);
-  assertEqual(env.APP.getState().selectedGrade, 1, 'Selected grade should be 1');
-  const sched1 = env.window.CURRICULUM_CLASSIFIER.getSchedule(1);
-  assert(sched1 && sched1.grade === 1, 'Grade 1 schedule should be valid');
+  assertEqual(env.APP.getState().selectedGrade, 2, 'Grade 1 has no plan, should clamp to 2');
+
+  env.APP.switchGrade(2);
+  assertEqual(env.APP.getState().selectedGrade, 2, 'Selected grade should be 2');
+  const sched2 = env.window.CURRICULUM_CLASSIFIER.getSchedule(2);
+  assert(sched2 && sched2.grade === 2, 'Grade 2 schedule should be valid');
 
   env.APP.switchGrade(12);
   assertEqual(env.APP.getState().selectedGrade, 12, 'Selected grade should be 12');
