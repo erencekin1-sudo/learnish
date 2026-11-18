@@ -303,6 +303,8 @@ vm.runInNewContext(rawWordsCode, staticDbSandbox);
 
 const SHARED_CURRICULUM_DATA = staticDbSandbox.CURRICULUM_DATA;
 const SHARED_CURRICULUM_CLASSIFIER = staticDbSandbox.CURRICULUM_CLASSIFIER;
+const SHARED_CURRICULUM_DICTIONARY = staticDbSandbox.CURRICULUM_DICTIONARY;
+const SHARED_ACADEMIC_CALENDAR = staticDbSandbox.ACADEMIC_CALENDAR;
 const SHARED_WORDS_DATA = staticDbSandbox.WORDS_DATA;
 const SHARED_THEMES_DATA = staticDbSandbox.THEMES_DATA;
 
@@ -471,6 +473,8 @@ function createFreshAppEnvironment(options = {}) {
     cancelAnimationFrame: (id) => clearTimeout(id),
     CURRICULUM_DATA: SHARED_CURRICULUM_DATA,
     CURRICULUM_CLASSIFIER: SHARED_CURRICULUM_CLASSIFIER,
+    CURRICULUM_DICTIONARY: SHARED_CURRICULUM_DICTIONARY,
+    ACADEMIC_CALENDAR: SHARED_ACADEMIC_CALENDAR,
     WORDS_DATA: SHARED_WORDS_DATA,
     THEMES_DATA: SHARED_THEMES_DATA,
     __spokenUtterances: spokenUtterances,
@@ -498,6 +502,8 @@ function createFreshAppEnvironment(options = {}) {
     clearInterval: windowMock.clearInterval,
     CURRICULUM_DATA: SHARED_CURRICULUM_DATA,
     CURRICULUM_CLASSIFIER: SHARED_CURRICULUM_CLASSIFIER,
+    CURRICULUM_DICTIONARY: SHARED_CURRICULUM_DICTIONARY,
+    ACADEMIC_CALENDAR: SHARED_ACADEMIC_CALENDAR,
     WORDS_DATA: SHARED_WORDS_DATA,
     THEMES_DATA: SHARED_THEMES_DATA,
     console: {
@@ -1808,6 +1814,104 @@ registerTest(4, 'Real-World Scenarios', 'test_scenario_single_file_bundle_integr
   assert(!/<script src="words-data\.js.*?>/.test(bundleContent), 'Bundle must NOT contain unbundled words-data.js script');
   assert(bundleContent.includes('<style>'), 'Bundle must contain inlined <style>');
   assert(bundleContent.includes('<script>'), 'Bundle must contain inlined <script>');
+});
+
+// ============================================================================
+// 7b. YILLIK PLAN TAKVİMİ & SINIF HAVUZU (Kasım 2026 düzeltmeleri)
+// ============================================================================
+registerTest(1, 'Curriculum Calendar', 'test_schedule_uses_real_plan_dates_and_breaks', () => {
+  const K = SHARED_CURRICULUM_CLASSIFIER;
+  const midterm = K.getSchedule(5, new Date(2026, 10, 18));          // 18 Kasım 2026: 1. ara tatil
+  assert(midterm.isBreak === true, '18 Kasım 2026 ara tatil olarak işaretlenmeli');
+  assertEqual(midterm.breakName, '1. Dönem Ara Tatili', 'Tatil adı');
+  assertEqual(midterm.weekNum, 9, 'Tatilde son başlamış hafta (9) gösterilmeli');
+  const after = K.getSchedule(5, new Date(2026, 10, 25));             // 25 Kasım: 10. hafta, Tema 2
+  assertEqual(after.weekNum, 10, '25 Kasım 10. hafta');
+  assertEqual(after.weekType, 'theme', '10. hafta ders haftası');
+  assertEqual(after.unitTitle, 'CLASSROOM LIFE', '10. hafta Tema 2');
+  const march = K.getSchedule(5, new Date(2027, 2, 16));              // 2. ara tatilden sonra 23. hafta
+  assertEqual(march.weekNum, 23, '16 Mart 2027 23. hafta');
+  const schoolBased = K.getSchedule(5, new Date(2026, 10, 11));
+  assertEqual(schoolBased.weekType, 'school_based', '9-13 Kasım okul temelli planlama');
+});
+
+registerTest(1, 'Curriculum Calendar', 'test_every_grade_calendar_has_ordered_iso_dates', () => {
+  for (const g of Object.keys(SHARED_CURRICULUM_DATA)) {
+    const cal = SHARED_CURRICULUM_DATA[g].calendar;
+    assert(cal.length >= 36, `${g}. sınıf en az 36 hafta`);
+    cal.forEach((w, i) => {
+      assert(/^\d{4}-\d{2}-\d{2}$/.test(w.start) && /^\d{4}-\d{2}-\d{2}$/.test(w.end), `${g}. sınıf ${w.weekNum}. hafta ISO tarih`);
+      if (i) assert(w.start > cal[i - 1].end, `${g}. sınıf haftalar tarih sırasında olmalı (${w.weekNum})`);
+    });
+  }
+});
+
+registerTest(1, 'Curriculum Calendar', 'test_theme1_title_is_not_overwritten_by_orientation', () => {
+  for (const g of [2, 3, 5, 6, 9, 10]) {
+    const t = SHARED_CURRICULUM_DATA[g].units[0].title;
+    assert(t.includes('SCHOOL LIFE'), `${g}. sınıf Tema 1 "SCHOOL LIFE" olmalı, bulunan: ${t}`);
+  }
+});
+
+registerTest(1, 'Curriculum Calendar', 'test_weekly_progression_splits_theme_vocabulary', () => {
+  for (const g of Object.keys(SHARED_CURRICULUM_DATA)) {
+    const cal = SHARED_CURRICULUM_DATA[g].calendar.filter(w => w.weekType === 'theme');
+    for (let i = 1; i < cal.length; i++) {
+      if (cal[i].unitNum !== cal[i - 1].unitNum || !cal[i].targetWords.length) continue;
+      const overlap = cal[i].targetWords.filter(x => cal[i - 1].targetWords.includes(x));
+      assertEqual(overlap.length, 0, `${g}. sınıf ${cal[i].weekNum}. hafta önceki haftayı tekrar etmemeli`);
+    }
+  }
+});
+
+registerTest(3, 'Grade Pool', 'test_grade_pool_follows_selected_grade', () => {
+  const env = createFreshAppEnvironment();
+  env.APP.switchGrade(7);
+  const pool7 = env.APP.getActiveGradePool().map(w => w.en.toLowerCase());
+  assert(pool7.includes('outgoing'), '7. sınıf havuzunda "outgoing" olmalı');
+  assert(!pool7.includes('albeit'), '7. sınıf havuzuna YDS kelimesi girmemeli');
+  env.APP.switchGrade(5);
+  const pool5 = env.APP.getActiveGradePool();
+  assert(pool5.some(w => w.en.toLowerCase() === 'uniform'), '5. sınıf havuzunda "uniform" olmalı');
+  assert(!pool5.some(w => ['albeit', 'allocate', 'commence'].includes(w.en.toLowerCase())), '5. sınıf havuzunda YDS akademik kelimeleri olmamalı');
+  pool5.forEach(w => assert(w.tr && w.tr.trim(), `"${w.en}" Türkçe karşılığı boş olmamalı`));
+});
+
+registerTest(3, 'Grade Pool', 'test_curriculum_word_ids_are_stable_unique_and_exact', () => {
+  const env = createFreshAppEnvironment();
+  for (const g of [2, 5, 9, 10]) {
+    env.APP.switchGrade(g);
+    const ids = env.APP.getActiveGradePool().map(w => w.id);
+    assertEqual(new Set(ids).size, ids.length, `${g}. sınıf havuzunda tekrarlı id olmamalı`);
+  }
+  const a = env.APP.lookupCurriculumWord('a notice board');
+  const b = env.APP.lookupCurriculumWord('notice board');
+  assert(!a || !b || a.id === b.id, 'Aynı kelime aynı id ile çözülmeli');
+  const pen = env.APP.lookupCurriculumWord('pen');
+  assert(!pen || pen.en.toLowerCase() === 'pen', '"pen" başka bir kelimeye (ör. "open") eşleşmemeli');
+});
+
+registerTest(3, 'Grade Pool', 'test_distractors_come_from_selected_grade_pool', () => {
+  const env = createFreshAppEnvironment();
+  env.APP.switchGrade(6);
+  const pool = env.APP.getActiveGradePool();
+  const ids = new Set(pool.map(w => w.id));
+  for (const target of pool.slice(0, 15)) {
+    const ds = env.APP.pickDistractors(target, 3, pool);
+    assertEqual(ds.length, 3, 'Üç yanlış şık');
+    ds.forEach(d => assert(ids.has(d.id), `"${target.en}" şıkları 6. sınıf havuzundan gelmeli ("${d.en}" değil)`));
+  }
+});
+
+registerTest(4, 'Real-World Scenarios', 'test_scenario_daily_day_points_to_this_weeks_words', () => {
+  const env = createFreshAppEnvironment();
+  env.APP.switchGrade(5);
+  const info = env.APP.getMEBCalendarInfo(new Date(2026, 9, 7));    // 7 Ekim 2026: 4. hafta, Tema 1 ilk hafta
+  assertEqual(info.weekNum, 4, '7 Ekim 4. hafta');
+  const pool = env.APP.getActiveGradePool();
+  const dayWords = pool.slice((info.day - 1) * 10, info.day * 10).map(w => w.en.toLowerCase());
+  const weekWords = info.schedule.targetWords.map(t => (env.APP.lookupCurriculumWord(t) || { en: '' }).en.toLowerCase());
+  assert(dayWords.some(w => weekWords.includes(w)), 'Günlük çalışma bu haftanın kelimelerini göstermeli');
 });
 
 // ============================================================================

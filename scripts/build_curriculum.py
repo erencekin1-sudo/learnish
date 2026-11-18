@@ -14,10 +14,185 @@ import xml.etree.ElementTree as ET
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from curriculum_dictionary_definitions import CURRICULUM_DEFINITIONS
+from curriculum_extra_translations import CURRICULUM_EXTRA_TRANSLATIONS
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 EXCEL_PATH = os.path.join(BASE_DIR, 'belgeler', 'İNGİLİZCE (2-8. SINIF) TASLAK YILLIK ÇERÇEVE PLAN.xlsx')
+DOCX_PLAN_DIR = os.path.join(BASE_DIR, 'belgeler', 'yillik-planlar')
 OUTPUT_JS_PATH = os.path.join(BASE_DIR, 'curriculum-data.js')
+
+# Eğitim-öğretim yılının başladığı takvim yılı (Eylül-Aralık bu yıl, Ocak-Haziran bir sonraki yıl).
+# Yeni yılın planları yüklendiğinde yalnızca bu değer ve belgeler/ içindeki plan dosyaları güncellenir.
+ACADEMIC_START_YEAR = 2026
+
+# ---------------------------------------------------------------------------
+# Tarih ayrıştırma (İngilizce + Türkçe ay adları): "14-18 September", "28 Aralık -1Ocak",
+# "30 November - 4 December", "25 JANUARY - 5 FEBRUARY 2027"
+# ---------------------------------------------------------------------------
+_MONTHS = {
+    'january': 1, 'february': 2, 'march': 3, 'april': 4, 'may': 5, 'june': 6, 'july': 7,
+    'august': 8, 'september': 9, 'october': 10, 'november': 11, 'december': 12,
+    'ocak': 1, 'subat': 2, 'mart': 3, 'nisan': 4, 'mayis': 5, 'haziran': 6, 'temmuz': 7,
+    'agustos': 8, 'eylul': 9, 'ekim': 10, 'kasim': 11, 'aralik': 12,
+}
+_TR_ASCII = str.maketrans('çğıöşüÇĞİÖŞÜ', 'cgiosuCGIOSU')
+
+def _month_num(token):
+    if not token:
+        return None
+    t = token.translate(_TR_ASCII).lower()
+    return _MONTHS.get(t)
+
+def parse_date_range(text, start_year=ACADEMIC_START_YEAR):
+    """Serbest metindeki tarih aralığını (başlangıç, bitiş) ISO tarihlerine çevirir. Bulamazsa (None, None)."""
+    if not text:
+        return None, None
+    parts = []  # [(gün, ay|None)]
+    for m in re.finditer(r'(?<!\d)(\d{1,2})(?![\d.])\s*([A-Za-zÇĞİÖŞÜçğıöşü]+)?', text):  # "1. Dönem" sıra sayısı değil
+        day = int(m.group(1))
+        if not 1 <= day <= 31:
+            continue
+        mon = _month_num(m.group(2))
+        if m.group(2) and mon is None:
+            continue  # "2027", "Hafta" vb. tarih olmayan sayı
+        parts.append((day, mon))
+    if not parts:
+        return None, None
+    end_day, end_mon = parts[-1]
+    start_day, start_mon = parts[0]
+    end_mon = end_mon or start_mon
+    start_mon = start_mon or end_mon
+    if not start_mon:
+        return None, None
+
+    def iso(d, mth):
+        y = start_year if mth >= 8 else start_year + 1
+        return f'{y:04d}-{mth:02d}-{d:02d}'
+    return iso(start_day, start_mon), iso(end_day, end_mon)
+
+HOLIDAY_RE = re.compile(r'(BREAK|HOLIDAY|TATİL|TATIL|EID|BAYRAM)', re.IGNORECASE)
+
+def make_holiday(text):
+    """'FIRST MIDTERM BREAK (16-20 November)' → {'name','start','end','full'} (full: tüm okul haftasını kapsar)."""
+    start, end = parse_date_range(text)
+    if not start:
+        return None
+    from datetime import date
+    s = date.fromisoformat(start); e = date.fromisoformat(end)
+    weekdays = sum(1 for i in range((e - s).days + 1) if (s.toordinal() + i) % 7 not in (6, 0))
+    is_eid = bool(re.search(r'EID|BAYRAM', text, re.IGNORECASE))
+    up = text.translate(_TR_ASCII).upper()
+    if 'FITR' in up or 'RAMAZAN' in up:
+        name = 'Ramazan Bayramı'
+    elif 'ADHA' in up or 'KURBAN' in up:
+        name = 'Kurban Bayramı'
+    elif 'SEMESTER' in up or 'YARIYIL' in up:
+        name = 'Yarıyıl Tatili'
+    elif 'MIDTERM' in up or 'ARA TATIL' in up:
+        name = '1. Dönem Ara Tatili' if start[5:7] in ('10', '11', '12') else '2. Dönem Ara Tatili'
+    else:
+        name = clean_text(re.sub(r'[\(:].*$', '', text).strip('| ')) or clean_text(text)
+    return {'name': name, 'start': start, 'end': end, 'full': (weekdays >= 5 and not is_eid)}
+
+# ---------------------------------------------------------------------------
+# Sağlam hedef kelime ayıklayıcı (planlardaki tüm biçimler: "Nouns: A gate, a lab.",
+# "Countries:\nTürkiye, the UK ...", "British/English", "(trash-garbage-AmE)")
+# ---------------------------------------------------------------------------
+_VOCAB_LABEL_RE = re.compile(r'(?:^|(?<=[\s,.;]))[^,.;:\n]{1,70}:')
+_STOP_LEADING = re.compile(r'^(a|an|the|to)\s+', re.IGNORECASE)
+
+def _join_wrapped_lines(text):
+    """Excel/Word hücrelerinde satır sonuna taşan ifadeleri birleştirir ("Religion\\nand Morals" → tek ifade),
+    ama her satırı ayrı bir kelime olan listeleri ("an arm\\na head") ayrı bırakır."""
+    lines = [l.strip() for l in text.split('\n')]
+    out = []
+    for line in lines:
+        if not line:
+            out.append('\n'); continue
+        prev = out[-1] if out and out[-1] != '\n' else None
+        if prev is not None:
+            prev_open = not re.search(r'[,.;:)]\s*$', prev)
+            prev_tail_fn = re.search(r'\b(a|an|the|to|and|of|or)$', prev, re.IGNORECASE)
+            starts_new_item = re.match(r'^(a|an|the|to)\s', line, re.IGNORECASE) or line[:1].isupper()
+            if prev_open and (prev_tail_fn or (not starts_new_item and line[:1].islower())):
+                out[-1] = prev + ' ' + line
+                continue
+        out.append(line)
+    return '\n'.join(x for x in out if x != '\n')
+
+def extract_plan_vocab(text):
+    if not text:
+        return []
+    m = re.search(r'Target\s+Vocabulary(.*?)(?=Target\s+Grammatical|Target\s+Language|Target\s+Social|Target\s+Phonological|Functions\s+of|\*\s*National|\*\s*Local|\Z)',
+                  text, re.DOTALL | re.IGNORECASE)
+    if not m:
+        return []
+    sec = _join_wrapped_lines(m.group(1))
+
+    def _paren(mm):
+        inner = mm.group(1)
+        if re.search(r'revisional|phonetic|will not', inner, re.IGNORECASE):
+            return ' '
+        if re.search(r'\b(AmE|BrE|Br|Am)\b', inner):     # (trash-garbage-AmE) → , trash, garbage,
+            inner = re.sub(r'[-–]?\s*\b(AmE|BrE|Br|Am)\b', '', inner)
+            return ',' + ','.join(re.split(r'[-–/]', inner)) + ','
+        return ',' + inner + ','                         # (England, Scotland, Northern Ireland, Wales)
+    sec = re.sub(r'\(([^)]*)\)', _paren, sec)
+    sec = re.sub(r'[“”"]', '', sec.replace('’', "'").replace('‘', "'"))
+    sec = _VOCAB_LABEL_RE.sub(',', sec)               # "Nouns:", "Vocabulary for clothes:", "Countries:"
+    words = []
+    for part in re.split(r'[,;/\n]|\.(?=\s|$)|[-–]\s', sec):
+        w = clean_text(part)
+        w = _STOP_LEADING.sub('', w).strip(' .-–—*•')
+        w = _STOP_LEADING.sub('', w)
+        if not w or len(w) < 2 or len(w) > 40 or len(w.split()) > 5:
+            continue
+        if w.lower() in ('an', 'the', 'to', 'and', 'or', 'of', 'etc', 'no'):
+            continue
+        w = re.sub(r'\s+etc$', '', w).strip(" '")
+        if not re.match(r"^[A-Za-zÇĞİÖŞÜçğıöşü][A-Za-zÇĞİÖŞÜçğıöşü\s'\-]*$", w):
+            continue
+        if len(w) < 3 and not (w.isupper() and len(w) >= 2):     # "es", "re" artıkları; "PE", "UK", "IT" kalır
+            continue
+        if re.search(r"\s(of|the|to|a|an|and|for|your)$", w, re.IGNORECASE):   # "piece of", "take the" yarım parçalar
+            continue
+        low = w.lower()
+        if any(b in low for b in ('vocabulary', 'target', 'in use', 'revisional', 'from 50 to', 'numbers',
+                                   'language chunks', 'has got', 'have got some', 'physical appearance and')):
+            continue
+        words.append(low)  # uygulama eşleştirmeyi harf duyarsız yapar; görünen yazım WORDS_DATA'dan gelir
+    return list(dict.fromkeys(words))
+
+def extract_standard_vocab_and_functions(text):
+    """Eski program biçimi: işlev başlıkları + '—' ile başlayan örnek cümleler + alt alta kelime listesi."""
+    vocab, funcs = [], []
+    for raw in (text or '').split('\n'):
+        line = clean_text(raw)
+        if not line or line.startswith(('—', '-', '•', '(')):
+            continue
+        if re.match(r"^[a-z][a-z\s'\-]{1,34}$", line) and len(line.split()) <= 4:
+            vocab.append(line)
+        elif line[0].isupper() and '?' not in line and '/' not in line[:3] and len(line) < 70 and not line.endswith('.'):
+            funcs.append(line)
+    return list(dict.fromkeys(vocab)), '; '.join(dict.fromkeys(funcs))
+
+# ---------------------------------------------------------------------------
+# Word (.docx) yıllık plan okuyucu (9-12. sınıflar)
+# ---------------------------------------------------------------------------
+_W = '{http://schemas.openxmlformats.org/wordprocessingml/2006/main}'
+
+def read_docx_rows(path):
+    with zipfile.ZipFile(path) as z:
+        root = ET.fromstring(z.read('word/document.xml'))
+    rows = []
+    for tbl in root.iter(_W + 'tbl'):
+        for tr in tbl.findall(_W + 'tr'):
+            cells = []
+            for tc in tr.findall(_W + 'tc'):
+                ps = [''.join(t.text or '' for t in p.iter(_W + 't')) for p in tc.findall('.//' + _W + 'p')]
+                cells.append('\n'.join(x for x in ps if x.strip()))
+            rows.append(cells)
+    return rows
 
 def log(msg):
     print(f"[Curriculum Builder] {msg}")
@@ -222,28 +397,24 @@ UNIT_TITLES_TR = {
     (8, 8): "Ev İşleri ve Sorumluluklar",
     (8, 9): "Bilim ve Keşifler",
     (8, 10): "Doğal Afetler ve Çevre",
-    # Grade 9
-    (9, 1): "Yurt Dışında Eğitim & Tanışma",
-    (9, 2): "Çevrem & Yaşam Alanım",
-    (9, 3): "Filmler & Sinema Dünyası",
-    (9, 4): "Doğada İnsan & Yaşam",
-    (9, 5): "İlham Veren Kişilikler & Biyografiler",
-    (9, 6): "Kültür Köprüleri & Gelenekler",
-    (9, 7): "Dünya Mirası & Tarihi Eserler",
-    (9, 8): "Acil Durumlar & Sağlık",
-    (9, 9): "Davetler & Kutlamalar",
-    (9, 10): "Televizyon & Sosyal Medya",
-    # Grade 10
-    (10, 1): "Lise Yaşamı & Çalışma Alışkanlıkları",
-    (10, 2): "Gelecek Planları & Hedefler",
-    (10, 3): "Efsanevi Figürler & Tarih",
-    (10, 4): "Gelenekler & Kültürel Değerler",
-    (10, 5): "Seyahat & Keşif",
-    (10, 6): "Faydalı İpuçları & Yaşam Becerileri",
-    (10, 7): "Dünya Mutfakları & Festivaller",
-    (10, 8): "Dijital Çağ & Teknoloji",
-    (10, 9): "Modern Çağın Kahramanları",
-    (10, 10): "Alışveriş & Tüketici Alışkanlıkları",
+    # Grade 9 (Türkiye Yüzyılı Maarif Modeli)
+    (9, 1): "Okul Yaşamı & Ülkeler",
+    (9, 2): "Sınıf Yaşamı & Arkadaşlık",
+    (9, 3): "Kişisel Yaşam: Dış Görünüş & Kişilik",
+    (9, 4): "Aile Yaşamı",
+    (9, 5): "Ev ve Mahallede Yaşam",
+    (9, 6): "Şehirde ve Kırsalda Yaşam",
+    (9, 7): "Dünyada ve Doğada Yaşam",
+    (9, 8): "Evrende Yaşam & Gelecek",
+    # Grade 10 (Türkiye Yüzyılı Maarif Modeli)
+    (10, 1): "Okul Yaşamı & Eğitim",
+    (10, 2): "Sınıf Yaşamı & Öğrenme",
+    (10, 3): "Kişisel Yaşam & İyi Oluş",
+    (10, 4): "Aile Yaşamı & Ev",
+    (10, 5): "Mahalle, Şehir & Sosyal Yaşam",
+    (10, 6): "Dünyada Yaşam & Kültür",
+    (10, 7): "Doğada Yaşam & Küresel Sorunlar",
+    (10, 8): "Evrende Yaşam & Gelecek",
     # Grade 11
     (11, 1): "Geleceğin Meslekleri & Kariyer",
     (11, 2): "Hobiler, Yetenekler & Sanat",
@@ -346,28 +517,7 @@ UNIT_KEYWORDS = {
     (8, 8): ['chores', 'housework', 'do the laundry', 'wash dishes', 'dishwasher', 'take out garbage', 'tidy up', 'make the bed', 'clean up', 'iron', 'vacuum', 'dust', 'sweep', 'responsibility', 'obligation'],
     (8, 9): ['science', 'scientific', 'experiment', 'scientist', 'invent', 'invention', 'discover', 'discovery', 'lab', 'laboratory', 'test tube', 'high-tech', 'cell', 'vaccination', 'cure', 'process', 'result'],
     (8, 10): ['natural forces', 'natural disasters', 'avalanche', 'drought', 'earthquake', 'erosion', 'flood', 'global warming', 'hurricane', 'landslide', 'tornado', 'tsunami', 'volcano', 'destruction', 'survivor', 'rescue'],
-    # Grade 9
-    (9, 1): ['studying abroad', 'overseas', 'international student', 'campus', 'dormitory', 'scholarship', 'visa', 'passport', 'exchange program', 'foreign language'],
-    (9, 2): ['my environment', 'neighbourhood', 'apartment', 'rent', 'directions', 'suburb', 'residential', 'balcony', 'district', 'landmark'],
-    (9, 3): ['movies', 'cinema', 'film', 'genre', 'director', 'soundtrack', 'plot', 'acting', 'blockbuster', 'premiere', 'scene', 'character'],
-    (9, 4): ['human in nature', 'outdoor', 'trekking', 'camping', 'wildlife', 'campfire', 'hiking trail', 'flora', 'fauna', 'mountain', 'survival'],
-    (9, 5): ['inspirational people', 'role model', 'biography', 'achieve', 'pioneer', 'inventor', 'nobel prize', 'determination', 'perseverance', 'legacy'],
-    (9, 6): ['bridging cultures', 'multicultural', 'tradition', 'customs', 'hospitality', 'folklore', 'ceremony', 'cultural diversity', 'costume'],
-    (9, 7): ['world heritage', 'unesco', 'ancient wonder', 'pyramid', 'monument', 'ruins', 'archaeological', 'civilization', 'historical landmark'],
-    (9, 8): ['emergency', 'health', 'first aid', 'ambulance', 'paramedic', 'injury', 'prescription', 'symptom', 'remedy', 'treatment', 'hospital', 'patient'],
-    (9, 9): ['invitations', 'celebrations', 'party', 'gathering', 'anniversary', 'reception', 'toast', 'ceremony', 'rsvp', 'organize', 'festivity'],
-    (9, 10): ['television', 'social media', 'broadcasting', 'digital influencer', 'follower', 'content creator', 'media ethics', 'streaming', 'audience'],
-    # Grade 10
-    (10, 1): ['school life', 'high school', 'syllabus', 'curriculum', 'study habits', 'attendance', 'extracurricular', 'counselor', 'discipline', 'exam period'],
-    (10, 2): ['plans', 'future ambition', 'career goal', 'prospective', 'intention', 'aspiration', 'higher education', 'vocation', 'pathway'],
-    (10, 3): ['legendary figures', 'mythology', 'epic', 'warrior', 'conqueror', 'empire', 'historical chronicle', 'saga', 'heroic deed'],
-    (10, 4): ['traditions', 'cultural values', 'ancestral', 'folk dance', 'ceremonial', 'wedding customs', 'heritage', 'handicraft', 'national festival'],
-    (10, 5): ['travel', 'voyage', 'journey', 'itinerary', 'boarding pass', 'flight booking', 'luggage', 'customs declaration', 'cruise', 'excursion'],
-    (10, 6): ['helpful tips', 'practical advice', 'guidelines', 'household repair', 'diy', 'troubleshooting', 'safety rules', 'recommendations'],
-    (10, 7): ['food and festivals', 'culinary', 'gastronomy', 'gourmet', 'world cuisine', 'harvest festival', 'street food', 'cooking techniques'],
-    (10, 8): ['digital era', 'cybersecurity', 'artificial intelligence', 'virtual reality', 'algorithm', 'smart devices', 'automation', 'cloud computing'],
-    (10, 9): ['modern heroes', 'altruism', 'courageous', 'philanthropy', 'bravery', 'first responder', 'lifesaver', 'humanitarian', 'selfless'],
-    (10, 10): ['shopping', 'consumerism', 'discount', 'receipt', 'bargain', 'cashier', 'fitting room', 'clothing size', 'refund', 'warranty'],
+    # Grade 9-10: Maarif modeli planları hedef kelimeleri içerir; ek anahtar kelime gerekmez
     # Grade 11
     (11, 1): ['future jobs', 'emerging careers', 'data analyst', 'ai specialist', 'biotechnologist', 'freelancer', 'job interview', 'curriculum vitae', 'salary package'],
     (11, 2): ['hobbies and skills', 'craftsmanship', 'pottery', 'photography', 'martial arts', 'creative writing', 'artistic expression', 'talent'],
@@ -401,312 +551,397 @@ GRADE_METADATA = {
     6: {"name": "6. Sınıf (Maarif)", "stage": "Ortaokul", "stageTr": "Ortaokul (5-8 / LGS)", "cefr": "A2", "hours": 3, "badge": "6. SINIF"},
     7: {"name": "7. Sınıf", "stage": "Ortaokul", "stageTr": "Ortaokul (5-8 / LGS)", "cefr": "A2", "hours": 4, "badge": "7. SINIF"},
     8: {"name": "8. Sınıf (LGS)", "stage": "Ortaokul", "stageTr": "Ortaokul (5-8 / LGS)", "cefr": "A2-B1", "hours": 4, "badge": "8. SINIF"},
-    9: {"name": "9. Sınıf", "stage": "Lise", "stageTr": "Lise (9-12 / YDT)", "cefr": "A2.2-B1.1", "hours": 4, "badge": "9. SINIF"},
-    10: {"name": "10. Sınıf", "stage": "Lise", "stageTr": "Lise (9-12 / YDT)", "cefr": "B1.1-B1.2", "hours": 4, "badge": "10. SINIF"},
+    9: {"name": "9. Sınıf (Maarif)", "stage": "Lise", "stageTr": "Lise (9-12 / YDT)", "cefr": "A2.2-B1.1", "hours": 4, "badge": "9. SINIF"},
+    10: {"name": "10. Sınıf (Maarif)", "stage": "Lise", "stageTr": "Lise (9-12 / YDT)", "cefr": "B1.1-B1.2", "hours": 4, "badge": "10. SINIF"},
     11: {"name": "11. Sınıf", "stage": "Lise", "stageTr": "Lise (9-12 / YDT)", "cefr": "B1.2-B2.1", "hours": 4, "badge": "11. SINIF"},
     12: {"name": "12. Sınıf (YDT)", "stage": "Lise", "stageTr": "Lise (9-12 / YDT)", "cefr": "B2.1-B2.2", "hours": 4, "badge": "12. SINIF"}
 }
 
-# 36-Week Standard Academic Calendar Schedule Generator
-def generate_standard_calendar(grade_num, units):
-    weeks = []
-    week_templates = [
-        # 1. Dönem
-        (1, "Eylül", "14-18 September", "Orientation & Uyum", "15 Temmuz Demokrasi ve Milli Birlik Günü"),
-        (2, "Eylül", "21-25 September", "", "26 Eylül Türk Dil Bayramı"),
-        (3, "Eylül", "28 September - 2 October", "", ""),
-        (4, "Ekim", "5-9 October", "", ""),
-        (5, "Ekim", "12-16 October", "", ""),
-        (6, "Ekim", "19-23 October", "", ""),
-        (7, "Ekim", "26-30 October", "", "29 Ekim Cumhuriyet Bayramı"),
-        (8, "Kasım", "2-6 November", "", ""),
-        (9, "Kasım", "9-13 November", "", "10 Kasım Atatürk'ü Anma Günü"),
-        (10, "Kasım", "16-20 November", "", "1. Ara Tatil & Pekiştirme"),
-        (11, "Kasım", "23-27 November", "", "24 Kasım Öğretmenler Günü"),
-        (12, "Aralık", "30 November - 4 December", "", ""),
-        (13, "Aralık", "7-11 December", "", ""),
-        (14, "Aralık", "14-18 December", "", ""),
-        (15, "Aralık", "21-25 December", "", ""),
-        (16, "Aralık", "28 December - 1 January", "", "1 Ocak Yılbaşı Tatili"),
-        (17, "Ocak", "4-8 January", "", ""),
-        (18, "Ocak", "11-15 January", "", "1. Dönem Sonu & Karne"),
-        # 2. Dönem
-        (19, "Şubat", "8-12 February", "", "2. Dönem Başlangıcı"),
-        (20, "Şubat", "15-19 February", "", ""),
-        (21, "Şubat", "22-26 February", "", ""),
-        (22, "Mart", "1-5 March", "", ""),
-        (23, "Mart", "8-12 March", "", "12 Mart İstiklal Marşı'nın Kabulü"),
-        (24, "Mart", "15-19 March", "", "18 Mart Çanakkale Zaferi"),
-        (25, "Mart", "22-26 March", "", ""),
-        (26, "Mart", "29 March - 2 April", "", ""),
-        (27, "Nisan", "5-9 April", "", ""),
-        (28, "Nisan", "12-16 April", "", "2. Ara Tatil"),
-        (29, "Nisan", "19-23 April", "", "23 Nisan Ulusal Egemenlik ve Çocuk Bayramı"),
-        (30, "Nisan", "26-30 April", "", ""),
-        (31, "Mayıs", "3-7 May", "", "1 Mayıs Emek ve Dayanışma Günü"),
-        (32, "Mayıs", "10-14 May", "", ""),
-        (33, "Mayıs", "17-21 May", "", "19 Mayıs Atatürk'ü Anma Gençlik ve Spor Bayramı"),
-        (34, "Mayıs", "24-28 May", "", ""),
-        (35, "Haziran", "31 May - 4 June", "", ""),
-        (36, "Haziran", "7-11 June", "Yıl Sonu Değerlendirme & Tekrar", "Yıl Sonu Kapanış")
-    ]
-    
-    num_units = len(units)
-    for idx, (wn, m, d, default_focus, imp) in enumerate(week_templates):
-        u_idx = min(num_units - 1, int((idx / 36.0) * num_units))
-        target_unit = units[u_idx]
-        u_num = target_unit['unitNum']
-        u_title = target_unit['title']
-        focus = default_focus or target_unit['subThemes'] or target_unit['title']
-        vocab = target_unit['targetVocab']
-        slice_start = (idx % 3) * 6
-        weekly_words = vocab[slice_start:slice_start + 8] if vocab else target_unit['semanticKeywords'][:8]
+# ---------------------------------------------------------------------------
+# Yıllık plan → müfredat kaydı (2-8: Excel, 9-12: Word). Tek ortak mantık:
+#   * Haftalar gerçek tarihleriyle (start/end ISO) ve türleriyle saklanır
+#     (theme | orientation | revision | school_based | evaluation | social)
+#   * Orientation / Revision / Okul Temelli haftalar TEMA SAYILMAZ (eskiden Tema 1'in adını eziyordu)
+#   * Temanın hedef kelimeleri, o temanın ders haftalarına sırayla bölünür (haftalık ilerleme)
+#   * Tatiller planlardan okunur ve ACADEMIC_CALENDAR olarak dışa verilir
+# ---------------------------------------------------------------------------
+TR_MONTH_NAMES = ['', 'Ocak', 'Şubat', 'Mart', 'Nisan', 'Mayıs', 'Haziran', 'Temmuz',
+                  'Ağustos', 'Eylül', 'Ekim', 'Kasım', 'Aralık']
 
-        weeks.append({
-            'weekNum': wn,
-            'month': m,
-            'dates': d,
-            'hours': GRADE_METADATA[grade_num]['hours'],
-            'unitNum': u_num,
-            'unitTitle': u_title,
-            'focus': focus[:160],
-            'targetWords': weekly_words,
-            'importantDays': imp
-        })
-    return weeks
+WEEK_TYPE_LABELS = {
+    'theme': ('', ''),
+    'orientation': ('ORIENTATION', 'Uyum Haftası'),
+    'revision': ('REVISION', 'Tekrar Haftası'),
+    'school_based': ('SCHOOL-BASED PLANNING', 'Okul Temelli Planlama'),
+    'evaluation': ('EVALUATION', 'Değerlendirme Haftası'),
+    'social': ('SOCIAL ACTIVITIES', 'Sosyal Etkinlik Haftası'),
+}
 
-def build_full_curriculum_registry():
-    log("Tüm 1-12 sınıf müfredat veritabanı inşa ediliyor...")
-    
-    excel_data = {}
-    with zipfile.ZipFile(EXCEL_PATH, 'r') as z:
-        sst_xml = z.read('xl/sharedStrings.xml')
-        sst = ET.fromstring(sst_xml)
-        ns = {'ns': 'http://schemas.openxmlformats.org/spreadsheetml/2006/main'}
-        strings = [''.join([t.text or '' for t in si.findall('.//ns:t', ns)]) for si in sst.findall('.//ns:si', ns)]
+DOCX_GRADES = {9: 'tymm', 10: 'tymm', 11: 'standard', 12: 'standard'}
 
-        sheet_specs = [
-            (2, 'xl/worksheets/sheet1.xml', 'tymm'),
-            (3, 'xl/worksheets/sheet2.xml', 'tymm'),
-            (4, 'xl/worksheets/sheet3.xml', 'standard'),
-            (5, 'xl/worksheets/sheet4.xml', 'tymm'),
-            (6, 'xl/worksheets/sheet5.xml', 'tymm'),
-            (7, 'xl/worksheets/sheet6.xml', 'standard'),
-            (8, 'xl/worksheets/sheet7.xml', 'standard'),
-        ]
 
-        for grade_num, sheet_xml_path, mode in sheet_specs:
-            root = ET.fromstring(z.read(sheet_xml_path))
-            weeks = []
-            units_map = {}
-            last_month = ''
-            last_theme = ''
-            last_content = ''
-            last_outcomes = ''
+def classify_theme_cell(text):
+    """Hücre metnini (tür, tema no, tema başlığı) olarak sınıflandırır; tanınmazsa None."""
+    t = clean_text(text).upper()
+    if not t:
+        return None
+    if 'ORIENTATION' in t:
+        return ('orientation', None, '')
+    if t.startswith('REVISION'):
+        return ('revision', None, '')
+    if 'SCHOOL-BASED' in t or 'SCHOOL BASED' in t or 'OKUL TEMELL' in t:
+        return ('school_based', None, '')
+    if t.startswith('SOSYAL') or 'SOCIAL ACTIVIT' in t:
+        return ('social', None, '')
+    if t.startswith('EVALUATION'):
+        return ('evaluation', None, '')
+    m = re.match(r'(?:THEME|UNIT)\s*(\d+)\s*:?\s*(.*)$', t, re.DOTALL)
+    if m:
+        return ('theme', int(m.group(1)), clean_text(m.group(2)).strip(' -&'))
+    m = re.match(r'^(\d+)\s+([A-Z].*)$', t)
+    if m:
+        return ('theme', int(m.group(1)), clean_text(m.group(2)))
+    return None
 
-            for r in root.findall('.//ns:row', ns)[2:]:
-                row_dict = {}
-                for c in r.findall('ns:c', ns):
-                    v = c.find('ns:v', ns)
-                    t = c.attrib.get('t')
-                    val = strings[int(v.text)] if v is not None and v.text is not None and t == 's' else (v.text if v is not None else '')
-                    col = ''.join(filter(str.isalpha, c.attrib.get('r', '')))
-                    row_dict[col] = val.strip()
 
-                month = row_dict.get('A') or last_month
-                if row_dict.get('A'):
-                    last_month = row_dict.get('A')
+class GradePlan:
+    def __init__(self, grade, code_prefix):
+        self.grade = grade
+        self.code_prefix = code_prefix
+        self.units = {}
+        self.weeks = {}
+        self.holidays = []
 
-                raw_week = row_dict.get('B', '')
-                if not raw_week or raw_week.strip().upper() == 'WEEK':
-                    continue
-
-                week_match = re.search(r'Week\s*(\d+)[:\s]*(.*)', raw_week, re.IGNORECASE | re.DOTALL)
-                week_num = int(week_match.group(1)) if week_match else len(weeks) + 1
-                date_range = week_match.group(2).strip() if week_match else raw_week.strip()
-                date_range = clean_text(date_range)
-
-                theme_raw = row_dict.get('D') or last_theme
-                if row_dict.get('D'):
-                    last_theme = row_dict.get('D')
-
-                content = row_dict.get('E') or last_content
-                if row_dict.get('E'):
-                    last_content = row_dict.get('E')
-
-                outcomes = row_dict.get('F') or last_outcomes
-                if row_dict.get('F'):
-                    last_outcomes = row_dict.get('F')
-
-                raw_hours = row_dict.get('C', '')
-                try:
-                    hours = int(raw_hours)
-                except (ValueError, TypeError):
-                    hours = GRADE_METADATA[grade_num]['hours']
-                important_days = clean_text(row_dict.get('L' if mode == 'tymm' else 'I', ''))
-
-                clean_theme = clean_text(theme_raw)
-                unit_num = 1
-                unit_title = clean_theme
-
-                if mode == 'tymm':
-                    m_th = re.search(r'THEME\s*(\d+)[:\s]*(.*)', clean_theme, re.IGNORECASE)
-                    if m_th:
-                        unit_num = int(m_th.group(1))
-                        unit_title = clean_text(m_th.group(2)) or f"THEME {unit_num}"
-                    elif 'ORIENTATION' in clean_theme.upper():
-                        unit_num = 1
-                        unit_title = 'ORIENTATION'
-                    elif 'REVISION' in clean_theme.upper():
-                        unit_num = 1
-                        unit_title = 'REVISION'
-                else:
-                    m_un = re.search(r'^(\d+)\s+(.*)', clean_theme)
-                    if m_un:
-                        unit_num = int(m_un.group(1))
-                        unit_title = clean_text(m_un.group(2))
-
-                vocab_list = extract_vocab_from_text(content)
-                clean_subthemes = extract_subthemes_and_focus(content)
-                clean_functions = extract_communicative_functions(content)
-                parsed_outcomes, full_outcomes_text = parse_learning_outcomes(outcomes)
-
-                if unit_num not in units_map:
-                    units_map[unit_num] = {
-                        'unitNum': unit_num,
-                        'code': f"THEME {unit_num}" if mode == 'tymm' else f"UNIT {unit_num}",
-                        'title': unit_title.upper(),
-                        'titleTr': UNIT_TITLES_TR.get((grade_num, unit_num), unit_title),
-                        'subThemes': clean_subthemes or unit_title.upper(),
-                        'functions': clean_functions or f"Functions for {unit_title.upper()}",
-                        'outcomes': full_outcomes_text or f"Learning outcomes for {unit_title.upper()}",
-                        'outcomesList': parsed_outcomes,
-                        'targetVocab': [],
-                        'semanticKeywords': UNIT_KEYWORDS.get((grade_num, unit_num), [])
-                    }
-                elif not units_map[unit_num].get('outcomesList') and parsed_outcomes:
-                    units_map[unit_num]['outcomesList'] = parsed_outcomes
-                    units_map[unit_num]['outcomes'] = full_outcomes_text
-
-                units_map[unit_num]['targetVocab'].extend(vocab_list)
-                units_map[unit_num]['targetVocab'] = list(dict.fromkeys(units_map[unit_num]['targetVocab']))
-
-                weeks.append({
-                    'weekNum': week_num,
-                    'month': month.capitalize(),
-                    'dates': date_range,
-                    'hours': hours,
-                    'unitNum': unit_num,
-                    'unitTitle': unit_title.upper(),
-                    'focus': clean_subthemes or unit_title.upper(),
-                    'targetWords': vocab_list[:10],
-                    'importantDays': important_days
-                })
-
-            excel_data[grade_num] = {
-                'units': list(units_map.values()),
-                'calendar': weeks
+    def unit(self, num, title):
+        if num not in self.units:
+            self.units[num] = {
+                'unitNum': num,
+                'code': f'{self.code_prefix} {num}',
+                'title': (title or f'{self.code_prefix} {num}').upper(),
+                'titleTr': UNIT_TITLES_TR.get((self.grade, num), (title or '').title()),
+                'subThemes': '', 'functions': '', 'outcomes': '', 'outcomesList': [],
+                'targetVocab': [], 'semanticKeywords': []
             }
+        return self.units[num]
 
-    full_registry = {}
+    def absorb(self, u, content='', outcomes='', functions=''):
+        if content:
+            if not u['subThemes']:
+                m = re.search(r'Sub-?themes?:\s*(.*?)(?=Target\s+Vocabulary|\n\s*\n|\Z)', content, re.IGNORECASE | re.DOTALL)
+                u['subThemes'] = clean_text(m.group(1)).strip('"“”\' ') if m else ''
+            if not u['functions']:
+                u['functions'] = extract_communicative_functions(content) if 'Target' in content else ''
+            u['targetVocab'] = list(dict.fromkeys(u['targetVocab'] + extract_plan_vocab(content)))
+        if functions and not u['functions']:
+            u['functions'] = functions
+        if outcomes and not u['outcomesList']:
+            lst, full = parse_learning_outcomes(outcomes)
+            if lst:
+                u['outcomesList'], u['outcomes'] = lst, full
 
-    for g_num in range(1, 13):
-        meta = GRADE_METADATA[g_num]
-
-        if g_num in excel_data:
-            g_units = excel_data[g_num]['units']
-            g_calendar = excel_data[g_num]['calendar']
-        else:
-            g_units = []
-            for u_num in range(1, 11):
-                tr_title = UNIT_TITLES_TR.get((g_num, u_num), f"Ünite {u_num}")
-                kw = UNIT_KEYWORDS.get((g_num, u_num), [])
-                
-                en_titles_grade1 = [
-                    "HELLO & GREETINGS", "MY FAMILY & FRIENDS", "COLORS & RAINBOW",
-                    "NUMBERS 1-10", "CLASSROOM & TOYS", "ANIMALS & PETS",
-                    "MY BODY", "FRUITS & SNACKS", "ACTION & MOVEMENT", "NATURE & WEATHER"
-                ]
-                en_titles_grade9 = [
-                    "STUDYING ABROAD", "MY ENVIRONMENT", "MOVIES", "HUMAN IN NATURE",
-                    "INSPIRATIONAL PEOPLE", "BRIDGING CULTURES", "WORLD HERITAGE",
-                    "EMERGENCY AND HEALTH", "INVITATIONS AND CELEBRATIONS", "TELEVISION AND SOCIAL MEDIA"
-                ]
-                en_titles_grade10 = [
-                    "SCHOOL LIFE", "PLANS", "LEGENDARY FIGURES", "TRADITIONS",
-                    "TRAVEL", "HELPFUL TIPS", "FOOD AND FESTIVALS", "DIGITAL ERA",
-                    "MODERN HEROES AND HEROINES", "SHOPPING"
-                ]
-                en_titles_grade11 = [
-                    "FUTURE JOBS", "HOBBIES AND SKILLS", "HARD TIMES", "WHAT A LIFE!",
-                    "BACK TO THE PAST", "OPEN YOUR HEART", "FACTS ABOUT TURKEY",
-                    "SPORTS", "MY FRIENDS", "VALUES AND NORMS"
-                ]
-                en_titles_grade12 = [
-                    "MUSIC", "FRIENDSHIP", "HUMAN RIGHTS", "COMING SOON",
-                    "PSYCHOLOGY", "FAVORS", "NEWS STORIES", "ALTERNATIVE ENERGY",
-                    "TECHNOLOGY", "MANNERS"
-                ]
-
-                if g_num == 1: en_title = en_titles_grade1[u_num - 1]
-                elif g_num == 9: en_title = en_titles_grade9[u_num - 1]
-                elif g_num == 10: en_title = en_titles_grade10[u_num - 1]
-                elif g_num == 11: en_title = en_titles_grade11[u_num - 1]
-                elif g_num == 12: en_title = en_titles_grade12[u_num - 1]
-
-                g_units.append({
-                    'unitNum': u_num,
-                    'code': f"THEME {u_num}" if g_num in (2, 3, 5, 6) else f"UNIT {u_num}",
-                    'title': en_title,
-                    'titleTr': tr_title,
-                    'subThemes': f"{en_title} • {tr_title}",
-                    'functions': f"Communicative functions and language patterns for {en_title}",
-                    'outcomes': f"ENG.{g_num}.{u_num} Learning outcomes and skills for {en_title}",
-                    'outcomesList': [{
-                        'code': f"ENG.{g_num}.{u_num}",
-                        'skill': 'General',
-                        'text': f"Learning outcomes and communicative skills for {en_title}"
-                    }],
-                    'targetVocab': kw[:15],
-                    'semanticKeywords': kw
-                })
-
-            g_calendar = generate_standard_calendar(g_num, g_units)
-
-        for u in g_units:
-            u_kw = UNIT_KEYWORDS.get((g_num, u['unitNum']), [])
-            valid_existing = [w.lower().strip() for w in u['targetVocab'] if is_valid_vocab_word(w)]
-            u['targetVocab'] = list(dict.fromkeys([k.lower().strip() for k in u_kw] + valid_existing))
-            u['semanticKeywords'] = list(dict.fromkeys([k.lower().strip() for k in u_kw] + u['targetVocab'][:15]))
-
-        for wk in g_calendar:
-            u_match = next((u for u in g_units if u['unitNum'] == wk['unitNum']), None)
-            if u_match and u_match['targetVocab']:
-                valid_wk = [w.lower().strip() for w in wk.get('targetWords', []) if is_valid_vocab_word(w)]
-                if not valid_wk or len(valid_wk) < 4:
-                    u_v = u_match['targetVocab']
-                    offset = ((wk['weekNum'] - 1) % 4) * 5
-                    wk['targetWords'] = u_v[offset:offset + 8] if len(u_v) > offset else u_v[:8]
-                else:
-                    wk['targetWords'] = valid_wk
-
-        full_registry[g_num] = {
-            'grade': g_num,
-            'name': meta['name'],
-            'stage': meta['stage'],
-            'stageTr': meta['stageTr'],
-            'cefr': meta['cefr'],
-            'hours': meta['hours'],
-            'badge': meta['badge'],
-            'units': g_units,
-            'calendar': g_calendar
+    def add_week(self, wn, dates_text, hours, wtype, unit_num, important='', revision_vocab=None):
+        start, end = parse_date_range(dates_text)
+        existing = self.weeks.get(wn)
+        if existing:
+            # Aynı hafta iki kez yazılmışsa (ör. "EVALUATION" + "THEME 3") tema satırı kazanır
+            if existing['weekType'] != 'theme' and wtype == 'theme':
+                existing.update({'weekType': 'theme', 'unitNum': unit_num})
+            if important and important not in existing['importantDays']:
+                existing['importantDays'] = clean_text(f"{existing['importantDays']} {important}")
+            return
+        self.weeks[wn] = {
+            'weekNum': wn,
+            'month': TR_MONTH_NAMES[int(start[5:7])] if start else '',
+            'dates': clean_text(dates_text),
+            'start': start, 'end': end,
+            'hours': hours,
+            'weekType': wtype,
+            'unitNum': unit_num,
+            'importantDays': clean_text(important),
+            '_revisionVocab': revision_vocab or []
         }
 
-    return full_registry
+    def add_holiday(self, text):
+        h = make_holiday(text)
+        if h and not any(x['start'] == h['start'] and x['end'] == h['end'] for x in self.holidays):
+            self.holidays.append(h)
+
+
+def parse_excel_grades():
+    plans = {}
+    ns = {'ns': 'http://schemas.openxmlformats.org/spreadsheetml/2006/main'}
+    with zipfile.ZipFile(EXCEL_PATH, 'r') as z:
+        sst = ET.fromstring(z.read('xl/sharedStrings.xml'))
+        strings = [''.join([t.text or '' for t in si.findall('.//ns:t', ns)]) for si in sst.findall('.//ns:si', ns)]
+        sheet_specs = [
+            (2, 'xl/worksheets/sheet1.xml', 'tymm'), (3, 'xl/worksheets/sheet2.xml', 'tymm'),
+            (4, 'xl/worksheets/sheet3.xml', 'standard'), (5, 'xl/worksheets/sheet4.xml', 'tymm'),
+            (6, 'xl/worksheets/sheet5.xml', 'tymm'), (7, 'xl/worksheets/sheet6.xml', 'standard'),
+            (8, 'xl/worksheets/sheet7.xml', 'standard'),
+        ]
+        for grade, sheet, mode in sheet_specs:
+            gp = GradePlan(grade, 'THEME' if mode == 'tymm' else 'UNIT')
+            root = ET.fromstring(z.read(sheet))
+            last = None  # (tür, tema no)
+            for r in root.findall('.//ns:row', ns)[2:]:
+                d = {}
+                for c in r.findall('ns:c', ns):
+                    v = c.find('ns:v', ns)
+                    val = strings[int(v.text)] if v is not None and v.text is not None and c.attrib.get('t') == 's' else (v.text if v is not None else '')
+                    d[''.join(filter(str.isalpha, c.attrib.get('r', '')))] = (val or '').strip()
+                a, b, c_, dd, e, f = (d.get(k, '') for k in 'ABCDEF')
+                important = d.get('L' if mode == 'tymm' else 'I', '')
+                wm = re.search(r'Week\s*(\d+)[:\s]*(.*)', b, re.IGNORECASE | re.DOTALL)
+                if not wm:
+                    for t in (a, b, c_):
+                        if t and HOLIDAY_RE.search(t):
+                            gp.add_holiday(t)
+                    continue
+                cls = (classify_theme_cell(c_) if c_ and not c_.isdigit() else None) or classify_theme_cell(dd)
+                if cls:
+                    last = cls
+                cls = cls or last
+                if not cls:
+                    continue
+                wtype, unum, title = cls
+                hours = int(c_) if c_.isdigit() else GRADE_METADATA[grade]['hours']
+                rev_vocab = None
+                if wtype == 'theme':
+                    u = gp.unit(unum, title)
+                    gp.absorb(u, e, f)
+                    if mode == 'standard' and e:
+                        sv, sf = extract_standard_vocab_and_functions(e)
+                        u['targetVocab'] = list(dict.fromkeys(u['targetVocab'] + sv))
+                        if sf and not u['functions']:
+                            u['functions'] = sf
+                elif wtype == 'revision' and e:
+                    rev_vocab = extract_plan_vocab(e)
+                gp.add_week(int(wm.group(1)), wm.group(2), hours, wtype, unum, important, rev_vocab)
+            plans[grade] = gp
+    return plans
+
+
+def parse_docx_grade(grade, path):
+    mode = DOCX_GRADES[grade]
+    gp = GradePlan(grade, 'THEME')
+    last = None
+    for cells in read_docx_rows(path):
+        joined = ' | '.join(cells)
+        wk_idx = next((i for i, c in enumerate(cells) if re.search(r'\d+\.\s*Hafta', c)), None)
+        if wk_idx is None:
+            if HOLIDAY_RE.search(joined) and not re.search(r'THEME|ÖĞRENME|KAZANIM', joined):
+                gp.add_holiday(joined)
+                continue
+            # Haftası olmayan tema içerik satırı (bir sonraki temanın içeriği önceden yazılmış)
+            for c in cells:
+                cls = classify_theme_cell(c)
+                if cls and cls[0] == 'theme':
+                    content = next((x for x in cells if 'Target Vocabulary' in x or 'Sub-theme' in x), '')
+                    outcomes = next((x for x in cells if re.search(r'\bENG\.?\s*\d+\.\d+|\bE\d+\.\d+\.', x)), '')
+                    gp.absorb(gp.unit(cls[1], cls[2]), content, outcomes)
+                    break
+            continue
+        wm = re.search(r'(\d+)\.\s*Hafta:?\s*(.*)', cells[wk_idx], re.DOTALL)
+        wn, dates_text = int(wm.group(1)), wm.group(2)
+        rest = cells[wk_idx + 1:]
+        hours = int(rest[0]) if rest and rest[0].strip().isdigit() else GRADE_METADATA[grade]['hours']
+        cls = None
+        for c in rest[1:3] if rest and rest[0].strip().isdigit() else rest[:2]:
+            cls = classify_theme_cell(c)
+            if cls:
+                break
+        if cls:
+            last = cls
+        cls = cls or last
+        if not cls:
+            continue
+        wtype, unum, title = cls
+        important = clean_text(cells[-1]) if len(cells) >= 9 else ''
+        if re.search(r'THEME|Target|Students|ENG', important):
+            important = ''
+        rev_vocab = None
+        if wtype == 'theme':
+            u = gp.unit(unum, title)
+            if mode == 'tymm':
+                content = next((x for x in rest if 'Target Vocabulary' in x or 'Sub-theme' in x), '')
+                outcomes = next((x for x in rest if re.search(r'\bENG\.?\s*\d+\.\d+', x)), '')
+                gp.absorb(u, content, outcomes)
+            else:
+                # Eski program (11-12): KONU | KAZANIM | KAZANIM AÇIKLAMASI (işlevler + örnek cümleler)
+                outcomes = next((x for x in rest if re.search(r'\bE\d+\.\d+\.', x)), '')
+                expl = rest[rest.index(outcomes) + 1] if outcomes and rest.index(outcomes) + 1 < len(rest) else ''
+                funcs = '; '.join(clean_text(re.sub(r'^\d+\.\s*', '', l)) for l in expl.split('\n') if re.match(r'^\s*\d+\.', l))
+                gp.absorb(u, '', outcomes, funcs)
+        elif wtype == 'revision':
+            content = next((x for x in rest if 'Target Vocabulary' in x), '')
+            rev_vocab = extract_plan_vocab(content)
+        gp.add_week(wn, dates_text, hours, wtype, unum, important, rev_vocab)
+    return gp
+
+
+def _split_evenly(items, n):
+    if n <= 0:
+        return []
+    size, extra = divmod(len(items), n)
+    out, i = [], 0
+    for k in range(n):
+        step = size + (1 if k < extra else 0)
+        out.append(items[i:i + step])
+        i += step
+    return out
+
+
+def finalize_grade(gp):
+    units = [gp.units[k] for k in sorted(gp.units)]
+    weeks = [gp.weeks[k] for k in sorted(gp.weeks)]
+    unit_nums = [u['unitNum'] for u in units]
+
+    for u in units:
+        kw = [k.lower().strip() for k in UNIT_KEYWORDS.get((gp.grade, u['unitNum']), [])]
+        u['vocabSource'] = 'plan' if len(u['targetVocab']) >= 8 else 'estimated'
+        if u['vocabSource'] == 'estimated':
+            # Planda hedef kelime listesi yok (ör. 11-12. sınıf eski program): tema anahtar kelimeleri kullanılır
+            u['targetVocab'] = list(dict.fromkeys(kw + u['targetVocab']))
+        u['semanticKeywords'] = list(dict.fromkeys(kw + u['targetVocab'][:15]))
+        if not u['subThemes']:
+            u['subThemes'] = u['title']
+        if not u['functions']:
+            u['functions'] = ''
+        if not u['outcomesList']:
+            u['outcomes'] = ''
+
+    # Tema dışı haftaları en yakın temaya bağla: hazırlık haftaları sonraki temaya, diğerleri önceki temaya
+    for i, w in enumerate(weeks):
+        if w['weekType'] == 'theme':
+            continue
+        prev_u = next((x['unitNum'] for x in reversed(weeks[:i]) if x['weekType'] == 'theme'), None)
+        next_u = next((x['unitNum'] for x in weeks[i + 1:] if x['weekType'] == 'theme'), None)
+        if w['weekType'] in ('orientation', 'revision'):
+            w['unitNum'] = next_u or prev_u or unit_nums[0]
+        else:
+            w['unitNum'] = prev_u or next_u or unit_nums[0]
+
+    # Haftalık ilerleme: temanın kelimeleri ders haftalarına sırayla bölünür
+    for u in units:
+        tw = [w for w in weeks if w['weekType'] == 'theme' and w['unitNum'] == u['unitNum']]
+        for w, chunk in zip(tw, _split_evenly(u['targetVocab'], len(tw))):
+            w['targetWords'] = chunk
+    year_review = [v for u in units for v in u['targetVocab'][:3]]
+    for w in weeks:
+        if w['weekType'] == 'theme':
+            continue
+        u = gp.units.get(w['unitNum'])
+        if w['weekType'] == 'revision' and len(w['_revisionVocab']) >= 8:
+            w['targetWords'] = w['_revisionVocab'][:20]
+        elif w['weekType'] in ('orientation', 'revision'):
+            w['targetWords'] = []          # build_full_curriculum_registry önceki sınıfın tekrarıyla doldurur
+        elif w['weekType'] == 'social':
+            w['targetWords'] = year_review[:24]                       # yıl sonu genel tekrar
+        else:
+            w['targetWords'] = (u['targetVocab'] if u else [])[:12]   # bitmiş temanın tekrarı
+    for w in weeks:
+        w.pop('_revisionVocab', None)
+        en, tr = WEEK_TYPE_LABELS[w['weekType']]
+        w['label'] = en
+        w['labelTr'] = tr
+        u = gp.units.get(w['unitNum'])
+        w['unitTitle'] = u['title'] if u else ''
+        w['focus'] = (tr + ' • ' + u['title']) if (w['weekType'] != 'theme' and u) else (u['subThemes'][:160] if u else tr)
+    return units, weeks
+
+
+def grade1_placeholder(reference_weeks):
+    """1. sınıf için yıllık plan yok: mevcut 10 ünite, 2. sınıfın gerçek takvim haftalarına yayılır."""
+    units = []
+    titles = ["HELLO & GREETINGS", "MY FAMILY & FRIENDS", "COLORS & RAINBOW", "NUMBERS 1-10", "CLASSROOM & TOYS",
+              "ANIMALS & PETS", "MY BODY", "FRUITS & SNACKS", "ACTION & MOVEMENT", "NATURE & WEATHER"]
+    for n, t in enumerate(titles, 1):
+        kw = UNIT_KEYWORDS.get((1, n), [])
+        units.append({'unitNum': n, 'code': f'UNIT {n}', 'title': t, 'titleTr': UNIT_TITLES_TR.get((1, n), t),
+                      'subThemes': t, 'functions': '', 'outcomes': '', 'outcomesList': [],
+                      'targetVocab': list(kw), 'semanticKeywords': list(kw), 'vocabSource': 'estimated'})
+    weeks = [dict(w) for w in reference_weeks]
+    teach = [w for w in weeks if w['weekType'] == 'theme']
+    for i, w in enumerate(teach):
+        w['unitNum'] = units[min(len(units) - 1, i * len(units) // max(1, len(teach)))]['unitNum']
+    for i, w in enumerate(weeks):
+        if w['weekType'] != 'theme':
+            w['unitNum'] = next((x['unitNum'] for x in weeks[i:] if x['weekType'] == 'theme'), units[-1]['unitNum'])
+    for u in units:
+        tw = [w for w in weeks if w['weekType'] == 'theme' and w['unitNum'] == u['unitNum']]
+        for w, chunk in zip(tw, _split_evenly(u['targetVocab'], len(tw))):
+            w['targetWords'] = chunk
+    for w in weeks:
+        u = units[w['unitNum'] - 1]
+        if w['weekType'] != 'theme':
+            w['targetWords'] = []
+        w['unitTitle'] = u['title']
+        w['focus'] = u['title'] if w['weekType'] == 'theme' else w['labelTr']
+        w['hours'] = GRADE_METADATA[1]['hours']
+    return units, weeks
+
+
+def build_full_curriculum_registry():
+    log("Tüm 1-12 sınıf müfredat veritabanı yıllık planlardan inşa ediliyor...")
+    plans = parse_excel_grades()
+    for g in (9, 10, 11, 12):
+        path = os.path.join(DOCX_PLAN_DIR, f'{ACADEMIC_START_YEAR}-{ACADEMIC_START_YEAR + 1}-{g}-sinif-ingilizce-yillik-plan.docx')
+        if os.path.exists(path):
+            plans[g] = parse_docx_grade(g, path)
+        else:
+            log(f"UYARI: {g}. sınıf yıllık planı bulunamadı: {path}")
+
+    by_name = {}
+    from datetime import date as _d
+    span = lambda h: (_d.fromisoformat(h['end']) - _d.fromisoformat(h['start'])).days
+    for gp in plans.values():
+        for h in gp.holidays:
+            cur = by_name.get(h['name'])
+            if cur is None or span(h) > span(cur) or (span(h) == span(cur) and h['start'] < cur['start']):
+                by_name[h['name']] = h
+    holidays = sorted(by_name.values(), key=lambda h: h['start'])
+
+    registry = {}
+    built = {g: finalize_grade(gp) for g, gp in plans.items()}
+    if 2 in built:
+        built[1] = grade1_placeholder(built[2][1])
+
+    # Yıl başı tekrar (revision) haftaları: kendi listesi yoksa ÖNCEKİ SINIFIN temel kelimeleri
+    # (ör. 5. sınıfın revizyonu 4. sınıfı tekrar eder). Her temadan ilk kelimeler, haftalara bölünür.
+    for g, (units, weeks) in built.items():
+        rev = [w for w in weeks if w['weekType'] == 'revision' and not w.get('targetWords')]
+        if not rev or (g - 1) not in built:
+            continue
+        prev_units = built[g - 1][0]
+        per_unit = max(2, (12 * len(rev)) // max(1, len(prev_units)))
+        pool = list(dict.fromkeys(v for u in prev_units for v in u['targetVocab'][:per_unit]))
+        for w, chunk in zip(rev, _split_evenly(pool, len(rev))):
+            w['targetWords'] = chunk
+            w['focus'] = f"{w['labelTr']} • {g - 1}. sınıf tekrarı"
+            w['revisionOfGrade'] = g - 1
+    for g in range(1, 13):
+        if g not in built:
+            continue
+        units, weeks = built[g]
+        meta = GRADE_METADATA[g]
+        registry[g] = {
+            'grade': g, 'name': meta['name'], 'stage': meta['stage'], 'stageTr': meta['stageTr'],
+            'cefr': meta['cefr'], 'hours': meta['hours'], 'badge': meta['badge'],
+            'hasPlan': g != 1,
+            'units': units, 'calendar': weeks
+        }
+        log(f"{g:>2}. sınıf: {len(units)} tema/ünite, {len(weeks)} hafta, "
+            f"{sum(len(u['targetVocab']) for u in units)} hedef kelime "
+            f"({sum(1 for u in units if u.get('vocabSource') == 'plan')} tema plandan)")
+    registry['_calendar'] = {'academicYear': f'{ACADEMIC_START_YEAR}-{ACADEMIC_START_YEAR + 1}', 'holidays': holidays}
+    return registry
+
 
 def generate_curriculum_javascript(registry):
     log("curriculum-data.js derleniyor...")
 
+    registry = dict(registry)
+    academic_calendar = registry.pop('_calendar', {'academicYear': '', 'holidays': []})
     canonical_index = {}
     for g_num, g_data in registry.items():
         for u in g_data['units']:
@@ -724,7 +959,18 @@ def generate_curriculum_javascript(registry):
 
     registry_json = json.dumps(registry, ensure_ascii=False, separators=(',', ':'))
     canonical_index_json = json.dumps(canonical_index, ensure_ascii=False, separators=(',', ':'))
-    curriculum_dict_json = json.dumps(CURRICULUM_DEFINITIONS, ensure_ascii=False, separators=(',', ':'))
+    # Ana sözlük + yıllık plan kelimeleri için ek çeviriler (ana sözlükteki kayıtların üzerine yazılmaz)
+    merged_dict = dict(CURRICULUM_DEFINITIONS)
+    for en, (tr, pos) in CURRICULUM_EXTRA_TRANSLATIONS.items():
+        if en in merged_dict:
+            continue
+        proper = tr[:1].isupper() and pos == 'noun'          # ülke, kıta, gezegen vb. özel isimler
+        merged_dict[en] = {
+            'en': ' '.join(x if x in ('of', 'and') else x.capitalize() for x in en.split()) if proper else en,
+            'tr': tr, 'pos': pos, 'desc': '', 'cefr': '', 'phonetic': '', 'example': ''
+        }
+    curriculum_dict_json = json.dumps(merged_dict, ensure_ascii=False, separators=(',', ':'))
+    academic_calendar_json = json.dumps(academic_calendar, ensure_ascii=False, separators=(',', ':'))
 
     js_code = f"""/**
  * Learnish - K-12 MEB İngilizce Müfredatı ve Bağlama (Curriculum Context Classifier) Motoru
@@ -737,6 +983,9 @@ def generate_curriculum_javascript(registry):
 
   // 1. K-12 Tam Müfredat Veritabanı (1. Sınıf - 12. Sınıf)
   const CURRICULUM_DATA = {registry_json};
+
+  // 1b. Akademik takvim: yıllık planlardan okunan tatiller (start/end ISO, full = tüm haftayı kapsar)
+  const ACADEMIC_CALENDAR = {academic_calendar_json};
 
   // 2. Kanonik Kelime Ters Dizin (O(1) Hızlı Erişim)
   const CANONICAL_VOCAB_INDEX = {canonical_index_json};
@@ -997,68 +1246,34 @@ def generate_curriculum_javascript(registry):
     }},
 
     /**
-     * Verilen sınıf ve tarihe göre o haftanın müfredat dersini ve takvim bilgilerini döndürür.
-     * @param {{number}} grade - Sınıf numarası (1-12)
-     * @param {{Date}} date - İsteğe bağlı tarih nesnesi (varsayılan: bugün)
-     * @returns {{object}} Hafta, ünite, ders saatleri ve hedef kelimeler
+     * Verilen sınıf ve tarihe göre o haftanın müfredat kaydını döndürür.
+     * Tarih tahmini YAPILMAZ: yıllık plandaki gerçek hafta tarihleri (start/end) okunur.
+     *  - Ders haftası içindeyse o hafta
+     *  - Hafta sonu / tatil / haftalar arası boşlukta: en son başlamış hafta (tekrar için)
+     *  - Yıl başlamadan önce: 1. hafta; yıl bittikten sonra: son hafta
+     * Tatil günlerinde isBreak=true ve breakName döner.
      */
     getSchedule(grade = 5, date = new Date()) {{
       const gNum = Math.max(1, Math.min(12, parseInt(grade, 10) || 5));
       const gData = CURRICULUM_DATA[gNum] || CURRICULUM_DATA[5];
-      const month = date.getMonth() + 1;
-      const day = date.getDate();
-
-      let weekIndex = 0;
-      if (month === 9) {{
-        weekIndex = day < 21 ? 0 : (day < 28 ? 1 : 2);
-      }} else if (month === 10) {{
-        weekIndex = day < 11 ? 3 : (day < 18 ? 4 : (day < 25 ? 5 : 6));
-      }} else if (month === 11) {{
-        weekIndex = day <= 7 ? 7 : (day <= 15 ? 8 : (day <= 22 ? 9 : 10));
-      }} else if (month === 12) {{
-        weekIndex = day <= 7 ? 11 : (day <= 14 ? 12 : (day <= 21 ? 13 : (day <= 28 ? 14 : 15)));
-      }} else if (month === 1) {{
-        weekIndex = day <= 7 ? 15 : (day <= 14 ? 16 : 17);
-      }} else if (month === 2) {{
-        weekIndex = day <= 14 ? 18 : (day <= 21 ? 19 : 20);
-      }} else if (month === 3) {{
-        weekIndex = day <= 7 ? 21 : (day <= 14 ? 22 : (day <= 21 ? 23 : (day <= 28 ? 24 : 25)));
-      }} else if (month === 4) {{
-        weekIndex = day <= 7 ? 25 : (day <= 14 ? 26 : (day <= 21 ? 27 : 28));
-      }} else if (month === 5) {{
-        weekIndex = day <= 7 ? 29 : (day <= 14 ? 30 : (day <= 21 ? 31 : (day <= 28 ? 32 : 33)));
-      }} else if (month === 6) {{
-        weekIndex = day <= 7 ? 34 : 35;
-      }} else {{
-        weekIndex = 9;
+      const iso = toISODate(date);
+      const cal = gData.calendar;
+      let idx = -1;
+      for (let i = 0; i < cal.length; i++) {{
+        if (cal[i].start && cal[i].start <= iso) idx = i;
       }}
-
-      weekIndex = Math.min(gData.calendar.length - 1, Math.max(0, weekIndex));
-      const activeWeek = gData.calendar[weekIndex] || gData.calendar[0];
-      const activeUnit = gData.units.find(u => u.unitNum === activeWeek.unitNum) || gData.units[0];
-
-      return {{
-        grade: gNum,
-        gradeName: gData.name,
-        stage: gData.stage,
-        stageTr: gData.stageTr,
-        badge: gData.badge,
-        weekNum: activeWeek.weekNum,
-        month: activeWeek.month,
-        dates: activeWeek.dates,
-        hours: activeWeek.hours,
-        unitNum: activeWeek.unitNum,
-        unitCode: activeUnit.code,
-        unitTitle: activeUnit.title,
-        unitTitleTr: activeUnit.titleTr,
-        focus: activeWeek.focus || activeUnit.subThemes || activeUnit.title,
-        functions: activeUnit.functions,
-        outcomes: activeUnit.outcomes,
-        outcomesList: activeUnit.outcomesList || [],
-        targetWords: activeWeek.targetWords || activeUnit.targetVocab.slice(0, 10),
-        importantDays: activeWeek.importantDays,
-        isCurrentWeek: true
-      }};
+      if (idx < 0) idx = 0;
+      const w = cal[idx];
+      const inWeek = !!(w.start && w.end && iso >= w.start && iso <= w.end);
+      const holiday = (ACADEMIC_CALENDAR.holidays || []).find(h => h.full && iso >= h.start && iso <= h.end) || null;
+      return Object.assign(buildWeekInfo(gNum, gData, w), {{
+        isCurrentWeek: inWeek,
+        isBreak: !!holiday,
+        breakName: holiday ? holiday.name : '',
+        isWeekend: [0, 6].includes(date.getDay()),
+        isBeforeYear: !!(cal[0].start && iso < cal[0].start),
+        isAfterYear: !!(cal[cal.length - 1].end && iso > cal[cal.length - 1].end)
+      }});
     }},
 
     /**
@@ -1067,40 +1282,59 @@ def generate_curriculum_javascript(registry):
     getWeekByNumber(grade, weekNum) {{
       const gNum = Math.max(1, Math.min(12, parseInt(grade, 10) || 5));
       const gData = CURRICULUM_DATA[gNum] || CURRICULUM_DATA[5];
-      const targetW = gData.calendar.find(w => w.weekNum === weekNum) || gData.calendar[0];
-      const targetU = gData.units.find(u => u.unitNum === targetW.unitNum) || gData.units[0];
+      const w = gData.calendar.find(x => x.weekNum === weekNum) || gData.calendar[0];
+      return buildWeekInfo(gNum, gData, w);
+    }},
 
-      return {{
-        grade: gNum,
-        gradeName: gData.name,
-        stage: gData.stage,
-        stageTr: gData.stageTr,
-        badge: gData.badge,
-        weekNum: targetW.weekNum,
-        month: targetW.month,
-        dates: targetW.dates,
-        hours: targetW.hours,
-        unitNum: targetW.unitNum,
-        unitCode: targetU.code,
-        unitTitle: targetU.title,
-        unitTitleTr: targetU.titleTr,
-        focus: targetW.focus || targetU.subThemes || targetU.title,
-        functions: targetU.functions,
-        outcomes: targetU.outcomes,
-        outcomesList: targetU.outcomesList || [],
-        targetWords: targetW.targetWords || targetU.targetVocab.slice(0, 10),
-        importantDays: targetW.importantDays
-      }};
+    /** Akademik takvim (tatiller) */
+    getAcademicCalendar() {{
+      return ACADEMIC_CALENDAR;
     }}
   }};
+
+  function toISODate(d) {{
+    const pad = n => String(n).padStart(2, '0');
+    return `${{d.getFullYear()}}-${{pad(d.getMonth() + 1)}}-${{pad(d.getDate())}}`;
+  }}
+
+  function buildWeekInfo(gNum, gData, w) {{
+    const u = gData.units.find(x => x.unitNum === w.unitNum) || gData.units[0];
+    return {{
+      grade: gNum,
+      gradeName: gData.name,
+      stage: gData.stage,
+      stageTr: gData.stageTr,
+      badge: gData.badge,
+      weekNum: w.weekNum,
+      weekType: w.weekType,
+      weekLabel: w.label,
+      weekLabelTr: w.labelTr,
+      month: w.month,
+      dates: w.dates,
+      start: w.start,
+      end: w.end,
+      hours: w.hours,
+      unitNum: u.unitNum,
+      unitCode: u.code,
+      unitTitle: u.title,
+      unitTitleTr: u.titleTr,
+      focus: w.focus || u.subThemes || u.title,
+      functions: u.functions,
+      outcomes: u.outcomes,
+      outcomesList: u.outcomesList || [],
+      targetWords: Array.isArray(w.targetWords) ? w.targetWords : [],
+      importantDays: w.importantDays
+    }};
+  }}
 
   if (typeof window !== 'undefined') {{
     window.CURRICULUM_DATA = CURRICULUM_DATA;
     window.CURRICULUM_CLASSIFIER = CURRICULUM_CLASSIFIER;
     window.CURRICULUM_DICTIONARY = CURRICULUM_DICTIONARY;
+    window.ACADEMIC_CALENDAR = ACADEMIC_CALENDAR;
   }}
   if (typeof module !== 'undefined' && module.exports) {{
-    module.exports = {{ CURRICULUM_DATA, CURRICULUM_CLASSIFIER, CURRICULUM_DICTIONARY }};
+    module.exports = {{ CURRICULUM_DATA, CURRICULUM_CLASSIFIER, CURRICULUM_DICTIONARY, ACADEMIC_CALENDAR }};
   }}
 
 }})();

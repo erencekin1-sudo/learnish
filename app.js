@@ -409,10 +409,34 @@
     'widespread': 'pervasive, prevalent, extensive'
   };
 
+  // Güvenli localStorage okuma: depolama engelliyse (gizli sekme, kısıtlı okul tarayıcısı) ya da
+  // kayıtlı veri bozulmuşsa uygulama açılışta çökmesin; varsayılan değerle devam edilsin.
+  function lsGet(key, fallback = null) {
+    try { const v = localStorage.getItem(key); return v === null ? fallback : v; } catch (e) { return fallback; }
+  }
+  function lsJSON(key, fallback) {
+    try {
+      const v = localStorage.getItem(key);
+      if (v === null) return fallback;
+      const parsed = JSON.parse(v);
+      if (parsed === null || typeof parsed !== typeof fallback) return fallback;
+      if (Array.isArray(fallback) !== Array.isArray(parsed)) return fallback;
+      return parsed;
+    } catch (e) {
+      console.warn('[Learnish] Bozuk kayıt sıfırlandı:', key);
+      return fallback;
+    }
+  }
+
+  // Sınıf havuzu önbellekleri (bkz. getActiveGradePool) — açılışta takvim hesaplanırken hazır olmalı
+  const _wordIndex = new Map();          // küçük harf İngilizce → kelime
+  const _compactIndex = new Map();       // boşluk/tire/nokta farkı yok sayılır: "free-time" = "free time" = "freetime"
+  const _gradePoolCache = new Map();     // sınıf → { pool, meta: Map(id → {weekNum, unitNum, unitTitle, unitTitleTr}) }
+
   // State Management
   const STATE = {
-    activeModule: localStorage.getItem('learnish_active_module') || 'maarif', // 'maarif' | 'yds' | 'oxford' | 'all'
-    selectedGrade: parseInt(localStorage.getItem('learnish_selected_grade'), 10) || 5, // 1-12
+    activeModule: lsGet('learnish_active_module') || 'maarif', // 'maarif' | 'yds' | 'oxford' | 'all'
+    selectedGrade: parseInt(lsGet('learnish_selected_grade'), 10) || 5, // 1-12
     activeCurriculumWeek: null, // null = current academic week, or 1-36
     currentView: 'home', // 'home', 'daily', 'flashcard', 'quiz', 'directory', 'stats'
     viewHistory: ['home'],
@@ -443,15 +467,15 @@
     directoryPage: 1,
     directoryPageSize: 60,
     settings: {
-      accent: localStorage.getItem('mk_accent') || 'en-GB', // 'en-GB' or 'en-US'
-      speed: parseFloat(localStorage.getItem('mk_speed') || '1.0'),
-      soundEffects: localStorage.getItem('mk_sound') !== 'false',
-      theme: localStorage.getItem('mk_theme') || 'light'
+      accent: lsGet('mk_accent') || 'en-GB', // 'en-GB' or 'en-US'
+      speed: parseFloat(lsGet('mk_speed') || '1.0') || 1.0,
+      soundEffects: lsGet('mk_sound') !== 'false',
+      theme: lsGet('mk_theme') || 'light'
     },
     userData: {
-      learned: new Set(JSON.parse(localStorage.getItem('mk_learned') || '[]')),
-      review: new Set(JSON.parse(localStorage.getItem('mk_review') || '[]')),
-      starred: new Set(JSON.parse(localStorage.getItem('mk_starred') || '[]')),
+      learned: new Set(lsJSON('mk_learned', [])),
+      review: new Set(lsJSON('mk_review', [])),
+      starred: new Set(lsJSON('mk_starred', [])),
       stats: Object.assign({
         quizzesPlayed: 0,
         correctAnswers: 0,
@@ -459,89 +483,48 @@
         bestStreak: 0,
         speakingAttempts: 0,
         speakingSuccesses: 0
-      }, JSON.parse(localStorage.getItem('mk_stats') || '{}')),
-      activityLog: JSON.parse(localStorage.getItem('mk_activity_log') || '[]'),
-      srs: JSON.parse(localStorage.getItem('mk_srs') || '{}'),
-      mistakes: JSON.parse(localStorage.getItem('mk_mistakes') || '{}')
+      }, lsJSON('mk_stats', {})),
+      activityLog: lsJSON('mk_activity_log', []),
+      srs: lsJSON('mk_srs', {}),
+      mistakes: lsJSON('mk_mistakes', {})
     }
   };
 
   // ==========================================================================
   // MEB Yıllık Çerçeve Planı Takvim Eşleştirme Motoru (36 Hafta, 82 Gün)
   // ==========================================================================
+  /**
+   * Seçili sınıf için "bugün" bilgisi. Tarih tahmini yapılmaz: yıllık plandaki gerçek hafta tarihleri
+   * ve tatiller (CURRICULUM_CLASSIFIER.getSchedule) kullanılır. "day", günde 10 kelimelik çalışmada
+   * bu haftanın kelimelerinin başladığı gündür.
+   */
   function getMEBCalendarInfo(date = new Date()) {
-    const month = date.getMonth() + 1; // 1-12
-    const day = date.getDate();
     const trMonths = ['', 'Ocak', 'Şubat', 'Mart', 'Nisan', 'Mayıs', 'Haziran', 'Temmuz', 'Ağustos', 'Eylül', 'Ekim', 'Kasım', 'Aralık'];
     const trDays = ['Pazar', 'Pazartesi', 'Salı', 'Çarşamba', 'Perşembe', 'Cuma', 'Cumartesi'];
-    const dateFormatted = `${day} ${trMonths[month]} ${trDays[date.getDay()]}`;
-
-    let targetDay = 18;
-    let weekNum = 8;
-    let themeNum = 2;
-    let themeName = 'Theme 2: Classroom Life (Sınıf Yaşamı)';
-
-    // MEB 2026-2027 İngilizce 5. Sınıf Maarif Modeli Taslak Yıllık Çerçeve Planı (TYMM 5)
-    if (month === 9) { // Eylül
-      if (day < 21) { targetDay = 1; weekNum = 1; themeNum = 1; themeName = 'Orientation & Uyum'; }
-      else if (day < 28) { targetDay = 2; weekNum = 2; themeNum = 1; themeName = 'Revision & Hazırlık'; }
-      else { targetDay = 4; weekNum = 3; themeNum = 1; themeName = 'Revision & Hazırlık'; }
-    } else if (month === 10) { // Ekim (Theme 1: School Life)
-      themeNum = 1; themeName = 'Theme 1: School Life (Okul Yaşamı)';
-      if (day < 11) { targetDay = 7; weekNum = 4; }
-      else if (day < 18) { targetDay = 10; weekNum = 5; }
-      else if (day < 25) { targetDay = 13; weekNum = 6; }
-      else { targetDay = 16; weekNum = 7; }
-    } else if (month === 11) { // Kasım (Theme 2: Classroom Life)
-      themeNum = 2; themeName = 'Theme 2: Classroom Life (Sınıf Yaşamı)';
-      if (day <= 7) { targetDay = 18; weekNum = 8; }
-      else if (day <= 15) { targetDay = 18; weekNum = 9; themeName = '1. Ara Tatil & Pekiştirme'; }
-      else if (day <= 22) { targetDay = 20; weekNum = 9; }
-      else if (day <= 28) { targetDay = 22; weekNum = 10; }
-      else { targetDay = 24; weekNum = 11; }
-    } else if (month === 12) { // Aralık
-      if (day <= 12) { targetDay = 25; weekNum = 12; themeNum = 2; themeName = 'Theme 2: Classroom Life'; }
-      else if (day <= 19) { targetDay = 28; weekNum = 13; themeNum = 3; themeName = 'Theme 3: Personal Life'; }
-      else if (day <= 26) { targetDay = 31; weekNum = 14; themeNum = 3; themeName = 'Theme 3: Personal Life'; }
-      else { targetDay = 34; weekNum = 15; themeNum = 3; themeName = 'Theme 3: Personal Life'; }
-    } else if (month === 1) { // Ocak
-      if (day <= 9) { targetDay = 35; weekNum = 16; themeNum = 3; themeName = 'Theme 3: Personal Life'; }
-      else if (day <= 16) { targetDay = 38; weekNum = 17; themeNum = 4; themeName = 'Theme 4: Family Life'; }
-      else if (day <= 23) { targetDay = 41; weekNum = 18; themeNum = 4; themeName = 'Theme 4: Family Life'; }
-      else { targetDay = 41; weekNum = 18; themeNum = 4; themeName = 'Yarıyıl Tatili'; }
-    } else if (month === 2) { // Şubat
-      if (day <= 7) { targetDay = 41; weekNum = 18; themeNum = 4; themeName = 'Yarıyıl Tatili'; }
-      else if (day <= 13) { targetDay = 43; weekNum = 19; themeNum = 4; themeName = 'Theme 4: Family Life'; }
-      else if (day <= 20) { targetDay = 45; weekNum = 20; themeNum = 4; themeName = 'Theme 4: Family Life'; }
-      else { targetDay = 48; weekNum = 21; themeNum = 5; themeName = 'Theme 5: Life in the City'; }
-    } else if (month === 3) { // Mart
-      themeNum = 5; themeName = 'Theme 5: Life in the City';
-      if (day <= 6) { targetDay = 51; weekNum = 22; }
-      else if (day <= 13) { targetDay = 53; weekNum = 23; }
-      else if (day <= 20) { targetDay = 55; weekNum = 24; }
-      else if (day <= 27) { targetDay = 58; weekNum = 25; themeNum = 6; themeName = 'Theme 6: Life in the World'; }
-      else { targetDay = 61; weekNum = 26; themeNum = 6; themeName = 'Theme 6: Life in the World'; }
-    } else if (month === 4) { // Nisan
-      if (day <= 10) { targetDay = 63; weekNum = 27; themeNum = 6; themeName = 'Theme 6: Life in the World'; }
-      else if (day <= 17) { targetDay = 63; weekNum = 27; themeNum = 6; themeName = '2. Ara Tatil & Tekrar'; }
-      else if (day <= 24) { targetDay = 65; weekNum = 28; themeNum = 6; themeName = 'Theme 6: Life in the World'; }
-      else { targetDay = 68; weekNum = 29; themeNum = 7; themeName = 'Theme 7: Life in Nature'; }
-    } else if (month === 5) { // Mayıs
-      themeNum = 7; themeName = 'Theme 7: Life in Nature';
-      if (day <= 8) { targetDay = 71; weekNum = 30; }
-      else if (day <= 15) { targetDay = 73; weekNum = 31; }
-      else if (day <= 22) { targetDay = 75; weekNum = 32; }
-      else if (day <= 29) { targetDay = 77; weekNum = 33; themeNum = 8; themeName = 'Theme 8: Life in the Universe'; }
-      else { targetDay = 79; weekNum = 34; themeNum = 8; themeName = 'Theme 8: Life in the Universe'; }
-    } else if (month === 6) { // Haziran
-      themeNum = 8; themeName = 'Theme 8: Life in the Universe & Future';
-      if (day <= 11) { targetDay = 81; weekNum = 35; }
-      else { targetDay = 82; weekNum = 36; }
-    } else {
-      targetDay = 18; weekNum = 8; themeNum = 2; themeName = 'Yıllık Plan İnceleme';
+    const dateFormatted = `${date.getDate()} ${trMonths[date.getMonth() + 1]} ${trDays[date.getDay()]}`;
+    const classifier = (typeof window !== 'undefined') ? window.CURRICULUM_CLASSIFIER : null;
+    const gNum = getActiveGrade();
+    if (!classifier) {
+      return { day: 1, weekNum: 1, themeNum: 1, themeName: '', dateFormatted, isBreak: false, breakName: '', weekType: 'theme', schedule: null };
     }
-
-    return { day: targetDay, weekNum, themeNum, themeName, dateFormatted };
+    const s = classifier.getSchedule(gNum, date);
+    const pool = getActiveGradePool(gNum);
+    const positions = new Map(pool.map((w, i) => [w.id, i]));
+    let firstIdx = -1;
+    (s.targetWords || []).forEach(t => {
+      const w = lookupCurriculumWord(t);
+      const i = w ? positions.get(w.id) : undefined;
+      if (i !== undefined && (firstIdx < 0 || i < firstIdx)) firstIdx = i;
+    });
+    const day = Math.floor(Math.max(0, firstIdx) / 10) + 1;
+    let themeName;
+    if (s.isBreak) themeName = `${s.breakName} • ${s.unitTitleTr || s.unitTitle} tekrarı`;
+    else if (s.weekType === 'theme') themeName = `${s.unitCode}: ${s.unitTitle} (${s.unitTitleTr})`;
+    else themeName = `${s.weekLabelTr} • ${s.unitTitleTr || s.unitTitle}`;
+    return {
+      day, weekNum: s.weekNum, themeNum: s.unitNum, themeName, dateFormatted,
+      isBreak: s.isBreak, breakName: s.breakName, weekType: s.weekType, schedule: s
+    };
   }
 
   // Ensure current day is restored or defaults to MEB calendar day
@@ -1799,12 +1782,12 @@
       STATE.userData.learned.add(wordId);
       STATE.userData.review.delete(wordId);
       const modMap = {
-        maarif: 'MEB 5. SINIF MAARİF',
+        maarif: `MEB ${getActiveGrade()}. SINIF`,
         yds: 'YDS & YÖKDİL AKADEMİK',
         oxford: 'KELİME KÜTÜPHANESİ',
         all: 'TÜM KÜTÜPHANE'
       };
-      const modTitle = modMap[STATE.activeModule] || '5. SINIF MAARİF MODELİ';
+      const modTitle = modMap[STATE.activeModule] || modMap.maarif;
       const wEn = wordObj ? wordObj.en.toUpperCase() : `#${wordId}`;
       logActivity(`${modTitle} • GÜN ${STATE.currentDay}`, `KELİME DOĞRULANDI [${wEn}] • TOPLAM: ${STATE.userData.learned.size}`);
     }
@@ -2002,7 +1985,7 @@
     const activeMod = moduleFilter || STATE.activeModule;
 
     let pool = WORDS_DATA;
-    if (activeMod === 'maarif') pool = WORDS_DATA.filter(isMaarifWord);
+    if (activeMod === 'maarif') pool = getActiveGradePool();
     else if (activeMod === 'yds') pool = WORDS_DATA.filter(isYDSWord);
     else if (activeMod === 'oxford') pool = WORDS_DATA.filter(isOxfordWord);
 
@@ -2022,7 +2005,7 @@
     const activeMod = moduleFilter || STATE.activeModule;
 
     let pool = WORDS_DATA;
-    if (activeMod === 'maarif') pool = WORDS_DATA.filter(isMaarifWord);
+    if (activeMod === 'maarif') pool = getActiveGradePool();
     else if (activeMod === 'yds') pool = WORDS_DATA.filter(isYDSWord);
     else if (activeMod === 'oxford') pool = WORDS_DATA.filter(isOxfordWord);
 
@@ -2050,7 +2033,7 @@
     const activeMod = moduleFilter || STATE.activeModule;
 
     let pool = WORDS_DATA;
-    if (activeMod === 'maarif') pool = WORDS_DATA.filter(isMaarifWord);
+    if (activeMod === 'maarif') pool = getActiveGradePool();
     else if (activeMod === 'yds') pool = WORDS_DATA.filter(isYDSWord);
     else if (activeMod === 'oxford') pool = WORDS_DATA.filter(isOxfordWord);
 
@@ -2123,7 +2106,7 @@
   function getMistakeStats(moduleFilter = null) {
     const activeMod = moduleFilter || STATE.activeModule;
     let pool = WORDS_DATA;
-    if (activeMod === 'maarif') pool = WORDS_DATA.filter(isMaarifWord);
+    if (activeMod === 'maarif') pool = getActiveGradePool();
     else if (activeMod === 'yds') pool = WORDS_DATA.filter(isYDSWord);
     else if (activeMod === 'oxford') pool = WORDS_DATA.filter(isOxfordWord);
 
@@ -2213,10 +2196,208 @@
 
   function getWordPOS(w) {
     const p = (w.pos || w.desc || '').toLowerCase();
+    // Önce sıfat/zarf kontrolü: "adverb" içinde "verb" geçtiği için aksi halde zarflar fiil sayılıyordu.
+    if (p.includes('adverb') || p.includes('zarf')) return 'adj_adv';
     if (p.includes('verb') || p.includes('fiil')) return 'verb';
     if (p.includes('noun') || p.includes('isim')) return 'noun';
     if (p.includes('adj') || p.includes('sıfat') || p.includes('adv') || p.includes('zarf')) return 'adj_adv';
     return 'other';
+  }
+
+  /**
+   * Akıllı çeldirici (yanlış şık) seçici.
+   * Rastgele 9.000 kelime yerine hedef kelimeye benzeyen şıklar seçer; böylece soru
+   * "Avustralya / foton" gibi bariz şıklarla kendiliğinden çözülmez.
+   * Kademeler (yeterli şık bulunana kadar sırayla genişler):
+   *   1) Aynı modül + aynı kelime türü + aynı tema (Maarif) / aynı CEFR (YDS-Oxford)
+   *   2) Aynı modül + aynı kelime türü
+   *   3) Aynı modül
+   *   4) preferredPool (kullanıcının seçtiği havuz), en son tüm kelimeler
+   * Aynı Türkçe/İngilizce karşılığa sahip şıklar elenir (iki doğru cevap çıkmasın).
+   */
+  const _distractorIndexCache = { maarif: null, yds: null, oxford: null };
+  function _moduleOf(w) {
+    if (isMaarifWord(w)) return 'maarif';
+    if (w.isYds || w.dataset === 'yds') return 'yds';
+    return 'oxford';
+  }
+  function _moduleWords(mod) {
+    if (!_distractorIndexCache[mod]) {
+      const test = mod === 'maarif' ? isMaarifWord : (mod === 'yds' ? (w => w.isYds || w.dataset === 'yds') : isOxfordWord);
+      _distractorIndexCache[mod] = WORDS_DATA.filter(test);
+    }
+    return _distractorIndexCache[mod];
+  }
+  function _normMeaning(s) {
+    return String(s || '').toLocaleLowerCase('tr').split(/[;,]/)[0].replace(/\(.*?\)/g, '').trim();
+  }
+  // ==========================================================================
+  // SINIF (KADEME) HAVUZU — Maarif rotası 1-12. sınıfların hepsine hizmet eder.
+  // Seçili sınıfın kelimeleri yıllık plandaki hafta sırasıyla (CURRICULUM_DATA.calendar) gelir.
+  // Eskiden 18 yerde sabit "5. sınıf 817 kelime" listesi (isMaarifWord) kullanılıyordu.
+  // ==========================================================================
+
+  function _ensureWordIndex() {
+    if (_wordIndex.size) return;
+    WORDS_DATA.forEach(w => {
+      const k = String(w.en || '').toLowerCase().trim();
+      if (k && !_wordIndex.has(k)) _wordIndex.set(k, w);
+      const c = _compactKey(k);
+      if (c && !_compactIndex.has(c)) _compactIndex.set(c, w);
+    });
+  }
+
+  function _compactKey(k) {
+    return String(k || '').toLowerCase().replace(/[\s\-.'’]+/g, '');
+  }
+
+  function _normalizeCurriculumTerm(raw) {
+    return String(raw || '').trim()
+      .replace(/^[—\-\*•\s]*[A-Za-z0-9\s/&]+:\s*/, '')
+      .replace(/^(verbs?|nouns?|adjectives?|adverbs?):\s*/i, '')
+      .replace(/^(to|a|an)\s+/i, '')
+      .replace(/\s*\([^)]*\)/g, '')
+      .replace(/[.,;:!?]+$/, '')
+      .trim()
+      .toLowerCase();
+  }
+
+  // Kalıcı kimlik: aynı kelime her oturumda aynı id'yi alır (öğrendim/hata defteri kayıtları bozulmaz)
+  function _stableCurriculumId(key) {
+    let h = 0x811c9dc5;
+    for (let i = 0; i < key.length; i++) {
+      h ^= key.charCodeAt(i);
+      h = Math.imul(h, 0x01000193) >>> 0;
+    }
+    return 1000000 + (h % 8999999);
+  }
+
+  /**
+   * Müfredat kelimesini (ör. "a notice board", "apples") kelime veritabanında bulur.
+   * Yalnızca tam eşleşme ve basit çoğul eki denenir; "pen" → "open" gibi içerik eşleşmesi YAPILMAZ.
+   * Veritabanında yoksa müfredat sözlüğündeki Türkçe karşılıkla bir kez oluşturulup WORDS_DATA'ya eklenir
+   * (böylece id ile yapılan tüm aramalar — öğrendim, hata defteri, istatistik — çalışır).
+   */
+  function lookupCurriculumWord(raw) {
+    if (raw && typeof raw === 'object' && raw.en) return raw;
+    _ensureWordIndex();
+    const key = _normalizeCurriculumTerm(raw);
+    if (!key) return null;
+    const variants = [key, key.replace(/^the\s+/, '')];
+    if (key.length > 3 && /[^su]s$/.test(key)) variants.push(key.slice(0, -1));   // eggs → egg
+    if (key.length > 4 && /ies$/.test(key)) variants.push(key.slice(0, -3) + 'y');  // cherries → cherry
+    if (key.length > 4 && /(ch|sh|x|ss|o)es$/.test(key)) variants.push(key.slice(0, -2)); // boxes → box, potatoes → potato
+    for (const v of variants) {
+      if (_wordIndex.has(v)) return _wordIndex.get(v);
+    }
+    for (const v of variants) {
+      const c = _compactKey(v);
+      if (_compactIndex.has(c)) return _compactIndex.get(c);
+    }
+    const dict = (typeof window !== 'undefined' && window.CURRICULUM_DICTIONARY) || null;
+    const entry = dict && (dict[key] || dict[variants[1]]);
+    if (!entry || !entry.tr) return null;
+    const enDisplay = entry.en || (key.charAt(0).toUpperCase() + key.slice(1));
+    let id = _stableCurriculumId(key);
+    while (WORDS_DATA.some(w => w.id === id)) id++;   // olası çakışmaya karşı
+    const word = {
+      id, no: id, en: enDisplay, tr: entry.tr,
+      isMaarif: false, isOxford: false, isYds: false,
+      dataset: 'meb', datasets: ['meb'],
+      desc: entry.desc || '', pos: entry.pos || '', cefr: entry.cefr || '',
+      cat: '', themeNum: 1, themeCode: '', themeTitle: '', themeTitleTr: '',
+      phonetic: entry.phonetic || '', example: entry.example || '', definition: '',
+      ydsStats: '', ydsExample: '', day: 0, alt: ''
+    };
+    WORDS_DATA.push(word);
+    _wordIndex.set(key, word);
+    _compactIndex.set(_compactKey(key), word);
+    return word;
+  }
+
+  function getActiveGrade() {
+    return Math.max(1, Math.min(12, parseInt(STATE.selectedGrade, 10) || 5));
+  }
+
+  function _buildGradePool(gNum) {
+    const gData = window.CURRICULUM_DATA && window.CURRICULUM_DATA[gNum];
+    const pool = [];
+    const meta = new Map();
+    const seen = new Set();
+    if (!gData) return { pool, meta };
+    const add = (raw, w, u) => {
+      const word = lookupCurriculumWord(raw);
+      if (!word || seen.has(word.id)) return;
+      seen.add(word.id);
+      pool.push(word);
+      meta.set(word.id, {
+        weekNum: w ? w.weekNum : 0,
+        unitNum: u ? u.unitNum : 0,
+        unitTitle: u ? u.title : '',
+        unitTitleTr: u ? u.titleTr : ''
+      });
+    };
+    const unitOf = n => gData.units.find(u => u.unitNum === n);
+    // 1) Yıllık plan sırası: önce ders haftaları ve tekrar haftaları, hafta hafta
+    (gData.calendar || []).forEach(w => (w.targetWords || []).forEach(t => add(t, w, unitOf(w.unitNum))));
+    // 2) Haftalara düşmemiş kalan tema kelimeleri
+    gData.units.forEach(u => (u.targetVocab || []).forEach(t => add(t, null, u)));
+    return { pool, meta };
+  }
+
+  /** Seçili (veya verilen) sınıfın kelime havuzu, yıllık plan hafta sırasıyla. */
+  function getActiveGradePool(gNum = getActiveGrade()) {
+    if (!_gradePoolCache.has(gNum)) _gradePoolCache.set(gNum, _buildGradePool(gNum));
+    return _gradePoolCache.get(gNum).pool;
+  }
+
+  /** Kelimenin seçili sınıftaki hafta/tema bilgisi (yoksa null). */
+  function gradeWordMeta(wordId, gNum = getActiveGrade()) {
+    getActiveGradePool(gNum);
+    return _gradePoolCache.get(gNum).meta.get(wordId) || null;
+  }
+
+  function pickDistractors(target, count = 3, preferredPool = null) {
+    const mod = _moduleOf(target);
+    const pos = getWordPOS(target);
+    const modWords = _moduleWords(mod);
+    const sameGroup = mod === 'maarif'
+      ? (w => w.themeNum === target.themeNum)
+      : (w => w.cefr && w.cefr === target.cefr);
+
+    // Seçili sınıf/kapsam havuzu verildiyse (ör. 7. sınıf müfredatı) önce oradan aynı türde şık aranır
+    const pref = preferredPool && preferredPool.length >= 4 ? preferredPool : [];
+    const sameUnit = w => {
+      const a = gradeWordMeta(target.id), b = gradeWordMeta(w.id);
+      return a && b ? a.unitNum === b.unitNum : w.cefr === target.cefr;
+    };
+    const tiers = [
+      pref.filter(w => getWordPOS(w) === pos && sameUnit(w)),
+      pref.filter(w => getWordPOS(w) === pos),
+      pref,
+      modWords.filter(w => getWordPOS(w) === pos && sameGroup(w)),
+      modWords.filter(w => getWordPOS(w) === pos),
+      modWords,
+      WORDS_DATA
+    ];
+
+    const picked = [];
+    const usedMeanings = new Set([_normMeaning(target.tr)]);
+    const usedEn = new Set([String(target.en).toLowerCase()]);
+    for (const tier of tiers) {
+      if (picked.length >= count) break;
+      for (const w of shuffleArray(tier)) {
+        if (picked.length >= count) break;
+        if (w.id === target.id || !w.tr) continue;
+        const m = _normMeaning(w.tr);
+        const e = String(w.en).toLowerCase();
+        if (usedMeanings.has(m) || usedEn.has(e)) continue;
+        picked.push(w);
+        usedMeanings.add(m);
+        usedEn.add(e);
+      }
+    }
+    return picked;
   }
 
   function extractPreposition(w) {
@@ -2590,8 +2771,13 @@
     STATE.selectedGrade = gNum;
     STATE.activeModule = 'maarif';
     STATE.activeCurriculumWeek = null;
-    localStorage.setItem('learnish_selected_grade', gNum.toString());
-    localStorage.setItem('learnish_active_module', 'maarif');
+    // Her sınıfın havuzu farklıdır: günlük çalışma o sınıfın bu haftasına konumlanır
+    STATE.currentDay = getMEBCalendarInfo().day;
+    try {
+      localStorage.setItem('learnish_selected_grade', gNum.toString());
+      localStorage.setItem('learnish_active_module', 'maarif');
+      localStorage.setItem('mk_current_day', String(STATE.currentDay));
+    } catch (e) { /* depolama kapalıysa yalnızca oturumda geçerli */ }
 
     closeGradeModal();
     switchModule('maarif');
@@ -2745,77 +2931,13 @@
     studentName: ''
   };
 
-  function resolveCurriculumWord(wStr, gNum = 5, idx = 0) {
-    if (!wStr) return null;
-    if (typeof wStr === 'object' && wStr !== null && wStr.en) return wStr;
-    const raw = String(wStr || '').trim();
-    // Aggressively clean any accidental prefixes e.g. "-people at school: a classmate" -> "classmate"
-    const cleanEn = raw
-      .replace(/^[—\-\*•\s]*[A-Za-z0-9\s/&]+:\s*/, '')
-      .replace(/^(verbs?|nouns?|adjectives?|adverbs?):\s*/i, '')
-      .replace(/^(to|a|an)\s+/i, '')
-      .replace(/\s*\([^)]*\)/g, '')
-      .replace(/[.,;:!?]+$/, '')
-      .trim();
-    if (!cleanEn) return null;
-    const cleanLower = cleanEn.toLowerCase();
-
-    // 1. Direct match in WORDS_DATA
-    const found = WORDS_DATA.find(w => w.en.toLowerCase() === cleanLower);
-    if (found) return found;
-
-    // 2. Direct match in CURRICULUM_DICTIONARY
-    const dict = (typeof window !== 'undefined' && window.CURRICULUM_DICTIONARY)
-              || (typeof CURRICULUM_DICTIONARY !== 'undefined' ? CURRICULUM_DICTIONARY : null);
-    if (dict && dict[cleanLower]) {
-      const entry = dict[cleanLower];
-      const gData = (typeof window !== 'undefined' && window.CURRICULUM_DATA && window.CURRICULUM_DATA[gNum]) || null;
-      return {
-        id: 800000 + (gNum * 1000) + idx,
-        no: idx + 1,
-        en: entry.en || (cleanEn.charAt(0).toUpperCase() + cleanEn.slice(1)),
-        tr: entry.tr,
-        phonetic: entry.phonetic || '',
-        cefr: entry.cefr || (gData ? gData.cefr : 'A1'),
-        desc: entry.desc || 'hedef kelime',
-        pos: entry.pos || 'noun',
-        example: entry.example || `In our English class, we learn the word "${cleanEn}".`,
-        dataset: 'maarif',
-        isMaarif: true
-      };
-    }
-
-    // 3. Fallback partial/compound match in WORDS_DATA
-    const partial = WORDS_DATA.find(w => w.en.toLowerCase() === cleanLower || w.en.toLowerCase().includes(cleanLower))
-                 || WORDS_DATA.find(w => cleanLower.includes(w.en.toLowerCase()) && w.en.length > 3);
-    if (partial) {
-      return {
-        ...partial,
-        id: 800000 + (gNum * 1000) + idx,
-        no: idx + 1,
-        en: cleanEn.charAt(0).toUpperCase() + cleanEn.slice(1)
-      };
-    }
-
-    // 4. Safe fallback: show clean term, never show placeholder
-    const gData = (typeof window !== 'undefined' && window.CURRICULUM_DATA && window.CURRICULUM_DATA[gNum]) || null;
-    return {
-      id: 800000 + (gNum * 1000) + idx,
-      no: idx + 1,
-      en: cleanEn.charAt(0).toUpperCase() + cleanEn.slice(1),
-      tr: cleanEn,
-      phonetic: '',
-      cefr: gData ? gData.cefr : 'A1',
-      desc: 'hedef kelime',
-      pos: 'noun',
-      example: `In our English class, we learn the word "${cleanEn}".`,
-      dataset: 'maarif',
-      isMaarif: true
-    };
+  // Eski imza korunuyor; tüm çözümleme lookupCurriculumWord üzerinden (kalıcı id, yalnızca tam eşleşme)
+  function resolveCurriculumWord(wStr) {
+    return lookupCurriculumWord(wStr);
   }
 
   function resolveWorksheetWord(rawItem) {
-    return resolveCurriculumWord(rawItem, 5, 0);
+    return lookupCurriculumWord(rawItem);
   }
 
   function getWorksheetTargetWords(state = PDF_STUDIO_STATE) {
@@ -2832,7 +2954,7 @@
         const gNum = parseInt(grade, 10) || 5;
         const gData = window.CURRICULUM_DATA && window.CURRICULUM_DATA[gNum];
         const currWords = (gData && gData.units) ? gData.units.flatMap(u => (u.targetVocab || []).map(resolveWorksheetWord)).filter(Boolean) : [];
-        return currWords.length > 0 ? currWords : WORDS_DATA.filter(isMaarifWord);
+        return currWords.length > 0 ? currWords : getActiveGradePool();
       }
     };
 
@@ -2843,17 +2965,16 @@
         const gData = window.CURRICULUM_DATA && window.CURRICULUM_DATA[gNum];
         if (gData && gData.units) {
           const gKeywords = new Set(gData.units.flatMap(u => (u.targetVocab || []).concat(u.semanticKeywords || [])).map(s => String(s).toLowerCase()));
-          const gradeMistakes = activeMistakes.filter(w => gKeywords.has(w.en.toLowerCase()) || (gNum === 5 && isMaarifWord(w)));
-          list = gradeMistakes.length > 0 ? gradeMistakes : activeMistakes;
+          // Yalnızca seçilen sınıfa ait yanlışlar alınır. Boşsa başka modüllerin (ör. YDS) yanlışlarına
+          // geri DÖNÜLMEZ; eksik kısım aşağıda sınıfın kendi müfredat havuzundan tamamlanır.
+          list = activeMistakes.filter(w => gKeywords.has(w.en.toLowerCase()) || (gNum === 5 && isMaarifWord(w)));
         } else {
           list = activeMistakes;
         }
       } else if (grade === 'yds') {
-        const ydsMistakes = activeMistakes.filter(isYDSWord);
-        list = ydsMistakes.length > 0 ? ydsMistakes : activeMistakes;
+        list = activeMistakes.filter(isYDSWord);
       } else if (grade === 'oxford') {
-        const oxMistakes = activeMistakes.filter(isOxfordWord);
-        list = oxMistakes.length > 0 ? oxMistakes : activeMistakes;
+        list = activeMistakes.filter(isOxfordWord);
       } else {
         list = activeMistakes;
       }
@@ -2929,7 +3050,7 @@
         if (gData && gData.units) {
           list = gData.units.flatMap(u => (u.targetVocab || []).map(resolveWorksheetWord)).filter(Boolean);
         }
-        if (list.length === 0) list = WORDS_DATA.filter(isMaarifWord);
+        if (list.length === 0) list = getActiveGradePool();
       } else if (grade === 'yds') {
         list = WORDS_DATA.filter(isYDSWord);
       } else if (grade === 'oxford') {
@@ -3120,11 +3241,7 @@
 
       bodyHtml += `<div class="ws-quiz-list">`;
       quizWords.forEach((w, qIdx) => {
-        const distractors = WORDS_DATA
-          .filter(other => other.id !== w.id && other.tr && other.tr !== w.tr)
-          .sort(() => 0.5 - Math.random())
-          .slice(0, 3)
-          .map(d => d.tr);
+        const distractors = pickDistractors(w, 3, words).map(d => d.tr);
 
         const correctLetterIdx = Math.floor(Math.random() * 4);
         const letters = ['A', 'B', 'C', 'D'];
@@ -3712,10 +3829,7 @@
     const quizTargets = [target, ...extraQuestions];
 
     const questions = quizTargets.map(t => {
-      const distractors = WORDS_DATA
-        .filter(w => w.id !== t.id)
-        .sort(() => Math.random() - 0.5)
-        .slice(0, 3);
+      const distractors = pickDistractors(t, 3);
 
       const options = [t, ...distractors]
         .sort(() => Math.random() - 0.5)
@@ -3760,22 +3874,22 @@
 
     const module = STATE.activeModule;
     const curriculumSubtitles = {
-      maarif: 'MEB MÜFREDATI • 5. SINIF MAARİF MODELİ',
+      maarif: `MEB MÜFREDATI • ${getActiveGrade()}. SINIF`,
       yds: 'HEDEF MÜFREDAT • YDS & YÖKDİL AKADEMİK',
       oxford: 'HEDEF MÜFREDAT • KELİME KÜTÜPHANESİ',
       all: 'HEDEF MÜFREDAT • TÜM AKADEMİK KÜTÜPHANE'
     };
-    const activeCurriculumSubtitle = curriculumSubtitles[module] || 'MEB MÜFREDATI • 5. SINIF MAARİF MODELİ';
+    const activeCurriculumSubtitle = curriculumSubtitles[module] || curriculumSubtitles.maarif;
 
-    const maarifPool = WORDS_DATA.filter(isMaarifWord);
+    const maarifPool = getActiveGradePool();
     const ydsPool = WORDS_DATA.filter(isYDSWord);
     const oxfordPool = WORDS_DATA.filter(isOxfordWord);
 
-    const curMaarifThemeNum = Math.min(8, Math.max(1, Math.ceil((STATE.currentDay || 1) / 10)));
-    const curMaarifTheme = THEMES_DATA[curMaarifThemeNum] || { code: `THEME ${curMaarifThemeNum}`, titleTr: 'Okul Yaşamı' };
+    const todaySched = getMEBCalendarInfo().schedule;
+    const curMaarifTheme = todaySched ? { code: todaySched.unitCode, titleTr: todaySched.unitTitleTr || todaySched.unitTitle } : { code: '', titleTr: '' };
 
     const unitTitles = {
-      maarif: `MEB 5. Sınıf Maarif • ${curMaarifTheme.code}: ${curMaarifTheme.titleTr}`,
+      maarif: `MEB ${getActiveGrade()}. Sınıf • ${curMaarifTheme.code}: ${curMaarifTheme.titleTr}`,
       yds: 'YDS/YÖKDİL • 2020–2026 Akademik Sınav Soruları & Kalıpları',
       oxford: 'Kelime Kütüphanesi • CEFR A1–C1 Kapsamlı Arşiv',
       all: `Learnish Arşiv: ${WORDS_DATA.length.toLocaleString('tr-TR')} Kelimelik Birleşik Kütüphane`
@@ -4492,7 +4606,12 @@
           </div>
 
           <div class="daily-feed-column">
-            ${cardsHtml}
+            ${cardsHtml || `
+              <div class="daily-feed-empty" style="padding:18px; border:1px dashed var(--dp-color-border, #ccc); border-radius:10px; font-size:0.9rem; color:var(--dp-color-ink-muted);">
+                ${sched && sched.weekType === 'orientation'
+                  ? 'Uyum haftası: yıllık planda bu hafta için hedef kelime yok. Tanışma, sınıf kuralları ve ders materyalleri tanıtılır.'
+                  : 'Yıllık planda bu hafta için hedef kelime bulunmuyor.'}
+              </div>`}
           </div>
 
           <!-- Enriched Words via Context Classifier -->
@@ -4533,12 +4652,15 @@
       bannerTitle = `GÜN ${STATE.currentDay} • TÜM KÜTÜPHANE BİRLEŞİK HAVUZ`;
       bannerDesc = `Günde ${batchSize} hedef kelime ile ${WORDS_DATA.length.toLocaleString('tr-TR')} kelimelik kapsamlı çalışma.`;
     } else {
-      targetPool = WORDS_DATA.filter(isMaarifWord);
+      targetPool = getActiveGradePool();
       batchSize = 10;
-      const curThemeNum = (targetPool[(STATE.currentDay - 1) * batchSize] && targetPool[(STATE.currentDay - 1) * batchSize].themeNum) || Math.min(8, Math.max(1, Math.ceil(STATE.currentDay / 10)));
-      const curTheme = (typeof THEMES_DATA !== 'undefined' && THEMES_DATA[curThemeNum]) ? THEMES_DATA[curThemeNum] : { titleTr: 'Okul Yaşamı' };
-      bannerTitle = `GÜN ${STATE.currentDay} • MEB 5. SINIF MAARİF • TEMA ${curThemeNum}: ${(curTheme.titleTr || curTheme.title || 'Okul Yaşamı').toUpperCase()}`;
-      bannerDesc = `MEB 5. Sınıf İngilizce Maarif Modeli günlük ${batchSize} kelimelik odaklı çalışma.`;
+      const gNum = getActiveGrade();
+      const firstWord = targetPool[(STATE.currentDay - 1) * batchSize];
+      const meta = firstWord ? gradeWordMeta(firstWord.id, gNum) : null;
+      const unitLabel = meta && meta.unitNum ? `TEMA ${meta.unitNum}: ${(meta.unitTitleTr || meta.unitTitle).toLocaleUpperCase('tr')}` : 'MÜFREDAT';
+      const weekLabel = meta && meta.weekNum ? ` • ${meta.weekNum}. HAFTA` : '';
+      bannerTitle = `GÜN ${STATE.currentDay} • ${gNum}. SINIF MEB${weekLabel} • ${unitLabel}`;
+      bannerDesc = `MEB ${gNum}. Sınıf İngilizce yıllık plan kelimeleri, hafta sırasıyla günlük ${batchSize} kelimelik odaklı çalışma.`;
     }
     const totalDays = Math.ceil(targetPool.length / batchSize) || 1;
     if (STATE.currentDay > totalDays) STATE.currentDay = 1;
@@ -4865,7 +4987,7 @@
           if (targetWordsList.length > 0) {
             pool = targetWordsList.map((wStr, idx) => resolveCurriculumWord(wStr, gNum, idx)).filter(Boolean);
           } else {
-            const targetPool = WORDS_DATA.filter(isMaarifWord);
+            const targetPool = getActiveGradePool();
             const bSize = 10;
             const start = (STATE.currentDay - 1) * bSize;
             pool = targetPool.slice(start, start + bSize);
@@ -4884,7 +5006,7 @@
         const isAll = STATE.activeModule === 'all';
         const targetPool = isYDS 
           ? WORDS_DATA.filter(isYDSWord) 
-          : (isOxford ? WORDS_DATA.filter(isOxfordWord) : (isAll ? WORDS_DATA : WORDS_DATA.filter(isMaarifWord)));
+          : (isOxford ? WORDS_DATA.filter(isOxfordWord) : (isAll ? WORDS_DATA : getActiveGradePool()));
         const bSize = isYDS ? 20 : (isOxford || isAll ? 25 : 10);
         const end = Math.min(STATE.currentDay * bSize, targetPool.length);
         pool = targetPool.slice(0, end);
@@ -4901,7 +5023,7 @@
       } else if (sourceVal === 'yds_b2') {
         pool = WORDS_DATA.filter(w => isYDSWord(w) && w.cefr === 'B2');
       } else if (sourceVal === 'maarif_all') {
-        pool = WORDS_DATA.filter(isMaarifWord);
+        pool = getActiveGradePool();
       } else if (sourceVal === 'oxford_all') {
         pool = WORDS_DATA.filter(isOxfordWord);
       } else if (sourceVal === 'oxford_a1') {
@@ -4955,7 +5077,7 @@
       ` : `
         <option value="daily" ${sourceVal === 'daily' ? 'selected' : ''}>Günün Kelimeleri (Gün ${STATE.currentDay})</option>
         <option value="past_cumulative" ${sourceVal === 'past_cumulative' ? 'selected' : ''}>Geçmiş Günler Havuzu (1–${STATE.currentDay}. Gün)</option>
-        <option value="maarif_all" ${sourceVal === 'maarif_all' ? 'selected' : ''}>MEB: 5. Sınıf Maarif Modeli (${WORDS_DATA.filter(isMaarifWord).length.toLocaleString('tr-TR')} Kelime)</option>
+        <option value="maarif_all" ${sourceVal === 'maarif_all' ? 'selected' : ''}>MEB: ${getActiveGrade()}. Sınıf Müfredatı (${getActiveGradePool().length.toLocaleString('tr-TR')} Kelime)</option>
         <option value="yds_all" ${sourceVal === 'yds_all' ? 'selected' : ''}>YDS &amp; YÖKDİL Akademik (${WORDS_DATA.filter(isYDSWord).length.toLocaleString('tr-TR')} Kelime)</option>
         <option value="oxford_all" ${sourceVal === 'oxford_all' ? 'selected' : ''}>Kelime Kütüphanesi (Tümü - ${WORDS_DATA.filter(isOxfordWord).length.toLocaleString('tr-TR')})</option>
         <option value="oxford_a1" ${sourceVal === 'oxford_a1' ? 'selected' : ''}>Kütüphane: A1 Başlangıç</option>
@@ -5231,7 +5353,7 @@
                   ` : `
                     <option value="daily">Günün 10 Kelimesi (Gün ${STATE.currentDay})</option>
                     <option value="past_cumulative">Geçmiş Günler Havuzu (1–${STATE.currentDay}. Gün)</option>
-                    <option value="maarif">MEB: 5. Sınıf Maarif Modeli</option>
+                    <option value="maarif">MEB: ${getActiveGrade()}. Sınıf Müfredatı</option>
                     <option value="oxford_all">Kelime Kütüphanesi (Tüm Havuz)</option>
                     <option value="all">Tüm Kelime Havuzu (${WORDS_DATA.length})</option>
                   `}
@@ -5503,7 +5625,7 @@
     } else if (filters.dataset === 'oxford') {
       pool = WORDS_DATA.filter(isOxfordWord);
     } else if (filters.dataset === 'maarif') {
-      pool = WORDS_DATA.filter(isMaarifWord);
+      pool = getActiveGradePool();
     }
 
     if (filters.pos && filters.pos !== 'all') {
@@ -5825,7 +5947,7 @@
     const container = document.getElementById('view-stats');
     if (!container) return;
 
-    const maarifWords = WORDS_DATA.filter(isMaarifWord);
+    const maarifWords = getActiveGradePool();
     const maarifLearned = maarifWords.filter(w => STATE.userData.learned.has(w.id)).length;
     const maarifPct = Math.round((maarifLearned / (maarifWords.length || 1)) * 100);
 
@@ -5846,11 +5968,13 @@
 
     // 1. Maarif 8 Themes breakdown
     let themesBreakdownHtml = '';
-    for (let t = 1; t <= 8; t++) {
-      const tWords = WORDS_DATA.filter(w => w.themeNum === t);
+    const statGrade = getActiveGrade();
+    const statUnits = (window.CURRICULUM_DATA && window.CURRICULUM_DATA[statGrade]) ? window.CURRICULUM_DATA[statGrade].units : [];
+    for (const unit of statUnits) {
+      const tWords = maarifWords.filter(w => (gradeWordMeta(w.id, statGrade) || {}).unitNum === unit.unitNum);
       const tLearned = tWords.filter(w => STATE.userData.learned.has(w.id)).length;
       const tPct = Math.round((tLearned / (tWords.length || 1)) * 100);
-      const tMeta = THEMES_DATA[t] || { code: `THEME ${t}`, title: `Tema ${t}`, titleTr: '' };
+      const tMeta = { code: unit.code, title: unit.title, titleTr: unit.titleTr };
 
       themesBreakdownHtml += `
         <div class="theme-stat-row">
@@ -5934,9 +6058,9 @@
     });
 
     // Aktif Müfredat Verileri (Home'dan taşınan hedef kontrolü)
-    const curMaarifThemeNum = Math.min(8, Math.max(1, Math.ceil(STATE.currentDay / 10)));
-    let activeCurriculumTitle = 'MEB Müfredatı (5. Sınıf Maarif)';
-    let activeFocusName = THEMES_DATA[curMaarifThemeNum]?.titleTr ? `Tema ${curMaarifThemeNum}: ${THEMES_DATA[curMaarifThemeNum].titleTr}` : 'Tüm Temalar';
+    const statSched = getMEBCalendarInfo().schedule;
+    let activeCurriculumTitle = `MEB Müfredatı (${statGrade}. Sınıf)`;
+    let activeFocusName = statSched ? `${statSched.unitCode}: ${statSched.unitTitleTr || statSched.unitTitle}` : 'Tüm Temalar';
     let activeWords = maarifWords;
     let activeLearned = maarifLearned;
     let activePct = maarifPct;
@@ -6004,7 +6128,7 @@
       <div class="stats-summary-grid">
         <div class="stat-metric-card glass-panel">
           <div class="metric-val">${maarifLearned} <span style="font-size: 0.9rem; color: var(--dp-color-ink-muted);">/ ${maarifWords.length}</span></div>
-          <div class="metric-title">MEB 5. SINIF MAARİF (%${maarifPct})</div>
+          <div class="metric-title">MEB ${statGrade}. SINIF (%${maarifPct})</div>
         </div>
         <div class="stat-metric-card glass-panel">
           <div class="metric-val" style="color: var(--dp-color-accent-ink);">${ydsLearned} <span style="font-size: 0.9rem; color: var(--dp-color-ink-muted);">/ ${ydsWords.length}</span></div>
@@ -6029,7 +6153,7 @@
 
       <div class="themes-breakdown-card glass-panel" style="margin-bottom: 20px;">
         <h3 style="margin-bottom: 14px; text-transform: uppercase; letter-spacing: 0.03em;">
-          MEB 5. SINIF MAARİF MODELİ (8 TEMA KAZANIM İLERLEMESİ)
+          MEB ${statGrade}. SINIF MÜFREDATI (${statUnits.length} TEMA/ÜNİTE İLERLEMESİ)
         </h3>
         ${themesBreakdownHtml}
       </div>
@@ -6322,7 +6446,7 @@
     }
 
     const moduleNames = {
-      maarif: 'MEB MÜFREDATI • 5. SINIF',
+      maarif: `MEB MÜFREDATI • ${getActiveGrade()}. SINIF`,
       yds: 'YDS & YÖKDİL AKADEMİK',
       oxford: 'KELİME KÜTÜPHANESİ',
       all: 'TÜM KÜTÜPHANE'
@@ -6338,7 +6462,7 @@
     };
 
     if (modText) {
-      modText.innerText = moduleNames[STATE.activeModule] || '5. SINIF MAARİF MODELİ';
+      modText.innerText = moduleNames[STATE.activeModule] || moduleNames.maarif;
     }
     if (viewLabel) {
       viewLabel.innerText = viewNames[viewName] || viewName;
@@ -6349,7 +6473,7 @@
     const isOxford = STATE.activeModule === 'oxford';
     const targetPool = isYds 
       ? WORDS_DATA.filter(isYDSWord) 
-      : (isOxford ? WORDS_DATA.filter(isOxfordWord) : WORDS_DATA.filter(isMaarifWord));
+      : (isOxford ? WORDS_DATA.filter(isOxfordWord) : getActiveGradePool());
     
     const bSize = isYds ? 20 : (isOxford ? 25 : 10);
     const start = (STATE.currentDay - 1) * bSize;
@@ -6624,7 +6748,7 @@
       const isAll = STATE.activeModule === 'all';
       const targetPool = isYds 
         ? WORDS_DATA.filter(isYDSWord) 
-        : (isOxford ? WORDS_DATA.filter(isOxfordWord) : (isAll ? WORDS_DATA : WORDS_DATA.filter(isMaarifWord)));
+        : (isOxford ? WORDS_DATA.filter(isOxfordWord) : (isAll ? WORDS_DATA : getActiveGradePool()));
       const bSize = isYds ? 20 : (isOxford || isAll ? 25 : 10);
       const start = (STATE.currentDay - 1) * bSize;
       pool = targetPool.slice(start, start + bSize);
@@ -6634,7 +6758,7 @@
       const isAll = STATE.activeModule === 'all';
       const targetPool = isYds 
         ? WORDS_DATA.filter(isYDSWord) 
-        : (isOxford ? WORDS_DATA.filter(isOxfordWord) : (isAll ? WORDS_DATA : WORDS_DATA.filter(isMaarifWord)));
+        : (isOxford ? WORDS_DATA.filter(isOxfordWord) : (isAll ? WORDS_DATA : getActiveGradePool()));
       const bSize = isYds ? 20 : (isOxford || isAll ? 25 : 10);
       const end = Math.min(STATE.currentDay * bSize, targetPool.length);
       pool = targetPool.slice(0, end);
@@ -6653,7 +6777,7 @@
     } else if (source === 'review') {
       pool = WORDS_DATA.filter(w => STATE.userData.review.has(w.id));
     } else if (source === 'maarif') {
-      pool = WORDS_DATA.filter(isMaarifWord);
+      pool = getActiveGradePool();
     } else if (source === 'yds_all') {
       pool = WORDS_DATA.filter(isYDSWord);
     } else if (source === 'yds_verbs') {
@@ -6685,13 +6809,8 @@
     const shuffled = shuffleArray(pool);
     const qCount = countVal === 'all' ? shuffled.length : Math.min(parseInt(countVal, 10), shuffled.length);
     const selectedTargets = shuffled.slice(0, qCount);
-    const distractorPool = pool.length >= 10 ? pool : WORDS_DATA;
-
     const questions = selectedTargets.map(target => {
-      const distractors = distractorPool
-        .filter(w => w.id !== target.id)
-        .sort(() => Math.random() - 0.5)
-        .slice(0, 3);
+      const distractors = pickDistractors(target, 3, pool);
 
       let clozeSentence = null;
       if (mode === 'cloze' && target.example) {
@@ -7115,12 +7234,12 @@
     }
 
     const modMap = {
-      maarif: '5. SINIF MAARİF MODELİ',
+      maarif: `MEB ${getActiveGrade()}. SINIF`,
       yds: 'YDS & YÖKDİL AKADEMİK',
       oxford: 'KELİME KÜTÜPHANESİ',
       all: 'TÜM KÜTÜPHANE'
     };
-    const modTitle = modMap[STATE.activeModule] || '5. SINIF MAARİF MODELİ';
+    const modTitle = modMap[STATE.activeModule] || modMap.maarif;
     const wEn = wordObj ? wordObj.en.toUpperCase() : `#${wordId}`;
     const qualLabels = { 1: 'ZOR/TEKRAR (1g)', 4: `İYİ (${srsRec.interval}g)`, 5: `KOLAY (${srsRec.interval}g)` };
     logActivity(`${modTitle} • SRS DEĞERLENDİRME`, `[${wEn}] -> ${qualLabels[quality] || 'GÜNCELLENDİ'}`);
@@ -7244,13 +7363,8 @@
 
     const shuffled = shuffleArray(pool);
     const selectedTargets = shuffled.slice(0, Math.min(10, shuffled.length));
-    const distractorPool = pool.length >= 10 ? pool : WORDS_DATA;
-
     const questions = selectedTargets.map(target => {
-      const distractors = distractorPool
-        .filter(w => w.id !== target.id)
-        .sort(() => Math.random() - 0.5)
-        .slice(0, 3);
+      const distractors = pickDistractors(target, 3, pool);
 
       const options = [target, ...distractors]
         .sort(() => Math.random() - 0.5)
@@ -7619,6 +7733,11 @@
     generateWorksheetHTML,
     getWorksheetTargetWords,
     resolveCurriculumWord,
+    lookupCurriculumWord,
+    getActiveGradePool,
+    gradeWordMeta,
+    getMEBCalendarInfo,
+    pickDistractors,
     PDF_STUDIO_STATE,
     openFeedbackModal,
     closeFeedbackModal,
