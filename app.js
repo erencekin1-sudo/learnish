@@ -72,7 +72,8 @@
     circleDot: '<circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/>',
     lock: '<rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>',
     printer: '<path d="M6 9V2h12v7"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/>',
-    mail: '<path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/>'
+    mail: '<path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/>',
+    chevronDown: '<polyline points="6 9 12 15 18 9"/>'
   };
 
   function renderIcon(name, size = 18, className = '', strokeWidth = 2.2) {
@@ -5645,13 +5646,21 @@
     return pool;
   }
 
+  // Kısa ve sade kelime türü rozeti etiketleri
+  const POS_LABELS = {
+    noun: 'NOUN', verb: 'VERB', adjective: 'ADJ', adverb: 'ADV',
+    adj_adv: 'ADJ/ADV', preposition: 'PREP', pronoun: 'PRON',
+    conjunction: 'CONJ', determiner: 'DET', phrase: 'PHRASE', idiom: 'IDIOM'
+  };
+
   function generateWordCardsHtml(words) {
     if (!words || words.length === 0) {
       return `
-        <div class="empty-state-box glass-panel" style="grid-column: 1 / -1; margin: 32px 0; text-align: center; padding: 32px; border: 2px solid var(--dp-color-border); background: var(--dp-color-surface);">
-          <div class="empty-icon" style="font-size: 2rem; margin-bottom: 8px;">[ 0 ]</div>
-          <div class="empty-title" style="font-weight: 800; font-size: 1.1rem;">Arama kriterlerine uygun kelime bulunamadı</div>
-          <div class="empty-desc" style="color: var(--dp-color-ink-muted); font-size: 0.85rem; margin-top: 6px;">Filtreleri değiştirerek veya farklı bir kelime aratarak tekrar deneyin.</div>
+        <div class="dir-empty-state" role="status">
+          <div class="dir-empty-icon" aria-hidden="true">${renderIcon('search', 40, '', 1.6)}</div>
+          <div class="dir-empty-title">Arama kriterlerine uygun kelime bulunamadı</div>
+          <div class="dir-empty-desc">Aramayı sadeleştirin veya tüm filtreleri sıfırlayarak tekrar deneyin.</div>
+          <button type="button" class="dir-empty-clear-btn" onclick="window.APP.clearDirectoryFilters()">${renderIcon('refresh', 16)} Filtreleri Temizle</button>
         </div>
       `;
     }
@@ -5661,49 +5670,56 @@
       const isStarred = STATE.userData.starred.has(w.id);
       const prepBadge = extractPreposition(w);
       const syn = getWordSynonym(w);
+      const ipa = (w.phonetic || '').trim();
+      const posLabel = w.pos ? (POS_LABELS[w.pos] || w.pos.toUpperCase()) : '';
+      const synChips = syn
+        ? syn.split(/[,;]/).map(s => s.trim()).filter(Boolean).map(s =>
+            `<button type="button" class="word-syn-chip" onclick="event.stopPropagation(); window.APP.searchDirectory('${escapeHtml(s)}')" title="Sözlükte ara: ${escapeHtml(s)}">${escapeHtml(s)}</button>`
+          ).join('')
+        : '';
 
       return `
-        <div class="word-card glass-panel" data-id="${w.id}">
-          <div class="card-top">
-            <div class="card-tags">
-              ${getCefrBadgeHtml(w.cefr)}
-              ${w.themeCode ? getThemeBadgeHtml(w.themeCode, w.themeTitle) : ''}
-              ${prepBadge ? `<span class="yds-prep-tag">${prepBadge}</span>` : ''}
-              <button type="button" class="word-context-btn" onclick="event.stopPropagation(); window.APP.openClassifierForWord('${escapeHtml(w.en)}')" title="Bu kelimeyi müfredata bağla">${renderIcon('sparkles', 12)} Bağlam</button>
-            </div>
-            <span class="word-number">#${w.no || w.id}</span>
-          </div>
-
-          <div class="card-body">
-            <div class="word-en-row">
-              <span class="word-en">${w.en}${w.alt ? ` <small class="word-alt-badge" style="font-size:0.75rem; color:var(--dp-color-ink-muted); font-weight:500;" title="Alternatif yazım">(${escapeHtml(w.alt)})</small>` : ''}</span>
-              ${w.phonetic ? `<span class="word-phonetic">${w.phonetic}</span>` : ''}
-              <div class="card-audio-btns" style="display:inline-flex; gap:6px; margin-left:auto; align-items:center;">
-                <button class="speak-btn" data-word="${w.en}" aria-label="Dinle: ${w.en}">${ICONS.speaker}</button>
-                <button class="speak-btn coach-mic-btn" onclick="event.stopPropagation(); window.APP.openSpeechCoach('${escapeHtml(w.en)}')" title="Speaking Koçu ile Telaffuz Et" aria-label="Telaffuz Koçu: ${w.en}">
-                  ${ICONS.mic}
-                </button>
+        <div class="word-card" data-id="${w.id}" tabindex="0" aria-expanded="false"
+             onclick="window.APP.toggleWordCard(event, ${w.id})" onkeydown="window.APP.wordCardKey(event, ${w.id})">
+          <div class="word-row-top">
+            <div class="word-row-main">
+              <div class="word-en-row">
+                <span class="word-en">${w.en}${w.alt ? ` <small class="word-alt-badge" title="Alternatif yazım">(${escapeHtml(w.alt)})</small>` : ''}</span>
+                ${ipa ? `<span class="word-phonetic">${ipa}</span>` : ''}
+                ${getCefrBadgeHtml(w.cefr)}
+                ${posLabel ? `<span class="word-pos-badge">${posLabel}</span>` : ''}
               </div>
+              <div class="word-tr">${w.tr || '<span class="word-tr-pending">(Anlamı ekleniyor)</span>'}</div>
             </div>
-            <div class="word-tr">${w.tr || '<span style="color:var(--dp-color-ink-muted); font-style:italic;">(Anlamı ekleniyor)</span>'}</div>
-            <div class="word-pos">${w.desc} ${w.cat ? '• ' + w.cat : ''}</div>
-            ${w.definition ? `<div class="word-def">"${w.definition}"</div>` : ''}
-            ${syn ? `<div class="yds-syn-tag"><strong>EŞ ANLAM:</strong> ${syn}</div>` : ''}
-            ${w.example ? `<div class="word-example">“${w.example.replace(/^["“”]|["“”]$/g, '')}”</div>` : ''}
+            <div class="word-row-actions">
+              <button type="button" class="speak-btn" data-word="${w.en}" aria-label="Dinle: ${w.en}">${ICONS.speaker}</button>
+              <button type="button" class="star-btn ${isStarred ? 'starred' : ''}" onclick="window.APP.toggleStarred(${w.id})" aria-label="Favori" aria-pressed="${isStarred ? 'true' : 'false'}">
+                ${isStarred ? ICONS.starFilled : ICONS.starOutline}
+              </button>
+              <span class="word-expand-caret" aria-hidden="true">${renderIcon('chevronDown', 18)}</span>
+            </div>
           </div>
 
-          <div class="card-footer">
-            <div class="card-action-bar">
-              <button class="status-badge-btn ${isLearned ? 'learned' : ''}" onclick="window.APP.toggleLearned(${w.id})">
+          <div class="word-detail" hidden>
+            ${(w.desc || w.cat) ? `<div class="word-pos">${w.desc}${w.cat ? ' • ' + w.cat : ''}</div>` : ''}
+            ${w.definition ? `<div class="word-def">“${w.definition}”</div>` : ''}
+            ${w.example ? `<div class="word-example"><span class="word-example-lang">EN</span>${w.example.replace(/^["“”]|["“”]$/g, '')}</div>` : ''}
+            ${prepBadge ? `<div class="word-detail-row"><span class="word-detail-label">EDAT İPUCU</span><span class="yds-prep-tag">${prepBadge}</span></div>` : ''}
+            ${synChips ? `<div class="word-detail-row"><span class="word-detail-label">EŞ ANLAM</span><div class="word-syn-chips">${synChips}</div></div>` : ''}
+            <div class="word-detail-actions">
+              <button type="button" class="status-badge-btn ${isLearned ? 'learned' : ''}" onclick="window.APP.toggleLearned(${w.id})">
                 ${ICONS.check} <span>${isLearned ? 'ÖĞRENDİM' : 'ÖĞREN'}</span>
               </button>
-              <button class="status-badge-btn ${isReview ? 'review' : ''}" onclick="window.APP.toggleReview(${w.id})">
+              <button type="button" class="status-badge-btn ${isReview ? 'review' : ''}" onclick="window.APP.toggleReview(${w.id})">
                 ${ICONS.repeat} <span>${isReview ? 'TEKRARDA' : 'TEKRAR'}</span>
               </button>
+              <button type="button" class="status-badge-btn" onclick="event.stopPropagation(); window.APP.openSpeechCoach('${escapeHtml(w.en)}')" aria-label="Telaffuz Koçu: ${w.en}">
+                ${ICONS.mic} <span>TELAFFUZ</span>
+              </button>
+              <button type="button" class="status-badge-btn" onclick="event.stopPropagation(); window.APP.openClassifierForWord('${escapeHtml(w.en)}')" aria-label="Bağlam: ${w.en}">
+                ${renderIcon('sparkles', 14)} <span>BAĞLAM</span>
+              </button>
             </div>
-            <button class="star-btn ${isStarred ? 'starred' : ''}" onclick="window.APP.toggleStarred(${w.id})" aria-label="Favori">
-              ${isStarred ? ICONS.starFilled : ICONS.starOutline}
-            </button>
           </div>
         </div>
       `;
@@ -5767,6 +5783,55 @@
     }
   }
 
+  // Kademeli açılım: satır kartını genişlet/daralt (tıklama + Enter/Space)
+  function toggleWordCard(e, id) {
+    if (e && e.target && e.target.closest('button, a, .word-syn-chip')) return;
+    const row = (e && e.currentTarget) || document.querySelector(`.word-card[data-id="${id}"]`);
+    if (!row) return;
+    const open = row.getAttribute('aria-expanded') === 'true';
+    row.setAttribute('aria-expanded', String(!open));
+    const detail = row.querySelector('.word-detail');
+    if (detail) detail.hidden = open;
+  }
+
+  function wordCardKey(e, id) {
+    if (!e || (e.key !== 'Enter' && e.key !== ' ')) return;
+    if (e.target && e.target.closest('button, a, .word-syn-chip')) return;
+    e.preventDefault();
+    toggleWordCard(e, id);
+  }
+
+  // Eş anlam çipinden ya da başka bir yerden sözlükte arama tetikle
+  function searchDirectory(term) {
+    STATE.directoryFilters.search = term;
+    STATE.directoryPage = 1;
+    const input = document.getElementById('dir-search-input');
+    if (input) input.value = term;
+    renderDirectoryView(true);
+    const box = document.getElementById('dir-controls-box');
+    if (box) box.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  function clearDirectorySearch() {
+    searchDirectory('');
+    const input = document.getElementById('dir-search-input');
+    if (input) input.focus();
+  }
+
+  function clearDirectoryFilters() {
+    STATE.directoryFilters = { search: '', dataset: 'all', theme: 'all', cefr: 'all', status: 'all', pos: 'all' };
+    STATE.directoryPage = 1;
+    renderDirectoryView(false);
+  }
+
+  // Arama kutusu çevresini güncelle: temizleme düğmesi görünürlüğü + sonuç sayacı
+  function updateDirSearchChrome(count) {
+    const clearBtn = document.getElementById('dir-search-clear');
+    if (clearBtn) clearBtn.hidden = !STATE.directoryFilters.search;
+    const countEl = document.getElementById('dir-search-count');
+    if (countEl && typeof count === 'number') countEl.textContent = count.toLocaleString('tr-TR');
+  }
+
   function renderDirectoryView(cardsOnly = false) {
     const container = document.getElementById('view-directory');
     if (!container) return;
@@ -5796,6 +5861,7 @@
       paginationContainer.innerHTML = generateDirectoryPaginationHtml(filtered.length, STATE.directoryPage, pageSize);
       bindDirectoryCardAudio(wordsGrid);
       syncDirectoryStatusChips();
+      updateDirSearchChrome(filtered.length);
       return;
     }
 
@@ -5803,26 +5869,29 @@
       <div class="directory-controls glass-panel" id="dir-controls-box">
         <div class="search-input-box">
           <span class="search-icon">${ICONS.search}</span>
-          <input type="text" class="search-input" id="dir-search-input" placeholder="İngilizce, Türkçe veya eş anlam ara... (ör: abandon, advocate, relieve)" value="${escapeHtml(filters.search)}" aria-label="Kelime Ara">
+          <input type="text" class="search-input" id="dir-search-input" placeholder="İngilizce, Türkçe veya eş anlam ara… (ör: abandon, relieve)" value="${escapeHtml(filters.search)}" aria-label="Kelime Ara" autocomplete="off" spellcheck="false">
+          <button type="button" class="search-clear-btn" id="dir-search-clear" onclick="window.APP.clearDirectorySearch()" aria-label="Aramayı temizle" ${filters.search ? '' : 'hidden'}>${renderIcon('cross', 16)}</button>
+          <span class="search-count" id="dir-search-count" aria-hidden="true">${filtered.length.toLocaleString('tr-TR')}</span>
         </div>
 
         ${isYdsModule ? `
           <div style="margin-bottom: 12px;">
             <div style="font-family: var(--dp-typography-mono); font-size: 0.78rem; font-weight: 700; text-transform: uppercase; color: var(--dp-color-ink-muted); margin-bottom: 6px;">YDS KELİME TÜRLERİ</div>
             <div class="filter-chips-group" id="yds-pos-chips">
-              <button class="filter-chip ${filters.pos === 'all' ? 'active' : ''}" data-val="all">TÜM YDS (${WORDS_DATA.filter(isYDSWord).length.toLocaleString('tr-TR')})</button>
-              <button class="filter-chip ${filters.pos === 'verb' ? 'active' : ''}" data-val="verb">AKADEMİK FİİLLER (VERBS)</button>
-              <button class="filter-chip ${filters.pos === 'noun' ? 'active' : ''}" data-val="noun">AKADEMİK İSİMLER (NOUNS)</button>
-              <button class="filter-chip ${filters.pos === 'adj_adv' ? 'active' : ''}" data-val="adj_adv">SIFATLAR &amp; ZARFLAR</button>
+              <button type="button" class="filter-chip ${filters.pos === 'all' ? 'active' : ''}" aria-pressed="${filters.pos === 'all'}" data-val="all">TÜM YDS (${WORDS_DATA.filter(isYDSWord).length.toLocaleString('tr-TR')})</button>
+              <button type="button" class="filter-chip ${filters.pos === 'verb' ? 'active' : ''}" aria-pressed="${filters.pos === 'verb'}" data-val="verb">AKADEMİK FİİLLER (VERBS)</button>
+              <button type="button" class="filter-chip ${filters.pos === 'noun' ? 'active' : ''}" aria-pressed="${filters.pos === 'noun'}" data-val="noun">AKADEMİK İSİMLER (NOUNS)</button>
+              <button type="button" class="filter-chip ${filters.pos === 'adj_adv' ? 'active' : ''}" aria-pressed="${filters.pos === 'adj_adv'}" data-val="adj_adv">SIFATLAR &amp; ZARFLAR</button>
             </div>
           </div>
         ` : `
           <div style="margin-bottom: 12px;">
             <div style="font-family: var(--dp-typography-mono); font-size: 0.78rem; font-weight: 700; text-transform: uppercase; color: var(--dp-color-ink-muted); margin-bottom: 6px;">KELİME KÜTÜPHANESİ</div>
             <div class="filter-chips-group" id="dataset-chips">
-              <button class="filter-chip ${filters.dataset === 'all' ? 'active' : ''}" data-val="all">TÜM KÜTÜPHANELER (${WORDS_DATA.length.toLocaleString('tr-TR')})</button>
-              <button class="filter-chip ${filters.dataset === 'yds' ? 'active' : ''}" data-val="yds">YDS &amp; YÖKDİL (${WORDS_DATA.filter(isYDSWord).length.toLocaleString('tr-TR')})</button>
-              <button class="filter-chip ${filters.dataset === 'oxford' ? 'active' : ''}" data-val="oxford">KÜTÜPHANE (${WORDS_DATA.filter(isOxfordWord).length.toLocaleString('tr-TR')})</button>
+              <button type="button" class="filter-chip ${filters.dataset === 'all' ? 'active' : ''}" aria-pressed="${filters.dataset === 'all'}" data-val="all">TÜM KÜTÜPHANELER (${WORDS_DATA.length.toLocaleString('tr-TR')})</button>
+              <button type="button" class="filter-chip ${filters.dataset === 'maarif' ? 'active' : ''}" aria-pressed="${filters.dataset === 'maarif'}" data-val="maarif">MAARİF MODELİ (${getActiveGradePool().length.toLocaleString('tr-TR')})</button>
+              <button type="button" class="filter-chip ${filters.dataset === 'yds' ? 'active' : ''}" aria-pressed="${filters.dataset === 'yds'}" data-val="yds">YDS &amp; YÖKDİL (${WORDS_DATA.filter(isYDSWord).length.toLocaleString('tr-TR')})</button>
+              <button type="button" class="filter-chip ${filters.dataset === 'oxford' ? 'active' : ''}" aria-pressed="${filters.dataset === 'oxford'}" data-val="oxford">KÜTÜPHANE (${WORDS_DATA.filter(isOxfordWord).length.toLocaleString('tr-TR')})</button>
             </div>
           </div>
         `}
@@ -5830,21 +5899,21 @@
         <div style="margin-bottom: 12px;">
           <div style="font-family: var(--dp-typography-mono); font-size: 0.78rem; font-weight: 700; text-transform: uppercase; color: var(--dp-color-ink-muted); margin-bottom: 6px;">CEFR DÜZEYLERİ</div>
           <div class="filter-chips-group" id="cefr-chips">
-            <button class="filter-chip ${filters.cefr === 'all' ? 'active' : ''}" data-val="all">TÜM DÜZEYLER</button>
-            <button class="filter-chip ${filters.cefr === 'A1' ? 'active' : ''}" data-val="A1">A1</button>
-            <button class="filter-chip ${filters.cefr === 'A2' ? 'active' : ''}" data-val="A2">A2</button>
-            <button class="filter-chip ${filters.cefr === 'B1' ? 'active' : ''}" data-val="B1">B1</button>
-            <button class="filter-chip ${filters.cefr === 'B2' ? 'active' : ''}" data-val="B2">B2 (ORTA-İLERİ)</button>
-            <button class="filter-chip ${filters.cefr === 'C1' ? 'active' : ''}" data-val="C1">C1 (İLERİ AKADEMİK)</button>
+            <button type="button" class="filter-chip ${filters.cefr === 'all' ? 'active' : ''}" aria-pressed="${filters.cefr === 'all'}" data-val="all">TÜM DÜZEYLER</button>
+            <button type="button" class="filter-chip ${filters.cefr === 'A1' ? 'active' : ''}" aria-pressed="${filters.cefr === 'A1'}" data-val="A1">A1</button>
+            <button type="button" class="filter-chip ${filters.cefr === 'A2' ? 'active' : ''}" aria-pressed="${filters.cefr === 'A2'}" data-val="A2">A2</button>
+            <button type="button" class="filter-chip ${filters.cefr === 'B1' ? 'active' : ''}" aria-pressed="${filters.cefr === 'B1'}" data-val="B1">B1</button>
+            <button type="button" class="filter-chip ${filters.cefr === 'B2' ? 'active' : ''}" aria-pressed="${filters.cefr === 'B2'}" data-val="B2">B2 (ORTA-İLERİ)</button>
+            <button type="button" class="filter-chip ${filters.cefr === 'C1' ? 'active' : ''}" aria-pressed="${filters.cefr === 'C1'}" data-val="C1">C1 (İLERİ AKADEMİK)</button>
           </div>
         </div>
 
         <div>
           <div class="filter-chips-group" id="status-chips">
-            <button class="filter-chip ${filters.status === 'all' ? 'active' : ''}" data-val="all">TÜMÜ</button>
-            <button class="filter-chip ${filters.status === 'learned' ? 'active' : ''}" data-val="learned">ÖĞRENİLENLER (${STATE.userData.learned.size})</button>
-            <button class="filter-chip ${filters.status === 'review' ? 'active' : ''}" data-val="review">TEKRAR EDİLECEKLER (${STATE.userData.review.size})</button>
-            <button class="filter-chip ${filters.status === 'starred' ? 'active' : ''}" data-val="starred">FAVORİLER (${STATE.userData.starred.size})</button>
+            <button type="button" class="filter-chip ${filters.status === 'all' ? 'active' : ''}" aria-pressed="${filters.status === 'all'}" data-val="all">TÜMÜ</button>
+            <button type="button" class="filter-chip ${filters.status === 'learned' ? 'active' : ''}" aria-pressed="${filters.status === 'learned'}" data-val="learned">ÖĞRENİLENLER (${STATE.userData.learned.size})</button>
+            <button type="button" class="filter-chip ${filters.status === 'review' ? 'active' : ''}" aria-pressed="${filters.status === 'review'}" data-val="review">TEKRAR EDİLECEKLER (${STATE.userData.review.size})</button>
+            <button type="button" class="filter-chip ${filters.status === 'starred' ? 'active' : ''}" aria-pressed="${filters.status === 'starred'}" data-val="starred">FAVORİLER (${STATE.userData.starred.size})</button>
           </div>
         </div>
 
@@ -5868,6 +5937,8 @@
       searchInput.addEventListener('input', (e) => {
         STATE.directoryFilters.search = e.target.value;
         STATE.directoryPage = 1;
+        const clearBtn = document.getElementById('dir-search-clear');
+        if (clearBtn) clearBtn.hidden = !e.target.value;
         clearTimeout(_searchTimer);
         // 250ms debounce: büyük veri setinde her tuş vuruşunda arayüz donmaz
         _searchTimer = setTimeout(() => renderDirectoryView(true), 250);
@@ -5876,8 +5947,8 @@
 
     container.querySelectorAll('#yds-pos-chips .filter-chip').forEach(btn => {
       btn.addEventListener('click', () => {
-        container.querySelectorAll('#yds-pos-chips .filter-chip').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
+        container.querySelectorAll('#yds-pos-chips .filter-chip').forEach(b => { b.classList.remove('active'); b.setAttribute('aria-pressed', 'false'); });
+        btn.classList.add('active'); btn.setAttribute('aria-pressed', 'true');
         STATE.directoryFilters.pos = btn.getAttribute('data-val');
         STATE.directoryPage = 1;
         renderDirectoryView(true);
@@ -5886,8 +5957,8 @@
 
     container.querySelectorAll('#dataset-chips .filter-chip').forEach(btn => {
       btn.addEventListener('click', () => {
-        container.querySelectorAll('#dataset-chips .filter-chip').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
+        container.querySelectorAll('#dataset-chips .filter-chip').forEach(b => { b.classList.remove('active'); b.setAttribute('aria-pressed', 'false'); });
+        btn.classList.add('active'); btn.setAttribute('aria-pressed', 'true');
         STATE.directoryFilters.dataset = btn.getAttribute('data-val');
         STATE.directoryPage = 1;
         renderDirectoryView(true);
@@ -5896,8 +5967,8 @@
 
     container.querySelectorAll('#cefr-chips .filter-chip').forEach(btn => {
       btn.addEventListener('click', () => {
-        container.querySelectorAll('#cefr-chips .filter-chip').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
+        container.querySelectorAll('#cefr-chips .filter-chip').forEach(b => { b.classList.remove('active'); b.setAttribute('aria-pressed', 'false'); });
+        btn.classList.add('active'); btn.setAttribute('aria-pressed', 'true');
         STATE.directoryFilters.cefr = btn.getAttribute('data-val');
         STATE.directoryPage = 1;
         renderDirectoryView(true);
@@ -5906,8 +5977,8 @@
 
     container.querySelectorAll('#status-chips .filter-chip').forEach(btn => {
       btn.addEventListener('click', () => {
-        container.querySelectorAll('#status-chips .filter-chip').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
+        container.querySelectorAll('#status-chips .filter-chip').forEach(b => { b.classList.remove('active'); b.setAttribute('aria-pressed', 'false'); });
+        btn.classList.add('active'); btn.setAttribute('aria-pressed', 'true');
         STATE.directoryFilters.status = btn.getAttribute('data-val');
         STATE.directoryPage = 1;
         renderDirectoryView(true);
@@ -7744,6 +7815,11 @@
     renderFlashcardView,
     renderDirectoryView,
     setDirectoryPage,
+    toggleWordCard,
+    wordCardKey,
+    searchDirectory,
+    clearDirectorySearch,
+    clearDirectoryFilters,
     resetAllProgress,
     switchView,
     switchModule,
