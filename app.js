@@ -3136,6 +3136,7 @@
     scope: 'mistakes',     // 'mistakes', 'current_week', 'unit', 'starred', 'all'
     unitNum: 1,
     limit: 15,
+    fillExtra: false,     // Hata Defteri: hata sayısı limitten azsa müfredat kelimeleriyle tamamla (varsayılan kapalı)
     showTr: true,
     showPhonetic: true,
     showExamples: true,
@@ -3193,9 +3194,10 @@
         list = activeMistakes;
       }
 
-      // Hata Defteri kapsamındayken seçilen soru/kelime limitine ulaşmak için:
-      // Varsa hatalı kelimeler en başa yerleştirilir, kalan kısım sınıf müfredat havuzundan tamamlanır.
-      if (list.length < targetLimit) {
+      // Hata Defteri föyü varsayılan olarak YALNIZCA gerçek hataları içerir; limit hata sayısına
+      // göre kısılır. Kullanıcı "fillExtra" seçeneğini elle açarsa, kalan kısım sınıf müfredat
+      // havuzundan tamamlanır (hatalar en başta kalır).
+      if (state.fillExtra && list.length < targetLimit) {
         const poolFiller = getGradePool();
         const existingIds = new Set(list.map(w => w.id));
         for (const w of poolFiller) {
@@ -3583,7 +3585,7 @@
       PDF_STUDIO_STATE.scope = 'mistakes';
     }
     renderPdfPreview();
-    if (key === 'template' || key === 'grade') {
+    if (key === 'template' || key === 'grade' || key === 'scope') {
       renderPdfStudio();
     }
   }
@@ -3720,6 +3722,11 @@
                 <input type="checkbox" ${state.includeAnswerKey ? 'checked' : ''} onchange="window.APP.updatePdfStudioOption('includeAnswerKey', this.checked)">
                 <span>Cevap Anahtarı Ekle</span>
               </label>
+              ${(state.template === 'mistakes' || state.scope === 'mistakes') ? `
+              <label class="pdf-checkbox-label">
+                <input type="checkbox" ${state.fillExtra ? 'checked' : ''} onchange="window.APP.updatePdfStudioOption('fillExtra', this.checked)">
+                <span>Hata azsa müfredat kelimeleriyle tamamla</span>
+              </label>` : ''}
             </div>
           </div>
 
