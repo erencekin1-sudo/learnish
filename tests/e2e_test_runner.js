@@ -1261,6 +1261,56 @@ registerTest(1, 'Library Book', 'test_library_close_book', () => {
   assert(!env.document.getElementById('view-directory').innerHTML.includes('role="dialog"'));
 });
 
+registerTest(1, 'Library Search', 'test_library_search_picks_and_opens_book', () => {
+  const env = createFreshAppEnvironment();
+  env.APP.switchView('directory');
+  env.APP.searchDirectory('abandon');
+  const id = env.window.WORDS_DATA.find(x => x.en === 'abandon').id;
+  assertEqual(env.APP.getState().library.letter, 'A');
+  assertEqual(env.APP.getState().library.bookId, id);
+});
+
+registerTest(1, 'Library Search', 'test_library_search_turkish_lists_suggestion', () => {
+  const env = createFreshAppEnvironment();
+  env.APP.switchView('directory');
+  env.APP.openLibrarySearch('terk etmek');
+  env.APP.renderLibrarySuggestions();
+  assertIncludes(env.document.getElementById('view-directory').innerHTML, 'abandon');
+});
+
+registerTest(3, 'Library Search', 'test_library_pick_outside_filter_resets_filters', () => {
+  const env = createFreshAppEnvironment();
+  env.APP.switchView('directory');
+  const s = env.APP.getState();
+  s.directoryFilters.status = 'starred';
+  env.APP.renderDirectoryView();
+  const id = env.window.WORDS_DATA.find(x => x.en === 'abandon').id;
+  env.APP.pickLibrarySuggestion(id);
+  assertEqual(s.directoryFilters.status, 'all');
+  assertEqual(s.library.bookId, id);
+});
+
+registerTest(2, 'Library Search', 'test_library_search_escapes_markup', () => {
+  const env = createFreshAppEnvironment();
+  env.APP.switchView('directory');
+  env.APP.openLibrarySearch(`"<b>it's`);
+  env.APP.renderLibrarySuggestions();
+  const html = env.document.getElementById('view-directory').innerHTML;
+  assert(!html.includes('<b>it'), 'ham işaretleme girmemeli');
+  assertIncludes(html, '&quot;&lt;b&gt;it&#39;s');
+});
+
+registerTest(3, 'Library Search', 'test_library_synonym_without_entry_opens_search_over_book', () => {
+  const env = createFreshAppEnvironment();
+  env.APP.switchView('directory');
+  env.APP.openLibraryBook(env.window.WORDS_DATA.find(x => x.en === 'abandon').id);
+  env.APP.searchDirectory('qqzz-no-such-headword');
+  const s = env.APP.getState();
+  assertEqual(s.library.bookId, null, 'kitap kapanır, arama görünür olur');
+  assertEqual(s.library.searchOpen, true);
+  assertEqual(s.directoryFilters.search, 'qqzz-no-such-headword');
+});
+
 // --- 1.5 Word Directory Search & Filters (6 Tests) ---
 
 registerTest(1, 'Word Directory', 'test_directory_filter_by_pos', () => {

@@ -7404,3 +7404,35 @@ h1, h2, h3 { text-wrap: balance; line-height: 1.2; }
   .lib-page-r { box-shadow: none; }
   .lib-book-nav { position: sticky; bottom: 0; background: var(--lib-page); }
 }
+
+/* ----- Kitaplık: arama ----- */
+.lib-search-layer { position: fixed; inset: 0; z-index: calc(var(--z-modal) - 2); }
+.lib-search-backdrop { position: absolute; inset: 0; background: rgba(23, 30, 25, 0.30); animation: libFade 0.2s var(--lib-ease); }
+.lib-search-sheet {
+  position: relative; margin: 12px auto 0; width: min(560px, calc(100% - 24px));
+  background: var(--lib-page); color: var(--lib-page-ink); border-radius: var(--dp-radius-nested);
+  box-shadow: 0 24px 50px -16px rgba(23, 30, 25, 0.45); padding: 10px; animation: libDrop 0.22s var(--lib-ease);
+}
+.lib-search-bar { display: flex; align-items: center; gap: 8px; padding: 0 4px 0 12px; border: 1px solid var(--lib-line); border-radius: var(--dp-radius-pill); background: var(--lib-surface); }
+.lib-search-icon { display: inline-flex; color: var(--lib-ink-soft); }
+.lib-search-icon svg { width: 18px; height: 18px; }
+.lib-search-input {
+  flex: 1; min-width: 0; min-height: 48px; border: 0; outline: none; background: transparent; color: var(--lib-page-ink);
+  font: 700 16px var(--dp-typography-face);
+}
+.lib-search-input::placeholder { color: var(--lib-ink-soft); opacity: 0.8; }
+.lib-search-bar .lib-round { border: 0; background: transparent; }
+.lib-suggest { display: flex; flex-direction: column; gap: 2px; margin-top: 8px; max-height: 60vh; overflow-y: auto; }
+.lib-suggest-hint { margin: 10px 12px 8px; font-size: 13px; font-weight: 700; color: var(--lib-ink-soft); }
+.lib-suggest-item {
+  min-height: 48px; display: grid; grid-template-columns: auto 1fr; align-items: baseline; column-gap: 10px; row-gap: 2px;
+  padding: 8px 12px; border: 0; border-radius: 12px; background: transparent; color: var(--lib-page-ink);
+  text-align: left; cursor: pointer; font-family: var(--dp-typography-face);
+}
+.lib-suggest-item:hover, .lib-suggest-item:focus-visible { background: rgba(183, 198, 194, 0.28); outline: none; }
+.lib-s-en { font-size: 15px; font-weight: 900; }
+.lib-s-tr { font-size: 13px; font-weight: 600; color: var(--lib-ink-soft); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.lib-s-out { grid-column: 1 / -1; font-size: 10px; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; color: var(--lib-ink-soft); }
+.lib-suggest-item.is-outside .lib-s-en, .lib-suggest-item.is-outside .lib-s-tr { opacity: 0.6; }
+@keyframes libDrop { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: none; } }
+.lib-search-input::-webkit-search-cancel-button, .lib-search-input::-webkit-search-decoration { -webkit-appearance: none; appearance: none; }

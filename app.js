@@ -5753,22 +5753,6 @@
     }
   }
 
-  // Eş anlam çipinden ya da başka bir yerden sözlükte arama tetikle
-  function searchDirectory(term) {
-    STATE.directoryFilters.search = term;
-    const input = document.getElementById('dir-search-input');
-    if (input) input.value = term;
-    renderDirectoryView(true);
-    const box = document.getElementById('dir-controls-box');
-    if (box) box.scrollIntoView({ behavior: 'smooth', block: 'start' });
-  }
-
-  function clearDirectorySearch() {
-    searchDirectory('');
-    const input = document.getElementById('dir-search-input');
-    if (input) input.focus();
-  }
-
   function clearDirectoryFilters() {
     STATE.directoryFilters = { search: '', dataset: 'all', theme: 'all', cefr: 'all', status: 'all', pos: 'all' };
     renderDirectoryView(false);
@@ -5886,6 +5870,7 @@
     container.onkeydown = libraryKeyHandler;
     bindLibraryShelf();
     bindLibraryBookGestures();
+    bindLibrarySearchInput();
     centerLibraryWheel(false);
   }
 
@@ -6028,9 +6013,15 @@
     }
     const g = t.closest('.lib-ruler-g');
     if (g) { jumpLibraryRuler(parseInt(g.getAttribute('data-index'), 10)); return; }
+    const item = t.closest('.lib-suggest-item');
+    if (item) { pickLibrarySuggestion(item.getAttribute('data-id')); return; }
     const act = t.closest('[data-lib-action]');
-    const fnName = act && { search: 'openLibrarySearch', filters: 'openLibraryFilters' }[act.getAttribute('data-lib-action')];
-    if (fnName && typeof window.APP[fnName] === 'function') window.APP[fnName]();
+    const fn = act && {
+      search: () => openLibrarySearch(''),
+      'search-close': () => closeLibrarySearch(),
+      filters: () => { if (typeof openLibraryFilters === 'function') openLibraryFilters(); }
+    }[act.getAttribute('data-lib-action')];
+    if (fn) fn();
   }
 
   function libraryKeyHandler(e) {
@@ -6265,12 +6256,127 @@
   }
 
   function libraryOverlaysHtml() {
-    return STATE.library.bookId != null ? libraryBookLayerHtml() : '';
+    return (STATE.library.searchOpen ? librarySearchHtml() : '') +
+      (STATE.library.bookId != null ? libraryBookLayerHtml() : '');
   }
 
   window.addEventListener('popstate', () => {
     if (STATE.library.bookId != null) closeLibraryBook(true);
   });
+
+  // ==========================================================================
+  // KİTAPLIK: ARAMA (rafı süzmez; öneri seçilince kitaba götürür)
+  // ==========================================================================
+  let _librarySearchTimer = null;
+
+  function librarySuggestionsHtml() {
+    const q = String(STATE.directoryFilters.search || '').trim();
+    if (!q) return '<p class="lib-suggest-hint">İngilizce kelimeyi, Türkçe anlamını ya da eş anlamını yaz.</p>';
+    const list = librarySuggest(q, getFilteredDirectoryWords(), WORDS_DATA);
+    if (!list.length) return '<p class="lib-suggest-hint">Eşleşen kelime yok</p>';
+    return list.map(({ word: w, outsideFilter }) => `
+      <button type="button" role="option" class="lib-suggest-item${outsideFilter ? ' is-outside' : ''}" data-id="${w.id}">
+        <span class="lib-s-en">${escapeHtml(w.en)}</span>
+        ${w.tr ? `<span class="lib-s-tr">${escapeHtml(w.tr)}</span>` : ''}
+        ${outsideFilter ? '<span class="lib-s-out">filtre dışında</span>' : ''}
+      </button>`).join('');
+  }
+
+  function librarySearchHtml() {
+    return `
+      <div class="lib-search-layer" id="lib-search">
+        <div class="lib-search-backdrop" data-lib-action="search-close"></div>
+        <div class="lib-search-sheet" role="search">
+          <div class="lib-search-bar">
+            <span class="lib-search-icon" aria-hidden="true">${ICONS.search}</span>
+            <input type="search" id="lib-search-input" class="lib-search-input" placeholder="İngilizce, Türkçe veya eş anlam ara…"
+                   value="${escapeHtml(STATE.directoryFilters.search || '')}" autocomplete="off" spellcheck="false"
+                   aria-label="Kelime ara" aria-controls="lib-suggest" aria-autocomplete="list">
+            <button type="button" class="lib-round" data-lib-action="search-close" aria-label="Aramayı kapat">${renderIcon('cross', 18)}</button>
+          </div>
+          <div class="lib-suggest" id="lib-suggest" role="listbox" aria-label="Öneriler">${librarySuggestionsHtml()}</div>
+        </div>
+      </div>
+    `;
+  }
+
+  function renderLibrarySuggestions() {
+    const box = document.getElementById('lib-suggest');
+    if (!box) { renderDirectoryView(); return; }
+    box.innerHTML = librarySuggestionsHtml();
+  }
+
+  function bindLibrarySearchInput() {
+    const input = document.getElementById('lib-search-input');
+    if (!input || input._libBound || !input.addEventListener) return;
+    input._libBound = true;
+    input.addEventListener('input', () => {
+      STATE.directoryFilters.search = input.value;
+      clearTimeout(_librarySearchTimer);
+      _librarySearchTimer = setTimeout(renderLibrarySuggestions, 250);
+    });
+    input.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') { e.preventDefault(); closeLibrarySearch(); return; }
+      if (e.key === 'ArrowDown') {
+        const first = document.querySelector('.lib-suggest-item');
+        if (first) { e.preventDefault(); first.focus(); }
+        return;
+      }
+      if (e.key !== 'Enter') return;
+      e.preventDefault();
+      STATE.directoryFilters.search = input.value;
+      const q = input.value.trim().toLowerCase();
+      const list = librarySuggest(q, getFilteredDirectoryWords(), WORDS_DATA);
+      const hit = list.find(s => String(s.word.en).toLowerCase() === q) || list[0];
+      if (hit) pickLibrarySuggestion(hit.word.id);
+    });
+  }
+
+  function openLibrarySearch(term = '') {
+    if (STATE.library.bookId != null) closeLibraryBook(); // arama kitabın arkasında kalmasın
+    STATE.library.searchOpen = true;
+    STATE.directoryFilters.search = String(term || '');
+    const container = document.getElementById('view-directory');
+    const shelf = document.getElementById('lib-shelf');
+    if (!container || !shelf) { renderDirectoryView(); return; }
+    const old = document.getElementById('lib-search');
+    if (old) old.remove();
+    container.insertAdjacentHTML('beforeend', librarySearchHtml());
+    bindLibrarySearchInput();
+    const input = document.getElementById('lib-search-input');
+    if (input) { input.focus(); const n = input.value.length; try { input.setSelectionRange(n, n); } catch (e) { /* type=search */ } }
+  }
+
+  function closeLibrarySearch(silent) {
+    STATE.library.searchOpen = false;
+    STATE.directoryFilters.search = '';
+    clearTimeout(_librarySearchTimer);
+    const layer = document.getElementById('lib-search');
+    if (layer) layer.remove();
+    else if (!document.getElementById('lib-shelf')) renderDirectoryView();
+    if (!silent) { const btn = document.getElementById('lib-search-btn'); if (btn) btn.focus(); }
+  }
+
+  function pickLibrarySuggestion(id) {
+    id = parseInt(id, 10);
+    if (!libraryWordById(id)) return;
+    closeLibrarySearch(true);
+    const inFilter = getFilteredDirectoryWords().some(w => w.id === id);
+    if (!inFilter) {
+      const f = STATE.directoryFilters;
+      Object.assign(f, { dataset: 'all', theme: 'all', cefr: 'all', status: 'all', pos: 'all' });
+      renderDirectoryView(); // indeks yeniden kurulur, raf etiketi "Tümü"nü gösterir
+    }
+    openLibraryBook(id);
+  }
+
+  // Eş anlam çipleri ve diğer ekranlar: tam eşleşen kelime varsa doğrudan kitabını aç
+  function searchDirectory(term) {
+    const q = String(term || '').trim();
+    const exact = q && WORDS_DATA.find(w => String(w.en).toLowerCase() === q.toLowerCase());
+    if (exact) pickLibrarySuggestion(exact.id);
+    else openLibrarySearch(q);
+  }
 
   // ==========================================================================
   // VIEW 5: İSTATİSTİKLER & ANALİZ (Maarif vs YDS vs Oxford)
@@ -8112,8 +8218,11 @@
     openLibraryBook,
     closeLibraryBook,
     turnLibraryPage,
+    openLibrarySearch,
+    closeLibrarySearch,
+    renderLibrarySuggestions,
+    pickLibrarySuggestion,
     librarySuggest,
-    clearDirectorySearch,
     clearDirectoryFilters,
     resetAllProgress,
     switchView,
