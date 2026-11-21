@@ -1708,6 +1708,107 @@ registerTest(1, 'PDF & Worksheet Studio', 'test_pdf_print_and_download_handlers'
   assert(downloadedData.download && downloadedData.download.startsWith('learnish-calisma-foyu'), 'Download filename should begin with learnish-calisma-foyu');
 });
 
+// --- 1.8b PDF Studio Bug Fixes (scope coupling, deterministic quiz, unit picker) ---
+
+registerTest(1, 'PDF & Worksheet Studio', 'test_pdf_template_switch_resets_scope_to_populated', () => {
+  const env = createFreshAppEnvironment();
+  env.APP.openPdfStudio('mistakes');
+  // Hiç yanlış yokken diğer şablonlara geçince kapsam boş "mistakes"te kalmamalı.
+  env.APP.updatePdfStudioOption('template', 'flashcards');
+  assertEqual(env.APP.PDF_STUDIO_STATE.scope, 'current_week', 'Switching to flashcards must move scope off empty mistakes');
+  let words = env.APP.getWorksheetTargetWords(env.APP.PDF_STUDIO_STATE);
+  assert(words.length > 0, 'Flashcards template should produce a non-empty word list after template switch');
+
+  env.APP.updatePdfStudioOption('template', 'quiz');
+  assertEqual(env.APP.PDF_STUDIO_STATE.scope, 'current_week', 'Switching to quiz must move scope off empty mistakes');
+  words = env.APP.getWorksheetTargetWords(env.APP.PDF_STUDIO_STATE);
+  assert(words.length > 0, 'Quiz template should produce a non-empty word list after template switch');
+
+  env.APP.updatePdfStudioOption('template', 'mistakes');
+  assertEqual(env.APP.PDF_STUDIO_STATE.scope, 'mistakes', 'Mistakes template keeps the mistakes scope');
+});
+
+registerTest(1, 'PDF & Worksheet Studio', 'test_pdf_quiz_is_stable_across_unrelated_rerenders', () => {
+  const env = createFreshAppEnvironment();
+  env.APP.updatePdfStudioOption('template', 'quiz');
+  env.APP.updatePdfStudioOption('grade', 5);
+  env.APP.updatePdfStudioOption('limit', 15);
+
+  const extractKey = (html) => {
+    const m = html.match(/ANSWER KEY\):<\/div>\s*<div class="ws-answer-key-content">([^<]*)</);
+    return m ? m[1].trim() : null;
+  };
+  const html1 = env.APP.generateWorksheetHTML(env.APP.PDF_STUDIO_STATE);
+  const key1 = extractKey(html1);
+  assert(key1 && key1.length > 0, 'Answer key should be present in quiz output');
+
+  // Alakasız bir ayar aç/kapa → şıklar ve cevap anahtarı DEĞİŞMEMELİ.
+  env.APP.updatePdfStudioOption('showTr', false);
+  env.APP.updatePdfStudioOption('includeAnswerKey', true);
+  const html2 = env.APP.generateWorksheetHTML(env.APP.PDF_STUDIO_STATE);
+  assertEqual(extractKey(html2), key1, 'Toggling unrelated settings must NOT reshuffle quiz options/answer key');
+
+  // Yeniden karıştır → düzen değişebilir (nonce artar).
+  env.APP.reshufflePdfQuiz();
+  assert(env.APP.PDF_STUDIO_STATE._quizNonce >= 1, 'reshufflePdfQuiz should bump the shuffle nonce');
+});
+
+registerTest(1, 'PDF & Worksheet Studio', 'test_pdf_quiz_answer_key_matches_options', () => {
+  const env = createFreshAppEnvironment();
+  env.APP.updatePdfStudioOption('template', 'quiz');
+  env.APP.updatePdfStudioOption('grade', 5);
+  env.APP.updatePdfStudioOption('limit', 10);
+  const words = env.APP.getWorksheetTargetWords(env.APP.PDF_STUDIO_STATE);
+  const model = env.APP.buildQuizModel(env.APP.PDF_STUDIO_STATE, words);
+  assert(model.items.length > 0, 'Quiz model should have items');
+  model.items.forEach((it, i) => {
+    assert(it.correctIdx >= 0 && it.correctIdx <= 3, `Q${i + 1} correctIdx must be 0..3`);
+    assertEqual(it.options.length, 4, `Q${i + 1} must have 4 options`);
+    // Doğru şıktaki değer, kelimenin gerçek Türkçesi olmalı (anahtar şıkla tutarlı).
+    assert(it.options[it.correctIdx] && it.options[it.correctIdx] !== '—', `Q${i + 1} correct option must be a real meaning`);
+  });
+});
+
+registerTest(1, 'PDF & Worksheet Studio', 'test_pdf_unit_scope_shows_picker_and_changes_words', () => {
+  const env = createFreshAppEnvironment();
+  env.APP.openPdfStudio('daily');
+  env.APP.updatePdfStudioOption('grade', 5);
+  env.APP.updatePdfStudioOption('scope', 'unit');
+
+  const body = env.document.getElementById('pdf-dialog-body');
+  assert(body.innerHTML.includes('pdf-unit-select'), 'Unit scope must render a unit picker');
+  assert(body.innerHTML.includes('Ünite Seçimi'), 'Unit picker must have a visible label');
+
+  // Farklı üniteler farklı kelime kümeleri vermeli.
+  env.APP.updatePdfStudioOption('unitNum', 1);
+  const w1 = env.APP.getWorksheetTargetWords(env.APP.PDF_STUDIO_STATE).map(w => w.en).join(',');
+  env.APP.updatePdfStudioOption('unitNum', 3);
+  const w3 = env.APP.getWorksheetTargetWords(env.APP.PDF_STUDIO_STATE).map(w => w.en).join(',');
+  assert(w1.length > 0 && w3.length > 0, 'Both units should yield words');
+  assert(w1 !== w3, 'Different unit selection must change the selected words');
+});
+
+registerTest(1, 'PDF & Worksheet Studio', 'test_pdf_settings_are_template_specific', () => {
+  const env = createFreshAppEnvironment();
+  env.APP.openPdfStudio('quiz');
+  let body = env.document.getElementById('pdf-dialog-body');
+  assert(body.innerHTML.includes('Şıkları Yeniden Karıştır'), 'Quiz panel should offer the reshuffle control');
+  assert(body.innerHTML.includes('Cevap Anahtarı Ekle'), 'Quiz panel should offer the answer-key toggle');
+  assert(!body.innerHTML.includes('Eşleştirme Bölümü Ekle'), 'Quiz panel must NOT show the matching toggle (inert there)');
+
+  env.APP.updatePdfStudioOption('template', 'flashcards');
+  body = env.document.getElementById('pdf-dialog-body');
+  assert(body.innerHTML.includes('Türkçe Anlamları Göster'), 'Flashcards panel should offer the Turkish toggle');
+  assert(!body.innerHTML.includes('3x Yazım Çizgisi'), 'Flashcards panel must NOT show the writing-practice toggle');
+
+  // Flashcard şablonu showTr ayarını gerçekten uygular.
+  env.APP.updatePdfStudioOption('showTr', false);
+  const htmlNoTr = env.APP.generateWorksheetHTML(env.APP.PDF_STUDIO_STATE);
+  env.APP.updatePdfStudioOption('showTr', true);
+  const htmlTr = env.APP.generateWorksheetHTML(env.APP.PDF_STUDIO_STATE);
+  assert(htmlTr.length > htmlNoTr.length, 'Flashcard showTr toggle must actually change the output');
+});
+
 // --- 1.9 Feedback & Bug Reporter (5 Tests) ---
 
 registerTest(1, 'Feedback & Bug Reporter', 'test_feedback_modal_elements_and_open_close', () => {

@@ -22,3 +22,6 @@ node_modules/
 # Claude / superpowers çalışma alanları
 .superpowers/
 .claude/worktrees/
+
+# Graphify tarafından üretilen bilgi grafiği önbelleği (repoda tutulmaz)
+graphify-out/

@@ -3191,10 +3191,12 @@
         list = activeMistakes;
       }
 
-      // Hata Defteri föyü varsayılan olarak YALNIZCA gerçek hataları içerir; limit hata sayısına
-      // göre kısılır. Kullanıcı "fillExtra" seçeneğini elle açarsa, kalan kısım sınıf müfredat
-      // havuzundan tamamlanır (hatalar en başta kalır).
-      if (state.fillExtra && list.length < targetLimit) {
+      // Hata Defteri FÖYÜ (mistakes şablonu) varsayılan olarak YALNIZCA gerçek hataları içerir;
+      // kullanıcı "fillExtra" seçeneğini açarsa tamamlanır. Fakat quiz/müfredat/kes-katla
+      // şablonları "Yanlışlarım" kapsamıyla seçildiğinde, istenen sayıya ulaşmak için havuzdan
+      // tamamlanır (yoksa tek bir yanlıştan 20 soruluk test çıkmaz; hatalar en başta kalır).
+      const shouldFillMistakes = state.template !== 'mistakes' || state.fillExtra;
+      if (shouldFillMistakes && list.length < targetLimit) {
         const poolFiller = getGradePool();
         const existingIds = new Set(list.map(w => w.id));
         for (const w of poolFiller) {
@@ -3286,6 +3288,43 @@
 
     const numLimit = parseInt(limit, 10);
     return !isNaN(numLimit) && numLimit > 0 ? unique.slice(0, numLimit) : unique;
+  }
+
+  // Her şablonun doğal kapsamı. Şablon değişince kapsam buna çekilir ki, varsayılan boş
+  // "Yanlışlarım" kapsamı diğer şablonları (quiz/müfredat/kes-katla) boş bırakmasın.
+  function defaultScopeForTemplate(t) {
+    return t === 'mistakes' ? 'mistakes' : 'current_week';
+  }
+
+  // Quiz şık düzenini kelime kümesine göre SABİTLER. Alakasız bir ayar değişip önizleme
+  // yeniden çizildiğinde şıklar tekrar karışmaz; önizleme ile baskı aynı anahtarı verir.
+  // "Yeniden karıştır" (_quizNonce) ya da kelime kümesi değişince yeniden kurulur.
+  function buildQuizModel(state, words) {
+    const targetLimit = state.limit === 'all' ? words.length : (parseInt(state.limit, 10) || 10);
+    const quizWords = words.slice(0, targetLimit);
+    const sig = [state.grade, state.scope, state.unitNum, state.limit, state._quizNonce || 0, quizWords.map(w => w.id).join(',')].join('|');
+    if (state._quizCache && state._quizCache.sig === sig) return state._quizCache.model;
+
+    const items = quizWords.map((w) => {
+      const distractors = pickDistractors(w, 3, words).map(d => d.tr);
+      // Doğru şıkkın yeri kelime kimliğinden türetilir → her çizimde aynı kalır.
+      const seed = String(w.id).split('').reduce((a, c) => (a * 31 + c.charCodeAt(0)) >>> 0, 7);
+      const correctIdx = seed % 4;
+      const options = [];
+      let dIdx = 0;
+      for (let i = 0; i < 4; i++) {
+        options.push(i === correctIdx ? w.tr : (distractors[dIdx++] || '—'));
+      }
+      return { en: w.en, options, correctIdx };
+    });
+    const model = { items };
+    state._quizCache = { sig, model };
+    return model;
+  }
+
+  function reshufflePdfQuiz() {
+    PDF_STUDIO_STATE._quizNonce = (PDF_STUDIO_STATE._quizNonce || 0) + 1;
+    renderPdfPreview();
   }
 
   function generateWorksheetHTML(state = PDF_STUDIO_STATE, isForPrint = false) {
@@ -3448,33 +3487,16 @@
         `;
       }
     } else if (state.template === 'quiz') {
-      const targetLimit = state.limit === 'all' ? words.length : (parseInt(state.limit, 10) || 10);
-      const quizWords = words.slice(0, targetLimit);
-      const answerKey = [];
+      const letters = ['A', 'B', 'C', 'D'];
+      const quiz = buildQuizModel(state, words);
 
       bodyHtml += `<div class="ws-quiz-list">`;
-      quizWords.forEach((w, qIdx) => {
-        const distractors = pickDistractors(w, 3, words).map(d => d.tr);
-
-        const correctLetterIdx = Math.floor(Math.random() * 4);
-        const letters = ['A', 'B', 'C', 'D'];
-        answerKey.push(`${qIdx + 1}-${letters[correctLetterIdx]}`);
-
-        const options = [];
-        let dIdx = 0;
-        for (let i = 0; i < 4; i++) {
-          if (i === correctLetterIdx) {
-            options.push(w.tr);
-          } else {
-            options.push(distractors[dIdx++] || '—');
-          }
-        }
-
+      quiz.items.forEach((item, qIdx) => {
         bodyHtml += `
           <div class="ws-quiz-item">
-            <div class="ws-quiz-q-title">${qIdx + 1}. "${escapeHtml(w.en)}" kelimesinin Türkçe karşılığı aşağıdakilerden hangisidir?</div>
+            <div class="ws-quiz-q-title">${qIdx + 1}. "${escapeHtml(item.en)}" kelimesinin Türkçe karşılığı aşağıdakilerden hangisidir?</div>
             <div class="ws-quiz-options-grid">
-              ${options.map((opt, oIdx) => `
+              ${item.options.map((opt, oIdx) => `
                 <div class="ws-quiz-opt">
                   <span class="ws-opt-letter">${letters[oIdx]})</span>
                   <span>${escapeHtml(opt)}</span>
@@ -3487,6 +3509,7 @@
       bodyHtml += `</div>`;
 
       if (state.includeAnswerKey) {
+        const answerKey = quiz.items.map((it, i) => `${i + 1}-${letters[it.correctIdx]}`);
         bodyHtml += `
           <div class="ws-answer-key-box">
             <div class="ws-answer-key-title">${renderIcon('scissors', 14)} CEVAP ANAHTARI (ANSWER KEY):</div>
@@ -3504,18 +3527,25 @@
             <div class="ws-fc-side-en">
               <span style="font-size:9px; font-weight:800; color:#94a3b8;">KART #${idx + 1}</span>
               <div style="font-size:16px; font-weight:900; color:#171e19; margin:4px 0 2px 0;">${escapeHtml(w.en)}</div>
-              ${w.phonetic ? `<div style="font-size:10px; color:#64748b; font-style:italic;">${escapeHtml(w.phonetic)}</div>` : ''}
+              ${state.showPhonetic && w.phonetic ? `<div style="font-size:10px; color:#64748b; font-style:italic;">${escapeHtml(w.phonetic)}</div>` : ''}
               <div style="font-size:9.5px; font-weight:700; color:#0284c7; margin-top:4px;">${escapeHtml(w.desc || w.pos || 'kelime')}</div>
             </div>
             <div class="ws-fc-side-tr">
               <span style="font-size:9px; font-weight:800; color:#94a3b8;">TÜRKÇE / ÖRNEK</span>
-              <div style="font-size:13px; font-weight:800; color:#334155; margin:4px 0 2px 0;">${escapeHtml(w.tr || '—')}</div>
-              ${w.example ? `<div style="font-size:10px; color:#475569; font-style:italic; line-height:1.3;">“${escapeHtml(w.example)}”</div>` : ''}
+              ${state.showTr ? `<div style="font-size:13px; font-weight:800; color:#334155; margin:4px 0 2px 0;">${escapeHtml(w.tr || '—')}</div>` : ''}
+              ${state.showExamples && w.example ? `<div style="font-size:10px; color:#475569; font-style:italic; line-height:1.3;">“${escapeHtml(w.example)}”</div>` : ''}
             </div>
           </div>
         `;
       });
       bodyHtml += `</div>`;
+    }
+
+    if (!words.length) {
+      const hint = (state.scope === 'mistakes')
+        ? 'Henüz kayıtlı yanlışınız yok. Birkaç test/quiz çözün ya da yukarıdan Kapsam’ı değiştirin.'
+        : 'Bu kapsam için kelime bulunamadı. Sınıf, kapsam veya ünite seçimini değiştirin.';
+      bodyHtml = `<div class="ws-empty-note" style="padding:28px 20px; text-align:center; color:#64748b; border:1.5px dashed #cbd5e1; border-radius:12px; background:#f8fafc; font-size:13px; font-weight:600; margin-top:10px;">${renderIcon('alert', 18)}<div style="margin-top:8px;">${escapeHtml(hint)}</div></div>`;
     }
 
     return `
@@ -3553,8 +3583,10 @@
       PDF_STUDIO_STATE.grade = STATE.selectedGrade || 5;
     } else if (presetMode === 'quiz') {
       PDF_STUDIO_STATE.template = 'quiz';
+      PDF_STUDIO_STATE.scope = defaultScopeForTemplate('quiz');
     } else if (presetMode === 'flashcards') {
       PDF_STUDIO_STATE.template = 'flashcards';
+      PDF_STUDIO_STATE.scope = defaultScopeForTemplate('flashcards');
     }
 
     const dialog = document.getElementById('pdf-dialog');
@@ -3578,13 +3610,70 @@
 
   function updatePdfStudioOption(key, value) {
     PDF_STUDIO_STATE[key] = value;
-    if (key === 'template' && value === 'mistakes') {
-      PDF_STUDIO_STATE.scope = 'mistakes';
+    // Şablon değişince kapsamı o şablonun doğal kapsamına çek (boş "Yanlışlarım" tuzağını önler).
+    if (key === 'template') {
+      PDF_STUDIO_STATE.scope = defaultScopeForTemplate(value);
     }
     renderPdfPreview();
     if (key === 'template' || key === 'grade' || key === 'scope') {
       renderPdfStudio();
     }
+  }
+
+  // Kapsam seçenekleri; sınıf havuzu YDS/Oxford iken ünite bazlı seçim yoktur.
+  function pdfScopeOptionsHtml(state) {
+    const gNum = parseInt(state.grade, 10);
+    const hasUnits = gNum >= 1 && gNum <= 12;
+    return [
+      `<option value="mistakes" ${state.scope === 'mistakes' ? 'selected' : ''}>Yanlışlarım (Hata Defteri)</option>`,
+      `<option value="current_week" ${state.scope === 'current_week' ? 'selected' : ''}>Bu Haftanın Hedef Kelimeleri</option>`,
+      hasUnits ? `<option value="unit" ${state.scope === 'unit' ? 'selected' : ''}>Seçili Ünite Kelimeleri</option>` : '',
+      `<option value="starred" ${state.scope === 'starred' ? 'selected' : ''}>Yıldızlı / Favorilerim</option>`,
+      `<option value="all" ${state.scope === 'all' ? 'selected' : ''}>Sınıf Genel Havuzu</option>`
+    ].join('');
+  }
+
+  // "Seçili Ünite Kelimeleri" kapsamı seçildiğinde görünen ünite seçici (geçmiş haftalar dahil).
+  function pdfUnitSelectHtml(state) {
+    const gNum = parseInt(state.grade, 10);
+    const gData = (gNum >= 1 && gNum <= 12) ? (window.CURRICULUM_DATA && window.CURRICULUM_DATA[gNum]) : null;
+    if (state.scope !== 'unit' || !gData || !gData.units || !gData.units.length) return '';
+    const opts = gData.units.map(u =>
+      `<option value="${u.unitNum}" ${state.unitNum == u.unitNum ? 'selected' : ''}>${escapeHtml(u.code || ('UNIT ' + u.unitNum))} — ${escapeHtml(u.titleTr || u.title || '')}</option>`
+    ).join('');
+    return `
+      <div class="pdf-form-row" style="margin-top:8px;">
+        <div class="pdf-field-wrap" style="flex:1 1 100%;">
+          <span class="pdf-field-title">Ünite Seçimi (geçmiş haftalar dahil):</span>
+          <select id="pdf-unit-select" class="pdf-select" onchange="window.APP.updatePdfStudioOption('unitNum', this.value)">
+            ${opts}
+          </select>
+        </div>
+      </div>
+    `;
+  }
+
+  // İçerik ayarları şablona göre değişir: her seçenek yalnızca etkisi olan şablonda gösterilir.
+  function pdfSettingsHtml(state) {
+    const cb = (key, label) =>
+      `<label class="pdf-checkbox-label"><input type="checkbox" ${state[key] ? 'checked' : ''} onchange="window.APP.updatePdfStudioOption('${key}', this.checked)"><span>${label}</span></label>`;
+    let rows = '';
+    if (state.template === 'mistakes' || state.template === 'curriculum') {
+      rows = cb('showTr', 'Türkçe Anlamları Göster')
+           + cb('showPhonetic', 'Fonetik Okunuş Göster')
+           + cb('showExamples', 'Örnek Cümleleri Ekle')
+           + cb('showWritingPractice', '3x Yazım Çizgisi Ekle')
+           + cb('showMatching', 'Eşleştirme Bölümü Ekle')
+           + (state.template === 'mistakes' ? cb('fillExtra', 'Hata azsa müfredat kelimeleriyle tamamla') : '');
+    } else if (state.template === 'flashcards') {
+      rows = cb('showTr', 'Türkçe Anlamları Göster')
+           + cb('showPhonetic', 'Fonetik Okunuş Göster')
+           + cb('showExamples', 'Örnek Cümleleri Ekle');
+    } else if (state.template === 'quiz') {
+      rows = cb('includeAnswerKey', 'Cevap Anahtarı Ekle')
+           + `<button type="button" class="pdf-reshuffle-btn" onclick="window.APP.reshufflePdfQuiz()">${renderIcon('refresh', 15)}<span>Şıkları Yeniden Karıştır</span></button>`;
+    }
+    return rows;
   }
 
   function renderPdfStudio() {
@@ -3665,14 +3754,11 @@
               <div class="pdf-field-wrap">
                 <span class="pdf-field-title">Kapsam:</span>
                 <select id="pdf-scope-select" class="pdf-select" onchange="window.APP.updatePdfStudioOption('scope', this.value)">
-                  <option value="mistakes" ${state.scope === 'mistakes' ? 'selected' : ''}>Yanlışlarım (Hata Defteri)</option>
-                  <option value="current_week" ${state.scope === 'current_week' ? 'selected' : ''}>Bu Haftanın Hedef Kelimeleri</option>
-                  <option value="unit" ${state.scope === 'unit' ? 'selected' : ''}>Seçili Ünite Kelimeleri</option>
-                  <option value="starred" ${state.scope === 'starred' ? 'selected' : ''}>Yıldızlı / Favorilerim</option>
-                  <option value="all" ${state.scope === 'all' ? 'selected' : ''}>Sınıf Genel Havuzu</option>
+                  ${pdfScopeOptionsHtml(state)}
                 </select>
               </div>
             </div>
+            ${pdfUnitSelectHtml(state)}
           </div>
 
           <!-- 3. Kelime Limiti & Öğrenci Adı -->
@@ -3699,31 +3785,7 @@
           <div class="pdf-form-group">
             <label class="pdf-group-label">3. ÇALIŞMA KAĞIDI AYARLARI</label>
             <div class="pdf-checkbox-grid">
-              <label class="pdf-checkbox-label">
-                <input type="checkbox" ${state.showTr ? 'checked' : ''} onchange="window.APP.updatePdfStudioOption('showTr', this.checked)">
-                <span>Türkçe Anlamları Göster</span>
-              </label>
-              <label class="pdf-checkbox-label">
-                <input type="checkbox" ${state.showExamples ? 'checked' : ''} onchange="window.APP.updatePdfStudioOption('showExamples', this.checked)">
-                <span>Örnek Cümleleri Ekle</span>
-              </label>
-              <label class="pdf-checkbox-label">
-                <input type="checkbox" ${state.showWritingPractice ? 'checked' : ''} onchange="window.APP.updatePdfStudioOption('showWritingPractice', this.checked)">
-                <span>3x Yazım Çizgisi Ekle</span>
-              </label>
-              <label class="pdf-checkbox-label">
-                <input type="checkbox" ${state.showMatching ? 'checked' : ''} onchange="window.APP.updatePdfStudioOption('showMatching', this.checked)">
-                <span>Eşleştirme Bölümü Ekle</span>
-              </label>
-              <label class="pdf-checkbox-label">
-                <input type="checkbox" ${state.includeAnswerKey ? 'checked' : ''} onchange="window.APP.updatePdfStudioOption('includeAnswerKey', this.checked)">
-                <span>Cevap Anahtarı Ekle</span>
-              </label>
-              ${(state.template === 'mistakes' || state.scope === 'mistakes') ? `
-              <label class="pdf-checkbox-label">
-                <input type="checkbox" ${state.fillExtra ? 'checked' : ''} onchange="window.APP.updatePdfStudioOption('fillExtra', this.checked)">
-                <span>Hata azsa müfredat kelimeleriyle tamamla</span>
-              </label>` : ''}
+              ${pdfSettingsHtml(state)}
             </div>
           </div>
 
@@ -4257,7 +4319,7 @@
             </div>
             <h4 class="hrc-title">Kelime Kütüphanesi (A1–C1)</h4>
             <p class="hrc-desc">
-              İngilizce konuşulan ve yazılan tüm metinlerin %90'ından fazlasını kapsayan, A1'den C1'e uluslararası standartlarda 4.886 temel ve ileri düzey kelimelik zengin başvuru kütüphanesidir.
+              İngilizce konuşulan ve yazılan tüm metinlerin %90'ından fazlasını kapsayan, A1'den C1'e uluslararası standartlarda ${WORDS_DATA.filter(isOxfordWord).length.toLocaleString('tr-TR')} temel ve ileri düzey kelimelik zengin başvuru kütüphanesidir.
             </p>
             <div class="hrc-target-pill">
               <strong>Kimler İçin:</strong> Genel İngilizce konuşma ve anlama becerisini geliştirmek, uluslararası standartta kelime dağarcığı oluşturmak isteyenler.
@@ -8456,6 +8518,8 @@
     openPdfStudio,
     closePdfStudio,
     updatePdfStudioOption,
+    reshufflePdfQuiz,
+    buildQuizModel,
     printWorksheet,
     downloadWorksheetHtml,
     generateWorksheetHTML,

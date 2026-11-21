@@ -23,6 +23,7 @@ SERVICE_WORKER_PATH = os.path.join(BASE_DIR, 'service-worker.js')
 SINGLE_HTML_PATH = os.path.join(BASE_DIR, 'Learnish_Tek_Dosya_Web_App.html')
 YDS_PDF_PATH = os.path.join(BASE_DIR, 'belgeler', 'YDS İngilizce 2020–2026 Kelime ve Kalıp Tabloları.pdf')
 YDS_EXTRA_SOURCES_PATH = os.path.join(BASE_DIR, 'belgeler', 'yds_extra_sources.json')
+DICTIONARY_EXPANSION_PATH = os.path.join(BASE_DIR, 'belgeler', 'dictionary_expansion.json')
 
 def log(msg):
     print(f"[Learnish Builder] {msg}")
@@ -537,6 +538,48 @@ def load_extra_yds_sources():
     log(f"✅ {len(extra_words)} adet ek YDS & YÖKDİL kaynağı yüklendi.")
     return extra_words
 
+
+def load_dictionary_expansion():
+    """Load deduplicated & enriched Kelime Kütüphanesi words from belgeler/dictionary_expansion.json."""
+    if not os.path.exists(DICTIONARY_EXPANSION_PATH):
+        return []
+    with open(DICTIONARY_EXPANSION_PATH, 'r', encoding='utf-8') as f:
+        items = json.load(f)
+
+    dict_words = []
+    for item in items:
+        en = (item.get('en') or '').strip()
+        if not en:
+            continue
+        cefr = (item.get('cefr') or 'B1').strip().upper()
+        dict_words.append({
+            'en': en,
+            'tr': (item.get('tr') or '').strip(),
+            'desc': (item.get('desc') or '').strip(),
+            'pos': (item.get('pos') or '').strip(),
+            'cefr': cefr,
+            'cat': (item.get('cat') or f'Kelime Kütüphanesi ({cefr})').strip(),
+            'themeNum': 9,
+            'themeCode': 'OXFORD 5000',
+            'themeTitle': 'THE OXFORD 5000',
+            'themeTitleTr': 'The Oxford 5000 (A1-C1 Dünya Standardı)',
+            'dataset': 'oxford',
+            'datasets': ['oxford'],
+            'isMaarif': False,
+            'isOxford': True,
+            'isYds': False,
+            'isExtraDict': True,
+            'ydsStats': '',
+            'ydsExample': '',
+            'phonetic': (item.get('phonetic') or '').strip(),
+            'definition': (item.get('definition') or '').strip(),
+            'example': (item.get('example') or '').strip(),
+            'synonym': '',
+            'alt': ''
+        })
+    log(f"✅ {len(dict_words)} adet genişletilmiş sözlük kaydı yüklendi.")
+    return dict_words
+
 # 4. Build deduplicated master database
 def build_combined_database():
     maarif_words = load_maarif_words()
@@ -611,17 +654,37 @@ def build_combined_database():
 
     log(f"✅ Ek YDS kaynakları birleştirildi (+{added_extra}): Havuzda toplam {len(pool_dict)} benzersiz kelime/kalıp!")
 
+    # Step 5: Merge dictionary expansion (never overwrite existing entries)
+    extra_dict_words = load_dictionary_expansion()
+    added_dict = 0
+    for w in extra_dict_words:
+        key = get_canonical_key(w['en'])
+        jkey = js_norm_key(w['en'])
+        if key not in pool_dict and jkey not in existing_js_keys:
+            pool_dict[key] = dict(w)
+            existing_js_keys.add(jkey)
+            added_dict += 1
+
+    log(f"✅ Sözlük genişletmesi birleştirildi (+{added_dict}): Havuzda toplam {len(pool_dict)} benzersiz kelime/kalıp!")
+
     # Assign sequential IDs and Days
     combined_words = list(pool_dict.values())
     
-    # Sort order: Maarif words first, then Oxford words, then original YDS, then extra YDS
+    # Sort order: Maarif -> Original Oxford -> Original YDS -> Extra YDS -> Dictionary Expansion
     def sort_key(item):
-        is_m = 0 if item.get('isMaarif') else 1
-        is_o = 0 if item.get('isOxford') else 1
-        is_extra = 1 if item.get('isExtraYds') else 0
+        if item.get('isMaarif'):
+            track = 0
+        elif item.get('isOxford') and not item.get('isExtraDict'):
+            track = 1
+        elif item.get('isExtraDict'):
+            track = 4
+        elif item.get('isExtraYds'):
+            track = 3
+        else:
+            track = 2
         theme = item.get('themeNum', 99)
         orig_no = item.get('no', 999999)
-        return (is_m, is_o, is_extra, theme, orig_no, item.get('en', '').lower())
+        return (track, theme, orig_no, item.get('en', '').lower())
 
     combined_words.sort(key=sort_key)
 
@@ -948,6 +1011,50 @@ def append_extra_yds_to_pool():
     log(f"✅ {len(base_pool)} mevcut kayıt birebir korundu, +{len(appended)} yeni YDS/YÖKDİL kaydı eklendi.")
     write_word_database(base_pool + appended)
 
+
+def append_dictionary_expansion():
+    log("Mevcut 9.994 kelime korunarak belgeler/dictionary_expansion.json ekleniyor...")
+    if not os.path.exists(KELIMELER_HAVUZU_PATH):
+        raise FileNotFoundError(f"{KELIMELER_HAVUZU_PATH} bulunamadı!")
+    with open(KELIMELER_HAVUZU_PATH, 'r', encoding='utf-8') as f:
+        pool = json.load(f)
+
+    base_pool = [w for w in pool if w.get('id', 0) <= 9994]
+    assert len(base_pool) == 9994, f"Beklenen 9994 temel kelime yerine {len(base_pool)} bulundu!"
+    assert [w.get('id') for w in base_pool] == list(range(1, 9995)), "Temel havuz ID sırası bozuk!"
+
+    seen_canon = set()
+    seen_js = set()
+    for w in base_pool:
+        seen_canon.add(get_canonical_key(w['en']))
+        seen_js.add(js_norm_key(w['en']))
+        if w.get('alt'):
+            seen_canon.add(get_canonical_key(w['alt']))
+            seen_js.add(js_norm_key(w['alt']))
+
+    o_idx = sum(1 for w in base_pool if w.get('isOxford') and not w.get('isMaarif'))
+    dict_words = load_dictionary_expansion()
+
+    appended = []
+    next_id = 9995
+    for w in dict_words:
+        ck = get_canonical_key(w['en'])
+        jk = js_norm_key(w['en'])
+        if ck in seen_canon or jk in seen_js:
+            continue
+        seen_canon.add(ck)
+        seen_js.add(jk)
+        o_idx += 1
+        rec = dict(w)
+        rec['id'] = next_id
+        rec['no'] = next_id
+        rec['day'] = ((o_idx - 1) // 25) + 1
+        appended.append(rec)
+        next_id += 1
+
+    log(f"✅ {len(base_pool)} mevcut kayıt birebir korundu, +{len(appended)} yeni sözlük kaydı eklendi.")
+    write_word_database(base_pool + appended)
+
 def inline_asset_base64(html_str, filename, mime_type):
     """Inlines local binary assets as Base64 Data URIs for standalone offline robustness."""
     file_path = os.path.join(BASE_DIR, filename)
@@ -1150,6 +1257,7 @@ def main():
     parser.add_argument('--check', '-c', action='store_true', help="Learnish_Tek_Dosya_Web_App.html senkronizasyon kontrolü (senkron: exit 0, uyumsuz: exit 1)")
     parser.add_argument('--all', '--rebuild-db', action='store_true', help="Tam veritabanı ETL ve tek dosya derlemesi")
     parser.add_argument('--append-extra-yds', action='store_true', help="Mevcut 9.186 kelimeyi bozmadan ek YDS/YÖKDİL kaynaklarını havuza ekler")
+    parser.add_argument('--append-dictionary', action='store_true', help="Mevcut 9.994 kelimeyi bozmadan belgeler/dictionary_expansion.json kaynaklarını ekler")
 
     args = parser.parse_args()
 
@@ -1162,6 +1270,9 @@ def main():
         sys.exit(0)
     elif args.append_extra_yds:
         append_extra_yds_to_pool()
+        sys.exit(0)
+    elif args.append_dictionary:
+        append_dictionary_expansion()
         sys.exit(0)
     else:
         # Default behavior: full database extraction and bundling
