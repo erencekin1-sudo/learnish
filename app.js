@@ -5899,6 +5899,7 @@
   function selectLibraryLetter(letter) {
     const idx = getLibraryIndex();
     if (!idx.byLetter[letter]) return;
+    clearTimeout(_libraryWheelTimer); // bekleyen "çark durdu" kararı yeni seçimi ezmesin
     STATE.library.letter = letter;
     STATE.library.rendered = Math.min(LIBRARY_CHUNK, idx.byLetter[letter].length);
     refreshLibraryShelf();
@@ -5957,12 +5958,9 @@
   function centerLibraryWheel(smooth) {
     const wheel = document.getElementById('lib-wheel');
     const active = wheel && wheel.querySelector('.lib-wheel-l.is-active');
-    if (!active || typeof wheel.scrollTo !== 'function') return;
-    wheel._libProgrammatic = true;
-    const left = active.offsetLeft - (wheel.clientWidth - active.offsetWidth) / 2;
-    wheel.scrollTo({ left, behavior: smooth && !libraryReducedMotion() ? 'smooth' : 'auto' });
-    clearTimeout(wheel._libProgTimer);
-    wheel._libProgTimer = setTimeout(() => { wheel._libProgrammatic = false; }, 400);
+    if (!active || typeof active.scrollIntoView !== 'function') return;
+    // scrollIntoView, CSS scroll-snap noktasına oturur; elle hesaplanan konum snap ile çekişip döngüye giriyordu
+    active.scrollIntoView({ inline: 'center', block: 'nearest', behavior: smooth && !libraryReducedMotion() ? 'smooth' : 'auto' });
     if (!wheel._libScrollBound) {
       wheel._libScrollBound = true;
       wheel.addEventListener('scroll', onLibraryWheelScroll, { passive: true });
@@ -5972,7 +5970,7 @@
   // Çark parmakla çevrilip durunca ortadaki dolu harf seçilir
   function onLibraryWheelScroll() {
     const wheel = document.getElementById('lib-wheel');
-    if (!wheel || wheel._libProgrammatic) return;
+    if (!wheel) return;
     clearTimeout(_libraryWheelTimer);
     _libraryWheelTimer = setTimeout(() => {
       const mid = wheel.scrollLeft + wheel.clientWidth / 2;
@@ -5982,9 +5980,9 @@
         if (d < bestDist) { bestDist = d; best = b; }
       });
       const L = best && best.getAttribute('data-letter');
+      // Aynı harfte durduysa dokunma: hizalamayı CSS snap yapar (yeniden ortalamak snap ile döngü kuruyordu)
       if (L && L !== STATE.library.letter) selectLibraryLetter(L);
-      else centerLibraryWheel(true);
-    }, 120);
+    }, 140);
   }
 
   function libraryClickHandler(e) {
