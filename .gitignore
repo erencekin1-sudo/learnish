@@ -18,3 +18,7 @@ otomasyon.log
 # Vercel & Build
 .vercel
 node_modules/
+
+# Claude / superpowers çalışma alanları
+.superpowers/
+.claude/worktrees/
