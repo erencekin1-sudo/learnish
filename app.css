@@ -7343,3 +7343,64 @@ h1, h2, h3 { text-wrap: balance; line-height: 1.2; }
 @media (prefers-reduced-motion: reduce) {
   #view-directory *, #view-directory *::before, #view-directory *::after { transition: none !important; animation: none !important; scroll-behavior: auto !important; }
 }
+
+/* ----- Kitaplık: açılan kitap (çift sayfa) ----- */
+.lib-book-layer { position: fixed; inset: 0; z-index: calc(var(--z-modal) - 1); display: flex; align-items: center; justify-content: center; padding: 16px; }
+.lib-book-backdrop { position: absolute; inset: 0; background: rgba(23, 30, 25, 0.38); animation: libFade 0.25s var(--lib-ease); }
+.lib-spread {
+  position: relative; width: min(560px, 100%); max-height: min(78vh, 620px);
+  display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: minmax(0, 1fr) auto;
+  background: var(--lib-page); color: var(--lib-page-ink); border-radius: 14px;
+  box-shadow: 0 30px 60px -18px rgba(23, 30, 25, 0.55); overflow: hidden; outline: none;
+  touch-action: pan-y; animation: libOpen 0.28s var(--lib-ease);
+}
+.lib-page { padding: 20px 16px 12px; overflow-y: auto; overscroll-behavior: contain; min-height: 0; }
+.lib-page-l { border-right: 1px solid var(--lib-line); box-shadow: inset -14px 0 18px -16px rgba(23, 30, 25, 0.35); }
+.lib-page-r { box-shadow: inset 14px 0 18px -16px rgba(23, 30, 25, 0.35); }
+.lib-page-kicker, .lib-sec { font-size: 10px; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; color: var(--lib-ink-soft); }
+.lib-sec { margin-top: 14px; }
+.lib-sec:first-child { margin-top: 0; }
+.lib-book-word { margin: 6px 0 2px; font-size: 28px; line-height: 1.1; font-weight: 900; overflow-wrap: anywhere; }
+.lib-alt, .lib-ipa { font-size: 13px; font-weight: 700; color: var(--lib-ink-soft); }
+.lib-book-actions { display: flex; gap: 8px; margin-top: 12px; }
+.lib-round {
+  width: 44px; height: 44px; flex: none; border-radius: 50%; border: 1px solid var(--lib-line); background: var(--lib-surface);
+  color: var(--lib-page-ink); display: inline-flex; align-items: center; justify-content: center; font: 900 20px var(--dp-typography-face); cursor: pointer;
+}
+.lib-round svg { width: 18px; height: 18px; }
+.lib-round:disabled { opacity: 0.35; cursor: default; }
+.lib-fav.is-on { color: var(--lib-ribbon); background: rgba(202, 0, 19, 0.10); border-color: transparent; }
+.lib-sets { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; }
+.lib-sets span { font-size: 10px; font-weight: 800; letter-spacing: 0.05em; padding: 4px 9px; border-radius: var(--dp-radius-pill); background: rgba(183, 198, 194, 0.3); }
+.lib-tools { display: grid; grid-template-columns: 1fr; gap: 6px; margin-top: 14px; }
+.lib-tool {
+  min-height: 44px; display: flex; align-items: center; gap: 6px; padding: 0 10px; border-radius: 12px;
+  border: 1px solid var(--lib-line); background: transparent; color: var(--lib-page-ink);
+  font: 800 12px var(--dp-typography-face); cursor: pointer; text-align: left;
+}
+.lib-tool svg { width: 16px; height: 16px; flex: none; }
+.lib-tool.is-on { background: rgba(183, 198, 194, 0.35); border-color: transparent; }
+.lib-tr { margin: 4px 0 0; font-size: 17px; font-weight: 800; line-height: 1.35; }
+.lib-note { margin: 8px 0 0; font-size: 12px; font-weight: 700; color: var(--lib-ink-soft); }
+.lib-syns { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+.lib-syn {
+  min-height: 36px; padding: 0 12px; border-radius: var(--dp-radius-pill); border: 1px solid var(--lib-line);
+  background: var(--lib-surface); color: var(--lib-page-ink); font: 700 12px var(--dp-typography-face); cursor: pointer;
+}
+.lib-def, .lib-ex { margin: 4px 0 0; font-size: 13px; line-height: 1.5; }
+.lib-ex { font-style: italic; color: var(--lib-ink-soft); }
+.lib-book-nav {
+  grid-column: 1 / -1; display: flex; align-items: center; justify-content: center; gap: 10px;
+  padding: 10px 12px; border-top: 1px solid var(--lib-line);
+}
+.lib-book-pos { font-size: 11px; font-weight: 800; letter-spacing: 0.06em; color: var(--lib-ink-soft); min-width: 72px; text-align: center; }
+.lib-close { margin-left: auto; }
+@keyframes libFade { from { opacity: 0; } to { opacity: 1; } }
+@keyframes libOpen { from { opacity: 0; transform: scale(0.96) translateY(8px); } to { opacity: 1; transform: none; } }
+@media (max-width: 360px) {
+  .lib-spread { grid-template-columns: 1fr; grid-template-rows: auto minmax(0, 1fr) auto; overflow-y: auto; }
+  .lib-page { overflow: visible; }
+  .lib-page-l { border-right: 0; border-bottom: 1px solid var(--lib-line); box-shadow: none; }
+  .lib-page-r { box-shadow: none; }
+  .lib-book-nav { position: sticky; bottom: 0; background: var(--lib-page); }
+}

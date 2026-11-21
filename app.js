@@ -5885,6 +5885,7 @@
     container.onclick = libraryClickHandler;
     container.onkeydown = libraryKeyHandler;
     bindLibraryShelf();
+    bindLibraryBookGestures();
     centerLibraryWheel(false);
   }
 
@@ -6007,6 +6008,14 @@
   function libraryClickHandler(e) {
     const t = e.target;
     if (!t || !t.closest) return;
+    if (t.closest('#lib-book-layer')) {
+      if (t.closest('[data-lib-close]')) { closeLibraryBook(); return; }
+      const syn = t.closest('.lib-syn');
+      if (syn) { searchDirectory(syn.getAttribute('data-term')); return; }
+      const act = t.closest('[data-act]');
+      if (act && !act.disabled) libraryBookAction(act.getAttribute('data-act'));
+      return;
+    }
     const book = t.closest('.lib-book');
     if (book) {
       if (window.APP && typeof window.APP.openLibraryBook === 'function') window.APP.openLibraryBook(parseInt(book.getAttribute('data-id'), 10));
@@ -6026,7 +6035,15 @@
 
   function libraryKeyHandler(e) {
     const t = e.target;
-    if (!t || !t.closest || !t.closest('.lib-wheel')) return;
+    if (!t || !t.closest) return;
+    if (STATE.library.bookId != null && t.closest('#lib-book-layer')) {
+      if (e.key === 'Escape') { e.preventDefault(); closeLibraryBook(); }
+      else if ((e.key === 'ArrowLeft' || e.key === 'ArrowRight') && !t.closest('input, textarea')) {
+        e.preventDefault(); turnLibraryPage(e.key === 'ArrowRight' ? 1 : -1);
+      }
+      return;
+    }
+    if (!t.closest('.lib-wheel')) return;
     if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
     e.preventDefault();
     const letters = getLibraryIndex().letters;
@@ -6043,12 +6060,217 @@
   function syncLibrarySpine(wordId) {
     const shelf = document.getElementById('lib-shelf');
     const el = shelf && shelf.querySelector(`.lib-book[data-id="${wordId}"]`);
+    if (STATE.library.bookId === wordId) {
+      STATE.library.dirty = true;
+      refreshLibraryBook();
+    }
     if (!el) return;
     const ud = STATE.userData;
     el.classList.toggle('is-learned', ud.learned.has(wordId));
     el.classList.toggle('is-review', ud.review.has(wordId));
     el.classList.toggle('is-starred', ud.starred.has(wordId));
   }
+
+  // ==========================================================================
+  // KİTAPLIK: KİTAP (çift sayfa)
+  // ==========================================================================
+  let _libraryBookReturnFocus = null;
+
+  function libraryWordById(id) {
+    return WORDS_DATA.find(w => w.id === id) || null;
+  }
+
+  function librarySetsHtml(w) {
+    const sets = [];
+    if (isMaarifWord(w)) sets.push('MAARİF');
+    if (isOxfordWord(w)) sets.push('OXFORD');
+    if (isYDSWord(w)) sets.push('YDS');
+    return sets.length ? `<div class="lib-sets">${sets.map(s => `<span>${s}</span>`).join('')}</div>` : '';
+  }
+
+  function libraryBookLayerHtml() {
+    const w = libraryWordById(STATE.library.bookId);
+    if (!w) return '';
+    const ud = STATE.userData;
+    const learned = ud.learned.has(w.id), review = ud.review.has(w.id), starred = ud.starred.has(w.id);
+    const posLabel = w.pos ? (POS_LABELS[w.pos] || String(w.pos).toUpperCase()) : '';
+    const kicker = [w.cefr, posLabel].filter(Boolean).join(' · ');
+    const ipa = String(w.phonetic || '').trim();
+    const prep = extractPreposition(w);
+    const descLine = [w.desc, w.cat].filter(Boolean).join(' • ');
+    const syns = String(getWordSynonym(w) || '').split(/[,;]/).map(s => s.trim()).filter(Boolean);
+    const example = (STATE.activeModule === 'yds' && w.ydsExample) ? w.ydsExample : w.example;
+    const exampleText = example ? String(example).replace(/^["“”]|["“”]$/g, '') : '';
+    const shelf = libraryShelfWords();
+    const pos = shelf.findIndex(x => x.id === w.id);
+    const tool = (act, icon, label, pressed) =>
+      `<button type="button" class="lib-tool${pressed ? ' is-on' : ''}" data-act="${act}"${pressed === undefined ? '' : ` aria-pressed="${!!pressed}"`}>${icon}<span>${label}</span></button>`;
+
+    return `
+      <div class="lib-book-layer" id="lib-book-layer">
+        <div class="lib-book-backdrop" data-lib-close></div>
+        <div class="lib-spread" id="lib-spread" role="dialog" aria-modal="true" aria-labelledby="lib-book-word" tabindex="-1">
+          <div class="lib-page lib-page-l">
+            ${kicker ? `<div class="lib-page-kicker">${escapeHtml(kicker)}</div>` : ''}
+            <h3 class="lib-book-word" id="lib-book-word">${escapeHtml(w.en)}</h3>
+            ${w.alt ? `<div class="lib-alt">(${escapeHtml(w.alt)})</div>` : ''}
+            ${ipa ? `<div class="lib-ipa">${escapeHtml(ipa)}</div>` : ''}
+            <div class="lib-book-actions">
+              <button type="button" class="lib-round" data-act="speak" aria-label="Dinle: ${escapeHtml(w.en)}">${ICONS.speaker}</button>
+              <button type="button" class="lib-round lib-fav${starred ? ' is-on' : ''}" data-act="star" aria-pressed="${starred}" aria-label="${starred ? 'Favorilerden çıkar' : 'Favorilere ekle'}">${starred ? ICONS.starFilled : ICONS.starOutline}</button>
+            </div>
+            ${librarySetsHtml(w)}
+            <div class="lib-tools">
+              ${tool('learned', ICONS.check, learned ? 'Öğrendim' : 'Öğren', learned)}
+              ${tool('review', ICONS.repeat, review ? 'Tekrarda' : 'Tekrar', review)}
+              ${tool('coach', ICONS.mic, 'Telaffuz')}
+              ${tool('context', renderIcon('sparkles', 16), 'Bağlam')}
+            </div>
+          </div>
+          <div class="lib-page lib-page-r">
+            ${w.tr ? `<div class="lib-sec">Anlamı</div><p class="lib-tr">${escapeHtml(w.tr)}</p>` : ''}
+            ${prep ? `<p class="lib-note">Edat ipucu: <b>${escapeHtml(prep)}</b></p>` : ''}
+            ${descLine ? `<p class="lib-note">${escapeHtml(descLine)}</p>` : ''}
+            ${syns.length ? `<div class="lib-sec">Eş anlam</div><div class="lib-syns">${syns.map(s => `<button type="button" class="lib-syn" data-term="${escapeHtml(s)}">${escapeHtml(s)}</button>`).join('')}</div>` : ''}
+            ${w.definition ? `<div class="lib-sec">Tanım</div><p class="lib-def">${escapeHtml(w.definition)}</p>` : ''}
+            ${exampleText ? `<div class="lib-sec">Örnek</div><p class="lib-ex">“${escapeHtml(exampleText)}”</p>` : ''}
+          </div>
+          <div class="lib-book-nav">
+            <button type="button" class="lib-round" data-act="prev" aria-label="Önceki kitap"${pos <= 0 ? ' disabled' : ''}>‹</button>
+            ${pos >= 0 ? `<span class="lib-book-pos">${(pos + 1).toLocaleString('tr-TR')} / ${shelf.length.toLocaleString('tr-TR')}</span>` : ''}
+            <button type="button" class="lib-round" data-act="next" aria-label="Sonraki kitap"${pos < 0 || pos >= shelf.length - 1 ? ' disabled' : ''}>›</button>
+            <button type="button" class="lib-round lib-close" data-lib-close aria-label="Kitabı kapat">${renderIcon('cross', 18)}</button>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  // Kitap katmanını yerinde (yeniden) çiz; raf DOM'u yoksa tam çizim
+  function refreshLibraryBook() {
+    const container = document.getElementById('view-directory');
+    const shelf = document.getElementById('lib-shelf');
+    if (!container || !shelf) { renderDirectoryView(); return; }
+    const old = document.getElementById('lib-book-layer');
+    if (old) old.remove();
+    if (STATE.library.bookId == null) return;
+    container.insertAdjacentHTML('beforeend', libraryBookLayerHtml());
+    bindLibraryBookGestures();
+    const spread = document.getElementById('lib-spread');
+    if (spread) spread.focus({ preventScroll: true });
+  }
+
+  function openLibraryBook(id) {
+    id = parseInt(id, 10);
+    const w = libraryWordById(id);
+    if (!w) return;
+    const wasOpen = STATE.library.bookId != null;
+    const idx = getLibraryIndex();
+    const L = libraryLetterOf(w);
+    const shelf = idx.byLetter[L] || [];
+    const i = shelf.findIndex(x => x.id === id);
+    if (i >= 0) {
+      if (STATE.library.letter !== L) {
+        STATE.library.letter = L;
+        STATE.library.rendered = Math.min(shelf.length, Math.max(LIBRARY_CHUNK, Math.ceil((i + 1) / LIBRARY_CHUNK) * LIBRARY_CHUNK));
+        refreshLibraryShelf();
+        centerLibraryWheel(false);
+      } else {
+        while (STATE.library.rendered <= i) appendLibraryBooks();
+      }
+    }
+    if (!wasOpen) {
+      _libraryBookReturnFocus = id;
+      try { if (window.history && history.pushState) history.pushState({ libBook: true }, '', location.hash || '#directory'); } catch (e) { /* geri tuşu desteği isteğe bağlı */ }
+    }
+    STATE.library.bookId = id;
+    refreshLibraryBook();
+    const spine = document.querySelector(`.lib-book[data-id="${id}"]`);
+    if (spine && spine.scrollIntoView) spine.scrollIntoView({ inline: 'center', block: 'nearest', behavior: 'auto' });
+  }
+
+  function closeLibraryBook(fromHistory) {
+    if (STATE.library.bookId == null) return;
+    const returnId = _libraryBookReturnFocus;
+    STATE.library.bookId = null;
+    if (STATE.library.dirty) {
+      STATE.library.dirty = false;
+      renderDirectoryView(); // durum filtresine artık uymayan kitap raftan düşer
+    } else {
+      refreshLibraryBook();
+    }
+    if (!fromHistory) {
+      try { if (history.state && history.state.libBook && history.back) history.back(); } catch (e) { /* yok say */ }
+    }
+    const spine = returnId != null && document.querySelector(`.lib-book[data-id="${returnId}"]`);
+    if (spine && spine.focus) spine.focus({ preventScroll: true });
+  }
+
+  function turnLibraryPage(delta) {
+    const shelf = libraryShelfWords();
+    const i = shelf.findIndex(x => x.id === STATE.library.bookId);
+    if (i < 0) return;
+    const next = shelf[i + delta];
+    if (!next) return; // rafın başı/sonu: sarmaz
+    _libraryBookReturnFocus = next.id;
+    openLibraryBook(next.id);
+  }
+
+  function libraryBookAction(act) {
+    const w = libraryWordById(STATE.library.bookId);
+    if (!w) return;
+    if (act === 'speak') speakWord(w.en);
+    else if (act === 'star') toggleStarred(w.id);
+    else if (act === 'learned') toggleLearned(w.id);
+    else if (act === 'review') toggleReview(w.id);
+    else if (act === 'coach') openSpeechCoach(w.en);
+    else if (act === 'context') openClassifierForWord(w.en);
+    else if (act === 'prev') turnLibraryPage(-1);
+    else if (act === 'next') turnLibraryPage(1);
+  }
+
+  // Yatay sürükleme = sayfa çevir; aşağı sürükleme = kapat (sayfa metni kaydırılmışken değil).
+  // Dokunmada touch olayları kullanılır: tarayıcı dikey kaydırmayı üstlenince pointer olayları iptal olur.
+  function libraryGestureEnd(start, x, y, target) {
+    const dx = x - start.x, dy = y - start.y;
+    if (Math.abs(dx) > 40 && Math.abs(dx) > Math.abs(dy) * 1.2) { turnLibraryPage(dx < 0 ? 1 : -1); return; }
+    const page = target && target.closest && target.closest('.lib-page');
+    if (dy > 80 && Math.abs(dy) > Math.abs(dx) && start.scrollTop === 0 && (!page || page.scrollTop === 0)) closeLibraryBook();
+  }
+
+  function bindLibraryBookGestures() {
+    const spread = document.getElementById('lib-spread');
+    if (!spread || !spread.addEventListener) return;
+    let start = null;
+    const pageTop = (t) => { const p = t && t.closest && t.closest('.lib-page'); return p ? p.scrollTop : 0; };
+    spread.addEventListener('touchstart', (e) => {
+      const p = e.changedTouches[0];
+      start = { x: p.clientX, y: p.clientY, scrollTop: pageTop(e.target) };
+    }, { passive: true });
+    spread.addEventListener('touchend', (e) => {
+      if (!start) return;
+      const p = e.changedTouches[0];
+      libraryGestureEnd(start, p.clientX, p.clientY, e.target);
+      start = null;
+    }, { passive: true });
+    spread.addEventListener('pointerdown', (e) => {
+      if (e.pointerType === 'touch') return;
+      start = { x: e.clientX, y: e.clientY, scrollTop: pageTop(e.target) };
+    });
+    spread.addEventListener('pointerup', (e) => {
+      if (e.pointerType === 'touch' || !start) return;
+      libraryGestureEnd(start, e.clientX, e.clientY, e.target);
+      start = null;
+    });
+  }
+
+  function libraryOverlaysHtml() {
+    return STATE.library.bookId != null ? libraryBookLayerHtml() : '';
+  }
+
+  window.addEventListener('popstate', () => {
+    if (STATE.library.bookId != null) closeLibraryBook(true);
+  });
 
   // ==========================================================================
   // VIEW 5: İSTATİSTİKLER & ANALİZ (Maarif vs YDS vs Oxford)
@@ -7887,6 +8109,9 @@
     selectLibraryLetter,
     appendLibraryBooks,
     jumpLibraryRuler,
+    openLibraryBook,
+    closeLibraryBook,
+    turnLibraryPage,
     librarySuggest,
     clearDirectorySearch,
     clearDirectoryFilters,

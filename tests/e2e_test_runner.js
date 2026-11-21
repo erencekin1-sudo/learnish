@@ -1199,6 +1199,68 @@ registerTest(1, 'Library Shelf', 'test_library_starred_book_has_ribbon', () => {
   assertIncludes(env.document.getElementById('view-directory').innerHTML, `is-starred" data-id="${w.id}"`);
 });
 
+registerTest(1, 'Library Book', 'test_library_open_book_shows_both_pages', () => {
+  const env = createFreshAppEnvironment();
+  env.APP.switchView('directory');
+  const w = env.window.WORDS_DATA.find(x => x.en === 'abandon');
+  env.APP.openLibraryBook(w.id);
+  const html = env.document.getElementById('view-directory').innerHTML;
+  assertIncludes(html, 'role="dialog"');
+  assertIncludes(html, '>abandon<');
+  assertIncludes(html, w.tr);
+  ['learned','review','coach','context'].forEach(a => assertIncludes(html, `data-act="${a}"`));
+  assertEqual(env.APP.getState().library.letter, 'A');
+});
+
+registerTest(1, 'Library Book', 'test_library_turn_page_moves_to_neighbor_and_stops_at_ends', () => {
+  const env = createFreshAppEnvironment();
+  env.APP.switchView('directory');
+  const shelf = env.APP.buildLibraryIndex(env.APP.getFilteredDirectoryWords()).byLetter.Z;
+  env.APP.openLibraryBook(shelf[0].id);
+  env.APP.turnLibraryPage(-1);
+  assertEqual(env.APP.getState().library.bookId, shelf[0].id);
+  env.APP.turnLibraryPage(1);
+  assertEqual(env.APP.getState().library.bookId, shelf[1].id);
+  env.APP.openLibraryBook(shelf[shelf.length - 1].id);
+  env.APP.turnLibraryPage(1);
+  assertEqual(env.APP.getState().library.bookId, shelf[shelf.length - 1].id);
+});
+
+registerTest(1, 'Library Book', 'test_library_book_handles_missing_fields', () => {
+  const env = createFreshAppEnvironment();
+  const data = env.window.WORDS_DATA; // ortamlar arası paylaşılan dizi: mutlaka geri al
+  data.push({ id: 999999, en: 'zzzbare', tr: 'çıplak' });
+  try {
+    env.APP.switchView('directory');
+    env.APP.openLibraryBook(999999);
+    const html = env.document.getElementById('view-directory').innerHTML;
+    ['undefined', 'null', 'Örnek</', 'Eş anlam</'].forEach(s => assert(!html.includes(s), `kitapta "${s}" olmamalı`));
+  } finally { data.pop(); }
+});
+
+registerTest(3, 'Library Book', 'test_library_status_toggle_refreshes_on_close', () => {
+  const env = createFreshAppEnvironment();
+  const w = env.window.WORDS_DATA.find(x => x.en === 'abandon');
+  env.APP.toggleReview(w.id);
+  env.APP.switchView('directory');
+  env.APP.getState().directoryFilters.status = 'review';
+  env.APP.renderDirectoryView();
+  env.APP.openLibraryBook(w.id);
+  env.APP.toggleReview(w.id);
+  assertEqual(env.APP.getState().library.bookId, w.id, 'kitap açık kalır');
+  env.APP.closeLibraryBook();
+  assert(!env.document.getElementById('view-directory').innerHTML.includes(`data-id="${w.id}"`), 'artık uymayan kitap raftan düşer');
+});
+
+registerTest(1, 'Library Book', 'test_library_close_book', () => {
+  const env = createFreshAppEnvironment();
+  env.APP.switchView('directory');
+  env.APP.openLibraryBook(env.window.WORDS_DATA.find(x => x.en === 'abandon').id);
+  env.APP.closeLibraryBook();
+  assertEqual(env.APP.getState().library.bookId, null);
+  assert(!env.document.getElementById('view-directory').innerHTML.includes('role="dialog"'));
+});
+
 // --- 1.5 Word Directory Search & Filters (6 Tests) ---
 
 registerTest(1, 'Word Directory', 'test_directory_filter_by_pos', () => {
