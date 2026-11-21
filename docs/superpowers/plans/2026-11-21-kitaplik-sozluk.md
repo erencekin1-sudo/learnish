@@ -455,3 +455,11 @@ Güncellenen eski testler: `filter_by_cefr` → `setLibraryFilter('cefr','A1')` 
 
 ## Task 0 sonrası taban çizgisi
 (Task 0 Step 3'te doldurulur.)
+
+Task 0 sonrası (2026-11-21): 88 testten 83 PASS, 5 FAIL. Kalan 5'i kitaplıkla ilgisiz, önceden var olan uygulama hataları:
+- `test_nav_home_view_orientation_and_modules_guide` — "Home view should contain module guide section"
+- `test_grade_modal_all_modules_clickable_and_scrollable` — tanımsız `--dp-color-ink-secondary` (`app.css:6368`)
+- `test_pdf_worksheet_generation_curriculum` — "5th grade curriculum target words should not be empty"
+- `test_pdf_worksheet_generation_quiz_with_answer_key` — "Quiz worksheet with 20 limit should generate exactly 20 questions"
+- `test_pdf_worksheet_generation_cut_fold_flashcards` — "Flashcard worksheet should contain cut card elements"
+Sonraki görevlerin kuralı: bu listeye yeni test eklenmez.

@@ -391,7 +391,12 @@ function createFreshAppEnvironment(options = {}) {
       const list = domListeners[evt.type] || [];
       list.forEach(fn => fn(evt));
     },
-    startViewTransition: (cb) => { if (cb) cb(); }
+    // Gerçek API gibi ready/finished/updateCallbackDone sözleri döndürür (app.js switchView bunları kullanır)
+    startViewTransition: (cb) => {
+      if (cb) cb();
+      const done = Promise.resolve();
+      return { ready: done, finished: done, updateCallbackDone: done, skipTransition() {} };
+    }
   };
 
   const spokenUtterances = [];
@@ -417,7 +422,7 @@ function createFreshAppEnvironment(options = {}) {
     sessionStorage: localStorageMock,
     navigator: {
       userAgent: 'LearnishNodeE2ETestEngine/1.0',
-      serviceWorker: { register: () => Promise.resolve() }
+      serviceWorker: { controller: null, register: () => Promise.resolve({ addEventListener() {}, installing: null, waiting: null }), addEventListener() {}, removeEventListener() {} }
     },
     speechSynthesis: options.speechSynthesis !== undefined ? options.speechSynthesis : {
       speak: (utt) => spokenUtterances.push(utt),
@@ -469,6 +474,11 @@ function createFreshAppEnvironment(options = {}) {
     clearTimeout: clearTimeout,
     setInterval: setInterval,
     clearInterval: clearInterval,
+    matchMedia: (query) => ({
+      matches: !!options.reducedMotion && /prefers-reduced-motion:\s*reduce/.test(String(query)),
+      media: String(query),
+      addEventListener() {}, removeEventListener() {}, addListener() {}, removeListener() {}
+    }),
     requestAnimationFrame: (cb) => setTimeout(cb, 16),
     cancelAnimationFrame: (id) => clearTimeout(id),
     CURRICULUM_DATA: SHARED_CURRICULUM_DATA,
@@ -498,6 +508,7 @@ function createFreshAppEnvironment(options = {}) {
     alert: windowMock.alert,
     setTimeout: windowMock.setTimeout,
     clearTimeout: windowMock.clearTimeout,
+    matchMedia: windowMock.matchMedia,
     setInterval: windowMock.setInterval,
     clearInterval: windowMock.clearInterval,
     CURRICULUM_DATA: SHARED_CURRICULUM_DATA,
