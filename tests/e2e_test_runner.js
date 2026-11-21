@@ -1094,6 +1094,55 @@ registerTest(1, 'Quiz Engine', 'test_quiz_advance_to_next_question', () => {
   assertEqual(env.APP.getState().quizState.answered, false, 'answered state should reset for next question');
 });
 
+// --- 1.5b Kitaplık Veri Yardımcıları ---
+
+registerTest(1, 'Library Data', 'test_library_letter_of', () => {
+  const { APP } = createFreshAppEnvironment();
+  assertEqual(APP.libraryLetterOf({ en: 'abandon' }), 'A');
+  assertEqual(APP.libraryLetterOf({ en: ' Éclair' }), 'E');
+  assertEqual(APP.libraryLetterOf({ en: '1st' }), '#');
+  assertEqual(APP.libraryLetterOf({ en: 'Ƒoo' }), '#');
+});
+
+registerTest(1, 'Library Data', 'test_library_index_groups_and_sorts', () => {
+  const { APP } = createFreshAppEnvironment();
+  const idx = APP.buildLibraryIndex([{ id:1,en:'dog' },{ id:2,en:'apple' },{ id:3,en:'Desk' },{ id:4,en:'1st' }]);
+  assertDeepEqual(idx.letters, ['A','D','#']);
+  assertDeepEqual(idx.byLetter.D.map(w => w.en), ['Desk','dog']);
+});
+
+registerTest(1, 'Library Data', 'test_library_spine_tone_and_size', () => {
+  const { APP } = createFreshAppEnvironment();
+  assertEqual(APP.spineToneClass('A1'), 'tone-a1');
+  assertEqual(APP.spineToneClass('C2+'), 'tone-c2');
+  assertEqual(APP.spineToneClass(undefined), 'tone-a2');
+  assertEqual(APP.spineHeightPx({ id: 3, en: 'go' }), 138);
+  assertEqual(APP.spineHeightPx({ id: 5, en: 'x'.repeat(68) }), 190);
+  assertEqual(APP.spineLabel('be in charge of something important'), 'be in charge of somet…');
+  assertEqual(APP.spineLabel('decide'), 'decide');
+});
+
+registerTest(1, 'Library Data', 'test_library_ruler_groups', () => {
+  const { APP } = createFreshAppEnvironment();
+  const mk = (p, n) => Array.from({ length: n }, (_, i) => ({ id: i, en: p + String.fromCharCode(97 + (i % 26)) + i }));
+  assertDeepEqual(APP.shelfRulerGroups(mk('da', 59)), []);
+  const words = [...mk('da',20),...mk('de',20),...mk('di',20),...mk('do',20)];
+  assertDeepEqual(APP.shelfRulerGroups(words), [
+    { label:'DA', index:0 }, { label:'DE', index:20 }, { label:'DI', index:40 }, { label:'DO', index:60 }]);
+  const many = 'abcdefghij'.split('').flatMap(c => mk('d' + c, 10));
+  const g = APP.shelfRulerGroups(many);
+  assert(g.length <= 8, 'en fazla 8 grup');
+  assertEqual(g[0].index, 0);
+  assert(g.some(x => x.label.includes('–')), 'birleşen gruplar "DA–DB" biçiminde');
+});
+
+registerTest(1, 'Library Data', 'test_filtered_words_ignore_search', () => {
+  const env = createFreshAppEnvironment();
+  const before = env.APP.getFilteredDirectoryWords().length;
+  env.APP.getState().directoryFilters.search = 'abandon';
+  assertEqual(env.APP.getFilteredDirectoryWords().length, before);
+});
+
 // --- 1.5 Word Directory Search & Filters (6 Tests) ---
 
 registerTest(1, 'Word Directory', 'test_directory_search_by_english_word', () => {

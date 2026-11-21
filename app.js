@@ -5630,16 +5630,7 @@
       pool = pool.filter(w => STATE.userData.starred.has(w.id));
     }
 
-    if (filters.search && filters.search.trim()) {
-      const q = filters.search.trim().toLowerCase();
-      pool = pool.filter(w => 
-        w.en.toLowerCase().includes(q) || 
-        (w.alt && w.alt.toLowerCase().includes(q)) ||
-        (w.tr && w.tr.toLowerCase().includes(q)) ||
-        (w.synonym && w.synonym.toLowerCase().includes(q)) ||
-        (w.definition && w.definition.toLowerCase().includes(q))
-      );
-    }
+    // Arama rafı süzmez (kitaplık spec §6.6); arama yalnızca öneri listesini besler.
 
     // Deduplication safeguard: ensure each normalized English headword appears strictly once
     const seenWords = new Set();
@@ -5651,6 +5642,69 @@
     });
 
     return pool;
+  }
+
+  // ==========================================================================
+  // KİTAPLIK: VERİ (raf = harf, kitap = kelime)
+  // ==========================================================================
+  // İlk iki harfi (aksansız, büyük) döndürür; harf olmayanlar atlanmaz, olduğu gibi kalır
+  function _libraryFold(s) {
+    return String(s || '').trim().normalize('NFD').replace(/[̀-ͯ]/g, '').toUpperCase();
+  }
+
+  function libraryLetterOf(word) {
+    const c = _libraryFold(word && word.en).charAt(0);
+    return c >= 'A' && c <= 'Z' ? c : '#';
+  }
+
+  function buildLibraryIndex(words) {
+    const byLetter = {};
+    for (const w of words) {
+      const L = libraryLetterOf(w);
+      (byLetter[L] || (byLetter[L] = [])).push(w);
+    }
+    const cmp = (a, b) => String(a.en).localeCompare(String(b.en), 'en', { sensitivity: 'base' });
+    Object.values(byLetter).forEach(list => list.sort(cmp));
+    const letters = Object.keys(byLetter).filter(L => L !== '#').sort();
+    if (byLetter['#']) letters.push('#');
+    return { letters, byLetter };
+  }
+
+  const SPINE_TONES = { A1: 'tone-a1', A2: 'tone-a2', B1: 'tone-b1', B2: 'tone-b2', C1: 'tone-c1', C2: 'tone-c2', 'C2+': 'tone-c2' };
+  function spineToneClass(cefr) {
+    return SPINE_TONES[String(cefr || '').toUpperCase()] || 'tone-a2';
+  }
+
+  function spineHeightPx(word) {
+    const len = String((word && word.en) || '').length;
+    return 130 + Math.min(len, 14) * 4 + ((Number(word && word.id) || 0) % 3) * 2;
+  }
+
+  function spineLabel(en) {
+    const s = String(en || '');
+    return s.length > 22 ? s.slice(0, 21) + '…' : s;
+  }
+
+  // Harf içi atlama cetveli: ilk iki harfe göre kovalar, en fazla 8; fazlası en küçük komşu çiftler birleşerek azalır
+  function shelfRulerGroups(words) {
+    if (!words || words.length < 60) return [];
+    const buckets = [];
+    words.forEach((w, i) => {
+      const f = _libraryFold(w.en);
+      const key = /[A-Z]/.test(f.charAt(1)) ? f.slice(0, 2) : f.charAt(0);
+      const last = buckets[buckets.length - 1];
+      if (last && last.last === key) last.count++;
+      else buckets.push({ first: key, last: key, index: i, count: 1 });
+    });
+    while (buckets.length > 8) {
+      let best = 0;
+      for (let i = 1; i < buckets.length - 1; i++) {
+        if (buckets[i].count + buckets[i + 1].count < buckets[best].count + buckets[best + 1].count) best = i;
+      }
+      const a = buckets[best], b = buckets[best + 1];
+      buckets.splice(best, 2, { first: a.first, last: b.last, index: a.index, count: a.count + b.count });
+    }
+    return buckets.map(b => ({ label: b.first === b.last ? b.first : `${b.first}–${b.last}`, index: b.index }));
   }
 
   // Kısa ve sade kelime türü rozeti etiketleri
@@ -7825,6 +7879,13 @@
     toggleWordCard,
     wordCardKey,
     searchDirectory,
+    getFilteredDirectoryWords,
+    libraryLetterOf,
+    buildLibraryIndex,
+    spineToneClass,
+    spineHeightPx,
+    spineLabel,
+    shelfRulerGroups,
     clearDirectorySearch,
     clearDirectoryFilters,
     resetAllProgress,
