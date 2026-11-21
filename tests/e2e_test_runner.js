@@ -1809,6 +1809,31 @@ registerTest(1, 'PDF & Worksheet Studio', 'test_pdf_settings_are_template_specif
   assert(htmlTr.length > htmlNoTr.length, 'Flashcard showTr toggle must actually change the output');
 });
 
+registerTest(1, 'PDF & Worksheet Studio', 'test_pdf_yds_oxford_scope_not_grade5', () => {
+  const env = createFreshAppEnvironment();
+  env.APP.openPdfStudio('mistakes');
+
+  // YDS havuzu + şablon değişimi: kapsam 5. sınıfa düşmemeli, YDS havuzu gelmeli.
+  env.APP.updatePdfStudioOption('grade', 'yds');
+  env.APP.updatePdfStudioOption('template', 'flashcards');
+  assertEqual(env.APP.PDF_STUDIO_STATE.scope, 'all', 'YDS + template switch must land on the full pool, not current_week');
+  let words = env.APP.getWorksheetTargetWords(env.APP.PDF_STUDIO_STATE);
+  assert(words.length > 0, 'YDS flashcards should produce words');
+  const isYds = typeof env.APP.isYDSWord === 'function' ? env.APP.isYDSWord : null;
+  if (isYds) {
+    assert(words.every(w => isYds(w)), 'Every YDS worksheet word must come from the YDS pool, not grade 5');
+  } else {
+    // isYDSWord dışa verili değilse: en azından 5. sınıf ilkokul kelimesi gelmediğini doğrula.
+    assert(!words.slice(0, 5).map(w => w.en).includes('rubbish'), 'YDS sheet must not start with grade-5 words');
+  }
+
+  // Sıra ters olsa da (önce şablon, sonra havuz) kapsam yine düzelmeli.
+  env.APP.updatePdfStudioOption('template', 'quiz');
+  env.APP.updatePdfStudioOption('grade', 'oxford');
+  assert(env.APP.PDF_STUDIO_STATE.scope !== 'current_week' && env.APP.PDF_STUDIO_STATE.scope !== 'unit',
+    'Switching grade to Oxford must drop grade-only scopes (current_week/unit)');
+});
+
 // --- 1.9 Feedback & Bug Reporter (5 Tests) ---
 
 registerTest(1, 'Feedback & Bug Reporter', 'test_feedback_modal_elements_and_open_close', () => {

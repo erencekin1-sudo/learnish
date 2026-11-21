@@ -3292,8 +3292,11 @@
 
   // Her şablonun doğal kapsamı. Şablon değişince kapsam buna çekilir ki, varsayılan boş
   // "Yanlışlarım" kapsamı diğer şablonları (quiz/müfredat/kes-katla) boş bırakmasın.
-  function defaultScopeForTemplate(t) {
-    return t === 'mistakes' ? 'mistakes' : 'current_week';
+  // YDS/Oxford havuzlarında "bu hafta"/"ünite" kavramı yoktur (current_week sessizce
+  // 5. sınıfa düşer), o yüzden onlarda doğal kapsam tüm havuzdur.
+  function defaultScopeForTemplate(t, grade) {
+    if (t === 'mistakes') return 'mistakes';
+    return (grade === 'yds' || grade === 'oxford') ? 'all' : 'current_week';
   }
 
   // Quiz şık düzenini kelime kümesine göre SABİTLER. Alakasız bir ayar değişip önizleme
@@ -3583,10 +3586,10 @@
       PDF_STUDIO_STATE.grade = STATE.selectedGrade || 5;
     } else if (presetMode === 'quiz') {
       PDF_STUDIO_STATE.template = 'quiz';
-      PDF_STUDIO_STATE.scope = defaultScopeForTemplate('quiz');
+      PDF_STUDIO_STATE.scope = defaultScopeForTemplate('quiz', PDF_STUDIO_STATE.grade);
     } else if (presetMode === 'flashcards') {
       PDF_STUDIO_STATE.template = 'flashcards';
-      PDF_STUDIO_STATE.scope = defaultScopeForTemplate('flashcards');
+      PDF_STUDIO_STATE.scope = defaultScopeForTemplate('flashcards', PDF_STUDIO_STATE.grade);
     }
 
     const dialog = document.getElementById('pdf-dialog');
@@ -3610,9 +3613,16 @@
 
   function updatePdfStudioOption(key, value) {
     PDF_STUDIO_STATE[key] = value;
-    // Şablon değişince kapsamı o şablonun doğal kapsamına çek (boş "Yanlışlarım" tuzağını önler).
+    // Şablon değişince kapsamı o şablonun (ve seçili havuzun) doğal kapsamına çek
+    // (boş "Yanlışlarım" tuzağını ve YDS/Oxford'da 5. sınıfa düşmeyi önler).
     if (key === 'template') {
-      PDF_STUDIO_STATE.scope = defaultScopeForTemplate(value);
+      PDF_STUDIO_STATE.scope = defaultScopeForTemplate(value, PDF_STUDIO_STATE.grade);
+    }
+    // Havuz YDS/Oxford'a geçerken, sınıfa bağlı kapsamlar (bu hafta / ünite) anlamsızdır
+    // ve sessizce 5. sınıfa düşer; genel havuza çek.
+    if (key === 'grade' && (value === 'yds' || value === 'oxford') &&
+        (PDF_STUDIO_STATE.scope === 'current_week' || PDF_STUDIO_STATE.scope === 'unit')) {
+      PDF_STUDIO_STATE.scope = 'all';
     }
     renderPdfPreview();
     if (key === 'template' || key === 'grade' || key === 'scope') {
@@ -3623,13 +3633,13 @@
   // Kapsam seçenekleri; sınıf havuzu YDS/Oxford iken ünite bazlı seçim yoktur.
   function pdfScopeOptionsHtml(state) {
     const gNum = parseInt(state.grade, 10);
-    const hasUnits = gNum >= 1 && gNum <= 12;
+    const hasUnits = gNum >= 1 && gNum <= 12; // YDS/Oxford'da hafta/ünite kavramı yok
     return [
       `<option value="mistakes" ${state.scope === 'mistakes' ? 'selected' : ''}>Yanlışlarım (Hata Defteri)</option>`,
-      `<option value="current_week" ${state.scope === 'current_week' ? 'selected' : ''}>Bu Haftanın Hedef Kelimeleri</option>`,
+      hasUnits ? `<option value="current_week" ${state.scope === 'current_week' ? 'selected' : ''}>Bu Haftanın Hedef Kelimeleri</option>` : '',
       hasUnits ? `<option value="unit" ${state.scope === 'unit' ? 'selected' : ''}>Seçili Ünite Kelimeleri</option>` : '',
       `<option value="starred" ${state.scope === 'starred' ? 'selected' : ''}>Yıldızlı / Favorilerim</option>`,
-      `<option value="all" ${state.scope === 'all' ? 'selected' : ''}>Sınıf Genel Havuzu</option>`
+      `<option value="all" ${state.scope === 'all' ? 'selected' : ''}>${hasUnits ? 'Sınıf Genel Havuzu' : 'Havuzun Tamamı'}</option>`
     ].join('');
   }
 
@@ -8524,6 +8534,8 @@
     downloadWorksheetHtml,
     generateWorksheetHTML,
     getWorksheetTargetWords,
+    isYDSWord,
+    isOxfordWord,
     resolveCurriculumWord,
     lookupCurriculumWord,
     getActiveGradePool,
