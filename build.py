@@ -22,6 +22,7 @@ KELIMELER_HAVUZU_PATH = os.path.join(BASE_DIR, 'belgeler', 'kelimeler_havuzu.jso
 SERVICE_WORKER_PATH = os.path.join(BASE_DIR, 'service-worker.js')
 SINGLE_HTML_PATH = os.path.join(BASE_DIR, 'Learnish_Tek_Dosya_Web_App.html')
 YDS_PDF_PATH = os.path.join(BASE_DIR, 'belgeler', 'YDS İngilizce 2020–2026 Kelime ve Kalıp Tabloları.pdf')
+YDS_EXTRA_SOURCES_PATH = os.path.join(BASE_DIR, 'belgeler', 'yds_extra_sources.json')
 
 def log(msg):
     print(f"[Learnish Builder] {msg}")
@@ -129,6 +130,11 @@ def get_canonical_key(s):
     cleaned = clean_word_string(s).lower()
     if cleaned in CANONICAL_MAPPINGS:
         cleaned = CANONICAL_MAPPINGS[cleaned].lower()
+    return re.sub(r'[\s\-_~]+', '', cleaned)
+
+def js_norm_key(s):
+    cleaned = (s or '').strip().lower()
+    cleaned = re.sub(r'[\.\!\?,;:]+$', '', cleaned)
     return re.sub(r'[\s\-_~]+', '', cleaned)
 
 def merge_entry(entry, w):
@@ -491,6 +497,46 @@ def parse_yds_pdf():
     log(f"✅ Toplam {len(yds_items)} YDS & YÖKDİL maddesi başarıyla ayrıştırıldı.")
     return yds_items
 
+def load_extra_yds_sources():
+    """Load deduplicated & enriched YDS/YÖKDİL words from belgeler/yds_extra_sources.json."""
+    if not os.path.exists(YDS_EXTRA_SOURCES_PATH):
+        return []
+    with open(YDS_EXTRA_SOURCES_PATH, 'r', encoding='utf-8') as f:
+        items = json.load(f)
+
+    extra_words = []
+    for item in items:
+        en = (item.get('en') or '').strip()
+        if not en:
+            continue
+        extra_words.append({
+            'en': en,
+            'tr': (item.get('tr') or '').strip(),
+            'desc': (item.get('desc') or '').strip(),
+            'pos': (item.get('pos') or '').strip(),
+            'cefr': (item.get('cefr') or 'B2').strip(),
+            'cat': (item.get('cat') or 'YDS & YÖKDİL (İsim, Sıfat ve Zarf)').strip(),
+            'themeNum': 10,
+            'themeCode': 'YDS/YÖKDİL',
+            'themeTitle': 'YDS & YÖKDİL AKADEMİK',
+            'themeTitleTr': 'YDS & YÖKDİL Akademik Sınav Hazırlık (2020–2026)',
+            'dataset': 'yds',
+            'datasets': ['yds'],
+            'isMaarif': False,
+            'isOxford': False,
+            'isYds': True,
+            'isExtraYds': True,
+            'ydsStats': '',
+            'ydsExample': '',
+            'phonetic': '',
+            'definition': '',
+            'example': (item.get('example') or '').strip(),
+            'synonym': '',
+            'alt': ''
+        })
+    log(f"✅ {len(extra_words)} adet ek YDS & YÖKDİL kaynağı yüklendi.")
+    return extra_words
+
 # 4. Build deduplicated master database
 def build_combined_database():
     maarif_words = load_maarif_words()
@@ -548,16 +594,34 @@ def build_combined_database():
 
     log(f"✅ YDS birleştirildi: Havuzda toplam {len(pool_dict)} benzersiz kelime/kalıp!")
 
+    # Step 4: Merge extra YDS/YÖKDİL PDF sources (never overwrite existing entries)
+    extra_yds_words = load_extra_yds_sources()
+    existing_js_keys = {js_norm_key(v.get('en', '')) for v in pool_dict.values()}
+    for v in pool_dict.values():
+        if v.get('alt'):
+            existing_js_keys.add(js_norm_key(v['alt']))
+    added_extra = 0
+    for w in extra_yds_words:
+        key = get_canonical_key(w['en'])
+        jkey = js_norm_key(w['en'])
+        if key not in pool_dict and jkey not in existing_js_keys:
+            pool_dict[key] = dict(w)
+            existing_js_keys.add(jkey)
+            added_extra += 1
+
+    log(f"✅ Ek YDS kaynakları birleştirildi (+{added_extra}): Havuzda toplam {len(pool_dict)} benzersiz kelime/kalıp!")
+
     # Assign sequential IDs and Days
     combined_words = list(pool_dict.values())
     
-    # Sort order: Maarif words first, then Oxford words, then new YDS expressions
+    # Sort order: Maarif words first, then Oxford words, then original YDS, then extra YDS
     def sort_key(item):
         is_m = 0 if item.get('isMaarif') else 1
         is_o = 0 if item.get('isOxford') else 1
+        is_extra = 1 if item.get('isExtraYds') else 0
         theme = item.get('themeNum', 99)
         orig_no = item.get('no', 999999)
-        return (is_m, is_o, theme, orig_no, item.get('en', '').lower())
+        return (is_m, is_o, is_extra, theme, orig_no, item.get('en', '').lower())
 
     combined_words.sort(key=sort_key)
 
@@ -580,9 +644,17 @@ def build_combined_database():
             o_idx += 1
             w['day'] = ((o_idx - 1) // 25) + 1
 
-    # Verify no duplicates
+    write_word_database(combined_words)
+
+
+def write_word_database(combined_words):
+    # Verify no duplicates (lowercase, canonical, and JS directory norm)
     all_en = [w['en'].strip().lower() for w in combined_words]
     assert len(all_en) == len(set(all_en)), "Kritik Hata: Havuzda mükerrer kelimeler tespit edildi!"
+    all_canon = [get_canonical_key(w['en']) for w in combined_words]
+    assert len(all_canon) == len(set(all_canon)), "Kritik Hata: Havuzda kanonik mükerrer kelimeler tespit edildi!"
+    all_js = [js_norm_key(w['en']) for w in combined_words]
+    assert len(all_js) == len(set(all_js)), "Kritik Hata: Havuzda JS-normalizasyon mükerrer kelimeleri tespit edildi!"
     log(f"🌟 Sıfır Tekrar Doğrulandı: Tüm {len(combined_words)} kelime ve kalıp tekilleştirildi.")
 
     maarif_total = sum(1 for w in combined_words if w.get('isMaarif'))
@@ -826,17 +898,55 @@ if (typeof module !== 'undefined' && module.exports) {
         json.dump(pool_records, f, ensure_ascii=False, separators=(',', ':'))
     log(f"✅ {KELIMELER_HAVUZU_PATH} dosyası güncellendi ({len(pool_records)} kelime).")
 
-    # Update service-worker.js version
-    if os.path.exists(SERVICE_WORKER_PATH):
-        with open(SERVICE_WORKER_PATH, 'r', encoding='utf-8') as f:
-            sw_text = f.read()
-        sw_text = re.sub(r"const CACHE_NAME = ['\"][^'\"]+['\"];", "const CACHE_NAME = 'learnish-v11-k12';", sw_text)
-        with open(SERVICE_WORKER_PATH, 'w', encoding='utf-8') as f:
-            f.write(sw_text)
-        log("✅ service-worker.js önbellek sürümü v11-k12 olarak güncellendi.")
+    # Stamp asset versions in index.html & service-worker.js BEFORE single-file bundling
+    stamp_asset_versions()
 
     # Rebuild Learnish_Tek_Dosya_Web_App.html
     bundle_single_file(words_js=themes_js)
+
+
+def append_extra_yds_to_pool():
+    log("Mevcut 9.186 kelime korunarak belgeler/yds_extra_sources.json ekleniyor...")
+    if not os.path.exists(KELIMELER_HAVUZU_PATH):
+        raise FileNotFoundError(f"{KELIMELER_HAVUZU_PATH} bulunamadı!")
+    with open(KELIMELER_HAVUZU_PATH, 'r', encoding='utf-8') as f:
+        pool = json.load(f)
+
+    base_pool = [w for w in pool if w.get('id', 0) <= 9186]
+    assert len(base_pool) == 9186, f"Beklenen 9186 temel kelime yerine {len(base_pool)} bulundu!"
+    assert [w.get('id') for w in base_pool] == list(range(1, 9187)), "Temel havuz ID sırası bozuk!"
+
+    seen_canon = set()
+    seen_js = set()
+    for w in base_pool:
+        seen_canon.add(get_canonical_key(w['en']))
+        seen_js.add(js_norm_key(w['en']))
+        if w.get('alt'):
+            seen_canon.add(get_canonical_key(w['alt']))
+            seen_js.add(js_norm_key(w['alt']))
+
+    y_idx = sum(1 for w in base_pool if w.get('isYds') and not w.get('isOxford') and not w.get('isMaarif'))
+    extra_words = load_extra_yds_sources()
+
+    appended = []
+    next_id = 9187
+    for w in extra_words:
+        ck = get_canonical_key(w['en'])
+        jk = js_norm_key(w['en'])
+        if ck in seen_canon or jk in seen_js:
+            continue
+        seen_canon.add(ck)
+        seen_js.add(jk)
+        y_idx += 1
+        rec = dict(w)
+        rec['id'] = next_id
+        rec['no'] = next_id
+        rec['day'] = ((y_idx - 1) // 20) + 1
+        appended.append(rec)
+        next_id += 1
+
+    log(f"✅ {len(base_pool)} mevcut kayıt birebir korundu, +{len(appended)} yeni YDS/YÖKDİL kaydı eklendi.")
+    write_word_database(base_pool + appended)
 
 def inline_asset_base64(html_str, filename, mime_type):
     """Inlines local binary assets as Base64 Data URIs for standalone offline robustness."""
@@ -1039,6 +1149,7 @@ def main():
     parser.add_argument('--bundle', '-b', action='store_true', help="Hızlı tek dosya paketleme (~50ms, ETL çalıştırmaz)")
     parser.add_argument('--check', '-c', action='store_true', help="Learnish_Tek_Dosya_Web_App.html senkronizasyon kontrolü (senkron: exit 0, uyumsuz: exit 1)")
     parser.add_argument('--all', '--rebuild-db', action='store_true', help="Tam veritabanı ETL ve tek dosya derlemesi")
+    parser.add_argument('--append-extra-yds', action='store_true', help="Mevcut 9.186 kelimeyi bozmadan ek YDS/YÖKDİL kaynaklarını havuza ekler")
 
     args = parser.parse_args()
 
@@ -1049,10 +1160,12 @@ def main():
         stamp_asset_versions()
         bundle_single_file(write_to_disk=True, inline_assets=True)
         sys.exit(0)
+    elif args.append_extra_yds:
+        append_extra_yds_to_pool()
+        sys.exit(0)
     else:
         # Default behavior: full database extraction and bundling
         build_combined_database()
-        stamp_asset_versions()
 
 if __name__ == '__main__':
     main()

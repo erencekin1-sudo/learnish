@@ -2898,21 +2898,21 @@
           <button type="button" class="stage-grade-btn ${curMod === 'yds' ? 'active' : ''}" onclick="window.APP.switchModuleAndClose('yds')">
             <div class="sgb-info">
               <span class="sgb-name">YDS &amp; YÖKDİL</span>
-              <span class="sgb-meta">B2–C1 • 7.387 Kelime</span>
+              <span class="sgb-meta">B2–C1 • ${WORDS_DATA.filter(isYDSWord).length.toLocaleString('tr-TR')} Kelime</span>
             </div>
             <span class="sgb-check">${renderIcon('check', 14, '', 3)}</span>
           </button>
           <button type="button" class="stage-grade-btn ${curMod === 'oxford' ? 'active' : ''}" onclick="window.APP.switchModuleAndClose('oxford')">
             <div class="sgb-info">
               <span class="sgb-name">Kelime Kütüphanesi</span>
-              <span class="sgb-meta">A1–C1 • 4.886 Kelime</span>
+              <span class="sgb-meta">A1–C1 • ${WORDS_DATA.filter(isOxfordWord).length.toLocaleString('tr-TR')} Kelime</span>
             </div>
             <span class="sgb-check">${renderIcon('check', 14, '', 3)}</span>
           </button>
           <button type="button" class="stage-grade-btn ${curMod === 'all' ? 'active' : ''}" onclick="window.APP.switchModuleAndClose('all')">
             <div class="sgb-info">
               <span class="sgb-name">Tüm Kütüphane</span>
-              <span class="sgb-meta">Birleşik 9.234 Kelime</span>
+              <span class="sgb-meta">Birleşik ${WORDS_DATA.length.toLocaleString('tr-TR')} Kelime</span>
             </div>
             <span class="sgb-check">${renderIcon('check', 14, '', 3)}</span>
           </button>
@@ -3659,7 +3659,7 @@
                     <option value="12" ${state.grade == 12 ? 'selected' : ''}>12. Sınıf</option>
                   </optgroup>
                   <optgroup label="Akademik &amp; Kütüphane">
-                    <option value="yds" ${state.grade === 'yds' ? 'selected' : ''}>YDS &amp; YÖKDİL (7.387 Kelime)</option>
+                    <option value="yds" ${state.grade === 'yds' ? 'selected' : ''}>YDS &amp; YÖKDİL (${WORDS_DATA.filter(isYDSWord).length.toLocaleString('tr-TR')} Kelime)</option>
                     <option value="oxford" ${state.grade === 'oxford' ? 'selected' : ''}>Kelime Kütüphanesi (A1-C1)</option>
                   </optgroup>
                 </select>
@@ -4268,7 +4268,7 @@
             <ul class="hrc-features-list">
               <li><span>${renderIcon('check', 13)}</span> CEFR A1, A2, B1, B2 ve C1 seviye etiketleri</li>
               <li><span>${renderIcon('check', 13)}</span> Tam IPA fonetik telaffuz transkripsiyonu ve seslendirme</li>
-              <li><span>${renderIcon('check', 13)}</span> 9.234 kelimelik birleşik arama ve filtreleme kütüphanesi</li>
+              <li><span>${renderIcon('check', 13)}</span> ${WORDS_DATA.length.toLocaleString('tr-TR')} kelimelik birleşik arama ve filtreleme kütüphanesi</li>
               <li><span>${renderIcon('check', 13)}</span> Serbest tempolu flashcard ve test antrenmanları</li>
             </ul>
             <div class="hrc-actions">
