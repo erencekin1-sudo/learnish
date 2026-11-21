@@ -5685,6 +5685,36 @@
     return s.length > 22 ? s.slice(0, 21) + '…' : s;
   }
 
+  // Arama önerileri: önce filtreye uyanlar, eksik kalırsa filtre dışı eşleşmeler (outsideFilter)
+  function librarySuggest(query, filteredWords, allWords, limit = 6) {
+    const q = String(query || '').trim().toLowerCase();
+    if (!q) return [];
+    const tierOf = (w) => {
+      const en = String(w.en || '').toLowerCase();
+      if (en.startsWith(q)) return 0;
+      if (en.includes(q)) return 1;
+      return ['alt', 'tr', 'synonym', 'definition'].some(k => w[k] && String(w[k]).toLowerCase().includes(q)) ? 2 : -1;
+    };
+    const ranked = (list) => list
+      .map(w => ({ w, t: tierOf(w) }))
+      .filter(x => x.t >= 0)
+      .sort((a, b) => a.t - b.t || String(a.w.en).localeCompare(String(b.w.en), 'en', { sensitivity: 'base' }));
+    const out = [];
+    const seen = new Set();
+    for (const { w } of ranked(filteredWords)) {
+      if (out.length >= limit) break;
+      seen.add(w.id); out.push({ word: w, outsideFilter: false });
+    }
+    if (out.length < limit) {
+      for (const { w } of ranked(allWords)) {
+        if (out.length >= limit) break;
+        if (seen.has(w.id)) continue;
+        seen.add(w.id); out.push({ word: w, outsideFilter: true });
+      }
+    }
+    return out;
+  }
+
   // Harf içi atlama cetveli: ilk iki harfe göre kovalar, en fazla 8; fazlası en küçük komşu çiftler birleşerek azalır
   function shelfRulerGroups(words) {
     if (!words || words.length < 60) return [];
@@ -7886,6 +7916,7 @@
     spineHeightPx,
     spineLabel,
     shelfRulerGroups,
+    librarySuggest,
     clearDirectorySearch,
     clearDirectoryFilters,
     resetAllProgress,

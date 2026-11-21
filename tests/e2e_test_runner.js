@@ -1143,6 +1143,23 @@ registerTest(1, 'Library Data', 'test_filtered_words_ignore_search', () => {
   assertEqual(env.APP.getFilteredDirectoryWords().length, before);
 });
 
+registerTest(1, 'Library Search', 'test_library_suggest_ranking', () => {
+  const { APP } = createFreshAppEnvironment();
+  const ws = [{id:1,en:'abandon',tr:'terk etmek'},{id:2,en:'ban',tr:'yasak'},{id:3,en:'urban',tr:'kentsel'},{id:4,en:'leave',tr:'ayrılmak',alt:'abandon'}];
+  assertDeepEqual(APP.librarySuggest('ban', ws, ws).map(s => s.word.id), [2,1,3,4]); // 4: alt='abandon' içinde geçer
+  assertDeepEqual(APP.librarySuggest('abandon', ws, ws).map(s => s.word.id), [1,4]);
+  assertDeepEqual(APP.librarySuggest('terk', ws, ws).map(s => s.word.id), [1]);
+  assertDeepEqual(APP.librarySuggest('   ', ws, ws), []);
+});
+
+registerTest(1, 'Library Search', 'test_library_suggest_outside_filter_and_limit', () => {
+  const { APP } = createFreshAppEnvironment();
+  const all = Array.from({ length: 10 }, (_, i) => ({ id: i, en: 'deal' + i }));
+  const r = APP.librarySuggest('deal', all.slice(0, 2), all);
+  assertEqual(r.length, 6);
+  assertDeepEqual(r.map(s => s.outsideFilter), [false,false,true,true,true,true]);
+});
+
 // --- 1.5 Word Directory Search & Filters (6 Tests) ---
 
 registerTest(1, 'Word Directory', 'test_directory_search_by_english_word', () => {
