@@ -693,7 +693,7 @@ registerTest(1, 'Navigation & Canopy', 'test_nav_directory_view_activation', () 
   assertEqual(env.APP.getState().currentView, 'directory', 'currentView should be directory');
   const dirSection = env.document.getElementById('view-directory');
   assert(dirSection.classList.contains('active'), '#view-directory should have active class');
-  assertIncludes(dirSection.innerHTML, 'search-input-box', 'Directory view should contain search input container');
+  assertIncludes(dirSection.innerHTML, 'id="lib-search-btn"', 'Directory view should contain the library search button');
 });
 
 registerTest(1, 'Navigation & Canopy', 'test_nav_stats_view_activation', () => {
@@ -1160,29 +1160,46 @@ registerTest(1, 'Library Search', 'test_library_suggest_outside_filter_and_limit
   assertDeepEqual(r.map(s => s.outsideFilter), [false,false,true,true,true,true]);
 });
 
+registerTest(1, 'Library Shelf', 'test_library_renders_first_letter_shelf', () => {
+  const env = createFreshAppEnvironment();
+  env.APP.switchView('directory');
+  const html = env.document.getElementById('view-directory').innerHTML;
+  assertIncludes(html, 'KELİME KÜTÜPHANESİ');
+  assertIncludes(html, 'A Rafı');
+  assertIncludes(html, 'class="lib-book tone-');
+  assert(!html.includes('dir-page-btn'), 'sayfalama kalktı');
+});
+
+registerTest(1, 'Library Shelf', 'test_library_select_letter_updates_shelf', () => {
+  const env = createFreshAppEnvironment();
+  env.APP.switchView('directory');
+  env.APP.selectLibraryLetter('D');
+  const html = env.document.getElementById('view-directory').innerHTML;
+  const n = env.APP.buildLibraryIndex(env.APP.getFilteredDirectoryWords()).byLetter.D.length;
+  assertIncludes(html, 'D Rafı');
+  assertIncludes(html, `${n.toLocaleString('tr-TR')} KİTAP`);
+  assertEqual(env.APP.getState().library.letter, 'D');
+});
+
+registerTest(1, 'Library Shelf', 'test_library_renders_in_chunks_of_80', () => {
+  const env = createFreshAppEnvironment();
+  env.APP.switchView('directory');
+  env.APP.selectLibraryLetter('S');
+  assertEqual(env.APP.getState().library.rendered, 80);
+  env.APP.appendLibraryBooks();
+  assertEqual(env.APP.getState().library.rendered, 160);
+});
+
+registerTest(1, 'Library Shelf', 'test_library_starred_book_has_ribbon', () => {
+  const env = createFreshAppEnvironment();
+  const w = env.APP.buildLibraryIndex(env.APP.getFilteredDirectoryWords()).byLetter.A[0];
+  env.APP.toggleStarred(w.id);
+  env.APP.switchView('directory');
+  env.APP.selectLibraryLetter('A');
+  assertIncludes(env.document.getElementById('view-directory').innerHTML, `is-starred" data-id="${w.id}"`);
+});
+
 // --- 1.5 Word Directory Search & Filters (6 Tests) ---
-
-registerTest(1, 'Word Directory', 'test_directory_search_by_english_word', () => {
-  const env = createFreshAppEnvironment();
-  env.APP.switchView('directory');
-  const state = env.APP.getState();
-  state.directoryFilters.search = 'abandon';
-  env.APP.renderDirectoryView();
-  
-  const dirSection = env.document.getElementById('view-directory');
-  assertIncludes(dirSection.innerHTML, 'abandon', 'Directory should display matching word abandon');
-});
-
-registerTest(1, 'Word Directory', 'test_directory_search_by_turkish_translation', () => {
-  const env = createFreshAppEnvironment();
-  env.APP.switchView('directory');
-  const state = env.APP.getState();
-  state.directoryFilters.search = 'terk etmek';
-  env.APP.renderDirectoryView();
-  
-  const dirSection = env.document.getElementById('view-directory');
-  assertIncludes(dirSection.innerHTML, 'abandon', 'Directory should match abandon from Turkish query');
-});
 
 registerTest(1, 'Word Directory', 'test_directory_filter_by_pos', () => {
   const env = createFreshAppEnvironment();
@@ -1205,15 +1222,6 @@ registerTest(1, 'Word Directory', 'test_directory_filter_by_cefr', () => {
   
   const dirSection = env.document.getElementById('view-directory');
   assertIncludes(dirSection.innerHTML, 'A1', 'Directory cards should render A1 badges');
-});
-
-registerTest(1, 'Word Directory', 'test_directory_pagination_controls', () => {
-  const env = createFreshAppEnvironment();
-  env.APP.switchView('directory');
-  assertEqual(env.APP.getState().directoryPage, 1, 'Initial page should be 1');
-  
-  env.APP.setDirectoryPage(2);
-  assertEqual(env.APP.getState().directoryPage, 2, 'Page should advance to 2');
 });
 
 registerTest(1, 'Word Directory', 'test_directory_in_place_status_toggle', () => {
@@ -1268,14 +1276,10 @@ registerTest(1, 'Word Directory', 'test_directory_zero_duplicates_guarantee', ()
   assertEqual(wakeupCards.length, 1, 'wake up must have strictly 1 card in WORDS_DATA');
   assertEqual(wakeupCards[0].alt, 'wake-up', 'wake up must have wake-up as alternative spelling');
 
-  // 3. Verify directory search finds unified card via alt spelling
-  env.APP.switchView('directory');
-  const state = env.APP.getState();
-  state.directoryFilters.dataset = 'all';
-  state.directoryFilters.search = 'organise';
-  env.APP.renderDirectoryView();
-  const dirSection = env.document.getElementById('view-directory');
-  assertIncludes(dirSection.innerHTML, 'organize', 'Search for organise should find the organize card');
+  // 3. Verify library search suggests the unified card via alt spelling
+  const pool = env.APP.getFilteredDirectoryWords();
+  const sugg = env.APP.librarySuggest('organise', pool, allWords).map(s => s.word.en);
+  assertIncludes(sugg.join('|'), 'organize', 'Search for organise should suggest the organize card');
 });
 
 // --- 1.6 Telemetry & Progress Metrics (6 Tests) ---
@@ -1643,7 +1647,7 @@ registerTest(2, 'Boundary Cases', 'test_boundary_empty_search_query', () => {
   env.APP.getState().directoryFilters.search = '';
   env.APP.renderDirectoryView();
   const dirSection = env.document.getElementById('view-directory');
-  assert(dirSection.innerHTML.includes('KAYIT BULUNDU'), 'Empty search query should display total records');
+  assert(dirSection.innerHTML.includes(' KİTAP<'), 'Empty search query should display the shelf book count');
 });
 
 registerTest(2, 'Boundary Cases', 'test_boundary_special_characters_search', () => {

@@ -491,8 +491,7 @@
       status: 'all',
       pos: 'all' // 'all', 'verb', 'noun', 'adj_adv' (especially for YDS)
     },
-    directoryPage: 1,
-    directoryPageSize: 60,
+    library: { letter: null, rendered: 0, bookId: null, searchOpen: false, filtersOpen: false, dirty: false },
     settings: {
       accent: lsGet('mk_accent') || 'en-GB', // 'en-GB' or 'en-US'
       speed: parseFloat(lsGet('mk_speed') || '1.0') || 1.0,
@@ -1868,6 +1867,8 @@
     const isReview = STATE.userData.review.has(wordId);
     const isStarred = STATE.userData.starred.has(wordId);
 
+    syncLibrarySpine(wordId);
+
     // 1. Directory word cards & feed cards (match on data-id)
     const cards = document.querySelectorAll(`[data-id="${wordId}"]`);
     cards.forEach(card => {
@@ -2812,7 +2813,6 @@
       STATE.directoryFilters.dataset = 'yds';
       STATE.directoryFilters.cefr = 'all';
       STATE.directoryFilters.search = '';
-      STATE.directoryPage = 1;
       STATE.flashcardSource = 'yds_all';
     } else if (moduleName === 'maarif') {
       if (dailyText) dailyText.innerText = `${gData.name} Takibi`;
@@ -2823,7 +2823,6 @@
       STATE.directoryFilters.dataset = 'all';
       STATE.directoryFilters.cefr = 'all';
       STATE.directoryFilters.search = '';
-      STATE.directoryPage = 1;
       STATE.flashcardSource = 'daily';
     } else if (moduleName === 'oxford') {
       if (dailyText) dailyText.innerText = "Günün Kelimeleri";
@@ -2834,7 +2833,6 @@
       STATE.directoryFilters.dataset = 'oxford';
       STATE.directoryFilters.cefr = 'all';
       STATE.directoryFilters.search = '';
-      STATE.directoryPage = 1;
       STATE.flashcardSource = 'daily';
     } else {
       if (dailyText) dailyText.innerText = "Günün 10'lusu";
@@ -2845,7 +2843,6 @@
       STATE.directoryFilters.dataset = 'all';
       STATE.directoryFilters.cefr = 'all';
       STATE.directoryFilters.search = '';
-      STATE.directoryPage = 1;
       STATE.flashcardSource = 'all';
     }
 
@@ -5744,115 +5741,6 @@
     conjunction: 'CONJ', determiner: 'DET', phrase: 'PHRASE', idiom: 'IDIOM'
   };
 
-  function generateWordCardsHtml(words) {
-    if (!words || words.length === 0) {
-      return `
-        <div class="dir-empty-state" role="status">
-          <div class="dir-empty-icon" aria-hidden="true">${renderIcon('search', 40, '', 1.6)}</div>
-          <div class="dir-empty-title">Arama kriterlerine uygun kelime bulunamadı</div>
-          <div class="dir-empty-desc">Aramayı sadeleştirin veya tüm filtreleri sıfırlayarak tekrar deneyin.</div>
-          <button type="button" class="dir-empty-clear-btn" onclick="window.APP.clearDirectoryFilters()">${renderIcon('refresh', 16)} Filtreleri Temizle</button>
-        </div>
-      `;
-    }
-    return words.map(w => {
-      const isLearned = STATE.userData.learned.has(w.id);
-      const isReview = STATE.userData.review.has(w.id);
-      const isStarred = STATE.userData.starred.has(w.id);
-      const prepBadge = extractPreposition(w);
-      const syn = getWordSynonym(w);
-      const ipa = (w.phonetic || '').trim();
-      const posLabel = w.pos ? (POS_LABELS[w.pos] || w.pos.toUpperCase()) : '';
-      const synChips = syn
-        ? syn.split(/[,;]/).map(s => s.trim()).filter(Boolean).map(s =>
-            `<button type="button" class="word-syn-chip" onclick="event.stopPropagation(); window.APP.searchDirectory('${escapeHtml(s)}')" title="Sözlükte ara: ${escapeHtml(s)}">${escapeHtml(s)}</button>`
-          ).join('')
-        : '';
-
-      return `
-        <div class="word-card" data-id="${w.id}" tabindex="0" aria-expanded="false"
-             onclick="window.APP.toggleWordCard(event, ${w.id})" onkeydown="window.APP.wordCardKey(event, ${w.id})">
-          <div class="word-row-top">
-            <div class="word-row-main">
-              <div class="word-en-row">
-                <span class="word-en">${w.en}${w.alt ? ` <small class="word-alt-badge" title="Alternatif yazım">(${escapeHtml(w.alt)})</small>` : ''}</span>
-                ${ipa ? `<span class="word-phonetic">${ipa}</span>` : ''}
-                ${getCefrBadgeHtml(w.cefr)}
-                ${posLabel ? `<span class="word-pos-badge">${posLabel}</span>` : ''}
-              </div>
-              <div class="word-tr">${w.tr || '<span class="word-tr-pending">(Anlamı ekleniyor)</span>'}</div>
-            </div>
-            <div class="word-row-actions">
-              <button type="button" class="speak-btn" data-word="${w.en}" aria-label="Dinle: ${w.en}">${ICONS.speaker}</button>
-              <button type="button" class="star-btn ${isStarred ? 'starred' : ''}" onclick="window.APP.toggleStarred(${w.id})" aria-label="Favori" aria-pressed="${isStarred ? 'true' : 'false'}">
-                ${isStarred ? ICONS.starFilled : ICONS.starOutline}
-              </button>
-              <span class="word-expand-caret" aria-hidden="true">${renderIcon('chevronDown', 18)}</span>
-            </div>
-          </div>
-
-          <div class="word-detail" hidden>
-            ${(w.desc || w.cat) ? `<div class="word-pos">${w.desc}${w.cat ? ' • ' + w.cat : ''}</div>` : ''}
-            ${w.definition ? `<div class="word-def">“${w.definition}”</div>` : ''}
-            ${w.example ? `<div class="word-example"><span class="word-example-lang">EN</span>${w.example.replace(/^["“”]|["“”]$/g, '')}</div>` : ''}
-            ${prepBadge ? `<div class="word-detail-row"><span class="word-detail-label">EDAT İPUCU</span><span class="yds-prep-tag">${prepBadge}</span></div>` : ''}
-            ${synChips ? `<div class="word-detail-row"><span class="word-detail-label">EŞ ANLAM</span><div class="word-syn-chips">${synChips}</div></div>` : ''}
-            <div class="word-detail-actions">
-              <button type="button" class="status-badge-btn ${isLearned ? 'learned' : ''}" onclick="window.APP.toggleLearned(${w.id})">
-                ${ICONS.check} <span>${isLearned ? 'ÖĞRENDİM' : 'ÖĞREN'}</span>
-              </button>
-              <button type="button" class="status-badge-btn ${isReview ? 'review' : ''}" onclick="window.APP.toggleReview(${w.id})">
-                ${ICONS.repeat} <span>${isReview ? 'TEKRARDA' : 'TEKRAR'}</span>
-              </button>
-              <button type="button" class="status-badge-btn" onclick="event.stopPropagation(); window.APP.openSpeechCoach('${escapeHtml(w.en)}')" aria-label="Telaffuz Koçu: ${w.en}">
-                ${ICONS.mic} <span>TELAFFUZ</span>
-              </button>
-              <button type="button" class="status-badge-btn" onclick="event.stopPropagation(); window.APP.openClassifierForWord('${escapeHtml(w.en)}')" aria-label="Bağlam: ${w.en}">
-                ${renderIcon('sparkles', 14)} <span>BAĞLAM</span>
-              </button>
-            </div>
-          </div>
-        </div>
-      `;
-    }).join('');
-  }
-
-  function generateDirectoryPaginationHtml(totalCount, currentPage, pageSize) {
-    const totalPages = Math.ceil(totalCount / pageSize) || 1;
-    if (totalPages <= 1) return '';
-
-    return `
-      <div class="dir-pagination-container">
-        <button type="button" class="dir-page-btn" ${currentPage <= 1 ? 'disabled' : ''} onclick="window.APP.setDirectoryPage(1)" title="İlk Sayfa">
-          &laquo; İLK
-        </button>
-        <button type="button" class="dir-page-btn" ${currentPage <= 1 ? 'disabled' : ''} onclick="window.APP.setDirectoryPage(${currentPage - 1})" title="Önceki Sayfa">
-          &larr; ÖNCEKİ
-        </button>
-        <span class="dir-page-indicator">SAYFA ${currentPage} / ${totalPages}</span>
-        <button type="button" class="dir-page-btn" ${currentPage >= totalPages ? 'disabled' : ''} onclick="window.APP.setDirectoryPage(${currentPage + 1})" title="Sonraki Sayfa">
-          SONRAKİ &rarr;
-        </button>
-        <button type="button" class="dir-page-btn" ${currentPage >= totalPages ? 'disabled' : ''} onclick="window.APP.setDirectoryPage(${totalPages})" title="Son Sayfa">
-          SON &raquo;
-        </button>
-      </div>
-    `;
-  }
-
-  function bindDirectoryCardAudio(scopeEl) {
-    scopeEl.querySelectorAll('.speak-btn:not(.coach-mic-btn)').forEach(btn => {
-      btn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        const word = btn.getAttribute('data-word');
-        if (word) {
-          btn.classList.add('speaking');
-          speakWord(word, () => btn.classList.remove('speaking'));
-        }
-      });
-    });
-  }
-
   function syncDirectoryStatusChips() {
     const container = document.getElementById('status-chips');
     if (!container) return;
@@ -5865,37 +5753,9 @@
     }
   }
 
-  function setDirectoryPage(pageNum) {
-    STATE.directoryPage = parseInt(pageNum, 10) || 1;
-    renderDirectoryView(true);
-    const grid = document.getElementById('dir-words-grid');
-    if (grid) {
-      grid.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }
-  }
-
-  // Kademeli açılım: satır kartını genişlet/daralt (tıklama + Enter/Space)
-  function toggleWordCard(e, id) {
-    if (e && e.target && e.target.closest('button, a, .word-syn-chip')) return;
-    const row = (e && e.currentTarget) || document.querySelector(`.word-card[data-id="${id}"]`);
-    if (!row) return;
-    const open = row.getAttribute('aria-expanded') === 'true';
-    row.setAttribute('aria-expanded', String(!open));
-    const detail = row.querySelector('.word-detail');
-    if (detail) detail.hidden = open;
-  }
-
-  function wordCardKey(e, id) {
-    if (!e || (e.key !== 'Enter' && e.key !== ' ')) return;
-    if (e.target && e.target.closest('button, a, .word-syn-chip')) return;
-    e.preventDefault();
-    toggleWordCard(e, id);
-  }
-
   // Eş anlam çipinden ya da başka bir yerden sözlükte arama tetikle
   function searchDirectory(term) {
     STATE.directoryFilters.search = term;
-    STATE.directoryPage = 1;
     const input = document.getElementById('dir-search-input');
     if (input) input.value = term;
     renderDirectoryView(true);
@@ -5911,172 +5771,283 @@
 
   function clearDirectoryFilters() {
     STATE.directoryFilters = { search: '', dataset: 'all', theme: 'all', cefr: 'all', status: 'all', pos: 'all' };
-    STATE.directoryPage = 1;
     renderDirectoryView(false);
   }
 
-  // Arama kutusu çevresini güncelle: temizleme düğmesi görünürlüğü + sonuç sayacı
-  function updateDirSearchChrome(count) {
-    const clearBtn = document.getElementById('dir-search-clear');
-    if (clearBtn) clearBtn.hidden = !STATE.directoryFilters.search;
-    const countEl = document.getElementById('dir-search-count');
-    if (countEl && typeof count === 'number') countEl.textContent = count.toLocaleString('tr-TR');
+  // ==========================================================================
+  // KİTAPLIK: RAF (tek raf = tek harf, harf çarkı, raf cetveli)
+  // ==========================================================================
+  const LIBRARY_CHUNK = 80;
+  const LIBRARY_ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ#'.split('');
+  let _libraryIndex = null;
+  let _libraryObserver = null;
+  let _libraryWheelTimer = null;
+
+  function getLibraryIndex() {
+    if (!_libraryIndex) _libraryIndex = buildLibraryIndex(getFilteredDirectoryWords());
+    return _libraryIndex;
   }
 
-  function renderDirectoryView(cardsOnly = false) {
+  function libraryShelfWords() {
+    const idx = getLibraryIndex();
+    return (STATE.library.letter && idx.byLetter[STATE.library.letter]) || [];
+  }
+
+  function libraryShelfName(L) {
+    return L === '#' ? '# Rafı' : `${L} Rafı`;
+  }
+
+  function libraryBookHtml(w) {
+    const ud = STATE.userData;
+    let cls = `lib-book ${spineToneClass(w.cefr)}`;
+    if (ud.learned.has(w.id)) cls += ' is-learned';
+    if (ud.review.has(w.id)) cls += ' is-review';
+    if (ud.starred.has(w.id)) cls += ' is-starred';
+    const label = `${w.en}${w.cefr ? ' — ' + w.cefr : ''}`;
+    return `<button type="button" class="${cls}" data-id="${w.id}" style="height:${spineHeightPx(w)}px" aria-label="${escapeHtml(label)}"><span class="lib-spine-text">${escapeHtml(spineLabel(w.en))}</span></button>`;
+  }
+
+  function libraryBooksSliceHtml(words, from, to) {
+    let html = '';
+    for (let i = from; i < to; i++) html += libraryBookHtml(words[i]);
+    return html;
+  }
+
+  function libraryShelfInnerHtml(words) {
+    if (!words.length) {
+      return `<div class="lib-empty"><p>Bu filtrelerle rafta kitap yok</p><button type="button" class="lib-empty-btn" onclick="window.APP.clearDirectoryFilters()">Filtreleri temizle</button></div>`;
+    }
+    const sentinel = STATE.library.rendered < words.length ? '<span class="lib-sentinel" aria-hidden="true"></span>' : '';
+    return libraryBooksSliceHtml(words, 0, STATE.library.rendered) + sentinel;
+  }
+
+  function libraryRulerHtml(words) {
+    return shelfRulerGroups(words)
+      .map(g => `<button type="button" class="lib-ruler-g" data-index="${g.index}">${escapeHtml(g.label)}</button>`)
+      .join('');
+  }
+
+  function libraryWheelHtml() {
+    const idx = getLibraryIndex();
+    return LIBRARY_ALPHABET.map(L => {
+      const active = L === STATE.library.letter;
+      const empty = !idx.byLetter[L];
+      return `<button type="button" role="tab" class="lib-wheel-l${active ? ' is-active' : ''}${empty ? ' is-empty' : ''}" data-letter="${L}" aria-selected="${active}" tabindex="${active ? 0 : -1}"${empty ? ' aria-disabled="true"' : ''} aria-label="${L === '#' ? 'Diğer' : L} rafı">${L}</button>`;
+    }).join('');
+  }
+
+  function libraryFilterLabelText() {
+    return typeof libraryFilterSummary === 'function' ? libraryFilterSummary() : 'Tüm kütüphaneler · Tüm düzeyler';
+  }
+
+  function renderDirectoryView() {
     const container = document.getElementById('view-directory');
     if (!container) return;
 
-    const filters = STATE.directoryFilters;
-    const isYdsModule = STATE.activeModule === 'yds';
-
-    const filtered = getFilteredDirectoryWords();
-    const pageSize = STATE.directoryPageSize || 60;
-    const totalPages = Math.ceil(filtered.length / pageSize) || 1;
-    if (STATE.directoryPage > totalPages) STATE.directoryPage = totalPages;
-    if (STATE.directoryPage < 1) STATE.directoryPage = 1;
-
-    const startIdx = (STATE.directoryPage - 1) * pageSize;
-    const paginatedWords = filtered.slice(startIdx, startIdx + pageSize);
-    const resultText = `${filtered.length} KAYIT BULUNDU • SAYFA ${STATE.directoryPage} / ${totalPages} (${filtered.length > 0 ? (startIdx + 1) : 0} - ${Math.min(startIdx + pageSize, filtered.length)})`;
-
-    const controlsBox = document.getElementById('dir-controls-box');
-    const wordsGrid = document.getElementById('dir-words-grid');
-    const resultsInfo = document.getElementById('dir-results-info');
-    const paginationContainer = document.getElementById('dir-pagination-container');
-
-    // Akıllı kısmi güncelleme: Arama kutusu yok edilmez, klavye odağı ASLA kaybolmaz!
-    if (cardsOnly && controlsBox && wordsGrid && resultsInfo && paginationContainer) {
-      resultsInfo.innerText = resultText;
-      wordsGrid.innerHTML = generateWordCardsHtml(paginatedWords);
-      paginationContainer.innerHTML = generateDirectoryPaginationHtml(filtered.length, STATE.directoryPage, pageSize);
-      bindDirectoryCardAudio(wordsGrid);
-      syncDirectoryStatusChips();
-      updateDirSearchChrome(filtered.length);
-      return;
+    _libraryIndex = null; // filtreler/modül/kullanıcı verisi değişmiş olabilir
+    const idx = getLibraryIndex();
+    const lib = STATE.library;
+    if (!lib.letter || !idx.byLetter[lib.letter]) {
+      lib.letter = idx.letters[0] || null;
+      lib.rendered = 0;
     }
+    const words = libraryShelfWords();
+    lib.rendered = Math.min(words.length, Math.max(LIBRARY_CHUNK, lib.rendered));
+    const L = lib.letter;
 
     container.innerHTML = `
-      <div class="directory-controls glass-panel" id="dir-controls-box">
-        <div class="search-input-box">
-          <span class="search-icon">${ICONS.search}</span>
-          <input type="text" class="search-input" id="dir-search-input" placeholder="İngilizce, Türkçe veya eş anlam ara… (ör: abandon, relieve)" value="${escapeHtml(filters.search)}" aria-label="Kelime Ara" autocomplete="off" spellcheck="false">
-          <button type="button" class="search-clear-btn" id="dir-search-clear" onclick="window.APP.clearDirectorySearch()" aria-label="Aramayı temizle" ${filters.search ? '' : 'hidden'}>${renderIcon('cross', 16)}</button>
-          <span class="search-count" id="dir-search-count" aria-hidden="true">${filtered.length.toLocaleString('tr-TR')}</span>
+      <div class="lib">
+        <div class="lib-head">
+          <div>
+            <div class="lib-kicker">KELİME KÜTÜPHANESİ</div>
+            <h2 class="lib-title" id="lib-title">${L ? libraryShelfName(L) : 'Boş Raf'}</h2>
+          </div>
+          <button type="button" class="lib-icon-btn" id="lib-search-btn" aria-label="Kelime ara" data-lib-action="search">${ICONS.search}</button>
         </div>
-
-        ${isYdsModule ? `
-          <div style="margin-bottom: 12px;">
-            <div style="font-family: var(--dp-typography-mono); font-size: 0.78rem; font-weight: 700; text-transform: uppercase; color: var(--dp-color-ink-muted); margin-bottom: 6px;">YDS KELİME TÜRLERİ</div>
-            <div class="filter-chips-group" id="yds-pos-chips">
-              <button type="button" class="filter-chip ${filters.pos === 'all' ? 'active' : ''}" aria-pressed="${filters.pos === 'all'}" data-val="all">TÜM YDS (${WORDS_DATA.filter(isYDSWord).length.toLocaleString('tr-TR')})</button>
-              <button type="button" class="filter-chip ${filters.pos === 'verb' ? 'active' : ''}" aria-pressed="${filters.pos === 'verb'}" data-val="verb">AKADEMİK FİİLLER (VERBS)</button>
-              <button type="button" class="filter-chip ${filters.pos === 'noun' ? 'active' : ''}" aria-pressed="${filters.pos === 'noun'}" data-val="noun">AKADEMİK İSİMLER (NOUNS)</button>
-              <button type="button" class="filter-chip ${filters.pos === 'adj_adv' ? 'active' : ''}" aria-pressed="${filters.pos === 'adj_adv'}" data-val="adj_adv">SIFATLAR &amp; ZARFLAR</button>
-            </div>
-          </div>
-        ` : `
-          <div style="margin-bottom: 12px;">
-            <div style="font-family: var(--dp-typography-mono); font-size: 0.78rem; font-weight: 700; text-transform: uppercase; color: var(--dp-color-ink-muted); margin-bottom: 6px;">KELİME KÜTÜPHANESİ</div>
-            <div class="filter-chips-group" id="dataset-chips">
-              <button type="button" class="filter-chip ${filters.dataset === 'all' ? 'active' : ''}" aria-pressed="${filters.dataset === 'all'}" data-val="all">TÜM KÜTÜPHANELER (${WORDS_DATA.length.toLocaleString('tr-TR')})</button>
-              <button type="button" class="filter-chip ${filters.dataset === 'maarif' ? 'active' : ''}" aria-pressed="${filters.dataset === 'maarif'}" data-val="maarif">MAARİF MODELİ (${getActiveGradePool().length.toLocaleString('tr-TR')})</button>
-              <button type="button" class="filter-chip ${filters.dataset === 'yds' ? 'active' : ''}" aria-pressed="${filters.dataset === 'yds'}" data-val="yds">YDS &amp; YÖKDİL (${WORDS_DATA.filter(isYDSWord).length.toLocaleString('tr-TR')})</button>
-              <button type="button" class="filter-chip ${filters.dataset === 'oxford' ? 'active' : ''}" aria-pressed="${filters.dataset === 'oxford'}" data-val="oxford">KÜTÜPHANE (${WORDS_DATA.filter(isOxfordWord).length.toLocaleString('tr-TR')})</button>
-            </div>
-          </div>
-        `}
-
-        <div style="margin-bottom: 12px;">
-          <div style="font-family: var(--dp-typography-mono); font-size: 0.78rem; font-weight: 700; text-transform: uppercase; color: var(--dp-color-ink-muted); margin-bottom: 6px;">CEFR DÜZEYLERİ</div>
-          <div class="filter-chips-group" id="cefr-chips">
-            <button type="button" class="filter-chip ${filters.cefr === 'all' ? 'active' : ''}" aria-pressed="${filters.cefr === 'all'}" data-val="all">TÜM DÜZEYLER</button>
-            <button type="button" class="filter-chip ${filters.cefr === 'A1' ? 'active' : ''}" aria-pressed="${filters.cefr === 'A1'}" data-val="A1">A1</button>
-            <button type="button" class="filter-chip ${filters.cefr === 'A2' ? 'active' : ''}" aria-pressed="${filters.cefr === 'A2'}" data-val="A2">A2</button>
-            <button type="button" class="filter-chip ${filters.cefr === 'B1' ? 'active' : ''}" aria-pressed="${filters.cefr === 'B1'}" data-val="B1">B1</button>
-            <button type="button" class="filter-chip ${filters.cefr === 'B2' ? 'active' : ''}" aria-pressed="${filters.cefr === 'B2'}" data-val="B2">B2 (ORTA-İLERİ)</button>
-            <button type="button" class="filter-chip ${filters.cefr === 'C1' ? 'active' : ''}" aria-pressed="${filters.cefr === 'C1'}" data-val="C1">C1 (İLERİ AKADEMİK)</button>
-          </div>
+        <div class="lib-meta">
+          <button type="button" class="lib-label" id="lib-filter-label" data-lib-action="filters" aria-label="Filtreler: ${escapeHtml(libraryFilterLabelText())}">
+            <span class="lib-label-text">${escapeHtml(libraryFilterLabelText())}</span><span aria-hidden="true">▾</span>
+          </button>
+          <span class="lib-count" id="lib-count">${words.length.toLocaleString('tr-TR')} KİTAP</span>
         </div>
-
-        <div>
-          <div class="filter-chips-group" id="status-chips">
-            <button type="button" class="filter-chip ${filters.status === 'all' ? 'active' : ''}" aria-pressed="${filters.status === 'all'}" data-val="all">TÜMÜ</button>
-            <button type="button" class="filter-chip ${filters.status === 'learned' ? 'active' : ''}" aria-pressed="${filters.status === 'learned'}" data-val="learned">ÖĞRENİLENLER (${STATE.userData.learned.size})</button>
-            <button type="button" class="filter-chip ${filters.status === 'review' ? 'active' : ''}" aria-pressed="${filters.status === 'review'}" data-val="review">TEKRAR EDİLECEKLER (${STATE.userData.review.size})</button>
-            <button type="button" class="filter-chip ${filters.status === 'starred' ? 'active' : ''}" aria-pressed="${filters.status === 'starred'}" data-val="starred">FAVORİLER (${STATE.userData.starred.size})</button>
-          </div>
+        <div class="lib-shelf-wrap">
+          <div class="lib-shelf" id="lib-shelf" role="group" aria-label="${L ? libraryShelfName(L) : 'Raf'}">${libraryShelfInnerHtml(words)}</div>
+          <div class="lib-board" aria-hidden="true"></div>
         </div>
-
-        <div class="dir-results-info" id="dir-results-info">
-          ${resultText}
+        <div class="lib-ruler" id="lib-ruler" aria-label="Raf içinde atla">${libraryRulerHtml(words)}</div>
+        <div class="lib-wheel-wrap">
+          <div class="lib-wheel" id="lib-wheel" role="tablist" aria-label="Harfler">${libraryWheelHtml()}</div>
         </div>
       </div>
-
-      <div class="words-grid" id="dir-words-grid">
-        ${generateWordCardsHtml(paginatedWords)}
-      </div>
-
-      <div id="dir-pagination-container">
-        ${generateDirectoryPaginationHtml(filtered.length, STATE.directoryPage, pageSize)}
-      </div>
+      ${typeof libraryOverlaysHtml === 'function' ? libraryOverlaysHtml() : ''}
     `;
 
-    const searchInput = document.getElementById('dir-search-input');
-    if (searchInput) {
-      let _searchTimer = null;
-      searchInput.addEventListener('input', (e) => {
-        STATE.directoryFilters.search = e.target.value;
-        STATE.directoryPage = 1;
-        const clearBtn = document.getElementById('dir-search-clear');
-        if (clearBtn) clearBtn.hidden = !e.target.value;
-        clearTimeout(_searchTimer);
-        // 250ms debounce: büyük veri setinde her tuş vuruşunda arayüz donmaz
-        _searchTimer = setTimeout(() => renderDirectoryView(true), 250);
-      });
+    container.onclick = libraryClickHandler;
+    container.onkeydown = libraryKeyHandler;
+    bindLibraryShelf();
+    centerLibraryWheel(false);
+  }
+
+  // Raf, cetvel, başlık, sayaç ve çark durumunu yerinde günceller; hedefler yoksa tam çizim
+  function refreshLibraryShelf() {
+    const shelf = document.getElementById('lib-shelf');
+    const ruler = document.getElementById('lib-ruler');
+    const title = document.getElementById('lib-title');
+    const count = document.getElementById('lib-count');
+    const wheel = document.getElementById('lib-wheel');
+    if (!shelf || !ruler || !title || !count || !wheel) { renderDirectoryView(); return; }
+    const words = libraryShelfWords();
+    const L = STATE.library.letter;
+    title.textContent = libraryShelfName(L);
+    count.textContent = `${words.length.toLocaleString('tr-TR')} KİTAP`;
+    shelf.setAttribute('aria-label', libraryShelfName(L));
+    shelf.innerHTML = libraryShelfInnerHtml(words);
+    shelf.scrollLeft = 0;
+    ruler.innerHTML = libraryRulerHtml(words);
+    wheel.querySelectorAll('.lib-wheel-l').forEach(b => {
+      const on = b.getAttribute('data-letter') === L;
+      b.classList.toggle('is-active', on);
+      b.setAttribute('aria-selected', String(on));
+      b.setAttribute('tabindex', on ? '0' : '-1');
+    });
+    bindLibraryShelf();
+  }
+
+  function selectLibraryLetter(letter) {
+    const idx = getLibraryIndex();
+    if (!idx.byLetter[letter]) return;
+    STATE.library.letter = letter;
+    STATE.library.rendered = Math.min(LIBRARY_CHUNK, idx.byLetter[letter].length);
+    refreshLibraryShelf();
+    centerLibraryWheel(true);
+    announceStatus(`${letter === '#' ? 'Diğer' : letter} rafı, ${idx.byLetter[letter].length} kitap`);
+  }
+
+  function appendLibraryBooks() {
+    const words = libraryShelfWords();
+    const from = STATE.library.rendered;
+    if (from >= words.length) return;
+    const to = Math.min(words.length, from + LIBRARY_CHUNK);
+    STATE.library.rendered = to;
+    const shelf = document.getElementById('lib-shelf');
+    if (!shelf) return;
+    const sentinel = shelf.querySelector('.lib-sentinel');
+    if (sentinel) sentinel.remove();
+    shelf.insertAdjacentHTML('beforeend', libraryBooksSliceHtml(words, from, to) + (to < words.length ? '<span class="lib-sentinel" aria-hidden="true"></span>' : ''));
+    bindLibraryShelf();
+  }
+
+  function jumpLibraryRuler(index) {
+    const words = libraryShelfWords();
+    const target = words[index];
+    if (!target) return;
+    while (STATE.library.rendered <= index) appendLibraryBooks();
+    const shelf = document.getElementById('lib-shelf');
+    const el = shelf && shelf.querySelector(`.lib-book[data-id="${target.id}"]`);
+    if (el) el.scrollIntoView({ inline: 'start', block: 'nearest', behavior: libraryReducedMotion() ? 'auto' : 'smooth' });
+  }
+
+  function libraryReducedMotion() {
+    return !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+  }
+
+  // Sona yaklaşınca sıradaki 80 kitabı ekle; IntersectionObserver yoksa kaydırma olayı
+  function bindLibraryShelf() {
+    const shelf = document.getElementById('lib-shelf');
+    if (!shelf) return;
+    if (_libraryObserver) { _libraryObserver.disconnect(); _libraryObserver = null; }
+    const sentinel = shelf.querySelector('.lib-sentinel');
+    if (!sentinel) return;
+    if (typeof IntersectionObserver !== 'undefined') {
+      _libraryObserver = new IntersectionObserver((entries) => {
+        if (entries.some(e => e.isIntersecting)) appendLibraryBooks();
+      }, { root: shelf, rootMargin: '0px 400px 0px 0px' });
+      _libraryObserver.observe(sentinel);
+    } else if (!shelf._libScrollBound) {
+      shelf._libScrollBound = true;
+      shelf.addEventListener('scroll', () => {
+        if (shelf.scrollLeft + shelf.clientWidth > shelf.scrollWidth - 400) appendLibraryBooks();
+      }, { passive: true });
     }
+  }
 
-    container.querySelectorAll('#yds-pos-chips .filter-chip').forEach(btn => {
-      btn.addEventListener('click', () => {
-        container.querySelectorAll('#yds-pos-chips .filter-chip').forEach(b => { b.classList.remove('active'); b.setAttribute('aria-pressed', 'false'); });
-        btn.classList.add('active'); btn.setAttribute('aria-pressed', 'true');
-        STATE.directoryFilters.pos = btn.getAttribute('data-val');
-        STATE.directoryPage = 1;
-        renderDirectoryView(true);
+  function centerLibraryWheel(smooth) {
+    const wheel = document.getElementById('lib-wheel');
+    const active = wheel && wheel.querySelector('.lib-wheel-l.is-active');
+    if (!active || typeof wheel.scrollTo !== 'function') return;
+    wheel._libProgrammatic = true;
+    const left = active.offsetLeft - (wheel.clientWidth - active.offsetWidth) / 2;
+    wheel.scrollTo({ left, behavior: smooth && !libraryReducedMotion() ? 'smooth' : 'auto' });
+    clearTimeout(wheel._libProgTimer);
+    wheel._libProgTimer = setTimeout(() => { wheel._libProgrammatic = false; }, 400);
+    if (!wheel._libScrollBound) {
+      wheel._libScrollBound = true;
+      wheel.addEventListener('scroll', onLibraryWheelScroll, { passive: true });
+    }
+  }
+
+  // Çark parmakla çevrilip durunca ortadaki dolu harf seçilir
+  function onLibraryWheelScroll() {
+    const wheel = document.getElementById('lib-wheel');
+    if (!wheel || wheel._libProgrammatic) return;
+    clearTimeout(_libraryWheelTimer);
+    _libraryWheelTimer = setTimeout(() => {
+      const mid = wheel.scrollLeft + wheel.clientWidth / 2;
+      let best = null, bestDist = Infinity;
+      wheel.querySelectorAll('.lib-wheel-l:not(.is-empty)').forEach(b => {
+        const d = Math.abs(b.offsetLeft + b.offsetWidth / 2 - mid);
+        if (d < bestDist) { bestDist = d; best = b; }
       });
-    });
+      const L = best && best.getAttribute('data-letter');
+      if (L && L !== STATE.library.letter) selectLibraryLetter(L);
+      else centerLibraryWheel(true);
+    }, 120);
+  }
 
-    container.querySelectorAll('#dataset-chips .filter-chip').forEach(btn => {
-      btn.addEventListener('click', () => {
-        container.querySelectorAll('#dataset-chips .filter-chip').forEach(b => { b.classList.remove('active'); b.setAttribute('aria-pressed', 'false'); });
-        btn.classList.add('active'); btn.setAttribute('aria-pressed', 'true');
-        STATE.directoryFilters.dataset = btn.getAttribute('data-val');
-        STATE.directoryPage = 1;
-        renderDirectoryView(true);
-      });
-    });
+  function libraryClickHandler(e) {
+    const t = e.target;
+    if (!t || !t.closest) return;
+    const book = t.closest('.lib-book');
+    if (book) {
+      if (window.APP && typeof window.APP.openLibraryBook === 'function') window.APP.openLibraryBook(parseInt(book.getAttribute('data-id'), 10));
+      return;
+    }
+    const letter = t.closest('.lib-wheel-l');
+    if (letter) {
+      if (!letter.classList.contains('is-empty')) selectLibraryLetter(letter.getAttribute('data-letter'));
+      return;
+    }
+    const g = t.closest('.lib-ruler-g');
+    if (g) { jumpLibraryRuler(parseInt(g.getAttribute('data-index'), 10)); return; }
+    const act = t.closest('[data-lib-action]');
+    const fnName = act && { search: 'openLibrarySearch', filters: 'openLibraryFilters' }[act.getAttribute('data-lib-action')];
+    if (fnName && typeof window.APP[fnName] === 'function') window.APP[fnName]();
+  }
 
-    container.querySelectorAll('#cefr-chips .filter-chip').forEach(btn => {
-      btn.addEventListener('click', () => {
-        container.querySelectorAll('#cefr-chips .filter-chip').forEach(b => { b.classList.remove('active'); b.setAttribute('aria-pressed', 'false'); });
-        btn.classList.add('active'); btn.setAttribute('aria-pressed', 'true');
-        STATE.directoryFilters.cefr = btn.getAttribute('data-val');
-        STATE.directoryPage = 1;
-        renderDirectoryView(true);
-      });
-    });
+  function libraryKeyHandler(e) {
+    const t = e.target;
+    if (!t || !t.closest || !t.closest('.lib-wheel')) return;
+    if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
+    e.preventDefault();
+    const letters = getLibraryIndex().letters;
+    const i = letters.indexOf(STATE.library.letter);
+    const next = letters[i + (e.key === 'ArrowRight' ? 1 : -1)];
+    if (next) {
+      selectLibraryLetter(next);
+      const btn = document.querySelector(`.lib-wheel-l[data-letter="${next}"]`);
+      if (btn) btn.focus();
+    }
+  }
 
-    container.querySelectorAll('#status-chips .filter-chip').forEach(btn => {
-      btn.addEventListener('click', () => {
-        container.querySelectorAll('#status-chips .filter-chip').forEach(b => { b.classList.remove('active'); b.setAttribute('aria-pressed', 'false'); });
-        btn.classList.add('active'); btn.setAttribute('aria-pressed', 'true');
-        STATE.directoryFilters.status = btn.getAttribute('data-val');
-        STATE.directoryPage = 1;
-        renderDirectoryView(true);
-      });
-    });
-
-    bindDirectoryCardAudio(container.querySelector('#dir-words-grid') || container);
+  // Durum değişince ilgili sırtın işaretlerini yerinde güncelle (raf kaydırma konumu korunur)
+  function syncLibrarySpine(wordId) {
+    const shelf = document.getElementById('lib-shelf');
+    const el = shelf && shelf.querySelector(`.lib-book[data-id="${wordId}"]`);
+    if (!el) return;
+    const ud = STATE.userData;
+    el.classList.toggle('is-learned', ud.learned.has(wordId));
+    el.classList.toggle('is-review', ud.review.has(wordId));
+    el.classList.toggle('is-starred', ud.starred.has(wordId));
   }
 
   // ==========================================================================
@@ -7905,9 +7876,6 @@
     evaluatePronunciation,
     renderFlashcardView,
     renderDirectoryView,
-    setDirectoryPage,
-    toggleWordCard,
-    wordCardKey,
     searchDirectory,
     getFilteredDirectoryWords,
     libraryLetterOf,
@@ -7916,6 +7884,9 @@
     spineHeightPx,
     spineLabel,
     shelfRulerGroups,
+    selectLibraryLetter,
+    appendLibraryBooks,
+    jumpLibraryRuler,
     librarySuggest,
     clearDirectorySearch,
     clearDirectoryFilters,
