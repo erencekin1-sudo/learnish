@@ -5820,9 +5820,6 @@
     }).join('');
   }
 
-  function libraryFilterLabelText() {
-    return typeof libraryFilterSummary === 'function' ? libraryFilterSummary() : 'Tüm kütüphaneler · Tüm düzeyler';
-  }
 
   function renderDirectoryView() {
     const container = document.getElementById('view-directory');
@@ -5849,8 +5846,8 @@
           <button type="button" class="lib-icon-btn" id="lib-search-btn" aria-label="Kelime ara" data-lib-action="search">${ICONS.search}</button>
         </div>
         <div class="lib-meta">
-          <button type="button" class="lib-label" id="lib-filter-label" data-lib-action="filters" aria-label="Filtreler: ${escapeHtml(libraryFilterLabelText())}">
-            <span class="lib-label-text">${escapeHtml(libraryFilterLabelText())}</span><span aria-hidden="true">▾</span>
+          <button type="button" class="lib-label" id="lib-filter-label" data-lib-action="filters" aria-label="Filtreler: ${escapeHtml(libraryFilterSummary())}">
+            <span class="lib-label-text">${escapeHtml(libraryFilterSummary())}</span><span aria-hidden="true">▾</span>
           </button>
           <span class="lib-count" id="lib-count">${words.length.toLocaleString('tr-TR')} KİTAP</span>
         </div>
@@ -5863,7 +5860,7 @@
           <div class="lib-wheel" id="lib-wheel" role="tablist" aria-label="Harfler">${libraryWheelHtml()}</div>
         </div>
       </div>
-      ${typeof libraryOverlaysHtml === 'function' ? libraryOverlaysHtml() : ''}
+      ${libraryOverlaysHtml()}
     `;
 
     container.onclick = libraryClickHandler;
@@ -6013,13 +6010,17 @@
     }
     const g = t.closest('.lib-ruler-g');
     if (g) { jumpLibraryRuler(parseInt(g.getAttribute('data-index'), 10)); return; }
+    const chip = t.closest('.filter-chip[data-group]');
+    if (chip) { setLibraryFilter(chip.getAttribute('data-group'), chip.getAttribute('data-val')); return; }
     const item = t.closest('.lib-suggest-item');
     if (item) { pickLibrarySuggestion(item.getAttribute('data-id')); return; }
     const act = t.closest('[data-lib-action]');
     const fn = act && {
       search: () => openLibrarySearch(''),
       'search-close': () => closeLibrarySearch(),
-      filters: () => { if (typeof openLibraryFilters === 'function') openLibraryFilters(); }
+      filters: () => openLibraryFilters(),
+      'filters-close': () => closeLibraryFilters(),
+      'filters-clear': () => clearDirectoryFilters()
     }[act.getAttribute('data-lib-action')];
     if (fn) fn();
   }
@@ -6027,6 +6028,7 @@
   function libraryKeyHandler(e) {
     const t = e.target;
     if (!t || !t.closest) return;
+    if (e.key === 'Escape' && STATE.library.filtersOpen && t.closest('#lib-filters')) { e.preventDefault(); closeLibraryFilters(); return; }
     if (STATE.library.bookId != null && t.closest('#lib-book-layer')) {
       if (e.key === 'Escape') { e.preventDefault(); closeLibraryBook(); }
       else if ((e.key === 'ArrowLeft' || e.key === 'ArrowRight') && !t.closest('input, textarea')) {
@@ -6257,6 +6259,7 @@
 
   function libraryOverlaysHtml() {
     return (STATE.library.searchOpen ? librarySearchHtml() : '') +
+      (STATE.library.filtersOpen ? libraryFiltersHtml() : '') +
       (STATE.library.bookId != null ? libraryBookLayerHtml() : '');
   }
 
@@ -6376,6 +6379,128 @@
     const exact = q && WORDS_DATA.find(w => String(w.en).toLowerCase() === q.toLowerCase());
     if (exact) pickLibrarySuggestion(exact.id);
     else openLibrarySearch(q);
+  }
+
+  // ==========================================================================
+  // KİTAPLIK: FİLTRE ("raf etiketi" + alttan panel)
+  // ==========================================================================
+  const LIBRARY_DATASET_NAMES = { all: 'Tüm kütüphaneler', maarif: 'Maarif', yds: 'YDS & YÖKDİL', oxford: 'Kütüphane' };
+  const LIBRARY_STATUS_NAMES = { learned: 'Öğrenilenler', review: 'Tekrar edilecekler', starred: 'Favoriler' };
+  const LIBRARY_POS_NAMES = { verb: 'Fiiller', noun: 'İsimler', adj_adv: 'Sıfat & zarf' };
+
+  function libraryFilterSummary() {
+    const f = STATE.directoryFilters;
+    const dataset = STATE.activeModule === 'yds' ? 'yds' : (f.dataset || 'all');
+    const parts = [LIBRARY_DATASET_NAMES[dataset] || LIBRARY_DATASET_NAMES.all];
+    parts.push(f.cefr && f.cefr !== 'all' ? f.cefr : 'Tüm düzeyler');
+    if (LIBRARY_STATUS_NAMES[f.status]) parts.push(LIBRARY_STATUS_NAMES[f.status]);
+    if (LIBRARY_POS_NAMES[f.pos]) parts.push(LIBRARY_POS_NAMES[f.pos]);
+    return parts.join(' · ');
+  }
+
+  function libraryChip(group, val, label) {
+    const on = (STATE.directoryFilters[group] || 'all') === val;
+    return `<button type="button" class="filter-chip${on ? ' active' : ''}" aria-pressed="${on}" data-group="${group}" data-val="${val}">${label}</button>`;
+  }
+
+  function libraryFiltersHtml() {
+    const ud = STATE.userData;
+    const n = (x) => x.toLocaleString('tr-TR');
+    const isYds = STATE.activeModule === 'yds';
+    const first = isYds ? `
+        <div class="lib-filter-group-title">YDS KELİME TÜRLERİ</div>
+        <div class="filter-chips-group" id="yds-pos-chips">
+          ${libraryChip('pos', 'all', `TÜM YDS (${n(WORDS_DATA.filter(isYDSWord).length)})`)}
+          ${libraryChip('pos', 'verb', 'AKADEMİK FİİLLER (VERBS)')}
+          ${libraryChip('pos', 'noun', 'AKADEMİK İSİMLER (NOUNS)')}
+          ${libraryChip('pos', 'adj_adv', 'SIFATLAR &amp; ZARFLAR')}
+        </div>` : `
+        <div class="lib-filter-group-title">KELİME KÜTÜPHANESİ</div>
+        <div class="filter-chips-group" id="dataset-chips">
+          ${libraryChip('dataset', 'all', `TÜM KÜTÜPHANELER (${n(WORDS_DATA.length)})`)}
+          ${libraryChip('dataset', 'maarif', `MAARİF MODELİ (${n(getActiveGradePool().length)})`)}
+          ${libraryChip('dataset', 'yds', `YDS &amp; YÖKDİL (${n(WORDS_DATA.filter(isYDSWord).length)})`)}
+          ${libraryChip('dataset', 'oxford', `KÜTÜPHANE (${n(WORDS_DATA.filter(isOxfordWord).length)})`)}
+        </div>`;
+    return `
+      <div class="lib-filter-layer" id="lib-filters">
+        <div class="lib-search-backdrop" data-lib-action="filters-close"></div>
+        <div class="lib-filter-sheet" role="dialog" aria-modal="true" aria-labelledby="lib-filters-title">
+          <div class="lib-filter-head">
+            <h3 id="lib-filters-title">Raf etiketi</h3>
+            <button type="button" class="lib-round" data-lib-action="filters-close" aria-label="Filtreleri kapat">${renderIcon('cross', 18)}</button>
+          </div>
+          ${first}
+          <div class="lib-filter-group-title">CEFR DÜZEYLERİ</div>
+          <div class="filter-chips-group" id="cefr-chips">
+            ${libraryChip('cefr', 'all', 'TÜM DÜZEYLER')}
+            ${['A1', 'A2', 'B1'].map(c => libraryChip('cefr', c, c)).join('')}
+            ${libraryChip('cefr', 'B2', 'B2 (ORTA-İLERİ)')}
+            ${libraryChip('cefr', 'C1', 'C1 (İLERİ AKADEMİK)')}
+          </div>
+          <div class="lib-filter-group-title">DURUM</div>
+          <div class="filter-chips-group" id="status-chips">
+            ${libraryChip('status', 'all', 'TÜMÜ')}
+            ${libraryChip('status', 'learned', `ÖĞRENİLENLER (${ud.learned.size})`)}
+            ${libraryChip('status', 'review', `TEKRAR EDİLECEKLER (${ud.review.size})`)}
+            ${libraryChip('status', 'starred', `FAVORİLER (${ud.starred.size})`)}
+          </div>
+          <button type="button" class="lib-empty-btn lib-filter-clear" data-lib-action="filters-clear">Filtreleri temizle</button>
+        </div>
+      </div>
+    `;
+  }
+
+  function openLibraryFilters() {
+    STATE.library.filtersOpen = true;
+    const container = document.getElementById('view-directory');
+    if (!container || !document.getElementById('lib-shelf')) { renderDirectoryView(); return; }
+    const old = document.getElementById('lib-filters');
+    if (old) old.remove();
+    container.insertAdjacentHTML('beforeend', libraryFiltersHtml());
+    const first = container.querySelector('#lib-filters .filter-chip.active');
+    if (first) first.focus({ preventScroll: true });
+  }
+
+  function closeLibraryFilters() {
+    STATE.library.filtersOpen = false;
+    const layer = document.getElementById('lib-filters');
+    if (layer) layer.remove();
+    else if (!document.getElementById('lib-shelf')) renderDirectoryView();
+    const label = document.getElementById('lib-filter-label');
+    if (label) label.focus();
+  }
+
+  function setLibraryFilter(group, value) {
+    if (!['dataset', 'cefr', 'status', 'pos'].includes(group)) return;
+    STATE.directoryFilters[group] = value;
+    _libraryIndex = null;
+    const idx = getLibraryIndex();
+    const lib = STATE.library;
+    if (!lib.letter || !idx.byLetter[lib.letter]) lib.letter = idx.letters[0] || null; // boşalan harften ilk dolu harfe
+    lib.rendered = lib.letter ? Math.min(LIBRARY_CHUNK, idx.byLetter[lib.letter].length) : 0;
+
+    const shelf = document.getElementById('lib-shelf');
+    const wheel = document.getElementById('lib-wheel');
+    const label = document.getElementById('lib-filter-label');
+    if (!shelf || !wheel || !label || !lib.letter) { renderDirectoryView(); return; }
+    refreshLibraryShelf();
+    centerLibraryWheel(true);
+    wheel.querySelectorAll('.lib-wheel-l').forEach(b => {
+      const empty = !idx.byLetter[b.getAttribute('data-letter')];
+      b.classList.toggle('is-empty', empty);
+      if (empty) b.setAttribute('aria-disabled', 'true'); else b.removeAttribute('aria-disabled');
+    });
+    const summary = libraryFilterSummary();
+    const text = label.querySelector('.lib-label-text');
+    if (text) text.textContent = summary;
+    label.setAttribute('aria-label', `Filtreler: ${summary}`);
+    document.querySelectorAll('#lib-filters .filter-chip[data-group]').forEach(b => {
+      const on = (STATE.directoryFilters[b.getAttribute('data-group')] || 'all') === b.getAttribute('data-val');
+      b.classList.toggle('active', on);
+      b.setAttribute('aria-pressed', String(on));
+    });
+    announceStatus(`${summary}: ${libraryShelfWords().length} kitap`);
   }
 
   // ==========================================================================
@@ -8222,6 +8347,10 @@
     closeLibrarySearch,
     renderLibrarySuggestions,
     pickLibrarySuggestion,
+    setLibraryFilter,
+    libraryFilterSummary,
+    openLibraryFilters,
+    closeLibraryFilters,
     librarySuggest,
     clearDirectoryFilters,
     resetAllProgress,

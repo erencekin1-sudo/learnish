@@ -1311,29 +1311,56 @@ registerTest(3, 'Library Search', 'test_library_synonym_without_entry_opens_sear
   assertEqual(s.directoryFilters.search, 'qqzz-no-such-headword');
 });
 
+registerTest(1, 'Library Filters', 'test_library_filter_summary', () => {
+  const env = createFreshAppEnvironment();
+  env.APP.switchView('directory');
+  assertEqual(env.APP.libraryFilterSummary(), 'Tüm kütüphaneler · Tüm düzeyler');
+  env.APP.setLibraryFilter('cefr', 'B2');
+  env.APP.setLibraryFilter('status', 'starred');
+  assertEqual(env.APP.libraryFilterSummary(), 'Tüm kütüphaneler · B2 · Favoriler');
+});
+
+registerTest(2, 'Library Filters', 'test_library_filter_moves_off_empty_letter', () => {
+  const env = createFreshAppEnvironment();
+  const a = env.window.WORDS_DATA.find(x => x.en === 'abandon');
+  env.APP.toggleStarred(a.id);
+  env.APP.switchView('directory');
+  env.APP.selectLibraryLetter('D');
+  env.APP.setLibraryFilter('status', 'starred');
+  assertEqual(env.APP.getState().library.letter, 'A');
+  assertIncludes(env.document.getElementById('view-directory').innerHTML, 'is-empty');
+});
+
+registerTest(2, 'Library Filters', 'test_library_filter_empty_state', () => {
+  const env = createFreshAppEnvironment();
+  env.APP.switchView('directory');
+  env.APP.setLibraryFilter('status', 'starred');
+  const html = env.document.getElementById('view-directory').innerHTML;
+  assertIncludes(html, 'Bu filtrelerle rafta kitap yok');
+  assertIncludes(html, 'Filtreleri temizle');
+});
+
 // --- 1.5 Word Directory Search & Filters (6 Tests) ---
 
 registerTest(1, 'Word Directory', 'test_directory_filter_by_pos', () => {
   const env = createFreshAppEnvironment();
   env.APP.switchModule('yds');
   env.APP.switchView('directory');
-  const state = env.APP.getState();
-  state.directoryFilters.pos = 'verb';
-  env.APP.renderDirectoryView();
-  
-  const dirSection = env.document.getElementById('view-directory');
-  assert(dirSection.innerHTML.length > 500, 'Filtered verb list should render cards');
+  const before = env.APP.getFilteredDirectoryWords().length;
+  env.APP.setLibraryFilter('pos', 'verb');
+  const after = env.APP.getFilteredDirectoryWords().length;
+  assert(after > 0 && after < before, `verb filter should narrow the YDS shelf (${before} -> ${after})`);
+  assertIncludes(env.APP.libraryFilterSummary(), 'Fiiller');
 });
 
 registerTest(1, 'Word Directory', 'test_directory_filter_by_cefr', () => {
   const env = createFreshAppEnvironment();
   env.APP.switchView('directory');
-  const state = env.APP.getState();
-  state.directoryFilters.cefr = 'A1';
-  env.APP.renderDirectoryView();
-  
-  const dirSection = env.document.getElementById('view-directory');
-  assertIncludes(dirSection.innerHTML, 'A1', 'Directory cards should render A1 badges');
+  env.APP.setLibraryFilter('cefr', 'A1');
+  const html = env.document.getElementById('view-directory').innerHTML;
+  const tones = [...html.matchAll(/class="lib-book (tone-[a-z0-9]+)/g)].map(m => m[1]);
+  assert(tones.length > 0, 'A1 shelf should have books');
+  assert(tones.every(x => x === 'tone-a1'), `every book on an A1-filtered shelf is tone-a1 (got ${[...new Set(tones)].join(',')})`);
 });
 
 registerTest(1, 'Word Directory', 'test_directory_in_place_status_toggle', () => {
@@ -1348,6 +1375,7 @@ registerTest(1, 'Word Directory', 'test_directory_absence_of_redundant_grade_fil
   const env = createFreshAppEnvironment();
   env.APP.switchModule('maarif');
   env.APP.switchView('directory');
+  env.APP.openLibraryFilters();
   const dirSection = env.document.getElementById('view-directory');
   assert(!dirSection.innerHTML.includes('MEB: 5. SINIF MAARİF'), 'Directory must not contain redundant 5. Sınıf filter chip');
   assert(dirSection.innerHTML.includes('TÜM KÜTÜPHANELER'), 'Directory should offer unified library chip');
@@ -1888,8 +1916,7 @@ registerTest(3, 'Cross-Feature Combos', 'test_combo_switch_module_then_load_flas
 registerTest(3, 'Cross-Feature Combos', 'test_combo_directory_filter_then_mark_starred', () => {
   const env = createFreshAppEnvironment();
   env.APP.switchView('directory');
-  env.APP.getState().directoryFilters.dataset = 'oxford';
-  env.APP.renderDirectoryView();
+  env.APP.setLibraryFilter('dataset', 'oxford');
   
   const targetId = 1;
   env.APP.toggleStarred(targetId);
