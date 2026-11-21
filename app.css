@@ -7222,7 +7222,7 @@ h1, h2, h3 { text-wrap: balance; line-height: 1.2; }
   --lib-surface: #ffffff;
   --lib-board: #d8d3c5;
   --lib-line: rgba(183, 198, 194, 0.55);
-  --lib-page: #fbfaf6;
+  --lib-page: color-mix(in srgb, #ffffff 60%, #f5f3ed);
   --lib-page-ink: #171e19;
   --lib-ribbon: #ca0013;
   --lib-tone-a1: #ffffff;  --lib-tone-a1-text: #47524c;
@@ -7384,7 +7384,7 @@ h1, h2, h3 { text-wrap: balance; line-height: 1.2; }
 .lib-note { margin: 8px 0 0; font-size: 12px; font-weight: 700; color: var(--lib-ink-soft); }
 .lib-syns { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
 .lib-syn {
-  min-height: 36px; padding: 0 12px; border-radius: var(--dp-radius-pill); border: 1px solid var(--lib-line);
+  min-height: 44px; padding: 0 14px; border-radius: var(--dp-radius-pill); border: 1px solid var(--lib-line);
   background: var(--lib-surface); color: var(--lib-page-ink); font: 700 12px var(--dp-typography-face); cursor: pointer;
 }
 .lib-def, .lib-ex { margin: 4px 0 0; font-size: 13px; line-height: 1.5; }
@@ -7450,3 +7450,6 @@ h1, h2, h3 { text-wrap: balance; line-height: 1.2; }
 .lib-filter-sheet .filter-chip { min-height: 44px; }
 .lib-filter-clear { margin-top: 18px; width: 100%; }
 @keyframes libRise { from { transform: translateY(24px); opacity: 0; } to { transform: none; opacity: 1; } }
+.lib-shelf.lib-swap { animation: libFade 0.25s var(--lib-ease); }
+.lib-ruler-g.is-active { background: var(--lib-ink); color: var(--lib-surface); border-color: transparent; }
+[data-theme="dark"] #view-directory .lib-ruler-g.is-active { color: #171e19; }

@@ -5712,6 +5712,13 @@
     return out;
   }
 
+  // Raf kaydırılırken cetvelde etkin grup: ilk görünen kitabın düştüğü son grup
+  function libraryRulerActiveIndex(groups, firstVisibleIndex) {
+    let active = -1;
+    for (let i = 0; i < groups.length; i++) if (groups[i].index <= firstVisibleIndex) active = i;
+    return active;
+  }
+
   // Harf içi atlama cetveli: ilk iki harfe göre kovalar, en fazla 8; fazlası en küçük komşu çiftler birleşerek azalır
   function shelfRulerGroups(words) {
     if (!words || words.length < 60) return [];
@@ -5886,6 +5893,9 @@
     shelf.setAttribute('aria-label', libraryShelfName(L));
     shelf.innerHTML = libraryShelfInnerHtml(words);
     shelf.scrollLeft = 0;
+    shelf.classList.remove('lib-swap');
+    void shelf.offsetWidth; // animasyonu yeniden başlat
+    shelf.classList.add('lib-swap');
     ruler.innerHTML = libraryRulerHtml(words);
     wheel.querySelectorAll('.lib-wheel-l').forEach(b => {
       const on = b.getAttribute('data-letter') === L;
@@ -5936,9 +5946,36 @@
   }
 
   // Sona yaklaşınca sıradaki 80 kitabı ekle; IntersectionObserver yoksa kaydırma olayı
+  function syncLibraryRuler() {
+    const shelf = document.getElementById('lib-shelf');
+    const ruler = document.getElementById('lib-ruler');
+    if (!shelf || !ruler) return;
+    const buttons = ruler.querySelectorAll('.lib-ruler-g');
+    if (!buttons.length) return;
+    const left = shelf.getBoundingClientRect().left;
+    const books = shelf.querySelectorAll('.lib-book');
+    let first = 0;
+    for (let i = 0; i < books.length; i++) { if (books[i].getBoundingClientRect().right > left + 4) { first = i; break; } }
+    const groups = [...buttons].map(b => ({ index: parseInt(b.getAttribute('data-index'), 10) }));
+    const active = libraryRulerActiveIndex(groups, first);
+    buttons.forEach((b, i) => {
+      b.classList.toggle('is-active', i === active);
+      if (i === active) b.setAttribute('aria-current', 'true'); else b.removeAttribute('aria-current');
+    });
+  }
+
   function bindLibraryShelf() {
     const shelf = document.getElementById('lib-shelf');
     if (!shelf) return;
+    if (!shelf._libRulerBound && shelf.addEventListener) {
+      shelf._libRulerBound = true;
+      let raf = 0;
+      shelf.addEventListener('scroll', () => {
+        if (raf) return;
+        raf = requestAnimationFrame(() => { raf = 0; syncLibraryRuler(); });
+      }, { passive: true });
+    }
+    syncLibraryRuler();
     if (_libraryObserver) { _libraryObserver.disconnect(); _libraryObserver = null; }
     const sentinel = shelf.querySelector('.lib-sentinel');
     if (!sentinel) return;
@@ -6026,6 +6063,15 @@
   function libraryKeyHandler(e) {
     const t = e.target;
     if (!t || !t.closest) return;
+    const layer = e.key === 'Tab' && t.closest('#lib-book-layer, #lib-search, #lib-filters');
+    if (layer) {
+      const items = [...layer.querySelectorAll('button:not([disabled]), input')];
+      if (!items.length) return;
+      const firstEl = items[0], lastEl = items[items.length - 1];
+      if (e.shiftKey && (t === firstEl || t.id === 'lib-spread')) { e.preventDefault(); lastEl.focus(); }
+      else if (!e.shiftKey && t === lastEl) { e.preventDefault(); firstEl.focus(); }
+      return;
+    }
     if (e.key === 'Escape' && STATE.library.filtersOpen && t.closest('#lib-filters')) { e.preventDefault(); closeLibraryFilters(); return; }
     if (STATE.library.bookId != null && t.closest('#lib-book-layer')) {
       if (e.key === 'Escape') { e.preventDefault(); closeLibraryBook(); }
@@ -6052,7 +6098,8 @@
     const shelf = document.getElementById('lib-shelf');
     const el = shelf && shelf.querySelector(`.lib-book[data-id="${wordId}"]`);
     if (STATE.library.bookId === wordId) {
-      STATE.library.dirty = true;
+      // Yalnızca durum filtresi açıkken kapanışta raf yeniden kurulur (kitap raftan düşebilir)
+      if (STATE.directoryFilters.status && STATE.directoryFilters.status !== 'all') STATE.library.dirty = true;
       refreshLibraryBook();
     }
     if (!el) return;
@@ -6066,6 +6113,30 @@
   // KİTAPLIK: KİTAP (çift sayfa)
   // ==========================================================================
   let _libraryBookReturnFocus = null;
+  let _libraryLastAct = null;
+
+  // Açık katmanlar (kitap / arama / filtre) için tek bir geçmiş girdisi: geri tuşu katmanı kapatır.
+  // Katmandan katmana geçerken girdi değiştirilir (replace), böylece eşzamansız history.back() yarışı olmaz.
+  function libraryPushLayer(kind) {
+    try {
+      if (!window.history || !history.pushState) return;
+      if (history.state && history.state.libLayer) history.replaceState({ libLayer: kind }, '', location.hash || '#directory');
+      else history.pushState({ libLayer: kind }, '', location.hash || '#directory');
+    } catch (e) { /* geri tuşu desteği isteğe bağlı */ }
+  }
+
+  function libraryPopLayer() {
+    try { if (history.state && history.state.libLayer && history.back) history.back(); } catch (e) { /* yok say */ }
+  }
+
+  // Rafı (sayfayı değil) verilen kitap ortada olacak şekilde kaydır
+  function libraryScrollShelfTo(id) {
+    const shelf = document.getElementById('lib-shelf');
+    const el = shelf && shelf.querySelector(`.lib-book[data-id="${id}"]`);
+    if (!el) return null;
+    shelf.scrollLeft = Math.max(0, el.offsetLeft - shelf.offsetLeft - (shelf.clientWidth - el.offsetWidth) / 2);
+    return el;
+  }
 
   function libraryWordById(id) {
     return WORDS_DATA.find(w => w.id === id) || null;
@@ -6147,8 +6218,10 @@
     if (STATE.library.bookId == null) return;
     container.insertAdjacentHTML('beforeend', libraryBookLayerHtml());
     bindLibraryBookGestures();
-    const spread = document.getElementById('lib-spread');
-    if (spread) spread.focus({ preventScroll: true });
+    const keep = _libraryLastAct && document.querySelector(`#lib-book-layer [data-act="${_libraryLastAct}"]:not([disabled])`);
+    _libraryLastAct = null;
+    const target = keep || document.getElementById('lib-spread');
+    if (target) target.focus({ preventScroll: true });
   }
 
   function openLibraryBook(id) {
@@ -6172,12 +6245,11 @@
     }
     if (!wasOpen) {
       _libraryBookReturnFocus = id;
-      try { if (window.history && history.pushState) history.pushState({ libBook: true }, '', location.hash || '#directory'); } catch (e) { /* geri tuşu desteği isteğe bağlı */ }
+      libraryPushLayer('book');
     }
     STATE.library.bookId = id;
     refreshLibraryBook();
-    const spine = document.querySelector(`.lib-book[data-id="${id}"]`);
-    if (spine && spine.scrollIntoView) spine.scrollIntoView({ inline: 'center', block: 'nearest', behavior: 'auto' });
+    libraryScrollShelfTo(id);
   }
 
   function closeLibraryBook(fromHistory) {
@@ -6190,10 +6262,9 @@
     } else {
       refreshLibraryBook();
     }
-    if (!fromHistory) {
-      try { if (history.state && history.state.libBook && history.back) history.back(); } catch (e) { /* yok say */ }
-    }
-    const spine = returnId != null && document.querySelector(`.lib-book[data-id="${returnId}"]`);
+    if (!fromHistory) libraryPopLayer();
+    // Raf, açılan/son çevrilen kitabın olduğu yerde kalır (yeniden çizimden sonra da)
+    const spine = returnId != null && libraryScrollShelfTo(returnId);
     if (spine && spine.focus) spine.focus({ preventScroll: true });
   }
 
@@ -6210,6 +6281,7 @@
   function libraryBookAction(act) {
     const w = libraryWordById(STATE.library.bookId);
     if (!w) return;
+    _libraryLastAct = act; // yeniden çizimde basılan düğmeye odak dönsün
     if (act === 'speak') speakWord(w.en);
     else if (act === 'star') toggleStarred(w.id);
     else if (act === 'learned') toggleLearned(w.id);
@@ -6263,6 +6335,8 @@
 
   window.addEventListener('popstate', () => {
     if (STATE.library.bookId != null) closeLibraryBook(true);
+    else if (STATE.library.searchOpen) closeLibrarySearch(false, true);
+    else if (STATE.library.filtersOpen) closeLibraryFilters(true);
   });
 
   // ==========================================================================
@@ -6334,7 +6408,9 @@
   }
 
   function openLibrarySearch(term = '') {
-    if (STATE.library.bookId != null) closeLibraryBook(); // arama kitabın arkasında kalmasın
+    const wasLayer = STATE.library.bookId != null || STATE.library.filtersOpen;
+    if (STATE.library.bookId != null) closeLibraryBook(true); // arama kitabın arkasında kalmasın; geçmiş girdisi aramaya devredilir
+    if (!STATE.library.searchOpen || !wasLayer) libraryPushLayer('search');
     STATE.library.searchOpen = true;
     STATE.directoryFilters.search = String(term || '');
     const container = document.getElementById('view-directory');
@@ -6348,7 +6424,8 @@
     if (input) { input.focus(); const n = input.value.length; try { input.setSelectionRange(n, n); } catch (e) { /* type=search */ } }
   }
 
-  function closeLibrarySearch(silent) {
+  function closeLibrarySearch(silent, fromHistory) {
+    if (STATE.library.searchOpen && !fromHistory) libraryPopLayer();
     STATE.library.searchOpen = false;
     STATE.directoryFilters.search = '';
     clearTimeout(_librarySearchTimer);
@@ -6361,7 +6438,7 @@
   function pickLibrarySuggestion(id) {
     id = parseInt(id, 10);
     if (!libraryWordById(id)) return;
-    closeLibrarySearch(true);
+    closeLibrarySearch(true, true); // geçmiş girdisi kitaba devredilir (openLibraryBook değiştirir)
     const inFilter = getFilteredDirectoryWords().some(w => w.id === id);
     if (!inFilter) {
       const f = STATE.directoryFilters;
@@ -6450,6 +6527,7 @@
   }
 
   function openLibraryFilters() {
+    if (!STATE.library.filtersOpen) libraryPushLayer('filters');
     STATE.library.filtersOpen = true;
     const container = document.getElementById('view-directory');
     if (!container || !document.getElementById('lib-shelf')) { renderDirectoryView(); return; }
@@ -6460,7 +6538,8 @@
     if (first) first.focus({ preventScroll: true });
   }
 
-  function closeLibraryFilters() {
+  function closeLibraryFilters(fromHistory) {
+    if (STATE.library.filtersOpen && !fromHistory) libraryPopLayer();
     STATE.library.filtersOpen = false;
     const layer = document.getElementById('lib-filters');
     if (layer) layer.remove();
@@ -7171,6 +7250,10 @@
   }
 
   function executeSwitchView(viewName, pushHash = true) {
+    if (viewName !== 'directory') {
+      // Sözlükten çıkınca açık kitap/panel kalmasın; dönüşte yeniden açılmasın
+      Object.assign(STATE.library, { bookId: null, searchOpen: false, filtersOpen: false, dirty: false });
+    }
     STATE.currentView = viewName;
     if (!STATE.viewHistory) STATE.viewHistory = ['home'];
     if (STATE.viewHistory[STATE.viewHistory.length - 1] !== viewName) {
@@ -8335,6 +8418,7 @@
     spineHeightPx,
     spineLabel,
     shelfRulerGroups,
+    libraryRulerActiveIndex,
     selectLibraryLetter,
     appendLibraryBooks,
     jumpLibraryRuler,

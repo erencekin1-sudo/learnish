@@ -7260,7 +7260,7 @@ h1, h2, h3 { text-wrap: balance; line-height: 1.2; }
   --lib-surface: #ffffff;
   --lib-board: #d8d3c5;
   --lib-line: rgba(183, 198, 194, 0.55);
-  --lib-page: #fbfaf6;
+  --lib-page: color-mix(in srgb, #ffffff 60%, #f5f3ed);
   --lib-page-ink: #171e19;
   --lib-ribbon: #ca0013;
   --lib-tone-a1: #ffffff;  --lib-tone-a1-text: #47524c;
@@ -7422,7 +7422,7 @@ h1, h2, h3 { text-wrap: balance; line-height: 1.2; }
 .lib-note { margin: 8px 0 0; font-size: 12px; font-weight: 700; color: var(--lib-ink-soft); }
 .lib-syns { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
 .lib-syn {
-  min-height: 36px; padding: 0 12px; border-radius: var(--dp-radius-pill); border: 1px solid var(--lib-line);
+  min-height: 44px; padding: 0 14px; border-radius: var(--dp-radius-pill); border: 1px solid var(--lib-line);
   background: var(--lib-surface); color: var(--lib-page-ink); font: 700 12px var(--dp-typography-face); cursor: pointer;
 }
 .lib-def, .lib-ex { margin: 4px 0 0; font-size: 13px; line-height: 1.5; }
@@ -7488,6 +7488,9 @@ h1, h2, h3 { text-wrap: balance; line-height: 1.2; }
 .lib-filter-sheet .filter-chip { min-height: 44px; }
 .lib-filter-clear { margin-top: 18px; width: 100%; }
 @keyframes libRise { from { transform: translateY(24px); opacity: 0; } to { transform: none; opacity: 1; } }
+.lib-shelf.lib-swap { animation: libFade 0.25s var(--lib-ease); }
+.lib-ruler-g.is-active { background: var(--lib-ink); color: var(--lib-surface); border-color: transparent; }
+[data-theme="dark"] #view-directory .lib-ruler-g.is-active { color: #171e19; }
 
 </style>
 </head>
@@ -14148,6 +14151,13 @@ if (typeof module !== 'undefined' && module.exports) {
     return out;
   }
 
+  // Raf kaydırılırken cetvelde etkin grup: ilk görünen kitabın düştüğü son grup
+  function libraryRulerActiveIndex(groups, firstVisibleIndex) {
+    let active = -1;
+    for (let i = 0; i < groups.length; i++) if (groups[i].index <= firstVisibleIndex) active = i;
+    return active;
+  }
+
   // Harf içi atlama cetveli: ilk iki harfe göre kovalar, en fazla 8; fazlası en küçük komşu çiftler birleşerek azalır
   function shelfRulerGroups(words) {
     if (!words || words.length < 60) return [];
@@ -14322,6 +14332,9 @@ if (typeof module !== 'undefined' && module.exports) {
     shelf.setAttribute('aria-label', libraryShelfName(L));
     shelf.innerHTML = libraryShelfInnerHtml(words);
     shelf.scrollLeft = 0;
+    shelf.classList.remove('lib-swap');
+    void shelf.offsetWidth; // animasyonu yeniden başlat
+    shelf.classList.add('lib-swap');
     ruler.innerHTML = libraryRulerHtml(words);
     wheel.querySelectorAll('.lib-wheel-l').forEach(b => {
       const on = b.getAttribute('data-letter') === L;
@@ -14372,9 +14385,36 @@ if (typeof module !== 'undefined' && module.exports) {
   }
 
   // Sona yaklaşınca sıradaki 80 kitabı ekle; IntersectionObserver yoksa kaydırma olayı
+  function syncLibraryRuler() {
+    const shelf = document.getElementById('lib-shelf');
+    const ruler = document.getElementById('lib-ruler');
+    if (!shelf || !ruler) return;
+    const buttons = ruler.querySelectorAll('.lib-ruler-g');
+    if (!buttons.length) return;
+    const left = shelf.getBoundingClientRect().left;
+    const books = shelf.querySelectorAll('.lib-book');
+    let first = 0;
+    for (let i = 0; i < books.length; i++) { if (books[i].getBoundingClientRect().right > left + 4) { first = i; break; } }
+    const groups = [...buttons].map(b => ({ index: parseInt(b.getAttribute('data-index'), 10) }));
+    const active = libraryRulerActiveIndex(groups, first);
+    buttons.forEach((b, i) => {
+      b.classList.toggle('is-active', i === active);
+      if (i === active) b.setAttribute('aria-current', 'true'); else b.removeAttribute('aria-current');
+    });
+  }
+
   function bindLibraryShelf() {
     const shelf = document.getElementById('lib-shelf');
     if (!shelf) return;
+    if (!shelf._libRulerBound && shelf.addEventListener) {
+      shelf._libRulerBound = true;
+      let raf = 0;
+      shelf.addEventListener('scroll', () => {
+        if (raf) return;
+        raf = requestAnimationFrame(() => { raf = 0; syncLibraryRuler(); });
+      }, { passive: true });
+    }
+    syncLibraryRuler();
     if (_libraryObserver) { _libraryObserver.disconnect(); _libraryObserver = null; }
     const sentinel = shelf.querySelector('.lib-sentinel');
     if (!sentinel) return;
@@ -14462,6 +14502,15 @@ if (typeof module !== 'undefined' && module.exports) {
   function libraryKeyHandler(e) {
     const t = e.target;
     if (!t || !t.closest) return;
+    const layer = e.key === 'Tab' && t.closest('#lib-book-layer, #lib-search, #lib-filters');
+    if (layer) {
+      const items = [...layer.querySelectorAll('button:not([disabled]), input')];
+      if (!items.length) return;
+      const firstEl = items[0], lastEl = items[items.length - 1];
+      if (e.shiftKey && (t === firstEl || t.id === 'lib-spread')) { e.preventDefault(); lastEl.focus(); }
+      else if (!e.shiftKey && t === lastEl) { e.preventDefault(); firstEl.focus(); }
+      return;
+    }
     if (e.key === 'Escape' && STATE.library.filtersOpen && t.closest('#lib-filters')) { e.preventDefault(); closeLibraryFilters(); return; }
     if (STATE.library.bookId != null && t.closest('#lib-book-layer')) {
       if (e.key === 'Escape') { e.preventDefault(); closeLibraryBook(); }
@@ -14488,7 +14537,8 @@ if (typeof module !== 'undefined' && module.exports) {
     const shelf = document.getElementById('lib-shelf');
     const el = shelf && shelf.querySelector(`.lib-book[data-id="${wordId}"]`);
     if (STATE.library.bookId === wordId) {
-      STATE.library.dirty = true;
+      // Yalnızca durum filtresi açıkken kapanışta raf yeniden kurulur (kitap raftan düşebilir)
+      if (STATE.directoryFilters.status && STATE.directoryFilters.status !== 'all') STATE.library.dirty = true;
       refreshLibraryBook();
     }
     if (!el) return;
@@ -14502,6 +14552,30 @@ if (typeof module !== 'undefined' && module.exports) {
   // KİTAPLIK: KİTAP (çift sayfa)
   // ==========================================================================
   let _libraryBookReturnFocus = null;
+  let _libraryLastAct = null;
+
+  // Açık katmanlar (kitap / arama / filtre) için tek bir geçmiş girdisi: geri tuşu katmanı kapatır.
+  // Katmandan katmana geçerken girdi değiştirilir (replace), böylece eşzamansız history.back() yarışı olmaz.
+  function libraryPushLayer(kind) {
+    try {
+      if (!window.history || !history.pushState) return;
+      if (history.state && history.state.libLayer) history.replaceState({ libLayer: kind }, '', location.hash || '#directory');
+      else history.pushState({ libLayer: kind }, '', location.hash || '#directory');
+    } catch (e) { /* geri tuşu desteği isteğe bağlı */ }
+  }
+
+  function libraryPopLayer() {
+    try { if (history.state && history.state.libLayer && history.back) history.back(); } catch (e) { /* yok say */ }
+  }
+
+  // Rafı (sayfayı değil) verilen kitap ortada olacak şekilde kaydır
+  function libraryScrollShelfTo(id) {
+    const shelf = document.getElementById('lib-shelf');
+    const el = shelf && shelf.querySelector(`.lib-book[data-id="${id}"]`);
+    if (!el) return null;
+    shelf.scrollLeft = Math.max(0, el.offsetLeft - shelf.offsetLeft - (shelf.clientWidth - el.offsetWidth) / 2);
+    return el;
+  }
 
   function libraryWordById(id) {
     return WORDS_DATA.find(w => w.id === id) || null;
@@ -14583,8 +14657,10 @@ if (typeof module !== 'undefined' && module.exports) {
     if (STATE.library.bookId == null) return;
     container.insertAdjacentHTML('beforeend', libraryBookLayerHtml());
     bindLibraryBookGestures();
-    const spread = document.getElementById('lib-spread');
-    if (spread) spread.focus({ preventScroll: true });
+    const keep = _libraryLastAct && document.querySelector(`#lib-book-layer [data-act="${_libraryLastAct}"]:not([disabled])`);
+    _libraryLastAct = null;
+    const target = keep || document.getElementById('lib-spread');
+    if (target) target.focus({ preventScroll: true });
   }
 
   function openLibraryBook(id) {
@@ -14608,12 +14684,11 @@ if (typeof module !== 'undefined' && module.exports) {
     }
     if (!wasOpen) {
       _libraryBookReturnFocus = id;
-      try { if (window.history && history.pushState) history.pushState({ libBook: true }, '', location.hash || '#directory'); } catch (e) { /* geri tuşu desteği isteğe bağlı */ }
+      libraryPushLayer('book');
     }
     STATE.library.bookId = id;
     refreshLibraryBook();
-    const spine = document.querySelector(`.lib-book[data-id="${id}"]`);
-    if (spine && spine.scrollIntoView) spine.scrollIntoView({ inline: 'center', block: 'nearest', behavior: 'auto' });
+    libraryScrollShelfTo(id);
   }
 
   function closeLibraryBook(fromHistory) {
@@ -14626,10 +14701,9 @@ if (typeof module !== 'undefined' && module.exports) {
     } else {
       refreshLibraryBook();
     }
-    if (!fromHistory) {
-      try { if (history.state && history.state.libBook && history.back) history.back(); } catch (e) { /* yok say */ }
-    }
-    const spine = returnId != null && document.querySelector(`.lib-book[data-id="${returnId}"]`);
+    if (!fromHistory) libraryPopLayer();
+    // Raf, açılan/son çevrilen kitabın olduğu yerde kalır (yeniden çizimden sonra da)
+    const spine = returnId != null && libraryScrollShelfTo(returnId);
     if (spine && spine.focus) spine.focus({ preventScroll: true });
   }
 
@@ -14646,6 +14720,7 @@ if (typeof module !== 'undefined' && module.exports) {
   function libraryBookAction(act) {
     const w = libraryWordById(STATE.library.bookId);
     if (!w) return;
+    _libraryLastAct = act; // yeniden çizimde basılan düğmeye odak dönsün
     if (act === 'speak') speakWord(w.en);
     else if (act === 'star') toggleStarred(w.id);
     else if (act === 'learned') toggleLearned(w.id);
@@ -14699,6 +14774,8 @@ if (typeof module !== 'undefined' && module.exports) {
 
   window.addEventListener('popstate', () => {
     if (STATE.library.bookId != null) closeLibraryBook(true);
+    else if (STATE.library.searchOpen) closeLibrarySearch(false, true);
+    else if (STATE.library.filtersOpen) closeLibraryFilters(true);
   });
 
   // ==========================================================================
@@ -14770,7 +14847,9 @@ if (typeof module !== 'undefined' && module.exports) {
   }
 
   function openLibrarySearch(term = '') {
-    if (STATE.library.bookId != null) closeLibraryBook(); // arama kitabın arkasında kalmasın
+    const wasLayer = STATE.library.bookId != null || STATE.library.filtersOpen;
+    if (STATE.library.bookId != null) closeLibraryBook(true); // arama kitabın arkasında kalmasın; geçmiş girdisi aramaya devredilir
+    if (!STATE.library.searchOpen || !wasLayer) libraryPushLayer('search');
     STATE.library.searchOpen = true;
     STATE.directoryFilters.search = String(term || '');
     const container = document.getElementById('view-directory');
@@ -14784,7 +14863,8 @@ if (typeof module !== 'undefined' && module.exports) {
     if (input) { input.focus(); const n = input.value.length; try { input.setSelectionRange(n, n); } catch (e) { /* type=search */ } }
   }
 
-  function closeLibrarySearch(silent) {
+  function closeLibrarySearch(silent, fromHistory) {
+    if (STATE.library.searchOpen && !fromHistory) libraryPopLayer();
     STATE.library.searchOpen = false;
     STATE.directoryFilters.search = '';
     clearTimeout(_librarySearchTimer);
@@ -14797,7 +14877,7 @@ if (typeof module !== 'undefined' && module.exports) {
   function pickLibrarySuggestion(id) {
     id = parseInt(id, 10);
     if (!libraryWordById(id)) return;
-    closeLibrarySearch(true);
+    closeLibrarySearch(true, true); // geçmiş girdisi kitaba devredilir (openLibraryBook değiştirir)
     const inFilter = getFilteredDirectoryWords().some(w => w.id === id);
     if (!inFilter) {
       const f = STATE.directoryFilters;
@@ -14886,6 +14966,7 @@ if (typeof module !== 'undefined' && module.exports) {
   }
 
   function openLibraryFilters() {
+    if (!STATE.library.filtersOpen) libraryPushLayer('filters');
     STATE.library.filtersOpen = true;
     const container = document.getElementById('view-directory');
     if (!container || !document.getElementById('lib-shelf')) { renderDirectoryView(); return; }
@@ -14896,7 +14977,8 @@ if (typeof module !== 'undefined' && module.exports) {
     if (first) first.focus({ preventScroll: true });
   }
 
-  function closeLibraryFilters() {
+  function closeLibraryFilters(fromHistory) {
+    if (STATE.library.filtersOpen && !fromHistory) libraryPopLayer();
     STATE.library.filtersOpen = false;
     const layer = document.getElementById('lib-filters');
     if (layer) layer.remove();
@@ -15607,6 +15689,10 @@ if (typeof module !== 'undefined' && module.exports) {
   }
 
   function executeSwitchView(viewName, pushHash = true) {
+    if (viewName !== 'directory') {
+      // Sözlükten çıkınca açık kitap/panel kalmasın; dönüşte yeniden açılmasın
+      Object.assign(STATE.library, { bookId: null, searchOpen: false, filtersOpen: false, dirty: false });
+    }
     STATE.currentView = viewName;
     if (!STATE.viewHistory) STATE.viewHistory = ['home'];
     if (STATE.viewHistory[STATE.viewHistory.length - 1] !== viewName) {
@@ -16771,6 +16857,7 @@ if (typeof module !== 'undefined' && module.exports) {
     spineHeightPx,
     spineLabel,
     shelfRulerGroups,
+    libraryRulerActiveIndex,
     selectLibraryLetter,
     appendLibraryBooks,
     jumpLibraryRuler,

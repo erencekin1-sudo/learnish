@@ -1340,6 +1340,58 @@ registerTest(2, 'Library Filters', 'test_library_filter_empty_state', () => {
   assertIncludes(html, 'Filtreleri temizle');
 });
 
+registerTest(2, 'Library Review Fixes', 'test_library_star_toggle_without_status_filter_keeps_shelf', () => {
+  const env = createFreshAppEnvironment();
+  env.APP.switchView('directory');
+  const id = env.window.WORDS_DATA.find(x => x.en === 'abandon').id;
+  env.APP.openLibraryBook(id);
+  env.APP.toggleStarred(id);
+  env.APP.toggleLearned(id);
+  assertEqual(env.APP.getState().library.dirty, false, 'durum filtresi yokken kapanışta raf yeniden kurulmaz (konum korunur)');
+  env.APP.toggleStarred(id); env.APP.toggleLearned(id);
+});
+
+registerTest(1, 'Library Review Fixes', 'test_library_ruler_active_group', () => {
+  const { APP } = createFreshAppEnvironment();
+  const groups = [{ label: 'DA', index: 0 }, { label: 'DE', index: 20 }, { label: 'DI', index: 40 }];
+  assertEqual(APP.libraryRulerActiveIndex(groups, 0), 0);
+  assertEqual(APP.libraryRulerActiveIndex(groups, 19), 0);
+  assertEqual(APP.libraryRulerActiveIndex(groups, 20), 1);
+  assertEqual(APP.libraryRulerActiveIndex(groups, 99), 2);
+  assertEqual(APP.libraryRulerActiveIndex([], 5), -1);
+});
+
+registerTest(2, 'Library Review Fixes', 'test_library_css_stays_in_palette_and_touch_targets', () => {
+  const css = fs.readFileSync(APP_CSS_PATH, 'utf8');
+  const lib = css.slice(css.indexOf('/* ===== KİTAPLIK'));
+  const palette = ['#171e19', '#47524c', '#899690', '#b7c6c2', '#d8d3c5', '#f5f3ed', '#eeebe3', '#ffffff', '#ca0013', '#000'];
+  const off = [...new Set((lib.match(/#[0-9a-fA-F]{3,6}\b/g) || []).map(h => h.toLowerCase()))].filter(h => !palette.includes(h));
+  assertDeepEqual(off, [], 'kitaplık stilleri yalnızca palet renklerini kullanmalı');
+  const syn = lib.match(/\.lib-syn \{[^}]*min-height:\s*(\d+)px/);
+  assert(syn && Number(syn[1]) >= 44, `eş anlam çipi dokunma hedefi ≥44px olmalı (bulunan: ${syn && syn[1]})`);
+});
+
+registerTest(3, 'Library Review Fixes', 'test_library_back_button_closes_sheets', () => {
+  const env = createFreshAppEnvironment();
+  env.APP.switchView('directory');
+  env.APP.openLibrarySearch('aba');
+  env.window.dispatchEvent({ type: 'popstate' });
+  assertEqual(env.APP.getState().library.searchOpen, false, 'geri tuşu arama panelini kapatır');
+  env.APP.openLibraryFilters();
+  env.window.dispatchEvent({ type: 'popstate' });
+  assertEqual(env.APP.getState().library.filtersOpen, false, 'geri tuşu filtre panelini kapatır');
+});
+
+registerTest(3, 'Library Review Fixes', 'test_library_leaving_view_closes_sheets', () => {
+  const env = createFreshAppEnvironment();
+  env.APP.switchView('directory');
+  env.APP.openLibraryFilters();
+  env.APP.switchView('home');
+  env.APP.switchView('directory');
+  assertEqual(env.APP.getState().library.filtersOpen, false, 'sözlüğe dönünce eski panel yeniden açılmaz');
+  assert(!env.document.getElementById('view-directory').innerHTML.includes('id="lib-filters"'));
+});
+
 // --- 1.5 Word Directory Search & Filters (6 Tests) ---
 
 registerTest(1, 'Word Directory', 'test_directory_filter_by_pos', () => {
