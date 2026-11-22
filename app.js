@@ -4790,6 +4790,16 @@
     const dayLearnedCount = dayWords.filter(w => STATE.userData.learned.has(w.id)).length;
     const dayPercent = Math.round((dayLearnedCount / (dayWords.length || 1)) * 100);
 
+    // Günün tüm kelimeleri bitince Mentor bir kez kutlar (modül+gün başına)
+    if (dayPercent === 100 && dayWords.length) {
+      const dk = 'mk_buddy_dayDone_' + STATE.activeModule + '_' + STATE.currentDay;
+      let celebrated = false; try { celebrated = localStorage.getItem(dk) === '1'; } catch (e) {}
+      if (!celebrated) {
+        try { localStorage.setItem(dk, '1'); } catch (e) {}
+        if (typeof Buddy !== 'undefined' && Buddy.react) setTimeout(() => Buddy.react('dailyDone'), 700);
+      }
+    }
+
     // Build Day options dropdown
     let dayOptionsHtml = '';
     for (let d = 1; d <= totalDays; d++) {
@@ -5464,6 +5474,11 @@
           `OTURUM TAMAMLANDI — ${qState.score}/${totalQ} DOĞRU (%${accuracy})`
         );
         saveUserData();
+
+        // Mentor başarılı testi (≥%70) bir kez kutlar
+        if (typeof Buddy !== 'undefined' && Buddy.react && accuracy >= 70) {
+          setTimeout(() => Buddy.react('quizPass'), 700);
+        }
       }
 
       let statusCode = '[ OTURUM TAMAMLANDI ]';
@@ -5749,6 +5764,11 @@
     return 130 + Math.min(len, 14) * 4 + ((Number(word && word.id) || 0) % 3) * 2;
   }
 
+  function spineWidthPx(word) {
+    const len = String((word && word.en) || '').length;
+    return 30 + Math.min(len, 16) + ((Number(word && word.id) || 0) % 5) * 2; // ~30–48px
+  }
+
   function spineLabel(en) {
     const s = String(en || '');
     return s.length > 22 ? s.slice(0, 21) + '…' : s;
@@ -5866,8 +5886,14 @@
     if (ud.learned.has(w.id)) cls += ' is-learned';
     if (ud.review.has(w.id)) cls += ' is-review';
     if (ud.starred.has(w.id)) cls += ' is-starred';
+    const cefr = String(w.cefr || '').toUpperCase();
+    // İki bezeme çeşidi dönüşümlü: raf klon gibi görünmesin
+    const deco = (Number(w.id) || 0) % 2 === 0
+      ? '<span class="lib-rule r1" aria-hidden="true"></span><span class="lib-rule r2" aria-hidden="true"></span><span class="lib-rule r3" aria-hidden="true"></span><span class="lib-rule r4" aria-hidden="true"></span>'
+      : '<span class="lib-cap" aria-hidden="true"></span><span class="lib-plate" aria-hidden="true"></span>';
+    const vol = cefr ? `<span class="lib-vol" aria-hidden="true">${escapeHtml(cefr)}</span>` : '';
     const label = `${w.en}${w.cefr ? ' — ' + w.cefr : ''}`;
-    return `<button type="button" class="${cls}" data-id="${w.id}" style="height:${spineHeightPx(w)}px" aria-label="${escapeHtml(label)}"><span class="lib-spine-text">${escapeHtml(spineLabel(w.en))}</span></button>`;
+    return `<button type="button" class="${cls}" data-id="${w.id}" style="height:${spineHeightPx(w)}px;width:${spineWidthPx(w)}px" aria-label="${escapeHtml(label)}">${deco}<span class="lib-spine-text">${escapeHtml(spineLabel(w.en))}</span>${vol}</button>`;
   }
 
   function libraryBooksSliceHtml(words, from, to) {
@@ -6243,7 +6269,7 @@
     return `
       <div class="lib-book-layer" id="lib-book-layer">
         <div class="lib-book-backdrop" data-lib-close></div>
-        <div class="lib-spread" id="lib-spread" role="dialog" aria-modal="true" aria-labelledby="lib-book-word" tabindex="-1">
+        <div class="lib-spread ${spineToneClass(w.cefr)}" id="lib-spread" role="dialog" aria-modal="true" aria-labelledby="lib-book-word" tabindex="-1">
           <div class="lib-page lib-page-l">
             ${kicker ? `<div class="lib-page-kicker">${escapeHtml(kicker)}</div>` : ''}
             <h3 class="lib-book-word" id="lib-book-word">${escapeHtml(w.en)}</h3>
@@ -7387,6 +7413,8 @@
     if (viewName === 'quiz') renderQuizView();
     if (viewName === 'directory') renderDirectoryView();
     if (viewName === 'stats') renderStatsView();
+
+    if (typeof Buddy !== 'undefined' && Buddy.onView) Buddy.onView(viewName);
   }
 
   function updateUI() {
@@ -8373,6 +8401,8 @@
 
     switchView(initialView, !window.location.hash);
 
+    Buddy.init();
+
     window.addEventListener('hashchange', () => {
       const resolved = resolveView(window.location.hash);
       if (resolved && resolved !== STATE.currentView) {
@@ -8419,6 +8449,125 @@
   }
 
   // Export to Global Scope
+  // ==========================================================================
+  // MENTOR BADI — her ekranda köşe yardımcı ajan (balon, tur, tepki, telaffuz)
+  // ==========================================================================
+  const Buddy = (function () {
+    const V = 'mentor-v1';
+    const FR = { rest: 'assets/mentor-rest.png', blink: 'assets/mentor-blink.png', smile: 'assets/mentor-smile.png', talk: 'assets/mentor-talk.png' };
+    const SEEN_KEY = 'mk_buddy_seen', TIP_KEY = 'mk_buddy_tips';
+    let root, face, badge, buddyBtn, ping, bubble, bText, bActs, spot, hole;
+    let base = 'rest', talking = false, talkI = null, hideT = null, blinkT = null, built = false, ti = 0;
+    const reduce = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    const TIPS = {
+      home: 'Burası kontrol merkezin. Buradan günlük çalışmaya, sözlüğe ve teste ulaşırsın.',
+      daily: 'Her gün 10 yeni kelime. Kartın üstündeki hoparlörle telaffuzu dinleyebilirsin.',
+      flashcard: 'Kartı çevirmek için dokun; Boşluk ve ok tuşları da çalışır.',
+      quiz: 'Testte yanlış yaparsan önce birlikte gözden geçiririz, sonra devam ederiz.',
+      directory: 'Kelime kütüphanen ahşap rafta — seviyeye göre renkli sırtlar. Bir sırta dokun, kitabı açılır.',
+      stats: 'İlerlemenin özetini burada görürsün: tema, seviye ve ustalık dağılımı.'
+    };
+    const TOUR = [
+      { sel: '#floating-center-fab', t: 'Bu düğme bugünkü çalışmanı başlatır — en hızlı başlangıç burası.' },
+      { sel: '#tab-daily', t: '“Günlük Çalışma” — her gün 10 yeni kelimeyle ilerlersin.' },
+      { sel: '#tab-quiz', t: '“Quiz” ile öğrendiklerini test et; yanlışları birlikte gözden geçiririz.' },
+      { sel: '.lb-buddy', t: 'Takıldığında bana dokun — her ekranda köşede yanındayım. İyi çalışmalar!' }
+    ];
+
+    function el(tag, cls, text) { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; }
+
+    function build() {
+      if (built) return; built = true;
+      root = el('div'); root.id = 'lb-root';
+      spot = el('div', 'lb-spot'); spot.setAttribute('aria-hidden', 'true'); hole = el('div', 'lb-spot-hole'); spot.appendChild(hole);
+      bubble = el('div', 'lb-bubble'); bubble.setAttribute('role', 'status'); bubble.setAttribute('aria-live', 'polite');
+      const x = el('button', 'lb-x', '×'); x.type = 'button'; x.setAttribute('aria-label', 'Kapat'); x.onclick = hide;
+      bText = el('p', 'lb-text'); bActs = el('div', 'lb-acts');
+      bubble.appendChild(x); bubble.appendChild(el('div', 'lb-name', 'Mentor')); bubble.appendChild(bText); bubble.appendChild(bActs);
+      buddyBtn = el('button', 'lb-buddy'); buddyBtn.type = 'button'; buddyBtn.setAttribute('aria-label', 'Mentor — yardım');
+      ping = el('span', 'lb-ping', '1'); ping.setAttribute('aria-hidden', 'true');
+      face = el('img'); face.alt = 'Mentor'; face.decoding = 'async'; face.src = FR.rest;
+      badge = el('span', 'lb-badge'); badge.appendChild(face);
+      buddyBtn.appendChild(ping); buddyBtn.appendChild(badge);
+      buddyBtn.addEventListener('click', () => (bubble.classList.contains('is-on') ? hide() : open()));
+      root.appendChild(spot); root.appendChild(bubble); root.appendChild(buddyBtn);
+      document.body.appendChild(root);
+      Object.values(FR).forEach(s => { const i = new Image(); i.src = s; });
+      scheduleBlink();
+    }
+
+    function setFace(n) { if (face) face.src = FR[n]; }
+    function toBase() { if (!talking) setFace(base); }
+    function scheduleBlink() { if (reduce()) return; clearTimeout(blinkT); blinkT = setTimeout(() => { if (!talking) { setFace('blink'); setTimeout(toBase, 150); } scheduleBlink(); }, 3200 + Math.random() * 2800); }
+    function talk(on) { talking = on; if (on) { if (reduce()) return; clearInterval(talkI); let t = true; talkI = setInterval(() => { setFace(t ? 'talk' : base); t = !t; }, 170); } else { clearInterval(talkI); talkI = null; setFace(base); } }
+    function happy() { if (buddyBtn) { buddyBtn.classList.add('is-happy'); setTimeout(() => buddyBtn.classList.remove('is-happy'), 700); } }
+    function markSeen() { try { localStorage.setItem(SEEN_KEY, '1'); } catch (e) {} }
+    function seen() { try { return localStorage.getItem(SEEN_KEY) === '1'; } catch (e) { return false; } }
+
+    function say(text, acts, opts) {
+      opts = opts || {}; build();
+      if (ping) ping.style.display = 'none';
+      base = 'smile'; setFace('smile');
+      bText.textContent = text; bActs.innerHTML = '';
+      (acts || []).forEach(a => { const b = el('button', 'lb-btn' + (a.pri ? ' lb-pri' : ''), a.label); b.type = 'button'; b.onclick = a.on; bActs.appendChild(b); });
+      bubble.classList.add('is-on'); talk(true);
+      clearTimeout(hideT);
+      const sp = Math.min(4200, 1100 + text.length * 45);
+      setTimeout(() => talk(false), sp);
+      if (!opts.sticky) hideT = setTimeout(hide, sp + 3000);
+    }
+    function hide() { if (!bubble) return; bubble.classList.remove('is-on'); talk(false); base = 'rest'; setFace('rest'); endTour(); }
+
+    function open() {
+      const v = STATE.currentView || 'home';
+      say(TIPS[v] || 'Yardımcı olmak için buradayım.', [{ label: 'Turu başlat', pri: true, on: startTour }, { label: 'Kapat', on: hide }], { sticky: true });
+    }
+
+    function startTour() { ti = 0; build(); spot.classList.add('is-on'); tourStep(); }
+    function tourStep() {
+      const s = TOUR[ti], t = s && document.querySelector(s.sel);
+      if (!s) { endTour(); hide(); return; }
+      if (!t) { ti++; return tourStep(); }
+      const r = t.getBoundingClientRect(), p = 8;
+      hole.style.left = (r.left - p) + 'px'; hole.style.top = (r.top - p) + 'px';
+      hole.style.width = (r.width + p * 2) + 'px'; hole.style.height = (r.height + p * 2) + 'px';
+      const last = ti === TOUR.length - 1;
+      say(s.t, [
+        ...(ti > 0 ? [{ label: 'Geri', on: () => { ti--; tourStep(); } }] : []),
+        { label: last ? 'Bitir' : 'İleri', pri: true, on: () => { if (last) { markSeen(); hide(); } else { ti++; tourStep(); } } }
+      ], { sticky: true });
+    }
+    function endTour() { if (spot) spot.classList.remove('is-on'); }
+
+    function pronounce(word) {
+      happy(); say('“' + word + '” — dinle ve tekrar et.', [{ label: 'Tekrar', on: () => pronounce(word) }, { label: 'Kapat', on: hide }], { sticky: true });
+      talk(true);
+      try { if (typeof speakWord === 'function') speakWord(word, () => talk(false)); else talk(false); } catch (e) { talk(false); }
+    }
+    function react(kind) {
+      const lines = { learned: 'Güzel! Bir kelime daha cebe girdi.', dailyDone: 'Harika — bugünün kelimelerini tamamladın! Serini sürdür.', quizPass: 'Çok iyi! Testten başarıyla çıktın.', streak: 'Serini bozmadın, böyle devam!' };
+      happy(); say(lines[kind] || 'Harika gidiyorsun!', [{ label: 'Devam', pri: true, on: hide }]);
+    }
+
+    function init() {
+      build();
+      if (!seen()) {
+        setTimeout(() => say('Merhaba, ben Mentor. Learnish’te sana yol göstereyim mi? Kısa bir tur atabiliriz.', [{ label: 'Turu başlat', pri: true, on: startTour }, { label: 'Şimdi değil', on: () => { markSeen(); hide(); } }], { sticky: true }), 900);
+      } else if (ping) { ping.style.display = 'none'; }
+    }
+    function onView(viewName) {
+      if (!built || !seen()) return;
+      if (bubble.classList.contains('is-on')) return;
+      let tips = {}; try { tips = JSON.parse(localStorage.getItem(TIP_KEY) || '{}'); } catch (e) {}
+      if (tips[viewName] || !TIPS[viewName]) return;
+      tips[viewName] = 1; try { localStorage.setItem(TIP_KEY, JSON.stringify(tips)); } catch (e) {}
+      setTimeout(() => { if (!bubble.classList.contains('is-on')) say(TIPS[viewName], [{ label: 'Anladım', pri: true, on: hide }]); }, 650);
+    }
+
+    return { init, onView, open, startTour, pronounce, react, say, hide };
+  })();
+
   window.APP = {
     openSettingsModal,
     closeSettingsModal,
@@ -8553,7 +8702,8 @@
     sendFeedbackViaMail,
     sendFeedbackViaWhatsApp,
     copyFeedbackToClipboard,
-    getState: () => STATE
+    getState: () => STATE,
+    buddy: Buddy
   };
 
   document.addEventListener('DOMContentLoaded', initApp);

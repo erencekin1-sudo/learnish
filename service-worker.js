@@ -3,7 +3,7 @@
  * Caches core assets for offline usage on mobile and desktop
  */
 
-const CACHE_NAME = 'learnish-f294694b';
+const CACHE_NAME = 'learnish-2b73be95';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
@@ -14,7 +14,11 @@ const ASSETS_TO_CACHE = [
   './manifest.json',
   './favicon.png',
   './icon-192.png',
-  './icon-512.png'
+  './icon-512.png',
+  './assets/mentor-rest.png',
+  './assets/mentor-blink.png',
+  './assets/mentor-smile.png',
+  './assets/mentor-talk.png'
 ];
 
 self.addEventListener('install', (event) => {
