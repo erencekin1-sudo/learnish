@@ -8457,6 +8457,7 @@
     const FR = { rest: 'assets/mentor-rest.png', blink: 'assets/mentor-blink.png', smile: 'assets/mentor-smile.png', talk: 'assets/mentor-talk.png' };
     const SEEN_KEY = 'mk_buddy_seen', TIP_KEY = 'mk_buddy_tips';
     let root, face, badge, buddyBtn, ping, bubble, bText, bActs, spot, hole;
+    let conciergePanel = null, cgInput = null, cgSug = null, cgList = null, cgBuilt = false, cgActive = -1;
     let base = 'rest', talking = false, talkI = null, hideT = null, blinkT = null, built = false, ti = 0;
     const reduce = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
@@ -8477,6 +8478,177 @@
 
     function el(tag, cls, text) { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; }
 
+    // --- Concierge beyni: metin normalleştirme + kelime arama indeksi ---
+    const TR_MAP = { 'İ': 'i', 'I': 'i', 'ı': 'i', 'Ş': 's', 'ş': 's', 'Ğ': 'g', 'ğ': 'g', 'Ü': 'u', 'ü': 'u', 'Ö': 'o', 'ö': 'o', 'Ç': 'c', 'ç': 'c' };
+    function normalize(str) {
+      return String(str == null ? '' : str)
+        .replace(/[İIıŞşĞğÜüÖöÇç]/g, function (ch) { return TR_MAP[ch] || ch; })
+        .toLowerCase()
+        .replace(/[^a-z0-9\s]+/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim();
+    }
+    let wordIndex = null;
+    function wordSet() {
+      if (!wordIndex) {
+        wordIndex = new Set();
+        try { (WORDS_DATA || []).forEach(function (w) { if (w && w.en) wordIndex.add(normalize(w.en)); }); } catch (e) {}
+      }
+      return wordIndex;
+    }
+    // Sözlük araması yalnızca komut-tetikleyici token'lar düşüldükten sonra kalan
+    // gerçek sözcükler için yapılır (spec §5.1): "quiz", "test" gibi komut kelimeleri
+    // körlemesine sözlüğe yönlendirilmez.
+    function resolveWordLookup(query) {
+      const norm = normalize(query);
+      if (!norm) return null;
+      const set = wordSet();
+      const cmdToks = allCommandTokens();
+      const remaining = norm.split(' ').filter(function (t) { return t && !cmdToks.has(t); });
+      if (!remaining.length) return null;
+      const phrase = remaining.join(' ');
+      if (set.has(phrase)) return { word: phrase };
+      for (let i = 0; i < remaining.length; i++) { if (set.has(remaining[i])) return { word: remaining[i] }; }
+      return null;
+    }
+
+    // --- Komut kataloğu: her 'run' yalnızca var olan bir APP fonksiyonunu çağırır ---
+    const MENTOR_COMMANDS = [
+      // Çalışma
+      { id: 'continue-daily', group: 'calisma', type: 'action', label: 'Bugünün çalışmasına git', keywords: ['bugun', 'gunluk', 'calisma', 'devam', 'basla', 'daily'], run: function () { goToTodayMEBDay(); } },
+      { id: 'daily-flashcards', group: 'calisma', type: 'action', label: 'Günün kartlarını çalış', keywords: ['kart', 'flashcard', 'gunluk', 'calis'], run: function () { startDailyFlashcards(); } },
+      { id: 'daily-quiz', group: 'calisma', type: 'action', label: 'Günün testini çöz', keywords: ['test', 'quiz', 'sinav', 'gunluk', 'coz'], run: function () { startDailyQuiz(); } },
+      { id: 'srs-flashcards', group: 'calisma', type: 'action', label: 'Tekrar zamanı gelen kartlar', keywords: ['tekrar', 'srs', 'kart', 'flashcard', 'gelen'], run: function () { startSRSDueFlashcards(); } },
+      { id: 'srs-quiz', group: 'calisma', type: 'action', label: 'Tekrar zamanı gelenleri test et', keywords: ['tekrar', 'srs', 'test', 'quiz', 'sinav', 'gelen'], run: function () { startSRSDueQuiz(); } },
+      { id: 'mistakes-flashcards', group: 'calisma', type: 'action', label: 'Yanlışlarımı kartlarla tekrar et', keywords: ['yanlis', 'hata', 'kart', 'flashcard', 'tekrar'], run: function () { startMistakeFlashcards(); } },
+      { id: 'mistakes-quiz', group: 'calisma', type: 'action', label: 'Yanlışlarımı test et', keywords: ['yanlis', 'hata', 'test', 'quiz', 'sinav'], run: function () { startMistakeQuiz(); } },
+      { id: 'study-modes', group: 'calisma', type: 'action', label: 'Çalışma modlarını aç', keywords: ['mod', 'calisma', 'secenek', 'modlar'], run: function () { openModesModal(); } },
+      // Keşif / araç
+      { id: 'open-directory', group: 'kesif', type: 'action', label: 'Sözlüğü (kelime kütüphanesi) aç', keywords: ['sozluk', 'kelime', 'kutuphane', 'ara', 'directory', 'liste'], run: function () { switchView('directory'); } },
+      { id: 'open-stats', group: 'kesif', type: 'action', label: 'İstatistiklerime bak', keywords: ['istatistik', 'ilerleme', 'analiz', 'stats', 'durum'], run: function () { switchView('stats'); } },
+      { id: 'curriculum', group: 'kesif', type: 'action', label: 'Müfredatı görüntüle', keywords: ['mufredat', 'tema', 'unite', 'program', 'curriculum'], run: function () { openCurriculumModal(); } },
+      { id: 'pdf-studio', group: 'kesif', type: 'action', label: 'PDF / çalışma kağıdı stüdyosu', keywords: ['pdf', 'calisma', 'kagidi', 'worksheet', 'yazdir', 'cikti'], run: function () { openPdfStudio(); } },
+      { id: 'speech-coach', group: 'kesif', type: 'action', label: 'Telaffuz / konuşma koçunu aç', keywords: ['telaffuz', 'konusma', 'koc', 'ses', 'speaking', 'pronunciation'], run: function () { openSpeechCoach(); } },
+      // Modül / ayar
+      { id: 'module-maarif', group: 'modul', type: 'action', label: 'Maarif (5. sınıf) modülüne geç', keywords: ['maarif', 'meb', 'modul', '5', 'sinif', 'gec'], run: function () { switchModule('maarif'); } },
+      { id: 'module-yds', group: 'modul', type: 'action', label: 'YDS / YÖKDİL modülüne geç', keywords: ['yds', 'yokdil', 'akademik', 'modul', 'gec'], run: function () { switchModule('yds'); } },
+      { id: 'module-oxford', group: 'modul', type: 'action', label: 'Oxford 5000 modülüne geç', keywords: ['oxford', '5000', 'cefr', 'modul', 'gec'], run: function () { switchModule('oxford'); } },
+      { id: 'settings', group: 'ayar', type: 'action', label: 'Ayarları aç (aksan, hız, tema)', keywords: ['ayar', 'aksan', 'hiz', 'tema', 'settings', 'koyu', ' acik'], run: function () { openSettingsModal(); } },
+      { id: 'feedback', group: 'ayar', type: 'action', label: 'Geri bildirim gönder', keywords: ['geri', 'bildirim', 'oneri', 'hata', 'iletisim', 'feedback'], run: function () { openFeedbackModal(); } },
+      { id: 'reset-progress', group: 'ayar', type: 'action', label: 'İlerlememi sıfırla (ayarlardan)', keywords: ['sifirla', 'reset', 'sil', 'temizle', 'ilerleme'], run: function () { openSettingsModal(); } },
+      // Rehber (nasıl yapılır)
+      { id: 'guide-flashcard-flip', group: 'rehber', type: 'guide', label: 'Kartı nasıl çeviririm?', keywords: ['kart', 'cevir', 'flip', 'nasil', 'flashcard'], help: 'Karta dokun ya da Boşluk tuşuna bas; ok tuşlarıyla kartlar arasında gezinirsin.', run: function () { startDailyFlashcards(); } },
+      { id: 'guide-listen', group: 'rehber', type: 'guide', label: 'Telaffuzu nasıl dinlerim?', keywords: ['telaffuz', 'dinle', 'ses', 'nasil', 'oku'], help: 'Kartın ya da kelimenin üzerindeki hoparlör simgesine dokun; aksan ve hızı Ayarlar’dan değiştirebilirsin.', run: function () { openSpeechCoach(); } },
+      { id: 'guide-mistakes', group: 'rehber', type: 'guide', label: 'Yanlışlarımı nerede görürüm?', keywords: ['yanlis', 'hata', 'nerede', 'gor', 'nasil'], help: 'Testlerde yaptığın yanlışlar “Yanlışlarım” çalışmasında birikir; oradan tekrar edebilirsin.', run: function () { startMistakeQuiz(); } },
+      { id: 'guide-backup', group: 'rehber', type: 'guide', label: 'İlerlememi nasıl yedeklerim?', keywords: ['yedek', 'kaydet', 'disa', 'aktar', 'backup', 'nasil'], help: 'İlerlemeni Ayarlar’dan dışa aktarıp (yedekleyip) başka cihaza taşıyabilirsin.', run: function () { openSettingsModal(); } }
+    ];
+
+    function getCommands() { return MENTOR_COMMANDS; }
+
+    const MODULE_LABELS = { maarif: 'Maarif (5. sınıf)', yds: 'YDS / YÖKDİL', oxford: 'Oxford 5000' };
+    function dayDoneFlag(mod, day) {
+      try { return localStorage.getItem('mk_buddy_dayDone_' + mod + '_' + day) === '1'; } catch (e) { return false; }
+    }
+
+    // İlerlemeye duyarlı öneriler. Aktif modülde acil iş yoksa diğer modülleri tarar.
+    function buildSuggestions() {
+      const out = [];
+      const active = STATE.activeModule;
+      let srs = { dueCount: 0 }, mis = { activeMistakes: 0 };
+      try { srs = getSRSStats() || srs; } catch (e) {}
+      try { mis = getMistakeStats() || mis; } catch (e) {}
+
+      // 1) Aktif modülde tekrarı gelenler
+      if (srs.dueCount > 0) {
+        out.push({ id: 'sg-srs', text: srs.dueCount + ' kelimen tekrara düştü', actionLabel: 'Tekrar et', run: function () { startSRSDueQuiz(); } });
+      }
+      // 2) Aktif modülde yanlışlar
+      if (mis.activeMistakes > 0) {
+        out.push({ id: 'sg-mistakes', text: mis.activeMistakes + ' yanlışın bekliyor', actionLabel: 'Yanlışlarım', run: function () { startMistakeQuiz(); } });
+      }
+
+      // 3) Aktif modülde acil iş yoksa diğer modülleri tara (kullanıcı kararı)
+      if (srs.dueCount === 0 && mis.activeMistakes === 0) {
+        ['maarif', 'yds', 'oxford'].forEach(function (mod) {
+          if (mod === active || out.some(function (s) { return s.id === 'sg-cross'; })) return;
+          let od = 0, om = 0;
+          try { od = (getSRSStats(mod) || {}).dueCount || 0; } catch (e) {}
+          try { om = (getMistakeStats(mod) || {}).activeMistakes || 0; } catch (e) {}
+          if (od > 0 || om > 0) {
+            const lbl = MODULE_LABELS[mod] || mod;
+            out.push({
+              id: 'sg-cross',
+              text: lbl + ' modülünde ' + (od > 0 ? od + ' tekrar' : om + ' yanlış') + ' seni bekliyor',
+              actionLabel: lbl + ' modülüne geç',
+              run: (function (m, hasDue) { return function () { switchModule(m); if (hasDue) startSRSDueQuiz(); else startMistakeQuiz(); }; })(mod, od > 0)
+            });
+          }
+        });
+      }
+
+      // 4) Günlük çalışma / devam (filler)
+      if (out.length < 4) {
+        if (active === 'maarif') {
+          if (!dayDoneFlag('maarif', STATE.currentDay)) {
+            out.push({ id: 'sg-daily', text: 'Bugünün çalışması seni bekliyor', actionLabel: 'Başlat', run: function () { goToTodayMEBDay(); } });
+          }
+        } else {
+          out.push({ id: 'sg-continue', text: 'Kaldığın yerden devam et (gün ' + STATE.currentDay + ')', actionLabel: 'Devam et', run: function () { startDailyFlashcards(); } });
+        }
+      }
+
+      // 5) Hâlâ boşsa olumlu + keşif
+      if (!out.length) {
+        out.push({ id: 'sg-clear', text: 'Her şey güncel 🎉', actionLabel: 'Yeni kelimelere bak', run: function () { switchView('directory'); } });
+      }
+
+      return out.slice(0, 4);
+    }
+
+    function cmdTokenSet(cmd) {
+      const set = new Set();
+      normalize(cmd.label).split(' ').forEach(function (t) { if (t) set.add(t); });
+      (cmd.keywords || []).forEach(function (k) { const n = normalize(k); if (n) set.add(n); });
+      return set;
+    }
+
+    let _allCmdToks = null;
+    function allCommandTokens() {
+      if (!_allCmdToks) {
+        _allCmdToks = new Set();
+        MENTOR_COMMANDS.forEach(function (cmd) { cmdTokenSet(cmd).forEach(function (t) { _allCmdToks.add(t); }); });
+      }
+      return _allCmdToks;
+    }
+
+    function matchCommands(query) {
+      const qNorm = normalize(query);
+      if (!qNorm) return [];
+      const qTokens = qNorm.split(' ').filter(Boolean);
+      if (!qTokens.length) return [];
+      const scored = [];
+      MENTOR_COMMANDS.forEach(function (cmd) {
+        const toks = cmdTokenSet(cmd);
+        let score = 0;
+        qTokens.forEach(function (qt) {
+          if (toks.has(qt)) { score += 2; return; }
+          let sub = false;
+          toks.forEach(function (ct) { if (ct && (ct.indexOf(qt) >= 0 || qt.indexOf(ct) >= 0)) sub = true; });
+          if (sub) score += 1;
+        });
+        if (score > 0) scored.push({ id: cmd.id, label: cmd.label, type: cmd.type, score: score, run: cmd.run, help: cmd.help });
+      });
+      scored.sort(function (a, b) { return b.score - a.score; });
+      let top = scored.slice(0, 6);
+      const wl = resolveWordLookup(query);
+      if (wl) {
+        const w = wl.word;
+        top.unshift({ id: 'word-' + w, label: '“' + w + '” kelimesini sözlükte aç', type: 'action', score: 999, run: function () { searchDirectory(w); } });
+        top = top.slice(0, 6);
+      }
+      return top;
+    }
+
     function build() {
       if (built) return; built = true;
       root = el('div'); root.id = 'lb-root';
@@ -8490,7 +8662,7 @@
       face = el('img'); face.alt = 'Mentor'; face.decoding = 'async'; face.src = FR.rest;
       badge = el('span', 'lb-badge'); badge.appendChild(face);
       buddyBtn.appendChild(ping); buddyBtn.appendChild(badge);
-      buddyBtn.addEventListener('click', () => (bubble.classList.contains('is-on') ? hide() : open()));
+      buddyBtn.addEventListener('click', () => ((conciergePanel && conciergePanel.classList.contains('is-on')) ? hide() : open()));
       root.appendChild(spot); root.appendChild(bubble); root.appendChild(buddyBtn);
       document.body.appendChild(root);
       Object.values(FR).forEach(s => { const i = new Image(); i.src = s; });
@@ -8517,11 +8689,107 @@
       setTimeout(() => talk(false), sp);
       if (!opts.sticky) hideT = setTimeout(hide, sp + 3000);
     }
-    function hide() { if (!bubble) return; bubble.classList.remove('is-on'); talk(false); base = 'rest'; setFace('rest'); endTour(); }
+    function hide() {
+      if (bubble) bubble.classList.remove('is-on');
+      if (conciergePanel) conciergePanel.classList.remove('is-on');
+      talk(false); base = 'rest'; setFace('rest'); endTour();
+    }
 
-    function open() {
-      const v = STATE.currentView || 'home';
-      say(TIPS[v] || 'Yardımcı olmak için buradayım.', [{ label: 'Turu başlat', pri: true, on: startTour }, { label: 'Kapat', on: hide }], { sticky: true });
+    function open() { openConcierge(); }
+
+    // ---- Concierge paneli (aria-live olmayan ayrı kap) ----
+    function cgBuild() {
+      if (cgBuilt) return; cgBuilt = true;
+      build();
+      conciergePanel = el('div', 'lb-cg');
+      conciergePanel.setAttribute('id', 'lb-concierge');
+      conciergePanel.setAttribute('role', 'dialog');
+      conciergePanel.setAttribute('aria-label', 'Mentor — yardım ve komutlar');
+      const x = el('button', 'lb-x', '×'); x.type = 'button'; x.setAttribute('aria-label', 'Kapat'); x.onclick = hide;
+      const name = el('div', 'lb-name', 'Mentor');
+      cgSug = el('div', 'lb-cg-sug');
+      cgInput = document.createElement('input'); cgInput.className = 'lb-cg-input'; cgInput.type = 'text';
+      cgInput.setAttribute('placeholder', 'Ne yapmak istersin?');
+      cgInput.setAttribute('aria-label', 'Mentor komut arama');
+      cgList = el('div', 'lb-cg-list'); cgList.setAttribute('role', 'listbox'); cgList.setAttribute('aria-label', 'Öneriler ve komutlar');
+      conciergePanel.appendChild(x); conciergePanel.appendChild(name);
+      conciergePanel.appendChild(cgSug); conciergePanel.appendChild(cgInput); conciergePanel.appendChild(cgList);
+      root.appendChild(conciergePanel);
+      cgInput.addEventListener('input', function () { renderList(cgInput.value); });
+      cgInput.addEventListener('keydown', onCgKey);
+    }
+
+    function renderSug() {
+      if (!cgSug) return;
+      cgSug.innerHTML = '';
+      let sg = [];
+      try { sg = buildSuggestions() || []; } catch (e) {}
+      sg.forEach(function (s, i) {
+        const chip = el('button', 'lb-cg-chip'); chip.type = 'button';
+        chip.setAttribute('data-sg', String(i));
+        chip.appendChild(el('span', 'lb-cg-chip-t', s.text));
+        chip.appendChild(el('span', 'lb-cg-chip-a', s.actionLabel));
+        chip.onclick = function () { runAndClose(s.run); };
+        cgSug.appendChild(chip);
+      });
+    }
+
+    function optionEl(it) {
+      const o = el('button', 'lb-cg-opt' + (it.type === 'guide' ? ' is-guide' : '')); o.type = 'button';
+      o.setAttribute('role', 'option');
+      o.appendChild(el('span', 'lb-cg-opt-l', it.label));
+      if (it.type === 'guide') o.appendChild(el('span', 'lb-cg-opt-badge', 'rehber'));
+      o.onclick = function () { selectItem(it); };
+      return o;
+    }
+
+    function renderList(query) {
+      if (!cgList) return;
+      cgList.innerHTML = ''; cgActive = -1;
+      const q = (query || '').trim();
+      const items = q ? matchCommands(q) : getCommands().slice(0, 6);
+      if (!items.length) {
+        cgList.appendChild(el('div', 'lb-cg-empty', 'Bunu tam anlamadım. Şunlarda yardımcı olabilirim:'));
+        getCommands().slice(0, 4).forEach(function (c) { cgList.appendChild(optionEl(c)); });
+        return;
+      }
+      items.forEach(function (it) { cgList.appendChild(optionEl(it)); });
+    }
+
+    function selectItem(it) {
+      if (it.type === 'guide') {
+        cgList.innerHTML = '';
+        cgList.appendChild(el('p', 'lb-cg-help', it.help || ''));
+        const go = el('button', 'lb-cg-opt lb-cg-go', 'Götür beni'); go.type = 'button';
+        go.onclick = function () { runAndClose(it.run); };
+        cgList.appendChild(go);
+      } else {
+        runAndClose(it.run);
+      }
+    }
+
+    function runAndClose(run) { hide(); try { if (typeof run === 'function') run(); } catch (e) {} }
+
+    function onCgKey(e) {
+      if (!cgList) return;
+      const opts = cgList.querySelectorAll('.lb-cg-opt');
+      const key = e && e.key;
+      if (key === 'Escape') { hide(); if (e.preventDefault) e.preventDefault(); return; }
+      if (key === 'ArrowDown') { cgActive = Math.min(opts.length - 1, cgActive + 1); focusOpt(opts); if (e.preventDefault) e.preventDefault(); }
+      else if (key === 'ArrowUp') { cgActive = Math.max(0, cgActive - 1); focusOpt(opts); if (e.preventDefault) e.preventDefault(); }
+      else if (key === 'Enter') { const t = opts[cgActive < 0 ? 0 : cgActive]; if (t && t.click) t.click(); if (e.preventDefault) e.preventDefault(); }
+    }
+    function focusOpt(opts) { for (let i = 0; i < opts.length; i++) { opts[i].classList.toggle('is-active', i === cgActive); } }
+
+    function openConcierge() {
+      cgBuild();
+      if (ping) ping.style.display = 'none';
+      if (bubble && bubble.classList.contains('is-on')) { bubble.classList.remove('is-on'); talk(false); }
+      base = 'smile'; setFace('smile');
+      if (cgInput) cgInput.value = '';
+      renderSug(); renderList('');
+      conciergePanel.classList.add('is-on');
+      if (!reduce() && cgInput && cgInput.focus) { try { cgInput.focus(); } catch (e) {} }
     }
 
     function startTour() { ti = 0; build(); spot.classList.add('is-on'); tourStep(); }
@@ -8565,7 +8833,7 @@
       setTimeout(() => { if (!bubble.classList.contains('is-on')) say(TIPS[viewName], [{ label: 'Anladım', pri: true, on: hide }]); }, 650);
     }
 
-    return { init, onView, open, startTour, pronounce, react, say, hide };
+    return { init, onView, open, startTour, pronounce, react, say, hide, normalize, resolveWordLookup, getCommands, matchCommands, buildSuggestions, openConcierge };
   })();
 
   window.APP = {

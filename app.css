@@ -7577,11 +7577,52 @@ h1, h2, h3 { text-wrap: balance; line-height: 1.2; }
 .lb-btn.lb-pri { background: var(--dp-color-ink, #171e19); color: var(--dp-color-ground, #eeebe3); border-color: transparent; }
 .lb-x { position: absolute; top: 7px; right: 10px; min-width: 28px; min-height: 28px; border: 0; background: none; font-size: 17px; color: var(--dp-color-ink-muted, #47524c); cursor: pointer; line-height: 1; }
 
+/* Concierge paneli — aria-live olmayan ayrı kap */
+.lb-cg {
+  position: fixed; right: 14px; bottom: calc(166px + env(safe-area-inset-bottom, 0px)); z-index: 47;
+  width: min(320px, calc(100vw - 28px)); max-height: min(70vh, 560px); display: flex; flex-direction: column;
+  background: var(--dp-color-surface, #fff); color: var(--dp-color-ink, #171e19);
+  border: 1px solid var(--dp-color-border, rgba(183, 198, 194, 0.6)); border-radius: 20px 20px 6px 20px;
+  padding: 14px 14px 12px; box-shadow: 0 18px 40px -14px rgba(23, 30, 25, 0.4);
+  opacity: 0; transform: translateY(8px) scale(0.96); transition: opacity 0.22s var(--lb-ease), transform 0.22s var(--lb-ease);
+  pointer-events: none;
+}
+.lb-cg.is-on { opacity: 1; transform: none; pointer-events: auto; }
+.lb-cg .lb-name { margin-bottom: 8px; }
+.lb-cg-sug { display: flex; flex-direction: column; gap: 6px; margin-bottom: 10px; }
+.lb-cg-chip {
+  display: flex; align-items: center; justify-content: space-between; gap: 10px; text-align: left;
+  min-height: 40px; padding: 7px 12px; border-radius: 14px; cursor: pointer;
+  border: 1px solid var(--dp-color-border, rgba(183, 198, 194, 0.6)); background: var(--dp-color-surface-subtle, #f5f3ed);
+  color: var(--dp-color-ink, #171e19); font: 700 13px/1.3 var(--dp-typography-face, "Nunito");
+}
+.lb-cg-chip-a { flex: 0 0 auto; font-weight: 900; font-size: 11px; letter-spacing: 0.03em; color: var(--dp-color-ink-muted, #47524c); }
+.lb-cg-input {
+  width: 100%; box-sizing: border-box; min-height: 40px; padding: 9px 13px; margin-bottom: 8px;
+  border: 1px solid var(--dp-color-border, rgba(183, 198, 194, 0.6)); border-radius: 999px;
+  background: var(--dp-color-ground, #eeebe3); color: var(--dp-color-ink, #171e19);
+  font: 700 13px/1.2 var(--dp-typography-face, "Nunito");
+}
+.lb-cg-input:focus-visible { outline: 2px solid var(--dp-color-ink, #171e19); outline-offset: 1px; }
+.lb-cg-list { display: flex; flex-direction: column; gap: 4px; overflow-y: auto; -webkit-overflow-scrolling: touch; }
+.lb-cg-opt {
+  display: flex; align-items: center; justify-content: space-between; gap: 8px; text-align: left; width: 100%;
+  min-height: 40px; padding: 8px 12px; border-radius: 12px; cursor: pointer;
+  border: 1px solid transparent; background: none; color: var(--dp-color-ink, #171e19);
+  font: 700 13px/1.35 var(--dp-typography-face, "Nunito");
+}
+.lb-cg-opt:hover, .lb-cg-opt.is-active, .lb-cg-opt:focus-visible { background: var(--dp-color-surface-subtle, #f5f3ed); border-color: var(--dp-color-border, rgba(183, 198, 194, 0.6)); outline: none; }
+.lb-cg-opt.is-guide .lb-cg-opt-l { color: var(--dp-color-ink-muted, #47524c); }
+.lb-cg-opt-badge { flex: 0 0 auto; font-size: 10px; font-weight: 900; letter-spacing: 0.04em; text-transform: uppercase; color: var(--dp-color-ink-subtle, #899690); }
+.lb-cg-go { justify-content: center; font-weight: 900; background: var(--dp-color-ink, #171e19); color: var(--dp-color-ground, #eeebe3); margin-top: 8px; }
+.lb-cg-help { margin: 2px 2px 0; font-size: 13px; font-weight: 700; line-height: 1.5; }
+.lb-cg-empty { font-size: 12px; font-weight: 800; color: var(--dp-color-ink-subtle, #899690); padding: 4px 2px 6px; }
+
 .lb-spot { position: fixed; inset: 0; z-index: 44; pointer-events: none; display: none; }
 .lb-spot.is-on { display: block; }
 .lb-spot-hole { position: absolute; border-radius: 16px; box-shadow: 0 0 0 9999px rgba(20, 26, 22, 0.62); transition: all 0.35s var(--lb-ease); }
 
 @media (prefers-reduced-motion: reduce) {
   .lb-badge, .lb-buddy.is-happy .lb-badge { animation: none !important; }
-  .lb-bubble, .lb-spot-hole { transition: none !important; }
+  .lb-bubble, .lb-spot-hole, .lb-cg { transition: none !important; }
 }

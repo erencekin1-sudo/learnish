@@ -442,6 +442,11 @@ function createFreshAppEnvironment(options = {}) {
       }
       pause() {}
     },
+    Image: class {
+      constructor() { this._src = ''; }
+      set src(v) { this._src = v; }
+      get src() { return this._src; }
+    },
     confirm: () => true,
     alert: (msg) => { windowMock.__lastAlert = msg; },
     prompt: () => '',
@@ -502,6 +507,7 @@ function createFreshAppEnvironment(options = {}) {
     speechSynthesis: windowMock.speechSynthesis,
     SpeechSynthesisUtterance: windowMock.SpeechSynthesisUtterance,
     Audio: windowMock.Audio,
+    Image: windowMock.Image,
     Blob: windowMock.Blob,
     URL: windowMock.URL,
     confirm: windowMock.confirm,
@@ -2313,6 +2319,133 @@ registerTest(4, 'Real-World Scenarios', 'test_scenario_daily_day_points_to_this_
   const dayWords = pool.slice((info.day - 1) * 10, info.day * 10).map(w => w.en.toLowerCase());
   const weekWords = info.schedule.targetWords.map(t => (env.APP.lookupCurriculumWord(t) || { en: '' }).en.toLowerCase());
   assert(dayWords.some(w => weekWords.includes(w)), 'Günlük çalışma bu haftanın kelimelerini göstermeli');
+});
+
+// ============================================================================
+// 7.X MENTOR CONCIERGE (Task 1)
+// ============================================================================
+
+registerTest(1, 'Mentor Concierge', 'test_mentor_normalize_turkish', () => {
+  const env = createFreshAppEnvironment();
+  const n = env.APP.buddy.normalize;
+  assertEqual(n('ŞINAV'), 'sinav', 'Türkçe büyük harf ve ş normalize edilmeli');
+  assertEqual(n('İstatistik'), 'istatistik', 'İ küçük i olmalı');
+  assertEqual(n('  Çok   Güzel! '), 'cok guzel', 'diakritik/noktalama/boşluk temizlenmeli');
+});
+
+registerTest(2, 'Mentor Concierge', 'test_mentor_word_lookup_real_vs_fake', () => {
+  const env = createFreshAppEnvironment();
+  const realWord = env.sandbox.WORDS_DATA[0].en;
+  const hit = env.APP.buddy.resolveWordLookup(realWord + ' anlamı');
+  assert(hit && env.APP.buddy.normalize(hit.word) === env.APP.buddy.normalize(realWord), 'gerçek kelime çözülmeli');
+  assertEqual(env.APP.buddy.resolveWordLookup('zzzqwxnotaword'), null, 'olmayan kelime null dönmeli');
+});
+
+registerTest(1, 'Mentor Concierge', 'test_mentor_catalog_has_core_commands', () => {
+  const env = createFreshAppEnvironment();
+  const ids = env.APP.buddy.getCommands().map(c => c.id);
+  ['daily-quiz','srs-quiz','mistakes-flashcards','open-directory','speech-coach','pdf-studio','open-stats'].forEach(id =>
+    assert(ids.includes(id), 'katalog ' + id + ' içermeli'));
+  const reset = env.APP.buddy.getCommands().find(c => c.id === 'reset-progress');
+  if (reset) assert(/openSettingsModal/.test(reset.run.toString()), 'sıfırlama yalnızca ayarlara götürmeli');
+});
+
+registerTest(1, 'Mentor Concierge', 'test_mentor_match_basic_and_turkish', () => {
+  const env = createFreshAppEnvironment();
+  const m = (q) => env.APP.buddy.matchCommands(q).map(r => r.id);
+  assert(m('quiz').includes('daily-quiz') || m('quiz').some(id => /quiz/.test(id)), 'quiz eşleşmeli');
+  assert(m('ŞINAV').length > 0, 'büyük harf/Türkçe girdi eşleşmeli');
+  assert(m('tekrar').some(id => /srs|tekrar/.test(id)), 'tekrar SRS komutuna eşleşmeli');
+});
+
+registerTest(2, 'Mentor Concierge', 'test_mentor_match_empty_and_unmatched', () => {
+  const env = createFreshAppEnvironment();
+  assertEqual(env.APP.buddy.matchCommands('   ').length, 0, 'boşluk sorgusu boş dönmeli');
+  assertEqual(env.APP.buddy.matchCommands('!!!').length, 0, 'noktalama sorgusu boş dönmeli');
+  assertEqual(env.APP.buddy.matchCommands('zzzqwxnomatch').length, 0, 'eşleşmeyen sorgu boş dönmeli');
+});
+
+registerTest(3, 'Mentor Concierge', 'test_mentor_word_lookup_injected_result', () => {
+  const env = createFreshAppEnvironment();
+  const realWord = env.sandbox.WORDS_DATA[0].en;
+  const res = env.APP.buddy.matchCommands(realWord);
+  assert(res.length > 0 && res[0].id.indexOf('word-') === 0, 'gerçek kelime için ilk sonuç sözlük araması olmalı');
+});
+
+registerTest(2, 'Mentor Concierge', 'test_mentor_command_word_not_misrouted', () => {
+  // 'quiz'/'test' hem gerçek sözcük hem komut tetikleyicisi: komut aksiyonu öne geçmeli,
+  // sözlük araması (word-*) bastırılmalı (spec §5.1 / Review Focus #2).
+  const env = createFreshAppEnvironment();
+  ['quiz', 'test'].forEach(q => {
+    const res = env.APP.buddy.matchCommands(q);
+    assert(res.length > 0, q + ' için sonuç olmalı');
+    assert(res[0].id.indexOf('word-') !== 0, q + ' ilk sonucu sözlük araması OLMAMALI');
+  });
+  assertEqual(env.APP.buddy.matchCommands('quiz')[0].id, 'daily-quiz', 'quiz ilk sonucu günün testi olmalı');
+  // komut tetikleyicisi olmayan gerçek kelime hâlâ sözlük araması enjekte etmeli
+  const realWord = env.sandbox.WORDS_DATA[0].en;
+  assert(env.APP.buddy.matchCommands(realWord)[0].id.indexOf('word-') === 0, 'komut olmayan kelime sözlüğe gitmeli');
+});
+
+registerTest(3, 'Mentor Concierge', 'test_mentor_suggestions_due_review', () => {
+  const env = createFreshAppEnvironment({ initialStorage: { learnish_active_module: 'maarif' } });
+  const pool = env.APP.getActiveGradePool();
+  const ids = pool.slice(0, 3).map(w => w.id);
+  env.APP.getState().userData.review = new Set(ids);
+  const sug = env.APP.buddy.buildSuggestions();
+  assert(sug.some(s => /tekrar/i.test(s.text) || /tekrar/i.test(s.actionLabel)), 'tekrar önerisi çıkmalı');
+});
+
+registerTest(3, 'Mentor Concierge', 'test_mentor_suggestions_all_clear_positive', () => {
+  const env = createFreshAppEnvironment({ initialStorage: { learnish_active_module: 'maarif' } });
+  const sug = env.APP.buddy.buildSuggestions();
+  assert(Array.isArray(sug) && sug.length >= 1, 'her durumda en az bir öneri dönmeli');
+});
+
+registerTest(3, 'Mentor Concierge', 'test_mentor_suggestions_cross_module_switch', () => {
+  const env = createFreshAppEnvironment({ initialStorage: { learnish_active_module: 'oxford' } });
+  env.APP.switchModule('maarif');
+  // Oxford havuzuyla paylaşılmayan (sadece Maarif) kelimeler seç: aktif oxford modülü "temiz" kalsın
+  const maarifIds = env.APP.getActiveGradePool().filter(w => !env.APP.isOxfordWord(w)).slice(0, 4).map(w => w.id);
+  assert(maarifIds.length >= 1, 'en az bir Maarif-özel kelime bulunmalı');
+  env.APP.switchModule('oxford');
+  env.APP.getState().userData.review = new Set(maarifIds);
+  const sug = env.APP.buddy.buildSuggestions();
+  assert(sug.some(s => /geç|maarif/i.test(s.actionLabel + ' ' + s.text)), 'başka modüle yönlendiren öneri çıkmalı');
+});
+
+registerTest(1, 'Mentor Concierge', 'test_mentor_panel_opens_non_live', () => {
+  const env = createFreshAppEnvironment();
+  env.APP.buddy.openConcierge();
+  const panel = env.document.getElementById('lb-concierge');
+  assert(panel, 'concierge paneli oluşmalı');
+  assertEqual(panel.getAttribute('role'), 'dialog', 'panel role=dialog olmalı');
+  assert(panel.getAttribute('aria-live') == null, 'panel canlı bölge olmamalı');
+  const input = panel.querySelector('input');
+  assert(input, 'arama kutusu olmalı');
+});
+
+registerTest(1, 'Mentor Concierge', 'test_mentor_panel_lists_suggestions', () => {
+  const env = createFreshAppEnvironment({ initialStorage: { learnish_active_module: 'maarif' } });
+  env.APP.buddy.openConcierge();
+  const panel = env.document.getElementById('lb-concierge');
+  assert(panel.querySelectorAll('[data-sg]').length >= 1, 'en az bir öneri çipi çizilmeli');
+});
+
+registerTest(5, 'Mentor Concierge', 'test_mentor_panel_reopen_no_duplicate', () => {
+  const env = createFreshAppEnvironment();
+  env.APP.buddy.openConcierge();
+  env.APP.buddy.hide();
+  env.APP.buddy.openConcierge();
+  const all = env.document.querySelectorAll('#lb-concierge');
+  assert(all.length <= 1, 'tekrar açılışta çift panel oluşmamalı');
+});
+
+registerTest(2, 'Mentor Concierge', 'test_mentor_preserves_tour_and_react', () => {
+  const env = createFreshAppEnvironment();
+  assert(typeof env.APP.buddy.startTour === 'function', 'tur korunmalı');
+  assert(typeof env.APP.buddy.react === 'function', 'tepkiler korunmalı');
+  env.APP.buddy.react('quizPass'); // çökmemeli
 });
 
 // ============================================================================
