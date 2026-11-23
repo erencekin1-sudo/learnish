@@ -442,6 +442,11 @@ function createFreshAppEnvironment(options = {}) {
       }
       pause() {}
     },
+    Image: class {
+      constructor() { this._src = ''; }
+      set src(v) { this._src = v; }
+      get src() { return this._src; }
+    },
     confirm: () => true,
     alert: (msg) => { windowMock.__lastAlert = msg; },
     prompt: () => '',
@@ -502,6 +507,7 @@ function createFreshAppEnvironment(options = {}) {
     speechSynthesis: windowMock.speechSynthesis,
     SpeechSynthesisUtterance: windowMock.SpeechSynthesisUtterance,
     Audio: windowMock.Audio,
+    Image: windowMock.Image,
     Blob: windowMock.Blob,
     URL: windowMock.URL,
     confirm: windowMock.confirm,
@@ -2313,6 +2319,26 @@ registerTest(4, 'Real-World Scenarios', 'test_scenario_daily_day_points_to_this_
   const dayWords = pool.slice((info.day - 1) * 10, info.day * 10).map(w => w.en.toLowerCase());
   const weekWords = info.schedule.targetWords.map(t => (env.APP.lookupCurriculumWord(t) || { en: '' }).en.toLowerCase());
   assert(dayWords.some(w => weekWords.includes(w)), 'Günlük çalışma bu haftanın kelimelerini göstermeli');
+});
+
+// ============================================================================
+// 7.X MENTOR CONCIERGE (Task 1)
+// ============================================================================
+
+registerTest(1, 'Mentor Concierge', 'test_mentor_normalize_turkish', () => {
+  const env = createFreshAppEnvironment();
+  const n = env.APP.buddy.normalize;
+  assertEqual(n('ŞINAV'), 'sinav', 'Türkçe büyük harf ve ş normalize edilmeli');
+  assertEqual(n('İstatistik'), 'istatistik', 'İ küçük i olmalı');
+  assertEqual(n('  Çok   Güzel! '), 'cok guzel', 'diakritik/noktalama/boşluk temizlenmeli');
+});
+
+registerTest(2, 'Mentor Concierge', 'test_mentor_word_lookup_real_vs_fake', () => {
+  const env = createFreshAppEnvironment();
+  const realWord = env.sandbox.WORDS_DATA[0].en;
+  const hit = env.APP.buddy.resolveWordLookup(realWord + ' anlamı');
+  assert(hit && env.APP.buddy.normalize(hit.word) === env.APP.buddy.normalize(realWord), 'gerçek kelime çözülmeli');
+  assertEqual(env.APP.buddy.resolveWordLookup('zzzqwxnotaword'), null, 'olmayan kelime null dönmeli');
 });
 
 // ============================================================================

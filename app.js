@@ -8477,6 +8477,34 @@
 
     function el(tag, cls, text) { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; }
 
+    // --- Concierge beyni: metin normalleştirme + kelime arama indeksi ---
+    const TR_MAP = { 'İ': 'i', 'I': 'i', 'ı': 'i', 'Ş': 's', 'ş': 's', 'Ğ': 'g', 'ğ': 'g', 'Ü': 'u', 'ü': 'u', 'Ö': 'o', 'ö': 'o', 'Ç': 'c', 'ç': 'c' };
+    function normalize(str) {
+      return String(str == null ? '' : str)
+        .replace(/[İIıŞşĞğÜüÖöÇç]/g, function (ch) { return TR_MAP[ch] || ch; })
+        .toLowerCase()
+        .replace(/[^a-z0-9\s]+/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim();
+    }
+    let wordIndex = null;
+    function wordSet() {
+      if (!wordIndex) {
+        wordIndex = new Set();
+        try { (WORDS_DATA || []).forEach(function (w) { if (w && w.en) wordIndex.add(normalize(w.en)); }); } catch (e) {}
+      }
+      return wordIndex;
+    }
+    function resolveWordLookup(query) {
+      const norm = normalize(query);
+      if (!norm) return null;
+      const set = wordSet();
+      if (set.has(norm)) return { word: norm };
+      const tokens = norm.split(' ');
+      for (let i = 0; i < tokens.length; i++) { if (tokens[i] && set.has(tokens[i])) return { word: tokens[i] }; }
+      return null;
+    }
+
     function build() {
       if (built) return; built = true;
       root = el('div'); root.id = 'lb-root';
@@ -8565,7 +8593,7 @@
       setTimeout(() => { if (!bubble.classList.contains('is-on')) say(TIPS[viewName], [{ label: 'Anladım', pri: true, on: hide }]); }, 650);
     }
 
-    return { init, onView, open, startTour, pronounce, react, say, hide };
+    return { init, onView, open, startTour, pronounce, react, say, hide, normalize, resolveWordLookup };
   })();
 
   window.APP = {
