@@ -12,6 +12,7 @@ import json
 import base64
 import argparse
 import zipfile
+import unicodedata
 import xml.etree.ElementTree as ET
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -24,6 +25,81 @@ SINGLE_HTML_PATH = os.path.join(BASE_DIR, 'Learnish_Tek_Dosya_Web_App.html')
 YDS_PDF_PATH = os.path.join(BASE_DIR, 'belgeler', 'YDS İngilizce 2020–2026 Kelime ve Kalıp Tabloları.pdf')
 YDS_EXTRA_SOURCES_PATH = os.path.join(BASE_DIR, 'belgeler', 'yds_extra_sources.json')
 DICTIONARY_EXPANSION_PATH = os.path.join(BASE_DIR, 'belgeler', 'dictionary_expansion.json')
+
+
+def resolve_existing_path(path):
+    """Return an existing path matching `path`, tolerant of Unicode NFC/NFD
+    filename normalization differences. macOS (HFS+/APFS) and some source
+    literals use NFD (e.g. 'İ' as 'I' + U+0307), while Linux stores the file
+    byte-exact as NFC (U+0130); a byte-exact lookup then fails and a source
+    file looks 'missing', silently shrinking the corpus. This matches by
+    NFC-normalized basename so the file is found on any platform."""
+    if os.path.exists(path):
+        return path
+    directory = os.path.dirname(path) or '.'
+    target = unicodedata.normalize('NFC', os.path.basename(path))
+    try:
+        for name in os.listdir(directory):
+            if unicodedata.normalize('NFC', name) == target:
+                return os.path.join(directory, name)
+    except OSError:
+        pass
+    return path
+
+
+def _en_norm(s):
+    """Lowercased, stripped English surface form for loss comparison."""
+    return str(s or '').strip().lower()
+
+
+def words_lost(existing_en, combined_words):
+    """Existing English surface forms absent from the rebuilt corpus.
+    Enforces the invariant: a rebuild may ADD words, never DROP them."""
+    have = {_en_norm(w.get('en', '')) for w in combined_words}
+    seen, lost = set(), []
+    for e in existing_en:
+        n = _en_norm(e)
+        if n and n not in have and n not in seen:
+            seen.add(n)
+            lost.append(e)
+    return lost
+
+
+def existing_en_set():
+    """English surface forms already present in the committed words-data.js."""
+    if not os.path.exists(WORDS_DATA_JS_PATH):
+        return []
+    try:
+        with open(WORDS_DATA_JS_PATH, 'r', encoding='utf-8') as f:
+            content = f.read()
+    except OSError:
+        return []
+    m = re.search(r'const _RAW_WORDS = (\[[\s\S]*?\]);', content)
+    if not m:
+        return []
+    try:
+        return [t[1] for t in json.loads(m.group(1)) if len(t) > 1 and t[1]]
+    except Exception:
+        return []
+
+
+def assert_no_word_loss(combined_words):
+    """Abort the build (without writing) if the rebuilt corpus would drop any
+    word that the committed words-data.js already contains. 'Not one word lost'
+    is a hard invariant: a missing/unparseable source must fail loudly, never
+    silently shrink the pool."""
+    existing = existing_en_set()
+    if not existing:
+        return
+    lost = words_lost(existing, combined_words)
+    if lost:
+        sample = ', '.join(lost[:15])
+        raise SystemExit(
+            "KRİTİK: Yeniden derleme mevcut korpustan %d kelime düşürüyordu "
+            "(ör. %s). words-data.js YAZILMADI. Eksik bir kaynak (ör. YDS PDF / fitz) "
+            "olabilir; düzeltip tekrar deneyin ya da bundle için 'python3 build.py --bundle' kullanın."
+            % (len(lost), sample)
+        )
 
 def log(msg):
     print(f"[Learnish Builder] {msg}")
@@ -239,7 +315,8 @@ def load_maarif_words():
 
 # 2. Parse The Oxford 5000 docx
 def parse_oxford_docx():
-    log(f"Oxford 5000 Word belgesi işleniyor: {DOCX_PATH}")
+    docx_path = resolve_existing_path(DOCX_PATH)
+    log(f"Oxford 5000 Word belgesi işleniyor: {docx_path}")
     cefr_by_word_type = {}
     cefr_by_word = {}
     if os.path.exists(CEFR_JSON_PATH):
@@ -252,7 +329,7 @@ def parse_oxford_docx():
                 if w not in cefr_by_word:
                     cefr_by_word[w] = v
 
-    with zipfile.ZipFile(DOCX_PATH) as z:
+    with zipfile.ZipFile(docx_path) as z:
         xml_content = z.read('word/document.xml')
         root = ET.fromstring(xml_content)
         namespaces = {'w': 'http://schemas.openxmlformats.org/wordprocessingml/2006/main'}
@@ -383,9 +460,10 @@ def parse_oxford_docx():
 
 # 3. Parse YDS/YÖKDİL 2020-2026 PDF (all 9 tables)
 def parse_yds_pdf():
-    log(f"YDS & YÖKDİL Tabloları PDF işleniyor: {YDS_PDF_PATH}")
-    if not os.path.exists(YDS_PDF_PATH):
-        log(f"Hata: {YDS_PDF_PATH} bulunamadı!")
+    pdf_path = resolve_existing_path(YDS_PDF_PATH)
+    log(f"YDS & YÖKDİL Tabloları PDF işleniyor: {pdf_path}")
+    if not os.path.exists(pdf_path):
+        log(f"Hata: {pdf_path} bulunamadı!")
         return []
 
     try:
@@ -394,7 +472,7 @@ def parse_yds_pdf():
         log("HATA: PyMuPDF (fitz) kütüphanesi bulunamadı. PDF ayrıştırma için 'pip install pymupdf' gereklidir.")
         raise
 
-    doc = fitz.open(YDS_PDF_PATH)
+    doc = fitz.open(pdf_path)
     sections_def = [
         (1, 'İsim, Sıfat ve Zarf', 4, 191),
         (2, 'Fiiller', 191, 246),
@@ -711,6 +789,10 @@ def build_combined_database():
 
 
 def write_word_database(combined_words):
+    # Invariant: a rebuild may add words but must never drop any that the
+    # committed words-data.js already contains. Abort before writing if it would.
+    assert_no_word_loss(combined_words)
+
     # Verify no duplicates (lowercase, canonical, and JS directory norm)
     all_en = [w['en'].strip().lower() for w in combined_words]
     assert len(all_en) == len(set(all_en)), "Kritik Hata: Havuzda mükerrer kelimeler tespit edildi!"
