@@ -627,7 +627,7 @@ registerTest(1, 'Navigation & Canopy', 'test_nav_home_view_orientation_and_modul
   assert(homeSection.innerHTML.includes('MEB Türkiye Yüzyılı Maarif Modeli'), 'Home view should describe MEB module');
   assert(homeSection.innerHTML.includes('YDS, YÖKDİL, YDT'), 'Home view should describe YDS module');
   assert(homeSection.innerHTML.includes('Kelime Kütüphanesi'), 'Home view should describe Library module');
-  assert(homeSection.innerHTML.includes('AKILLI PEDAGOJİ SİSTEMİ') || homeSection.innerHTML.includes('Bilişsel Hafıza'), 'Home view should provide the methodology / cognitive-learning station');
+  assert(homeSection.innerHTML.includes('TEKRAR VE HATA DEFTERİ') || homeSection.innerHTML.includes('Tekrar ve Hata Defteri'), 'Home view should provide the spaced-repetition / mistake-review station');
   assert(homeSection.innerHTML.includes('AI Speaking &amp; Telaffuz Koçu') || homeSection.innerHTML.includes('Telaffuz'), 'Home view should showcase speaking coach feature');
   assert(homeSection.innerHTML.includes('PDF &amp; Çalışma Kağıdı Stüdyosu') || homeSection.innerHTML.includes('PDF'), 'Home view should showcase PDF studio feature');
 });
@@ -1613,7 +1613,7 @@ registerTest(1, 'PDF & Worksheet Studio', 'test_pdf_studio_open_and_close', () =
   env.APP.openPdfStudio('mistakes');
   assert(backdrop.classList.contains('active'), 'openPdfStudio should activate backdrop');
   assert(dialog.classList.contains('active'), 'openPdfStudio should activate dialog');
-  assert(body.innerHTML.includes('Hata Kampı &amp; Yanlışlar') || body.innerHTML.includes('Hata Kampı & Yanlışlar'), 'Dialog body should have template options');
+  assert(body.innerHTML.includes('Hatalar ve Yanlışlar'), 'Dialog body should have template options');
   assert(body.innerHTML.includes('ÇALIŞMA ŞABLONU'), 'Dialog body should contain studio controls');
 
   env.APP.closePdfStudio();

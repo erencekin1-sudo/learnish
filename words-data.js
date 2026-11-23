@@ -1,7 +1,7 @@
 /**
  * Learnish - Maarif Modeli, The Oxford 5000 ve YDS/YÖKDİL Birleşik Kelime Veritabanı
  * Toplam: 11000 Benzersiz Kelime ve Kalıp (Maarif: 817, Oxford: 5888, YDS: 8170)
- * Yüksek Verimlilikli Sıkıştırılmış Sözlük Havuzu (6 ms Monomorfik V8 Başlatma)
+ * Sıkıştırılmış birleşik sözlük havuzu.
  */
 const THEMES_DATA = {
   "1": {
@@ -88,7 +88,7 @@ const THEMES_DATA = {
     "num": 9,
     "code": "OXFORD 5000",
     "title": "THE OXFORD 5000",
-    "titleTr": "The Oxford 5000 (A1-C1 Dünya Standardı)",
+    "titleTr": "The Oxford 5000 (A1–C1)",
     "full": "THE OXFORD 5000 (A1-C1)",
     "color": "#0284c7",
     "badgeBg": "#0284c7",
