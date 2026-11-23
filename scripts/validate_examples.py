@@ -41,16 +41,18 @@ def is_cit(s):
 
 def headword_present(en, ex):
     low = ex.lower()
-    toks = [t for t in re.split(r'[\s/\-]+', en.lower()) if t and t not in STOP]
+    all_toks = [re.sub(r'[^a-zàâçéèêëîïôûùüÿñæœ]', '', t)
+                for t in re.split(r'[\s/\-]+', en.lower()) if t and t != '...']
+    toks = [t for t in all_toks if t and t not in STOP]
+    # İçerik kelimesi yoksa (tümü "as/for/to" gibi edat), ilk sözcüğü aynen ara.
     if not toks:
-        toks = [en.lower()]
+        toks = [t for t in all_toks if t]
     for t in toks:
-        t = re.sub(r'[^a-zàâçéèêëîïôûùüÿñæœ]', '', t)
         if len(t) < 3:
-            if t and t in low:
+            if t and re.search(r'\b%s\b' % re.escape(t), low):
                 return True
             continue
-        root = t[:max(4, len(t) - 2)]  # çekim ekine tolerans
+        root = t[:3]  # çekim ekine tolerans (begin -> began)
         if root in low:
             return True
     return False
