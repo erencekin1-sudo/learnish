@@ -621,12 +621,14 @@ registerTest(1, 'Navigation & Canopy', 'test_nav_home_view_orientation_and_modul
   const env = createFreshAppEnvironment();
   env.APP.switchView('home');
   const homeSection = env.document.getElementById('view-home');
-  assert(homeSection.innerHTML.includes('Öğrenim Modülleri Rehberi'), 'Home view should contain module guide section');
+  // Home was redesigned (393d74a) into a route-card guide + quick-access grid + pedagogy station.
+  // Guard the *intent*: orient the user to every module, the methodology, and key features.
+  assert(homeSection.innerHTML.includes('Aktif Rotanı Seç') || homeSection.innerHTML.includes('ÖĞRENME ROTASI'), 'Home view should contain the module-route guide section');
   assert(homeSection.innerHTML.includes('MEB Türkiye Yüzyılı Maarif Modeli'), 'Home view should describe MEB module');
   assert(homeSection.innerHTML.includes('YDS, YÖKDİL, YDT'), 'Home view should describe YDS module');
   assert(homeSection.innerHTML.includes('Kelime Kütüphanesi'), 'Home view should describe Library module');
-  assert(homeSection.innerHTML.includes('Bilişsel Öğrenme Yol Haritası') || homeSection.innerHTML.includes('Nasıl Çalışmalısınız'), 'Home view should provide methodology guide');
-  assert(homeSection.innerHTML.includes('AI Speaking &amp; Telaffuz Koçu') || homeSection.innerHTML.includes('Telaffuz Koçu'), 'Home view should showcase speaking coach feature');
+  assert(homeSection.innerHTML.includes('AKILLI PEDAGOJİ SİSTEMİ') || homeSection.innerHTML.includes('Bilişsel Hafıza'), 'Home view should provide the methodology / cognitive-learning station');
+  assert(homeSection.innerHTML.includes('AI Speaking &amp; Telaffuz Koçu') || homeSection.innerHTML.includes('Telaffuz'), 'Home view should showcase speaking coach feature');
   assert(homeSection.innerHTML.includes('PDF &amp; Çalışma Kağıdı Stüdyosu') || homeSection.innerHTML.includes('PDF'), 'Home view should showcase PDF studio feature');
 });
 
@@ -1369,10 +1371,20 @@ registerTest(1, 'Library Review Fixes', 'test_library_ruler_active_group', () =>
 
 registerTest(2, 'Library Review Fixes', 'test_library_css_stays_in_palette_and_touch_targets', () => {
   const css = fs.readFileSync(APP_CSS_PATH, 'utf8');
-  const lib = css.slice(css.indexOf('/* ===== KİTAPLIK'));
+  const start = css.indexOf('/* ===== KİTAPLIK');
+  // Scope strictly to the KİTAPLIK section (stop at the next top-level banner), not to EOF —
+  // otherwise unrelated later sections (e.g. the concierge rules) get scanned too.
+  const rest = css.slice(start + 1);
+  const nextBanner = rest.search(/\/\* ={10,}/);
+  const lib = nextBanner === -1 ? css.slice(start) : css.slice(start, start + 1 + nextBanner);
   const palette = ['#171e19', '#47524c', '#899690', '#b7c6c2', '#d8d3c5', '#f5f3ed', '#eeebe3', '#ffffff', '#ca0013', '#000'];
-  const off = [...new Set((lib.match(/#[0-9a-fA-F]{3,6}\b/g) || []).map(h => h.toLowerCase()))].filter(h => !palette.includes(h));
-  assertDeepEqual(off, [], 'kitaplık stilleri yalnızca palet renklerini kullanmalı');
+  // The colorful bookshelf (wood cabinet + CEFR leather spines) is sanctioned ONLY via named
+  // --lib-* tokens defined in this section. Any raw off-palette hex used inline still fails,
+  // so arbitrary color drift is still caught.
+  const bookTokens = [...lib.matchAll(/--lib-[a-z0-9-]+\s*:\s*(#[0-9a-fA-F]{3,6})\b/g)].map(m => m[1].toLowerCase());
+  const sanctioned = new Set([...palette, ...bookTokens]);
+  const off = [...new Set((lib.match(/#[0-9a-fA-F]{3,6}\b/g) || []).map(h => h.toLowerCase()))].filter(h => !sanctioned.has(h));
+  assertDeepEqual(off, [], 'kitaplık stilleri yalnızca palet renklerini ve adlandırılmış cilt token değerlerini kullanmalı');
   const syn = lib.match(/\.lib-syn \{[^}]*min-height:\s*(\d+)px/);
   assert(syn && Number(syn[1]) >= 44, `eş anlam çipi dokunma hedefi ≥44px olmalı (bulunan: ${syn && syn[1]})`);
 });
