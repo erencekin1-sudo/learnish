@@ -2448,6 +2448,54 @@ registerTest(2, 'Mentor Concierge', 'test_mentor_preserves_tour_and_react', () =
   env.APP.buddy.react('quizPass'); // çökmemeli
 });
 
+// Komutlar başka bir ekrandayken de doğru ekrana GÖTÜRMELİ
+registerTest(4, 'Mentor Concierge', 'test_mentor_daily_command_navigates', () => {
+  const env = createFreshAppEnvironment({ initialStorage: { learnish_active_module: 'maarif' } });
+  env.APP.switchView('home');
+  const cmd = env.APP.buddy.getCommands().find(c => c.id === 'continue-daily');
+  assert(cmd, 'continue-daily komutu olmalı');
+  cmd.run();
+  assertEqual(env.APP.getState().currentView, 'daily', '"Bugünün çalışmasına git" günlük ekrana götürmeli');
+});
+
+registerTest(4, 'Mentor Concierge', 'test_mentor_word_lookup_navigates_to_directory', () => {
+  const env = createFreshAppEnvironment();
+  env.APP.switchView('home');
+  const realWord = env.sandbox.WORDS_DATA[0].en;
+  const res = env.APP.buddy.matchCommands(realWord);
+  assertEqual(res[0].id.indexOf('word-'), 0, 'ilk sonuç sözlük araması olmalı');
+  res[0].run();
+  assertEqual(env.APP.getState().currentView, 'directory', 'kelime araması sözlük ekranına götürmeli');
+});
+
+// Erişilebilirlik: role=listbox yalnızca option içermeli; geri dönüş metni dışarıda
+registerTest(2, 'Mentor Concierge', 'test_mentor_listbox_children_are_options', () => {
+  const env = createFreshAppEnvironment();
+  env.APP.buddy.openConcierge();
+  const panel = env.document.getElementById('lb-concierge');
+  const input = panel.querySelector('input');
+  input.value = 'zzzqwxnomatch';
+  input.dispatchEvent({ type: 'input', target: input });
+  const listbox = panel.querySelector('[role="listbox"]');
+  const kids = listbox.children;
+  for (let i = 0; i < kids.length; i++) {
+    assertEqual(kids[i].getAttribute('role'), 'option', 'listbox çocukları yalnızca option olmalı');
+  }
+  assert(panel.innerHTML.indexOf('anlamadım') === -1 || listbox.innerHTML.indexOf('anlamadım') === -1, 'geri dönüş metni listbox içinde olmamalı');
+});
+
+// Erişilebilirlik: ok tuşuyla aktif seçenek aria-activedescendant ile bildirilmeli
+registerTest(2, 'Mentor Concierge', 'test_mentor_arrowkey_sets_activedescendant', () => {
+  const env = createFreshAppEnvironment();
+  env.APP.buddy.openConcierge();
+  const panel = env.document.getElementById('lb-concierge');
+  const input = panel.querySelector('input');
+  input.dispatchEvent({ type: 'keydown', key: 'ArrowDown', target: input, preventDefault: function () {} });
+  const ad = input.getAttribute('aria-activedescendant');
+  assert(ad, 'ArrowDown sonrası aria-activedescendant set edilmeli');
+  assert(panel.querySelector('#' + ad), 'aria-activedescendant var olan bir seçeneği göstermeli');
+});
+
 // ============================================================================
 // 8. TEST EXECUTION & REPORTING
 // ============================================================================

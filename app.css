@@ -7617,6 +7617,8 @@ h1, h2, h3 { text-wrap: balance; line-height: 1.2; }
 .lb-cg-go { justify-content: center; font-weight: 900; background: var(--dp-color-ink, #171e19); color: var(--dp-color-ground, #eeebe3); margin-top: 8px; }
 .lb-cg-help { margin: 2px 2px 0; font-size: 13px; font-weight: 700; line-height: 1.5; }
 .lb-cg-empty { font-size: 12px; font-weight: 800; color: var(--dp-color-ink-subtle, #899690); padding: 4px 2px 6px; }
+.lb-cg-status { font-size: 13px; font-weight: 700; line-height: 1.5; color: var(--dp-color-ink-muted, #47524c); margin: 0 2px 6px; }
+.lb-cg-status:empty { display: none; }
 
 .lb-spot { position: fixed; inset: 0; z-index: 44; pointer-events: none; display: none; }
 .lb-spot.is-on { display: block; }
