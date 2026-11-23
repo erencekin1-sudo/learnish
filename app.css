@@ -6214,7 +6214,7 @@ body.modal-open {
   border: 1.5px solid var(--dp-color-border);
   border-radius: 14px;
   cursor: pointer;
-  color: var(--dp-color-ink-secondary);
+  color: var(--dp-color-ink-muted);
   font-family: var(--dp-typography-face);
   font-size: 11px;
   font-weight: 600;
@@ -7252,6 +7252,28 @@ h1, h2, h3 { text-wrap: balance; line-height: 1.2; }
   --lib-tone-c1: #47524c;  --lib-tone-c1-text: #eeebe3;
   --lib-tone-c2: #171e19;  --lib-tone-c2-text: #eeebe3;
   --lib-ease: cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* ---- Onaylı cilt & ahşap tonları (seviye = renk; sabit, tema ile dönmez) ---- */
+  /* ahşap dolap gövdesi */
+  --lib-wood-1: #5a4228;  --lib-wood-2: #7a5c38;  --lib-wood-3: #6e5234;  --lib-wood-4: #55401f;
+  --lib-well-1: #241a0f;  --lib-well-2: #3c2d1a;  --lib-well-3: #4a3620;
+  --lib-board-1: #9a7646; --lib-board-2: #75582f; --lib-board-3: #4a371d;
+  --lib-cap-1: #efe6d2;   --lib-cap-2: #cdbf9f;
+  --lib-cover-gilt: #c7a24e;
+  /* CEFR cilt sırtları: bg1 (kenar), bg2 (orta), ink (yazı), gilt (bezeme) */
+  --lib-a1-bg1: #b98a4e; --lib-a1-bg2: #cba062; --lib-a1-ink: #3a2a14; --lib-a1-gilt: #4a3418;
+  --lib-a2-bg1: #a67a24; --lib-a2-bg2: #c0922f; --lib-a2-ink: #2f2209; --lib-a2-gilt: #4a3511;
+  --lib-b1-bg1: #2d6b60; --lib-b1-bg2: #3b8577; --lib-b1-ink: #e9f1ee; --lib-b1-gilt: #dcb857;
+  --lib-b2-bg1: #9a4526; --lib-b2-bg2: #b35831; --lib-b2-ink: #f7e9e1; --lib-b2-gilt: #eccb84;
+  --lib-c1-bg1: #273f30; --lib-c1-bg2: #34503d; --lib-c1-ink: #e6ede7; --lib-c1-gilt: #cdae5e;
+  --lib-c2-bg1: #4f121b; --lib-c2-bg2: #681a26; --lib-c2-ink: #f2dede; --lib-c2-gilt: #dcae62;
+  /* CEFR açılan kitap kapakları: cover (cilt), gilt (yaldız) */
+  --lib-a1-cover: #c69a5c; --lib-a1-cover-gilt: #6e5024;
+  --lib-a2-cover: #b98a2b; --lib-a2-cover-gilt: #6e5222;
+  --lib-b1-cover: #347a6d; --lib-b1-cover-gilt: #e0c070;
+  --lib-b2-cover: #9f4e2d; --lib-b2-cover-gilt: #edcf86;
+  --lib-c1-cover: #2f4a3a; --lib-c1-cover-gilt: #cdb268;
+  --lib-c2-cover: #56141f; --lib-c2-cover-gilt: #e0b36a;
 }
 [data-theme="dark"] #view-directory {
   --lib-ink: #eeebe3;
@@ -7291,7 +7313,7 @@ h1, h2, h3 { text-wrap: balance; line-height: 1.2; }
 /* Ahşap kitaplık dolabı: wrapper = çerçeve, shelf = gölgeli iç, board = ön tahta */
 .lib-shelf-wrap {
   position: relative; border-radius: 10px; padding: 14px 16px;
-  background: linear-gradient(90deg, #5a4228, #7a5c38 8%, #6e5234 50%, #7a5c38 92%, #55401f), #6e5234;
+  background: linear-gradient(90deg, var(--lib-wood-1), var(--lib-wood-2) 8%, var(--lib-wood-3) 50%, var(--lib-wood-2) 92%, var(--lib-wood-4)), var(--lib-wood-3);
   box-shadow: 0 30px 54px -24px rgba(23, 18, 10, 0.6), inset 0 2px 0 rgba(255, 236, 200, 0.3), inset 0 -4px 0 rgba(0, 0, 0, 0.4);
 }
 /* yan kenarlarda kitapların gölgeye girdiği solma katmanı */
@@ -7305,13 +7327,13 @@ h1, h2, h3 { text-wrap: balance; line-height: 1.2; }
   display: flex; align-items: flex-end; gap: 5px; min-height: 232px; padding: 36px 14px 0;
   overflow-x: auto; overflow-y: hidden; scroll-snap-type: x proximity; overscroll-behavior-x: contain;
   -webkit-overflow-scrolling: touch; scrollbar-width: none; border-radius: 4px 4px 0 0;
-  background: linear-gradient(180deg, #241a0f, #3c2d1a 55%, #4a3620);
+  background: linear-gradient(180deg, var(--lib-well-1), var(--lib-well-2) 55%, var(--lib-well-3));
   box-shadow: inset 0 26px 28px -14px rgba(0, 0, 0, 0.72), inset 0 0 0 2px rgba(0, 0, 0, 0.45);
 }
 .lib-shelf::-webkit-scrollbar { display: none; }
 .lib-board {
   height: 20px; border-radius: 0 0 4px 4px;
-  background: linear-gradient(180deg, #9a7646, #75582f 55%, #4a371d);
+  background: linear-gradient(180deg, var(--lib-board-1), var(--lib-board-2) 55%, var(--lib-board-3));
   box-shadow: 0 10px 14px -8px rgba(0, 0, 0, 0.55), inset 0 2px 0 rgba(255, 236, 200, 0.25);
 }
 .lib-book {
@@ -7331,18 +7353,18 @@ h1, h2, h3 { text-wrap: balance; line-height: 1.2; }
   text-shadow: 0 1px 0 rgba(255, 255, 255, 0.42), 0 -1px 1px rgba(0, 0, 0, 0.14);
 }
 /* zengin kütüphane sırtı renkleri (seviye = renk), sabit — tema ile dönmez */
-.lib-book.tone-a1 { background: linear-gradient(90deg, #b98a4e, #cba062 40%, #b98a4e); color: #3a2a14; --lib-gilt: #4a3418; }
-.lib-book.tone-a2 { background: linear-gradient(90deg, #a67a24, #c0922f 40%, #a67a24); color: #2f2209; --lib-gilt: #4a3511; }
-.lib-book.tone-b1 { background: linear-gradient(90deg, #2d6b60, #3b8577 42%, #2d6b60); color: #e9f1ee; --lib-gilt: #dcb857; }
-.lib-book.tone-b2 { background: linear-gradient(90deg, #9a4526, #b35831 42%, #9a4526); color: #f7e9e1; --lib-gilt: #eccb84; }
-.lib-book.tone-c1 { background: linear-gradient(90deg, #273f30, #34503d 42%, #273f30); color: #e6ede7; --lib-gilt: #cdae5e; }
-.lib-book.tone-c2 { background: linear-gradient(90deg, #4f121b, #681a26 42%, #4f121b); color: #f2dede; --lib-gilt: #dcae62; }
+.lib-book.tone-a1 { background: linear-gradient(90deg, var(--lib-a1-bg1), var(--lib-a1-bg2) 40%, var(--lib-a1-bg1)); color: var(--lib-a1-ink); --lib-gilt: var(--lib-a1-gilt); }
+.lib-book.tone-a2 { background: linear-gradient(90deg, var(--lib-a2-bg1), var(--lib-a2-bg2) 40%, var(--lib-a2-bg1)); color: var(--lib-a2-ink); --lib-gilt: var(--lib-a2-gilt); }
+.lib-book.tone-b1 { background: linear-gradient(90deg, var(--lib-b1-bg1), var(--lib-b1-bg2) 42%, var(--lib-b1-bg1)); color: var(--lib-b1-ink); --lib-gilt: var(--lib-b1-gilt); }
+.lib-book.tone-b2 { background: linear-gradient(90deg, var(--lib-b2-bg1), var(--lib-b2-bg2) 42%, var(--lib-b2-bg1)); color: var(--lib-b2-ink); --lib-gilt: var(--lib-b2-gilt); }
+.lib-book.tone-c1 { background: linear-gradient(90deg, var(--lib-c1-bg1), var(--lib-c1-bg2) 42%, var(--lib-c1-bg1)); color: var(--lib-c1-ink); --lib-gilt: var(--lib-c1-gilt); }
+.lib-book.tone-c2 { background: linear-gradient(90deg, var(--lib-c2-bg1), var(--lib-c2-bg2) 42%, var(--lib-c2-bg1)); color: var(--lib-c2-ink); --lib-gilt: var(--lib-c2-gilt); }
 /* sırt bezemeleri */
 .lib-rule { position: absolute; left: 5px; right: 5px; border-top: 1.4px solid var(--lib-gilt); opacity: 0.9; z-index: 2; }
 .lib-rule.r1 { top: 13px; } .lib-rule.r2 { top: 17px; } .lib-rule.r3 { bottom: 30px; } .lib-rule.r4 { bottom: 26px; }
 .lib-cap {
   position: absolute; left: 1px; right: 2px; top: -2px; height: 4px; border-radius: 2px 2px 0 0; z-index: 2;
-  background: repeating-linear-gradient(90deg, #efe6d2 0 1px, #cdbf9f 1px 2px); box-shadow: 0 2px 0 rgba(0, 0, 0, 0.3);
+  background: repeating-linear-gradient(90deg, var(--lib-cap-1) 0 1px, var(--lib-cap-2) 1px 2px); box-shadow: 0 2px 0 rgba(0, 0, 0, 0.3);
 }
 .lib-plate {
   position: absolute; left: 4px; right: 4px; top: 30px; bottom: 34px; z-index: 1; border-radius: 2px;
@@ -7415,16 +7437,16 @@ h1, h2, h3 { text-wrap: balance; line-height: 1.2; }
   position: relative; width: min(560px, 100%); max-height: min(78vh, 620px);
   display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: minmax(0, 1fr) auto;
   background: var(--lib-page); color: var(--lib-page-ink); border-radius: 12px;
-  --cover: #6e5234; --sp-gilt: #c7a24e; border: 9px solid var(--cover);
+  --cover: var(--lib-wood-3); --sp-gilt: var(--lib-cover-gilt); border: 9px solid var(--cover);
   box-shadow: 0 34px 64px -18px rgba(26, 18, 8, 0.62), inset 0 0 0 1px var(--sp-gilt); overflow: hidden; outline: none;
   touch-action: pan-y; animation: libOpen 0.28s var(--lib-ease);
 }
-.lib-spread.tone-a1 { --cover: #c69a5c; --sp-gilt: #6e5024; }
-.lib-spread.tone-a2 { --cover: #b98a2b; --sp-gilt: #6e5222; }
-.lib-spread.tone-b1 { --cover: #347a6d; --sp-gilt: #e0c070; }
-.lib-spread.tone-b2 { --cover: #9f4e2d; --sp-gilt: #edcf86; }
-.lib-spread.tone-c1 { --cover: #2f4a3a; --sp-gilt: #cdb268; }
-.lib-spread.tone-c2 { --cover: #56141f; --sp-gilt: #e0b36a; }
+.lib-spread.tone-a1 { --cover: var(--lib-a1-cover); --sp-gilt: var(--lib-a1-cover-gilt); }
+.lib-spread.tone-a2 { --cover: var(--lib-a2-cover); --sp-gilt: var(--lib-a2-cover-gilt); }
+.lib-spread.tone-b1 { --cover: var(--lib-b1-cover); --sp-gilt: var(--lib-b1-cover-gilt); }
+.lib-spread.tone-b2 { --cover: var(--lib-b2-cover); --sp-gilt: var(--lib-b2-cover-gilt); }
+.lib-spread.tone-c1 { --cover: var(--lib-c1-cover); --sp-gilt: var(--lib-c1-cover-gilt); }
+.lib-spread.tone-c2 { --cover: var(--lib-c2-cover); --sp-gilt: var(--lib-c2-cover-gilt); }
 .lib-page { padding: 20px 16px 12px; overflow-y: auto; overscroll-behavior: contain; min-height: 0; }
 .lib-page-l { border-right: 1px solid var(--lib-line); box-shadow: inset -14px 0 18px -16px rgba(23, 30, 25, 0.35); }
 .lib-page-r { box-shadow: inset 14px 0 18px -16px rgba(23, 30, 25, 0.35); }
@@ -7617,6 +7639,8 @@ h1, h2, h3 { text-wrap: balance; line-height: 1.2; }
 .lb-cg-go { justify-content: center; font-weight: 900; background: var(--dp-color-ink, #171e19); color: var(--dp-color-ground, #eeebe3); margin-top: 8px; }
 .lb-cg-help { margin: 2px 2px 0; font-size: 13px; font-weight: 700; line-height: 1.5; }
 .lb-cg-empty { font-size: 12px; font-weight: 800; color: var(--dp-color-ink-subtle, #899690); padding: 4px 2px 6px; }
+.lb-cg-status { font-size: 13px; font-weight: 700; line-height: 1.5; color: var(--dp-color-ink-muted, #47524c); margin: 0 2px 6px; }
+.lb-cg-status:empty { display: none; }
 
 .lb-spot { position: fixed; inset: 0; z-index: 44; pointer-events: none; display: none; }
 .lb-spot.is-on { display: block; }
