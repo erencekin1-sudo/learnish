@@ -2399,6 +2399,40 @@ registerTest(3, 'Mentor Concierge', 'test_mentor_suggestions_cross_module_switch
   assert(sug.some(s => /geç|maarif/i.test(s.actionLabel + ' ' + s.text)), 'başka modüle yönlendiren öneri çıkmalı');
 });
 
+registerTest(1, 'Mentor Concierge', 'test_mentor_panel_opens_non_live', () => {
+  const env = createFreshAppEnvironment();
+  env.APP.buddy.openConcierge();
+  const panel = env.document.getElementById('lb-concierge');
+  assert(panel, 'concierge paneli oluşmalı');
+  assertEqual(panel.getAttribute('role'), 'dialog', 'panel role=dialog olmalı');
+  assert(panel.getAttribute('aria-live') == null, 'panel canlı bölge olmamalı');
+  const input = panel.querySelector('input');
+  assert(input, 'arama kutusu olmalı');
+});
+
+registerTest(1, 'Mentor Concierge', 'test_mentor_panel_lists_suggestions', () => {
+  const env = createFreshAppEnvironment({ initialStorage: { learnish_active_module: 'maarif' } });
+  env.APP.buddy.openConcierge();
+  const panel = env.document.getElementById('lb-concierge');
+  assert(panel.querySelectorAll('[data-sg]').length >= 1, 'en az bir öneri çipi çizilmeli');
+});
+
+registerTest(5, 'Mentor Concierge', 'test_mentor_panel_reopen_no_duplicate', () => {
+  const env = createFreshAppEnvironment();
+  env.APP.buddy.openConcierge();
+  env.APP.buddy.hide();
+  env.APP.buddy.openConcierge();
+  const all = env.document.querySelectorAll('#lb-concierge');
+  assert(all.length <= 1, 'tekrar açılışta çift panel oluşmamalı');
+});
+
+registerTest(2, 'Mentor Concierge', 'test_mentor_preserves_tour_and_react', () => {
+  const env = createFreshAppEnvironment();
+  assert(typeof env.APP.buddy.startTour === 'function', 'tur korunmalı');
+  assert(typeof env.APP.buddy.react === 'function', 'tepkiler korunmalı');
+  env.APP.buddy.react('quizPass'); // çökmemeli
+});
+
 // ============================================================================
 // 8. TEST EXECUTION & REPORTING
 // ============================================================================

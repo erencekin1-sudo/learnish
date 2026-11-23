@@ -8457,6 +8457,7 @@
     const FR = { rest: 'assets/mentor-rest.png', blink: 'assets/mentor-blink.png', smile: 'assets/mentor-smile.png', talk: 'assets/mentor-talk.png' };
     const SEEN_KEY = 'mk_buddy_seen', TIP_KEY = 'mk_buddy_tips';
     let root, face, badge, buddyBtn, ping, bubble, bText, bActs, spot, hole;
+    let conciergePanel = null, cgInput = null, cgSug = null, cgList = null, cgBuilt = false, cgActive = -1;
     let base = 'rest', talking = false, talkI = null, hideT = null, blinkT = null, built = false, ti = 0;
     const reduce = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
@@ -8646,7 +8647,7 @@
       face = el('img'); face.alt = 'Mentor'; face.decoding = 'async'; face.src = FR.rest;
       badge = el('span', 'lb-badge'); badge.appendChild(face);
       buddyBtn.appendChild(ping); buddyBtn.appendChild(badge);
-      buddyBtn.addEventListener('click', () => (bubble.classList.contains('is-on') ? hide() : open()));
+      buddyBtn.addEventListener('click', () => ((conciergePanel && conciergePanel.classList.contains('is-on')) ? hide() : open()));
       root.appendChild(spot); root.appendChild(bubble); root.appendChild(buddyBtn);
       document.body.appendChild(root);
       Object.values(FR).forEach(s => { const i = new Image(); i.src = s; });
@@ -8673,11 +8674,107 @@
       setTimeout(() => talk(false), sp);
       if (!opts.sticky) hideT = setTimeout(hide, sp + 3000);
     }
-    function hide() { if (!bubble) return; bubble.classList.remove('is-on'); talk(false); base = 'rest'; setFace('rest'); endTour(); }
+    function hide() {
+      if (bubble) bubble.classList.remove('is-on');
+      if (conciergePanel) conciergePanel.classList.remove('is-on');
+      talk(false); base = 'rest'; setFace('rest'); endTour();
+    }
 
-    function open() {
-      const v = STATE.currentView || 'home';
-      say(TIPS[v] || 'Yardımcı olmak için buradayım.', [{ label: 'Turu başlat', pri: true, on: startTour }, { label: 'Kapat', on: hide }], { sticky: true });
+    function open() { openConcierge(); }
+
+    // ---- Concierge paneli (aria-live olmayan ayrı kap) ----
+    function cgBuild() {
+      if (cgBuilt) return; cgBuilt = true;
+      build();
+      conciergePanel = el('div', 'lb-cg');
+      conciergePanel.setAttribute('id', 'lb-concierge');
+      conciergePanel.setAttribute('role', 'dialog');
+      conciergePanel.setAttribute('aria-label', 'Mentor — yardım ve komutlar');
+      const x = el('button', 'lb-x', '×'); x.type = 'button'; x.setAttribute('aria-label', 'Kapat'); x.onclick = hide;
+      const name = el('div', 'lb-name', 'Mentor');
+      cgSug = el('div', 'lb-cg-sug');
+      cgInput = document.createElement('input'); cgInput.className = 'lb-cg-input'; cgInput.type = 'text';
+      cgInput.setAttribute('placeholder', 'Ne yapmak istersin?');
+      cgInput.setAttribute('aria-label', 'Mentor komut arama');
+      cgList = el('div', 'lb-cg-list'); cgList.setAttribute('role', 'listbox'); cgList.setAttribute('aria-label', 'Öneriler ve komutlar');
+      conciergePanel.appendChild(x); conciergePanel.appendChild(name);
+      conciergePanel.appendChild(cgSug); conciergePanel.appendChild(cgInput); conciergePanel.appendChild(cgList);
+      root.appendChild(conciergePanel);
+      cgInput.addEventListener('input', function () { renderList(cgInput.value); });
+      cgInput.addEventListener('keydown', onCgKey);
+    }
+
+    function renderSug() {
+      if (!cgSug) return;
+      cgSug.innerHTML = '';
+      let sg = [];
+      try { sg = buildSuggestions() || []; } catch (e) {}
+      sg.forEach(function (s, i) {
+        const chip = el('button', 'lb-cg-chip'); chip.type = 'button';
+        chip.setAttribute('data-sg', String(i));
+        chip.appendChild(el('span', 'lb-cg-chip-t', s.text));
+        chip.appendChild(el('span', 'lb-cg-chip-a', s.actionLabel));
+        chip.onclick = function () { runAndClose(s.run); };
+        cgSug.appendChild(chip);
+      });
+    }
+
+    function optionEl(it) {
+      const o = el('button', 'lb-cg-opt' + (it.type === 'guide' ? ' is-guide' : '')); o.type = 'button';
+      o.setAttribute('role', 'option');
+      o.appendChild(el('span', 'lb-cg-opt-l', it.label));
+      if (it.type === 'guide') o.appendChild(el('span', 'lb-cg-opt-badge', 'rehber'));
+      o.onclick = function () { selectItem(it); };
+      return o;
+    }
+
+    function renderList(query) {
+      if (!cgList) return;
+      cgList.innerHTML = ''; cgActive = -1;
+      const q = (query || '').trim();
+      const items = q ? matchCommands(q) : getCommands().slice(0, 6);
+      if (!items.length) {
+        cgList.appendChild(el('div', 'lb-cg-empty', 'Bunu tam anlamadım. Şunlarda yardımcı olabilirim:'));
+        getCommands().slice(0, 4).forEach(function (c) { cgList.appendChild(optionEl(c)); });
+        return;
+      }
+      items.forEach(function (it) { cgList.appendChild(optionEl(it)); });
+    }
+
+    function selectItem(it) {
+      if (it.type === 'guide') {
+        cgList.innerHTML = '';
+        cgList.appendChild(el('p', 'lb-cg-help', it.help || ''));
+        const go = el('button', 'lb-cg-opt lb-cg-go', 'Götür beni'); go.type = 'button';
+        go.onclick = function () { runAndClose(it.run); };
+        cgList.appendChild(go);
+      } else {
+        runAndClose(it.run);
+      }
+    }
+
+    function runAndClose(run) { hide(); try { if (typeof run === 'function') run(); } catch (e) {} }
+
+    function onCgKey(e) {
+      if (!cgList) return;
+      const opts = cgList.querySelectorAll('.lb-cg-opt');
+      const key = e && e.key;
+      if (key === 'Escape') { hide(); if (e.preventDefault) e.preventDefault(); return; }
+      if (key === 'ArrowDown') { cgActive = Math.min(opts.length - 1, cgActive + 1); focusOpt(opts); if (e.preventDefault) e.preventDefault(); }
+      else if (key === 'ArrowUp') { cgActive = Math.max(0, cgActive - 1); focusOpt(opts); if (e.preventDefault) e.preventDefault(); }
+      else if (key === 'Enter') { const t = opts[cgActive < 0 ? 0 : cgActive]; if (t && t.click) t.click(); if (e.preventDefault) e.preventDefault(); }
+    }
+    function focusOpt(opts) { for (let i = 0; i < opts.length; i++) { opts[i].classList.toggle('is-active', i === cgActive); } }
+
+    function openConcierge() {
+      cgBuild();
+      if (ping) ping.style.display = 'none';
+      if (bubble && bubble.classList.contains('is-on')) { bubble.classList.remove('is-on'); talk(false); }
+      base = 'smile'; setFace('smile');
+      if (cgInput) cgInput.value = '';
+      renderSug(); renderList('');
+      conciergePanel.classList.add('is-on');
+      if (!reduce() && cgInput && cgInput.focus) { try { cgInput.focus(); } catch (e) {} }
     }
 
     function startTour() { ti = 0; build(); spot.classList.add('is-on'); tourStep(); }
@@ -8721,7 +8818,7 @@
       setTimeout(() => { if (!bubble.classList.contains('is-on')) say(TIPS[viewName], [{ label: 'Anladım', pri: true, on: hide }]); }, 650);
     }
 
-    return { init, onView, open, startTour, pronounce, react, say, hide, normalize, resolveWordLookup, getCommands, matchCommands, buildSuggestions };
+    return { init, onView, open, startTour, pronounce, react, say, hide, normalize, resolveWordLookup, getCommands, matchCommands, buildSuggestions, openConcierge };
   })();
 
   window.APP = {
