@@ -8505,6 +8505,74 @@
       return null;
     }
 
+    // --- Komut kataloğu: her 'run' yalnızca var olan bir APP fonksiyonunu çağırır ---
+    const MENTOR_COMMANDS = [
+      // Çalışma
+      { id: 'continue-daily', group: 'calisma', type: 'action', label: 'Bugünün çalışmasına git', keywords: ['bugun', 'gunluk', 'calisma', 'devam', 'basla', 'daily'], run: function () { goToTodayMEBDay(); } },
+      { id: 'daily-flashcards', group: 'calisma', type: 'action', label: 'Günün kartlarını çalış', keywords: ['kart', 'flashcard', 'gunluk', 'calis'], run: function () { startDailyFlashcards(); } },
+      { id: 'daily-quiz', group: 'calisma', type: 'action', label: 'Günün testini çöz', keywords: ['test', 'quiz', 'sinav', 'gunluk', 'coz'], run: function () { startDailyQuiz(); } },
+      { id: 'srs-flashcards', group: 'calisma', type: 'action', label: 'Tekrar zamanı gelen kartlar', keywords: ['tekrar', 'srs', 'kart', 'flashcard', 'gelen'], run: function () { startSRSDueFlashcards(); } },
+      { id: 'srs-quiz', group: 'calisma', type: 'action', label: 'Tekrar zamanı gelenleri test et', keywords: ['tekrar', 'srs', 'test', 'quiz', 'sinav', 'gelen'], run: function () { startSRSDueQuiz(); } },
+      { id: 'mistakes-flashcards', group: 'calisma', type: 'action', label: 'Yanlışlarımı kartlarla tekrar et', keywords: ['yanlis', 'hata', 'kart', 'flashcard', 'tekrar'], run: function () { startMistakeFlashcards(); } },
+      { id: 'mistakes-quiz', group: 'calisma', type: 'action', label: 'Yanlışlarımı test et', keywords: ['yanlis', 'hata', 'test', 'quiz', 'sinav'], run: function () { startMistakeQuiz(); } },
+      { id: 'study-modes', group: 'calisma', type: 'action', label: 'Çalışma modlarını aç', keywords: ['mod', 'calisma', 'secenek', 'modlar'], run: function () { openModesModal(); } },
+      // Keşif / araç
+      { id: 'open-directory', group: 'kesif', type: 'action', label: 'Sözlüğü (kelime kütüphanesi) aç', keywords: ['sozluk', 'kelime', 'kutuphane', 'ara', 'directory', 'liste'], run: function () { switchView('directory'); } },
+      { id: 'open-stats', group: 'kesif', type: 'action', label: 'İstatistiklerime bak', keywords: ['istatistik', 'ilerleme', 'analiz', 'stats', 'durum'], run: function () { switchView('stats'); } },
+      { id: 'curriculum', group: 'kesif', type: 'action', label: 'Müfredatı görüntüle', keywords: ['mufredat', 'tema', 'unite', 'program', 'curriculum'], run: function () { openCurriculumModal(); } },
+      { id: 'pdf-studio', group: 'kesif', type: 'action', label: 'PDF / çalışma kağıdı stüdyosu', keywords: ['pdf', 'calisma', 'kagidi', 'worksheet', 'yazdir', 'cikti'], run: function () { openPdfStudio(); } },
+      { id: 'speech-coach', group: 'kesif', type: 'action', label: 'Telaffuz / konuşma koçunu aç', keywords: ['telaffuz', 'konusma', 'koc', 'ses', 'speaking', 'pronunciation'], run: function () { openSpeechCoach(); } },
+      // Modül / ayar
+      { id: 'module-maarif', group: 'modul', type: 'action', label: 'Maarif (5. sınıf) modülüne geç', keywords: ['maarif', 'meb', 'modul', '5', 'sinif', 'gec'], run: function () { switchModule('maarif'); } },
+      { id: 'module-yds', group: 'modul', type: 'action', label: 'YDS / YÖKDİL modülüne geç', keywords: ['yds', 'yokdil', 'akademik', 'modul', 'gec'], run: function () { switchModule('yds'); } },
+      { id: 'module-oxford', group: 'modul', type: 'action', label: 'Oxford 5000 modülüne geç', keywords: ['oxford', '5000', 'cefr', 'modul', 'gec'], run: function () { switchModule('oxford'); } },
+      { id: 'settings', group: 'ayar', type: 'action', label: 'Ayarları aç (aksan, hız, tema)', keywords: ['ayar', 'aksan', 'hiz', 'tema', 'settings', 'koyu', ' acik'], run: function () { openSettingsModal(); } },
+      { id: 'feedback', group: 'ayar', type: 'action', label: 'Geri bildirim gönder', keywords: ['geri', 'bildirim', 'oneri', 'hata', 'iletisim', 'feedback'], run: function () { openFeedbackModal(); } },
+      { id: 'reset-progress', group: 'ayar', type: 'action', label: 'İlerlememi sıfırla (ayarlardan)', keywords: ['sifirla', 'reset', 'sil', 'temizle', 'ilerleme'], run: function () { openSettingsModal(); } },
+      // Rehber (nasıl yapılır)
+      { id: 'guide-flashcard-flip', group: 'rehber', type: 'guide', label: 'Kartı nasıl çeviririm?', keywords: ['kart', 'cevir', 'flip', 'nasil', 'flashcard'], help: 'Karta dokun ya da Boşluk tuşuna bas; ok tuşlarıyla kartlar arasında gezinirsin.', run: function () { startDailyFlashcards(); } },
+      { id: 'guide-listen', group: 'rehber', type: 'guide', label: 'Telaffuzu nasıl dinlerim?', keywords: ['telaffuz', 'dinle', 'ses', 'nasil', 'oku'], help: 'Kartın ya da kelimenin üzerindeki hoparlör simgesine dokun; aksan ve hızı Ayarlar’dan değiştirebilirsin.', run: function () { openSpeechCoach(); } },
+      { id: 'guide-mistakes', group: 'rehber', type: 'guide', label: 'Yanlışlarımı nerede görürüm?', keywords: ['yanlis', 'hata', 'nerede', 'gor', 'nasil'], help: 'Testlerde yaptığın yanlışlar “Yanlışlarım” çalışmasında birikir; oradan tekrar edebilirsin.', run: function () { startMistakeQuiz(); } },
+      { id: 'guide-backup', group: 'rehber', type: 'guide', label: 'İlerlememi nasıl yedeklerim?', keywords: ['yedek', 'kaydet', 'disa', 'aktar', 'backup', 'nasil'], help: 'İlerlemeni Ayarlar’dan dışa aktarıp (yedekleyip) başka cihaza taşıyabilirsin.', run: function () { openSettingsModal(); } }
+    ];
+
+    function getCommands() { return MENTOR_COMMANDS; }
+
+    function cmdTokenSet(cmd) {
+      const set = new Set();
+      normalize(cmd.label).split(' ').forEach(function (t) { if (t) set.add(t); });
+      (cmd.keywords || []).forEach(function (k) { const n = normalize(k); if (n) set.add(n); });
+      return set;
+    }
+
+    function matchCommands(query) {
+      const qNorm = normalize(query);
+      if (!qNorm) return [];
+      const qTokens = qNorm.split(' ').filter(Boolean);
+      if (!qTokens.length) return [];
+      const scored = [];
+      MENTOR_COMMANDS.forEach(function (cmd) {
+        const toks = cmdTokenSet(cmd);
+        let score = 0;
+        qTokens.forEach(function (qt) {
+          if (toks.has(qt)) { score += 2; return; }
+          let sub = false;
+          toks.forEach(function (ct) { if (ct && (ct.indexOf(qt) >= 0 || qt.indexOf(ct) >= 0)) sub = true; });
+          if (sub) score += 1;
+        });
+        if (score > 0) scored.push({ id: cmd.id, label: cmd.label, type: cmd.type, score: score, run: cmd.run, help: cmd.help });
+      });
+      scored.sort(function (a, b) { return b.score - a.score; });
+      let top = scored.slice(0, 6);
+      const wl = resolveWordLookup(query);
+      if (wl) {
+        const w = wl.word;
+        top.unshift({ id: 'word-' + w, label: '“' + w + '” kelimesini sözlükte aç', type: 'action', score: 999, run: function () { searchDirectory(w); } });
+        top = top.slice(0, 6);
+      }
+      return top;
+    }
+
     function build() {
       if (built) return; built = true;
       root = el('div'); root.id = 'lb-root';
@@ -8593,7 +8661,7 @@
       setTimeout(() => { if (!bubble.classList.contains('is-on')) say(TIPS[viewName], [{ label: 'Anladım', pri: true, on: hide }]); }, 650);
     }
 
-    return { init, onView, open, startTour, pronounce, react, say, hide, normalize, resolveWordLookup };
+    return { init, onView, open, startTour, pronounce, react, say, hide, normalize, resolveWordLookup, getCommands, matchCommands };
   })();
 
   window.APP = {

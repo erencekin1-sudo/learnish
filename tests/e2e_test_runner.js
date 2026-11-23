@@ -2341,6 +2341,37 @@ registerTest(2, 'Mentor Concierge', 'test_mentor_word_lookup_real_vs_fake', () =
   assertEqual(env.APP.buddy.resolveWordLookup('zzzqwxnotaword'), null, 'olmayan kelime null dönmeli');
 });
 
+registerTest(1, 'Mentor Concierge', 'test_mentor_catalog_has_core_commands', () => {
+  const env = createFreshAppEnvironment();
+  const ids = env.APP.buddy.getCommands().map(c => c.id);
+  ['daily-quiz','srs-quiz','mistakes-flashcards','open-directory','speech-coach','pdf-studio','open-stats'].forEach(id =>
+    assert(ids.includes(id), 'katalog ' + id + ' içermeli'));
+  const reset = env.APP.buddy.getCommands().find(c => c.id === 'reset-progress');
+  if (reset) assert(/openSettingsModal/.test(reset.run.toString()), 'sıfırlama yalnızca ayarlara götürmeli');
+});
+
+registerTest(1, 'Mentor Concierge', 'test_mentor_match_basic_and_turkish', () => {
+  const env = createFreshAppEnvironment();
+  const m = (q) => env.APP.buddy.matchCommands(q).map(r => r.id);
+  assert(m('quiz').includes('daily-quiz') || m('quiz').some(id => /quiz/.test(id)), 'quiz eşleşmeli');
+  assert(m('ŞINAV').length > 0, 'büyük harf/Türkçe girdi eşleşmeli');
+  assert(m('tekrar').some(id => /srs|tekrar/.test(id)), 'tekrar SRS komutuna eşleşmeli');
+});
+
+registerTest(2, 'Mentor Concierge', 'test_mentor_match_empty_and_unmatched', () => {
+  const env = createFreshAppEnvironment();
+  assertEqual(env.APP.buddy.matchCommands('   ').length, 0, 'boşluk sorgusu boş dönmeli');
+  assertEqual(env.APP.buddy.matchCommands('!!!').length, 0, 'noktalama sorgusu boş dönmeli');
+  assertEqual(env.APP.buddy.matchCommands('zzzqwxnomatch').length, 0, 'eşleşmeyen sorgu boş dönmeli');
+});
+
+registerTest(3, 'Mentor Concierge', 'test_mentor_word_lookup_injected_result', () => {
+  const env = createFreshAppEnvironment();
+  const realWord = env.sandbox.WORDS_DATA[0].en;
+  const res = env.APP.buddy.matchCommands(realWord);
+  assert(res.length > 0 && res[0].id.indexOf('word-') === 0, 'gerçek kelime için ilk sonuç sözlük araması olmalı');
+});
+
 // ============================================================================
 // 8. TEST EXECUTION & REPORTING
 // ============================================================================
