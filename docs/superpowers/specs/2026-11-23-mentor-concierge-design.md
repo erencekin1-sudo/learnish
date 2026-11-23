@@ -1,6 +1,6 @@
 # Mentor Concierge — Tasarım Dokümanı
 
-Tarih: 2026-11-23 · Durum: Onay bekliyor
+Tarih: 2026-11-23 · Durum: Onay bekliyor (builder incelemesi ve kullanıcı kararları işlendi)
 Yaklaşım: C (Melez — akıllı kısayollar + aranabilir komut paleti), kullanıcı tarafından seçildi.
 
 ## 1. Niyet ve neden
@@ -79,6 +79,8 @@ Kullanıcı ile üç yol değerlendirildi; **C seçildi**.
 Katalog **yalnızca var olan `APP` fonksiyonlarını** çağırır; yeni iş mantığı yazılmaz. Başlangıç kapsamı (her biri tek `APP` çağrısı):
 - **Çalışma:** bugünün çalışması (`goToTodayMEBDay`/`startDailyFlashcards`), bugünün testi (`startDailyQuiz`), tekrar (SRS) flashcard/test, yanlışlarım flashcard/test, çalışma modları (`openModesModal`).
 - **Keşif/araç:** sözlük (`switchView('directory')`), belirli bir kelimeyi ara (`searchDirectory`), istatistik (`switchView('stats')`), müfredat (`openCurriculumModal`), PDF/çalışma kağıdı stüdyosu (`openPdfStudio`), telaffuz/konuşma koçu (`openSpeechCoach`).
+
+**Belirli kelime araması (karar — benim kararım):** Kullanıcı mentor'a bir kelime yazarsa (örn. "apple", "apple anlamı"), girdiden komut-tetikleyici token'lar düşüldükten sonra kalan token, veri havuzunda **gerçekten var olan** bir kelimeyle (normalize edilmiş `en` kümesi; açılışta bir kez kurulan `Set`) eşleşiyorsa, listede "'apple'ı sözlükte aç" sonucu çıkar ve `searchDirectory('apple')` çağrılır. Eşleşme yoksa yalnızca genel "Sözlüğü aç" komutu gösterilir. Serbest metnin veriye dönüştüğü **tek** nokta budur; yalnızca var olan kelime geçtiği için uydurma imkânsız kalır.
 - **Modül/ayar:** modül değiştir (`switchModule` → maarif/yds/oxford), aksan/hız/tema (`openSettingsModal`), geri bildirim (`openFeedbackModal`).
 - **Rehber (type: 'guide'):** "kartı nasıl çeviririm", "telaffuzu nasıl dinlerim", "yanlışlarımı nerede görürüm", "ilerlememi nasıl yedeklerim" gibi kısa anlatım + "Götür beni" butonu.
 
@@ -93,8 +95,12 @@ Katalog dışı bir niyet eşleşmezse mentor **uydurmaz**, geri dönüş metnin
 Panel açılınca, yazı yokken, `STATE`/stat fonksiyonlarından **deterministik** 2–4 öneri üretilir; öncelik sırası:
 1. Tekrarı gelen var mı? (`getSRSStats().dueCount > 0`) → "N kelimen tekrara düştü · [Tekrar et]"
 2. Aktif yanlış var mı? (`getMistakeStats`) → "N yanlışın bekliyor · [Yanlışlarım]"
-3. Bugünün çalışması tamam değil mi? → "Bugünün çalışması bekliyor · [Başlat]"
+3. Günlük çalışma bekliyor mu?
+   - **Maarif:** "Bugünün çalışması bekliyor · [Başlat]". "Bugün" yalnızca MEB takviminde tanımlı (`getMEBCalendarInfo`/`goToTodayMEBDay`); tamamlanma mevcut `mk_buddy_dayDone_<modül>_<gün>` bayrağından okunur (yeni iş mantığı yok).
+   - **YDS/Oxford:** "bugün" kavramı yok → "Kaldığın yerden devam et (gün N)" (`STATE.currentDay` imlecini kullanan `startDailyFlashcards`).
 4. Hiçbiri yoksa → olumlu durum + keşif önerisi ("Her şey güncel 🎉 · [Yeni kelimelere bak]").
+
+**Kapsam (karar — kullanıcı):** Öneriler ve rozetler **aktif modüle** göre hesaplanır (stat fonksiyonlarının varsayılanı). Aktif modülde yapılacak bir şey yoksa (1–3 boşsa), mentor diğer modülleri `getSRSStats('all')`/ilgili `'<modül>'` çağrılarıyla tarar ve en acil olanı **modül değiştirme aksiyonuyla** önerir: "YDS'de 40 kelimen tekrara düştü · [YDS'ye geç ve tekrar et]" (`switchModule` + ilgili başlatıcı). Böylece başka modülde geciken iş varken "yapılacak bir şey yok" yanılgısı oluşmaz.
 
 ### 5.4 Arayüz (mevcut baloncuğun içinde)
 Mentor baloncuğu (`lb-bubble`) genişletilir; `say()`'in yanına yeni bir `openConcierge()` modu eklenir. Dizilim:
@@ -114,7 +120,7 @@ Mentor baloncuğu (`lb-bubble`) genişletilir; `say()`'in yanına yeni bir `open
 
 - Buddy butonuna tıklayınca bugünkü kısa ipucu yerine **bu concierge paneli** açılır (eski `open()` davranışı buraya evrilir; tur ve ilk karşılama korunur).
 - Liste öğesine dokununca: `action` ise çalıştırır + paneli kapatır (gerekirse kısa onay "Hadi!"); `guide` ise açıklamayı gösterir + "Götür beni" aksiyonu.
-- Erişilebilirlik: input `aria-label`'lı; liste klavye ok tuşlarıyla gezilebilir, Enter seçer, Esc kapatır; `role=listbox/option` ya da eşdeğeri.
+- Erişilebilirlik: input `aria-label`'lı; liste klavye ok tuşlarıyla gezilebilir, Enter seçer, Esc kapatır; `role=listbox/option` ya da eşdeğeri. **Not (karar — benim kararım):** Mevcut `lb-bubble` `role=status`/`aria-live=polite`'tır; canlı süzülen liste bu bölgeye konursa her tuş vuruşunda tüm liste okunur. Bu yüzden concierge paneli baloncuğun **canlı olmayan** ayrı bir kabında (`role=dialog` + içinde `role=listbox`) kurulur; eski kutlama/ipucu baloncuğu `aria-live=polite` olarak kalır. "Baloncuğun içinde" ifadesi görsel yerleşimi anlatır, aynı canlı bölgeyi değil.
 - Hareket: `reduce()` true ise animasyon yok; panel anında açılır.
 
 ### 5.5 Dosya ve önbellek
