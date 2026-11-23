@@ -8538,6 +8538,66 @@
 
     function getCommands() { return MENTOR_COMMANDS; }
 
+    const MODULE_LABELS = { maarif: 'Maarif (5. sınıf)', yds: 'YDS / YÖKDİL', oxford: 'Oxford 5000' };
+    function dayDoneFlag(mod, day) {
+      try { return localStorage.getItem('mk_buddy_dayDone_' + mod + '_' + day) === '1'; } catch (e) { return false; }
+    }
+
+    // İlerlemeye duyarlı öneriler. Aktif modülde acil iş yoksa diğer modülleri tarar.
+    function buildSuggestions() {
+      const out = [];
+      const active = STATE.activeModule;
+      let srs = { dueCount: 0 }, mis = { activeMistakes: 0 };
+      try { srs = getSRSStats() || srs; } catch (e) {}
+      try { mis = getMistakeStats() || mis; } catch (e) {}
+
+      // 1) Aktif modülde tekrarı gelenler
+      if (srs.dueCount > 0) {
+        out.push({ id: 'sg-srs', text: srs.dueCount + ' kelimen tekrara düştü', actionLabel: 'Tekrar et', run: function () { startSRSDueQuiz(); } });
+      }
+      // 2) Aktif modülde yanlışlar
+      if (mis.activeMistakes > 0) {
+        out.push({ id: 'sg-mistakes', text: mis.activeMistakes + ' yanlışın bekliyor', actionLabel: 'Yanlışlarım', run: function () { startMistakeQuiz(); } });
+      }
+
+      // 3) Aktif modülde acil iş yoksa diğer modülleri tara (kullanıcı kararı)
+      if (srs.dueCount === 0 && mis.activeMistakes === 0) {
+        ['maarif', 'yds', 'oxford'].forEach(function (mod) {
+          if (mod === active || out.some(function (s) { return s.id === 'sg-cross'; })) return;
+          let od = 0, om = 0;
+          try { od = (getSRSStats(mod) || {}).dueCount || 0; } catch (e) {}
+          try { om = (getMistakeStats(mod) || {}).activeMistakes || 0; } catch (e) {}
+          if (od > 0 || om > 0) {
+            const lbl = MODULE_LABELS[mod] || mod;
+            out.push({
+              id: 'sg-cross',
+              text: lbl + ' modülünde ' + (od > 0 ? od + ' tekrar' : om + ' yanlış') + ' seni bekliyor',
+              actionLabel: lbl + ' modülüne geç',
+              run: (function (m, hasDue) { return function () { switchModule(m); if (hasDue) startSRSDueQuiz(); else startMistakeQuiz(); }; })(mod, od > 0)
+            });
+          }
+        });
+      }
+
+      // 4) Günlük çalışma / devam (filler)
+      if (out.length < 4) {
+        if (active === 'maarif') {
+          if (!dayDoneFlag('maarif', STATE.currentDay)) {
+            out.push({ id: 'sg-daily', text: 'Bugünün çalışması seni bekliyor', actionLabel: 'Başlat', run: function () { goToTodayMEBDay(); } });
+          }
+        } else {
+          out.push({ id: 'sg-continue', text: 'Kaldığın yerden devam et (gün ' + STATE.currentDay + ')', actionLabel: 'Devam et', run: function () { startDailyFlashcards(); } });
+        }
+      }
+
+      // 5) Hâlâ boşsa olumlu + keşif
+      if (!out.length) {
+        out.push({ id: 'sg-clear', text: 'Her şey güncel 🎉', actionLabel: 'Yeni kelimelere bak', run: function () { switchView('directory'); } });
+      }
+
+      return out.slice(0, 4);
+    }
+
     function cmdTokenSet(cmd) {
       const set = new Set();
       normalize(cmd.label).split(' ').forEach(function (t) { if (t) set.add(t); });
@@ -8661,7 +8721,7 @@
       setTimeout(() => { if (!bubble.classList.contains('is-on')) say(TIPS[viewName], [{ label: 'Anladım', pri: true, on: hide }]); }, 650);
     }
 
-    return { init, onView, open, startTour, pronounce, react, say, hide, normalize, resolveWordLookup, getCommands, matchCommands };
+    return { init, onView, open, startTour, pronounce, react, say, hide, normalize, resolveWordLookup, getCommands, matchCommands, buildSuggestions };
   })();
 
   window.APP = {

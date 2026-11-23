@@ -2372,6 +2372,33 @@ registerTest(3, 'Mentor Concierge', 'test_mentor_word_lookup_injected_result', (
   assert(res.length > 0 && res[0].id.indexOf('word-') === 0, 'gerçek kelime için ilk sonuç sözlük araması olmalı');
 });
 
+registerTest(3, 'Mentor Concierge', 'test_mentor_suggestions_due_review', () => {
+  const env = createFreshAppEnvironment({ initialStorage: { learnish_active_module: 'maarif' } });
+  const pool = env.APP.getActiveGradePool();
+  const ids = pool.slice(0, 3).map(w => w.id);
+  env.APP.getState().userData.review = new Set(ids);
+  const sug = env.APP.buddy.buildSuggestions();
+  assert(sug.some(s => /tekrar/i.test(s.text) || /tekrar/i.test(s.actionLabel)), 'tekrar önerisi çıkmalı');
+});
+
+registerTest(3, 'Mentor Concierge', 'test_mentor_suggestions_all_clear_positive', () => {
+  const env = createFreshAppEnvironment({ initialStorage: { learnish_active_module: 'maarif' } });
+  const sug = env.APP.buddy.buildSuggestions();
+  assert(Array.isArray(sug) && sug.length >= 1, 'her durumda en az bir öneri dönmeli');
+});
+
+registerTest(3, 'Mentor Concierge', 'test_mentor_suggestions_cross_module_switch', () => {
+  const env = createFreshAppEnvironment({ initialStorage: { learnish_active_module: 'oxford' } });
+  env.APP.switchModule('maarif');
+  // Oxford havuzuyla paylaşılmayan (sadece Maarif) kelimeler seç: aktif oxford modülü "temiz" kalsın
+  const maarifIds = env.APP.getActiveGradePool().filter(w => !env.APP.isOxfordWord(w)).slice(0, 4).map(w => w.id);
+  assert(maarifIds.length >= 1, 'en az bir Maarif-özel kelime bulunmalı');
+  env.APP.switchModule('oxford');
+  env.APP.getState().userData.review = new Set(maarifIds);
+  const sug = env.APP.buddy.buildSuggestions();
+  assert(sug.some(s => /geç|maarif/i.test(s.actionLabel + ' ' + s.text)), 'başka modüle yönlendiren öneri çıkmalı');
+});
+
 // ============================================================================
 // 8. TEST EXECUTION & REPORTING
 // ============================================================================
