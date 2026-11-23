@@ -2372,6 +2372,21 @@ registerTest(3, 'Mentor Concierge', 'test_mentor_word_lookup_injected_result', (
   assert(res.length > 0 && res[0].id.indexOf('word-') === 0, 'gerçek kelime için ilk sonuç sözlük araması olmalı');
 });
 
+registerTest(2, 'Mentor Concierge', 'test_mentor_command_word_not_misrouted', () => {
+  // 'quiz'/'test' hem gerçek sözcük hem komut tetikleyicisi: komut aksiyonu öne geçmeli,
+  // sözlük araması (word-*) bastırılmalı (spec §5.1 / Review Focus #2).
+  const env = createFreshAppEnvironment();
+  ['quiz', 'test'].forEach(q => {
+    const res = env.APP.buddy.matchCommands(q);
+    assert(res.length > 0, q + ' için sonuç olmalı');
+    assert(res[0].id.indexOf('word-') !== 0, q + ' ilk sonucu sözlük araması OLMAMALI');
+  });
+  assertEqual(env.APP.buddy.matchCommands('quiz')[0].id, 'daily-quiz', 'quiz ilk sonucu günün testi olmalı');
+  // komut tetikleyicisi olmayan gerçek kelime hâlâ sözlük araması enjekte etmeli
+  const realWord = env.sandbox.WORDS_DATA[0].en;
+  assert(env.APP.buddy.matchCommands(realWord)[0].id.indexOf('word-') === 0, 'komut olmayan kelime sözlüğe gitmeli');
+});
+
 registerTest(3, 'Mentor Concierge', 'test_mentor_suggestions_due_review', () => {
   const env = createFreshAppEnvironment({ initialStorage: { learnish_active_module: 'maarif' } });
   const pool = env.APP.getActiveGradePool();

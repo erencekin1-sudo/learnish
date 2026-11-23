@@ -8496,13 +8496,19 @@
       }
       return wordIndex;
     }
+    // Sözlük araması yalnızca komut-tetikleyici token'lar düşüldükten sonra kalan
+    // gerçek sözcükler için yapılır (spec §5.1): "quiz", "test" gibi komut kelimeleri
+    // körlemesine sözlüğe yönlendirilmez.
     function resolveWordLookup(query) {
       const norm = normalize(query);
       if (!norm) return null;
       const set = wordSet();
-      if (set.has(norm)) return { word: norm };
-      const tokens = norm.split(' ');
-      for (let i = 0; i < tokens.length; i++) { if (tokens[i] && set.has(tokens[i])) return { word: tokens[i] }; }
+      const cmdToks = allCommandTokens();
+      const remaining = norm.split(' ').filter(function (t) { return t && !cmdToks.has(t); });
+      if (!remaining.length) return null;
+      const phrase = remaining.join(' ');
+      if (set.has(phrase)) return { word: phrase };
+      for (let i = 0; i < remaining.length; i++) { if (set.has(remaining[i])) return { word: remaining[i] }; }
       return null;
     }
 
@@ -8604,6 +8610,15 @@
       normalize(cmd.label).split(' ').forEach(function (t) { if (t) set.add(t); });
       (cmd.keywords || []).forEach(function (k) { const n = normalize(k); if (n) set.add(n); });
       return set;
+    }
+
+    let _allCmdToks = null;
+    function allCommandTokens() {
+      if (!_allCmdToks) {
+        _allCmdToks = new Set();
+        MENTOR_COMMANDS.forEach(function (cmd) { cmdTokenSet(cmd).forEach(function (t) { _allCmdToks.add(t); }); });
+      }
+      return _allCmdToks;
     }
 
     function matchCommands(query) {
