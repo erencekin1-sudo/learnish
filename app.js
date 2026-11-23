@@ -1525,7 +1525,7 @@
             ${w.desc ? `<span class="coach-target-pos">[${escapeHtml(w.desc)}]</span>` : ''}
             ${w.cefr ? getCefrBadgeHtml(w.cefr) : ''}
           </div>
-          ${w.example ? `<div class="coach-target-example">“${highlightWordInText(w.example.replace(/^["“”]|["“”]$/g, ''), w.en)}”</div>` : ''}
+          ${displayExample(w.example) ? `<div class="coach-target-example">“${highlightWordInText(displayExample(w.example), w.en)}”</div>` : ''}
         </div>
 
         ${!isSupported ? `
@@ -2331,6 +2331,31 @@
     const escaped = cleanWord.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
     const regex = new RegExp(`\\b(${escaped}(?:s|es|ed|d|ing)?)\\b`, 'gi');
     return text.replace(regex, '<mark class="pedagogy-word-highlight">$1</mark>');
+  }
+
+  /**
+   * Sınav kaynağı/alıntı metni mi? (ör. "2020 YDS/1 · S.75 kök", "2022 Ekim · S.44-E [Ç]")
+   * Bu tür köken bilgileri örnek cümle DEĞİLDİR; örnek cümle alanında gösterilmez.
+   */
+  function isSourceCitation(s) {
+    if (!s) return false;
+    s = String(s);
+    var exam = /YDS|YÖKDİL|YOKDIL|YDT|TIPDİL|TIPDIL|KPDS|ÜDS|UDS/i;
+    var month = /\b(Ocak|Şubat|Mart|Nisan|Mayıs|Haziran|Temmuz|Ağustos|Eylül|Ekim|Kasım|Aralık)\b/i;
+    if (s.indexOf('·') !== -1 && (/\bS\.\d/.test(s) || exam.test(s) || month.test(s))) return true;
+    if (/\bS\.\d/.test(s) && (exam.test(s) || month.test(s) || s.indexOf('[') !== -1)) return true;
+    if (/^(19|20)\d\d\s/.test(s) && exam.test(s)) return true;
+    return false;
+  }
+
+  /**
+   * Örnek cümleyi görüntüleme için hazırlar: tırnakları temizler;
+   * metin bir sınav kaynağı/alıntısıysa boş döndürür (sahte örnek cümle gösterilmez).
+   */
+  function displayExample(raw) {
+    if (!raw) return '';
+    var s = String(raw).replace(/^["“”]|["“”]$/g, '').trim();
+    return isSourceCitation(s) ? '' : s;
   }
 
   /**
@@ -3434,8 +3459,8 @@
             </div>
 
             ${state.showTr ? `<div class="ws-wc-tr"><strong>Türkçe Anlamı:</strong> ${escapeHtml(w.tr || '—')}</div>` : ''}
-            ${state.showExamples && (w.example || w.definition) ? `
-              <div class="ws-wc-example"><strong>Örnek Cümle:</strong> “${escapeHtml(w.example || w.definition)}”</div>
+            ${state.showExamples && (displayExample(w.example) || w.definition) ? `
+              <div class="ws-wc-example"><strong>Örnek Cümle:</strong> “${escapeHtml(displayExample(w.example) || w.definition)}”</div>
             ` : ''}
 
             ${state.showWritingPractice ? `
@@ -3536,7 +3561,7 @@
             <div class="ws-fc-side-tr">
               <span style="font-size:9px; font-weight:800; color:#94a3b8;">TÜRKÇE / ÖRNEK</span>
               ${state.showTr ? `<div style="font-size:13px; font-weight:800; color:#334155; margin:4px 0 2px 0;">${escapeHtml(w.tr || '—')}</div>` : ''}
-              ${state.showExamples && w.example ? `<div style="font-size:10px; color:#475569; font-style:italic; line-height:1.3;">“${escapeHtml(w.example)}”</div>` : ''}
+              ${state.showExamples && displayExample(w.example) ? `<div style="font-size:10px; color:#475569; font-style:italic; line-height:1.3;">“${escapeHtml(displayExample(w.example))}”</div>` : ''}
             </div>
           </div>
         `;
@@ -4869,7 +4894,7 @@
               <div class="feed-card-meta">${w.desc || ''} ${w.cat ? '• ' + w.cat : ''}</div>
               ${w.definition && w.definition.toLowerCase().trim() !== (w.tr || '').toLowerCase().trim() ? `<div class="feed-card-desc">"${w.definition}"</div>` : ''}
               ${syn ? `<div class="feed-card-meta" style="color:var(--dp-color-accent-ink);"><strong>EŞ ANLAM:</strong> ${syn}</div>` : ''}
-              ${w.example ? `<div class="feed-card-example">“${highlightWordInText(w.example.replace(/^["“”]|["“”]$/g, ''), w.en)}”</div>` : ''}
+              ${displayExample(w.example) ? `<div class="feed-card-example">“${highlightWordInText(displayExample(w.example), w.en)}”</div>` : ''}
             </div>
 
             <!-- Trailing Action Buttons -->
@@ -5281,7 +5306,7 @@
                 </div>
 
                 ${currentWord.definition && currentWord.definition.toLowerCase().trim() !== (currentWord.tr || '').toLowerCase().trim() ? `<div class="word-def" style="max-width: 52ch;">“${currentWord.definition}”</div>` : ''}
-                ${currentWord.example ? `<div class="word-example" style="max-width: 52ch;">“${highlightWordInText(currentWord.example.replace(/^["“”]|["“”]$/g, ''), currentWord.en)}”</div>` : ''}
+                ${displayExample(currentWord.example) ? `<div class="word-example" style="max-width: 52ch;">“${highlightWordInText(displayExample(currentWord.example), currentWord.en)}”</div>` : ''}
               </div>
 
               <div class="fc-footer">
@@ -5558,7 +5583,7 @@
     let questionContentHtml = '';
     if (qState.mode === 'cloze') {
       const regex = new RegExp(`\\b${targetWord.en}[a-z]*\\b`, 'i');
-      const clozeText = currentQ.clozeSentence || (targetWord.example ? targetWord.example.replace(regex, '<span class="cloze-blank">_______</span>') : `${targetWord.tr} anlamına gelen kelimeyi seçiniz: <span class="cloze-blank">_______</span>`);
+      const clozeText = currentQ.clozeSentence || (displayExample(targetWord.example) ? displayExample(targetWord.example).replace(regex, '<span class="cloze-blank">_______</span>') : `${targetWord.tr} anlamına gelen kelimeyi seçiniz: <span class="cloze-blank">_______</span>`);
       questionContentHtml = `
         <div class="quiz-cloze-sentence">“${clozeText}”</div>
         <div style="font-family:var(--dp-typography-mono); font-size:0.78rem; color:var(--dp-color-ink-muted); margin-top:10px;">[${targetWord.desc} • ${targetWord.cefr}]</div>
@@ -6259,8 +6284,7 @@
     const prep = extractPreposition(w);
     const descLine = [w.desc, w.cat].filter(Boolean).join(' • ');
     const syns = String(getWordSynonym(w) || '').split(/[,;]/).map(s => s.trim()).filter(Boolean);
-    const example = (STATE.activeModule === 'yds' && w.ydsExample) ? w.ydsExample : w.example;
-    const exampleText = example ? String(example).replace(/^["“”]|["“”]$/g, '') : '';
+    const exampleText = displayExample(w.example) || displayExample(w.ydsExample);
     const shelf = libraryShelfWords();
     const pos = shelf.findIndex(x => x.id === w.id);
     const tool = (act, icon, label, pressed) =>
@@ -7557,9 +7581,9 @@
       const distractors = pickDistractors(target, 3, pool);
 
       let clozeSentence = null;
-      if (mode === 'cloze' && target.example) {
+      if (mode === 'cloze' && displayExample(target.example)) {
         const regex = new RegExp(`\\b${target.en}[a-z]*\\b`, 'i');
-        clozeSentence = target.example.replace(regex, '<span class="cloze-blank">_______</span>');
+        clozeSentence = displayExample(target.example).replace(regex, '<span class="cloze-blank">_______</span>');
       }
 
       const options = [target, ...distractors]
@@ -7693,10 +7717,10 @@
             <span class=”feedback-meaning-label”>DOĞRU ANLAM:</span>
             <strong class=”feedback-meaning-tr”>${escapeHtml(targetWord.tr)}</strong>
           </div>
-          ${targetWord.example ? `
+          ${displayExample(targetWord.example) ? `
             <div class=”feedback-example-row”>
               <span class=”feedback-ex-label”>ÖRNEK KULLANIM:</span>
-              <p class=”feedback-example”>”${highlightWordInText(targetWord.example, targetWord.en)}”</p>
+              <p class=”feedback-example”>”${highlightWordInText(displayExample(targetWord.example), targetWord.en)}”</p>
             </div>
           ` : ''}
           ${(STATE.quizState.mode === 'cloze' || STATE.quizState.mode === 'definition') ? (() => {
@@ -8863,6 +8887,8 @@
   })();
 
   window.APP = {
+    isSourceCitation,
+    displayExample,
     openSettingsModal,
     closeSettingsModal,
     handleFabAction,
