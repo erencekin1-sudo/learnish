@@ -18,6 +18,7 @@ Kullanım:
     python3 scripts/apply_examples.py            # uygula ve yaz
     python3 scripts/apply_examples.py --check     # yalnızca doğrula, yazma
 """
+import glob
 import json
 import os
 import re
@@ -25,7 +26,9 @@ import sys
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 WORDS = os.path.join(ROOT, 'words-data.js')
-EXAMPLES = os.path.join(ROOT, 'data', 'yds_examples.json')
+DATA_DIR = os.path.join(ROOT, 'data')
+# Tüm parti dosyaları: data/yds_examples.json, data/yds_examples_002.json, ...
+EXAMPLES_GLOB = os.path.join(DATA_DIR, 'yds_examples*.json')
 
 EXAMPLE_IDX = 10       # record[10] = example
 YDS_EXAMPLE_IDX = 12   # record[12] = ydsExample (kaynak/alıntı korunur)
@@ -50,9 +53,14 @@ def main():
     src = open(WORDS, encoding='utf-8').read()
     m, raw = load_raw(src)
 
-    if not os.path.exists(EXAMPLES):
-        raise SystemExit('HATA: %s yok.' % EXAMPLES)
-    entries = json.load(open(EXAMPLES, encoding='utf-8'))
+    files = sorted(glob.glob(EXAMPLES_GLOB))
+    if not files:
+        raise SystemExit('HATA: data/yds_examples*.json bulunamadı.')
+    entries = []
+    for fp in files:
+        part = json.load(open(fp, encoding='utf-8'))
+        entries.extend(part)
+    print('[apply_examples] parti dosyaları: %d (%s)' % (len(files), ', '.join(os.path.basename(f) for f in files)))
 
     by_id = {r[0]: r for r in raw}
     before_keys = {(r[0], r[1]) for r in raw}
