@@ -1752,6 +1752,7 @@
       localStorage.setItem('mk_mistakes', JSON.stringify(STATE.userData.mistakes || {}));
       localStorage.setItem('mk_notebooks', JSON.stringify(STATE.userData.notebooks || {}));
       if (STATE.userData.notebookDailyCount != null) localStorage.setItem('mk_notebook_daily', JSON.stringify(STATE.userData.notebookDailyCount));
+      else localStorage.removeItem('mk_notebook_daily');
       localStorage.setItem('mk_schema_version', String(SCHEMA_VERSION));
     } catch (e) {
       console.warn('LocalStorage save error:', e);
@@ -4594,6 +4595,7 @@
           <button type="button" class="home-qa-btn" onclick="window.APP.switchView('quiz')">${renderIcon('zap', 20)}<span>Quiz</span></button>
           <button type="button" class="home-qa-btn" onclick="window.APP.startSRSDueFlashcards()">${renderIcon('repeat', 20)}<span>Tekrar</span></button>
           <button type="button" class="home-qa-btn" onclick="window.APP.startMistakeQuiz()">${renderIcon('alert', 20)}<span>Hatalar</span></button>
+          <button type="button" class="home-qa-btn" onclick="window.APP.switchView('notebooks')">${renderIcon('book', 20)}<span>Defterler</span></button>
           <button type="button" class="home-qa-btn" onclick="window.APP.switchView('directory')">${renderIcon('search', 20)}<span>Sözlük</span></button>
           <button type="button" class="home-qa-btn" onclick="window.APP.openSpeechCoach('pronunciation')">${renderIcon('mic', 20)}<span>Telaffuz</span></button>
           <button type="button" class="home-qa-btn" onclick="window.APP.openPdfStudio()">${renderIcon('printer', 20)}<span>PDF</span></button>
@@ -5468,6 +5470,9 @@
     const activeMistakesList = getActiveMistakeWords();
 
     const flashcardSourceOptions = `
+      <optgroup label="Renkli Defterler">
+        <option value="notebook" ${sourceVal === 'notebook' ? 'selected' : ''}>Renkli Defterler: Bugünün Kümesi</option>
+      </optgroup>
       <optgroup label="Tekrar ve Hata Defteri">
         <option value="srs_due" ${sourceVal === 'srs_due' ? 'selected' : ''}>Aralıklı Tekrar: Bugün Bekleyenler (${srsDueList.length})</option>
         <option value="mistakes" ${sourceVal === 'mistakes' ? 'selected' : ''}>Hata Defteri (${activeMistakesList.length})</option>
@@ -8676,7 +8681,7 @@
     }
 
     // Hash routing — default landing page is #home (Kontrol Merkezi)
-    const validViews = ['home', 'daily', 'flashcard', 'quiz', 'directory', 'stats'];
+    const validViews = ['home', 'daily', 'flashcard', 'quiz', 'directory', 'stats', 'notebooks'];
     const viewAliases = { 'word-list': 'directory', 'words': 'directory' };
     const resolveView = (h) => {
       const clean = (h || '').replace('#', '').trim();

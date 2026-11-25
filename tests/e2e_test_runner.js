@@ -2609,6 +2609,43 @@ registerTest(1, 'Renkli Defterler', 'test_notebooks_view_shows_levelup_cta_at_th
   assert(/startNotebookLevelUpTest/.test(html), 'uygun≥20 iken Seviye Geçme Testi CTA görünmeli');
 });
 
+// ----- Final inceleme düzeltmeleri -----
+
+registerTest(1, 'Renkli Defterler', 'test_notebook_flashcard_source_option_selected', () => {
+  // #1: "Bugünü Çalış" sonrası kaynak seçicide 'notebook' seçeneği SEÇİLİ render edilmeli.
+  // (Gerçek tarayıcıda seçili seçenek select.value='notebook' verir -> sonraki render deck'i korur.
+  //  Mock iç içe getElementById'yi desteklemediğinden fix, render edilen seçenek dizgesiyle doğrulanır.)
+  const env = createFreshAppEnvironment({ initialStorage: { learnish_active_module: 'maarif', learnish_selected_grade: '5' }});
+  env.APP.startNotebookFlashcards();
+  assertEqual(env.APP.getState().flashcardSource, 'notebook', 'kaynak notebook olmalı');
+  const html = env.document.getElementById('view-flashcard').innerHTML;
+  assert(/<option value="notebook" selected>/.test(html), "kaynak seçicide 'notebook' seçeneği seçili render edilmeli (deck ilk puanlamadan sonra kaymasın)");
+});
+
+registerTest(1, 'Renkli Defterler', 'test_notebooks_in_valid_views', () => {
+  // #2: #notebooks hash'i reload/ileri-geri ile notebooks görünümüne çözülmeli.
+  const env = createFreshAppEnvironment({ initialHash: '#notebooks' });
+  assertEqual(env.APP.getState().currentView, 'notebooks', '#notebooks geçerli görünüm olmalı, home\'a düşmemeli');
+});
+
+registerTest(1, 'Renkli Defterler', 'test_notebooks_home_quick_action_exists', () => {
+  // #3: Renkli Defterler mobilde de erişilebilir olmalı — home hızlı erişim kısayolu.
+  const env = createFreshAppEnvironment({ initialStorage: { learnish_active_module: 'maarif', learnish_selected_grade: '5' }});
+  env.APP.switchView('home');
+  const html = env.document.getElementById('view-home').innerHTML;
+  assert(/switchView\('notebooks'\)/.test(html), 'home hızlı erişimde Renkli Defterler kısayolu olmalı');
+});
+
+registerTest(1, 'Renkli Defterler', 'test_reset_clears_notebook_daily_key', () => {
+  // #5: notebookDailyCount null olunca (sıfırlama/import) saveUserData mk_notebook_daily anahtarını silmeli.
+  const env = createFreshAppEnvironment();
+  env.APP.setNotebookDailyCount(12);
+  assert(env.localStorage.getItem('mk_notebook_daily') != null, 'ayar kaydedilmeli');
+  env.APP.getState().userData.notebookDailyCount = null;      // sıfırlamanın yaptığı gibi
+  env.APP.enrollNotebookWord(env.sandbox.WORDS_DATA[0].id);   // saveUserData'yı tetikler
+  assertEqual(env.localStorage.getItem('mk_notebook_daily'), null, 'null değerde mk_notebook_daily anahtarı silinmeli');
+});
+
 // ============================================================================
 // 7.X MENTOR CONCIERGE (Task 1)
 // ============================================================================
