@@ -2190,6 +2190,7 @@
       .filter(id => {
         const r = STATE.userData.notebooks[id];
         if (!r || !r.candidate || r.archived) return false;
+        if (r.srcModule == null) r.srcModule = mod; // v1 geriye-uyum: eksik kaynağı aktif modülle doldur
         if (r.srcModule !== mod) return false;
         if (mod === 'maarif' && r.srcGrade != null && r.srcGrade !== grade) return false;
         return true;
@@ -2266,66 +2267,82 @@
     saveUserData();
   }
 
-  /** Günlük tavan durumu (bugün değilse sıfırlar). */
+  /** Günlük tavan durumu (bugün değilse sıfırlar). `served` = bugün servis edilen kelime id'leri (modül başına). */
   function notebookDayState() {
     const today = mkLocalDateKey();
     let d = STATE.userData.notebookDay;
     if (!d || d.date !== today) {
-      d = { date: today, used: {} };
+      d = { date: today, served: {} };
       STATE.userData.notebookDay = d;
     }
+    if (!d.served) d.served = {};
     return d;
   }
 
-  /** Bugün aktif modülde kalan günlük kelime kotası. */
+  /** Bugün aktif modülde yeni kelime için kalan kota (servis edilen farklı kelime sayısına göre). */
   function getNotebookDailyRemaining() {
     const d = notebookDayState();
-    const usedToday = (d.used && d.used[STATE.activeModule]) || 0;
-    return Math.max(0, getNotebookDailyCount() - usedToday);
+    const servedToday = (d.served[STATE.activeModule] || []).length;
+    return Math.max(0, getNotebookDailyCount() - servedToday);
   }
 
   /**
-   * O günün çalışma kümesi (aktif modül, arşiv hariç): sabit takvime göre
-   *  1) tekrarı gelen (nextReview yok veya <= bugün) kayıtlı kelimeler,
-   *  2) henüz kayıtlı olmayan yeni kelimeler (kaydedilerek),
-   * günlük tavanın kalanı kadar. Küme boyutu kadar günlük kota düşürülür.
+   * O günün çalışma kümesi (aktif modül, arşiv hariç). Kota kelime-id bazlı idempotenttir:
+   *  1) bugün servis edilmiş ama hâlâ tekrarı gelen (puanlanmamış) kelimeler tekrar gösterilir,
+   *  2) kalan kota kadar henüz servis edilmemiş yeni/tekrarı gelen kelime eklenir.
+   * Tekrar "Bugünü Çalış" aynı kelimeleri getirir, günde farklı kelime sayısını adedle sınırlar.
    */
   function buildNotebookDailySet() {
     const unlocked = getUnlockedModuleWords();
     const today = mkLocalDateKey();
-    const remaining = getNotebookDailyRemaining();
+    const mod = STATE.activeModule;
+    const d = notebookDayState();
+    const served = d.served[mod] = d.served[mod] || [];
+    const servedSet = new Set(served);
+    const N = getNotebookDailyCount();
+    const isDue = rec => rec && !rec.archived && (rec.nextReview == null || rec.nextReview <= today);
     const result = [];
     const used = new Set();
-    if (remaining <= 0) return result;
-    // 1) tekrarı gelen kayıtlı (arşivsiz) kelimeler
+    // 1) bugün servis edilmiş, hâlâ due (puanlanmamış) kelimeler — tekrar göster
     for (const w of unlocked) {
-      if (result.length >= remaining) break;
-      const rec = getNotebookRecord(w.id);
-      if (!rec || rec.archived) continue;
-      if (rec.nextReview == null || rec.nextReview <= today) {
-        used.add(w.id); result.push(w);
-      }
+      if (!servedSet.has(w.id) || used.has(w.id)) continue;
+      if (isDue(getNotebookRecord(w.id))) { used.add(w.id); result.push(w); }
     }
-    // 2) henüz kayıtlı olmayan yeni kelimeler
+    // 2) kalan kota kadar henüz servis edilmemiş due kelime (yeni ise kaydedilerek)
+    let added = 0;
+    const remaining = Math.max(0, N - served.length);
     for (const w of unlocked) {
-      if (result.length >= remaining) break;
-      if (used.has(w.id) || getNotebookRecord(w.id)) continue;
-      enrollNotebookWord(w.id);
-      used.add(w.id); result.push(w);
+      if (added >= remaining) break;
+      if (servedSet.has(w.id) || used.has(w.id)) continue;
+      let rec = getNotebookRecord(w.id);
+      if (!rec) rec = enrollNotebookWord(w.id);
+      if (!isDue(rec)) continue;
+      served.push(w.id); servedSet.add(w.id);
+      used.add(w.id); result.push(w); added++;
     }
-    // kotayı düşür
-    if (result.length > 0) {
-      const d = notebookDayState();
-      if (!d.used) d.used = {};
-      d.used[STATE.activeModule] = ((d.used[STATE.activeModule]) || 0) + result.length;
-      saveUserData();
-    }
+    if (added > 0) saveUserData();
     return result;
   }
 
   /** Flash kart puanlama yönlendirici (SRS kaynakları için). Notebook kartları doğrudan rateNotebookColor çağırır. */
   function rateFlashcard(wordId, quality) {
     markFlashcardSRS(wordId, quality);
+  }
+
+  /**
+   * Klavye 1/2/3 ile mevcut kartı puanlar — KAYNAĞA GÖRE YÖNLENDİRİR.
+   * Notebook kaynağında yalıtılmış rateNotebookColor'a (küresel SRS'e dokunmaz),
+   * diğer kaynaklarda markFlashcardSRS'e gider. (İzolasyonu korur.)
+   */
+  function rateCurrentFlashcardByKey(n) {
+    const pool = STATE.filteredFlashcards || [];
+    const w = pool[STATE.activeFlashcardIndex];
+    if (!w) return;
+    if (STATE.flashcardSource === 'notebook') {
+      rateNotebookColor(w.id, n === 1 ? 'red' : (n === 2 ? 'yellow' : 'green'));
+    } else {
+      markFlashcardSRS(w.id, n === 1 ? 1 : (n === 2 ? 4 : 5));
+    }
   }
 
   /** Renkli Defterler günlük çalışmasını flash kart motorunda başlatır. */
@@ -2417,6 +2434,7 @@
     Object.keys(nb).forEach(idStr => {
       const rec = nb[idStr];
       if (!rec || rec.archived || !buckets[rec.color]) return;
+      if (rec.srcModule == null) rec.srcModule = mod; // v1 geriye-uyum
       if (rec.srcModule !== mod) return;
       if (mod === 'maarif' && rec.srcGrade != null && rec.srcGrade !== grade) return;
       const w = WORDS_DATA.find(x => x.id === parseInt(idStr, 10));
@@ -8791,13 +8809,13 @@
         openSpeechCoach(currentWord.en);
       } else if (e.key === '1') {
         e.preventDefault();
-        markFlashcardSRS(currentWord.id, 1);
+        rateCurrentFlashcardByKey(1);
       } else if (e.key === '2') {
         e.preventDefault();
-        markFlashcardSRS(currentWord.id, 4);
+        rateCurrentFlashcardByKey(2);
       } else if (e.key === '3') {
         e.preventDefault();
-        markFlashcardSRS(currentWord.id, 5);
+        rateCurrentFlashcardByKey(3);
       }
     } else if (STATE.currentView === 'quiz' && STATE.quizState.active) {
       if (STATE.quizState.mode === 'speaking') {
@@ -9408,6 +9426,7 @@
     buildNotebookDailySet,
     startNotebookFlashcards,
     rateFlashcard,
+    rateCurrentFlashcardByKey,
     getNotebookCandidates,
     notebookArchiveLabel,
     archiveNotebookWord,

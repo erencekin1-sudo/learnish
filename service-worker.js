@@ -3,7 +3,7 @@
  * Caches core assets for offline usage on mobile and desktop
  */
 
-const CACHE_NAME = 'learnish-80dd6e00';
+const CACHE_NAME = 'learnish-a677e462';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',

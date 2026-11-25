@@ -2536,7 +2536,36 @@ registerTest(1, 'Renkli Defterler', 'test_daily_cap_not_exceeded_on_repeat', () 
   const s1 = env.APP.buildNotebookDailySet();
   const s2 = env.APP.buildNotebookDailySet(); // tekrar "Bugünü Çalış"
   assert(s1.length <= 8, 'ilk küme adedi aşmamalı');
-  assert(s1.length + s2.length <= 8, 'tekrar basmak günlük tavanı aşmamalı');
+  const distinct = new Set([...s1, ...s2].map(w => w.id));
+  assert(distinct.size <= 8, 'bir günde farklı kelime sayısı adedi aşmamalı (tekrar basmak yeni kelime eklememeli)');
+});
+
+registerTest(1, 'Renkli Defterler', 'test_daily_repeat_reshows_same_words_no_strand', () => {
+  const env = createFreshAppEnvironment({ initialStorage: { learnish_active_module: 'yds', mk_current_day: '5', mk_current_day_date: '2000-01-01' }});
+  env.APP.setNotebookDailyCount(8);
+  const s1 = env.APP.buildNotebookDailySet();
+  const s2 = env.APP.buildNotebookDailySet();
+  const s1ids = new Set(s1.map(w => w.id));
+  assert(s2.length === s1.length && s2.every(w => s1ids.has(w.id)), 'tekrar basınca aynı (puanlanmamış) kelimeler yeniden gelmeli, kaybolmamalı');
+});
+
+registerTest(1, 'Renkli Defterler', 'test_notebook_keyboard_rating_isolated', () => {
+  const env = createFreshAppEnvironment({ initialStorage: { learnish_active_module: 'yds', mk_current_day: '2', mk_current_day_date: '2000-01-01' }});
+  env.APP.startNotebookFlashcards();
+  const id = env.APP.getState().filteredFlashcards[0].id;
+  env.APP.rateCurrentFlashcardByKey(3); // KOLAY (yeşil)
+  assert(env.APP.getState().userData.srs[id] == null, 'notebook klavye puanı küresel SRS yazmamalı');
+  assert(!env.APP.getState().userData.review.has(id), 'notebook klavye puanı tekrar setine yazmamalı');
+  assertEqual(env.APP.getNotebookRecord(id).color, 'green', 'notebook klavye 3 kelimeyi yeşil yapmalı');
+});
+
+registerTest(1, 'Renkli Defterler', 'test_v1_record_backfills_src_module_into_candidates', () => {
+  const env = createFreshAppEnvironment({ initialStorage: { learnish_active_module: 'maarif', learnish_selected_grade: '5' }});
+  const id = env.sandbox.WORDS_DATA[0].id;
+  // v1 kaydı: srcModule yok
+  env.APP.getState().userData.notebooks[id] = { color:'red', good:4, candidate:true, enrolledAt:'2026-01-01' };
+  const ids = env.APP.getNotebookCandidates().map(w => w.id);
+  assert(ids.includes(id), 'srcModule olmayan v1 adayı aktif modülde görünmeli (backfill)');
 });
 
 registerTest(1, 'Renkli Defterler', 'test_daily_new_words_store_source', () => {
@@ -2561,10 +2590,11 @@ registerTest(1, 'Renkli Defterler', 'test_notebook_card_renders_color_buttons', 
 registerTest(1, 'Renkli Defterler', 'test_notebook_completion_screen_when_set_empty', () => {
   const env = createFreshAppEnvironment({ initialStorage: { learnish_active_module: 'yds', mk_current_day: '2', mk_current_day_date: '2000-01-01' }});
   env.APP.setNotebookDailyCount(1);
-  env.APP.buildNotebookDailySet(); // kotayı tüket
+  const s = env.APP.buildNotebookDailySet(); // 1 kelime servis et
+  env.APP.rateNotebookColor(s[0].id, 'green'); // puanla (kota 1 dolu, kelime artık due değil)
   env.APP.startNotebookFlashcards();
   const html = env.document.getElementById('view-flashcard').innerHTML;
-  assert(/nb-complete|Bugünlük bitti/.test(html), 'kota dolunca tamamlanma ekranı gösterilmeli');
+  assert(/nb-complete|Bugünlük bitti/.test(html), 'kota dolup kelime puanlanınca tamamlanma ekranı gösterilmeli');
 });
 
 registerTest(1, 'Renkli Defterler', 'test_notebook_session_ends_after_rating_all_no_loop', () => {
