@@ -2546,6 +2546,37 @@ registerTest(1, 'Renkli Defterler', 'test_daily_new_words_store_source', () => {
   assertEqual(env.APP.getNotebookRecord(set[0].id).srcModule, 'yds', 'yeni kelime kaynağını saklamalı');
 });
 
+// ----- Task 4: deftere özel flash kart arayüzü (renkli butonlar + tamamlanma) -----
+
+registerTest(1, 'Renkli Defterler', 'test_notebook_card_renders_color_buttons', () => {
+  const env = createFreshAppEnvironment({ initialStorage: { learnish_active_module: 'yds', mk_current_day: '2', mk_current_day_date: '2000-01-01' }});
+  env.APP.startNotebookFlashcards();
+  const html = env.document.getElementById('view-flashcard').innerHTML;
+  assert(/rateNotebookColor\([0-9]+,\s*'red'\)/.test(html), 'kırmızı renk butonu olmalı');
+  assert(/rateNotebookColor\([0-9]+,\s*'green'\)/.test(html), 'yeşil renk butonu olmalı');
+  assert(/1 gün/.test(html) && /3 gün/.test(html) && /5 gün/.test(html), 'sabit aralık etiketleri olmalı');
+  assert(!/markFlashcardSRS/.test(html), 'notebook kartında SRS puanlama butonu olmamalı');
+});
+
+registerTest(1, 'Renkli Defterler', 'test_notebook_completion_screen_when_set_empty', () => {
+  const env = createFreshAppEnvironment({ initialStorage: { learnish_active_module: 'yds', mk_current_day: '2', mk_current_day_date: '2000-01-01' }});
+  env.APP.setNotebookDailyCount(1);
+  env.APP.buildNotebookDailySet(); // kotayı tüket
+  env.APP.startNotebookFlashcards();
+  const html = env.document.getElementById('view-flashcard').innerHTML;
+  assert(/nb-complete|Bugünlük bitti/.test(html), 'kota dolunca tamamlanma ekranı gösterilmeli');
+});
+
+registerTest(1, 'Renkli Defterler', 'test_notebook_session_ends_after_rating_all_no_loop', () => {
+  const env = createFreshAppEnvironment({ initialStorage: { learnish_active_module: 'yds', mk_current_day: '2', mk_current_day_date: '2000-01-01' }});
+  env.APP.setNotebookDailyCount(1);
+  env.APP.startNotebookFlashcards(); // 1 kartlık oturum
+  const cardId = env.APP.getState().filteredFlashcards[0].id;
+  env.APP.rateNotebookColor(cardId, 'green'); // tek kartı puanla
+  const html = env.document.getElementById('view-flashcard').innerHTML;
+  assert(/nb-complete|Bugünlük bitti/.test(html), 'son kart puanlanınca sarmalamadan tamamlanmalı');
+});
+
 registerTest(1, 'Renkli Defterler', 'test_studying_enrolls_words', () => {
   const env = createFreshAppEnvironment({ initialStorage: { learnish_active_module: 'maarif', learnish_selected_grade: '5' }});
   const set = env.APP.buildNotebookDailySet();

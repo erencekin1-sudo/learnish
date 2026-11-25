@@ -7720,3 +7720,12 @@ h1, h2, h3 { text-wrap: balance; line-height: 1.2; }
 }
 .nb-card-eligible { color: var(--dp-color-accent); }
 .nb-card-cefr { background: var(--dp-color-surface-3); border-radius: 6px; padding: 1px 6px; }
+
+/* Renkli Defterler v2 — kart renk butonları */
+.fc-controls-notebook { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
+.nb-rate { border-width: 2px; border-style: solid; font-weight: 800; }
+.nb-rate-red    { border-color: var(--dp-color-red);   color: var(--dp-color-red); }
+.nb-rate-yellow { border-color: var(--dp-color-amber); color: var(--dp-color-amber-ink, var(--dp-color-amber)); }
+.nb-rate-green  { border-color: var(--dp-color-green); color: var(--dp-color-green); }
+.nb-rate .fc-btn-sub { font-weight: 700; opacity: 0.8; }
+.nb-complete h3 { font-size: 1.25rem; font-weight: 800; color: var(--dp-color-ink); }

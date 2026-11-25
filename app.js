@@ -2224,7 +2224,15 @@
     }
     rec.lastReview = today;
     saveUserData();
-    nextFlashcard();
+    // Oturumdaki kartı kümeden düşür; küme bitince renderFlashcardView tamamlanma ekranını gösterir (sarmalamaz).
+    if (Array.isArray(STATE.filteredFlashcards)) {
+      STATE.filteredFlashcards = STATE.filteredFlashcards.filter(w => w.id !== wordId);
+      if (STATE.activeFlashcardIndex >= STATE.filteredFlashcards.length) {
+        STATE.activeFlashcardIndex = Math.max(0, STATE.filteredFlashcards.length - 1);
+      }
+    }
+    STATE.flashcardFlipped = false;
+    renderFlashcardView(true);
     return rec;
   }
 
@@ -5580,6 +5588,7 @@
     `;
 
     if (pool.length === 0) {
+      const nbComplete = sourceVal === 'notebook';
       container.innerHTML = `
         <div class="flashcard-wrapper">
           <div class="flashcard-toolbar">
@@ -5587,11 +5596,18 @@
               ${flashcardSourceOptions}
             </select>
           </div>
+          ${nbComplete ? `
+          <div class="glass-panel nb-complete" style="padding: 48px 24px; text-align: center; width: 100%;">
+            <div style="margin-bottom: 12px; font-size: 32px;">✓</div>
+            <h3>Bugünlük bitti</h3>
+            <p style="color: var(--dp-color-ink-muted); margin-top: 6px;">Bugünün Renkli Defterler kotasını tamamladın. Yeni kelimeler ve tekrarlar yarın gelecek.</p>
+            ${shouldOfferLevelUpTest() ? `<button type="button" class="fc-action-btn nb-levelup-btn" style="margin-top:14px;" onclick="window.APP.startNotebookLevelUpTest()">${renderIcon('zap', 15)} <span>Seviye Geçme Testi (${getNotebookCandidates().length}) &rarr;</span></button>` : ''}
+          </div>` : `
           <div class="glass-panel" style="padding: 48px 24px; text-align: center; width: 100%;">
             <div style="margin-bottom: 12px; color: var(--dp-color-ink-muted);">${renderIcon('layers', 40)}</div>
             <h3>${sourceVal === 'srs_due' ? 'Bugün için bekleyen aralıklı tekrarınız yok. Harika!' : (sourceVal === 'mistakes' ? 'Hata Defteriniz tertemiz! Zayıf nokta bulunmuyor.' : 'Bu filtre grubunda henüz kelime bulunmuyor.')}</h3>
             <p style="color: var(--dp-color-ink-muted); margin-top: 6px;">Lütfen yukarıdaki menüden başka bir kelime havuzu seçin.</p>
-          </div>
+          </div>`}
         </div>
       `;
       return;
@@ -5700,14 +5716,15 @@
                   ${currentWord.en} — ${currentWord.desc || ''}
                 </div>
 
-                <!-- Pedagogical Memory Retention Bar -->
+                <!-- Pedagogical Memory Retention Bar (notebook kaynağında gizli) -->
+                ${sourceVal === 'notebook' ? '' : `
                 <div class="srs-card-pedagogy-meta">
                   <span class="srs-pill-item">${renderIcon('repeat', 12)} <strong>Tekrar Aralığı:</strong> ${curSRS ? (curSRS.interval || 1) + ' Gün' : 'Yeni'}</span>
                   <span class="srs-pill-item">${renderIcon('zap', 12)} <strong>Hatırlama:</strong> ${curSRS ? (curSRS.easeFactor >= 2.5 ? 'Kolay' : curSRS.easeFactor >= 2.1 ? 'Orta' : 'Zorlu') : 'Yeni'}</span>
                   ${curMistake && !curMistake.cleared ? `
                     <span class="srs-pill-item srs-pill-mistake">${renderIcon('alert', 12)} <strong>Hata Geçmişi:</strong> ${curMistake.wrongCount}x Yanlış (${Math.max(0, 2 - (curMistake.consecutiveCorrect || 0))} doğru sonra temizlenir)</span>
                   ` : ''}
-                </div>
+                </div>`}
 
                 ${currentWord.definition && currentWord.definition.toLowerCase().trim() !== (currentWord.tr || '').toLowerCase().trim() ? `<div class="word-def" style="max-width: 52ch;">“${currentWord.definition}”</div>` : ''}
                 ${displayExample(currentWord.example) ? `<div class="word-example" style="max-width: 52ch;">“${highlightWordInText(displayExample(currentWord.example), currentWord.en)}”</div>` : ''}
@@ -5725,11 +5742,31 @@
           </div>
         </div>
 
+        ${sourceVal === 'notebook' ? `
+        <div class="fc-controls fc-controls-notebook">
+          <button class="fc-action-btn fc-btn-prev" onclick="window.APP.prevFlashcard()" title="Önceki Kart">&larr; ÖNCEKİ</button>
+          <button class="fc-action-btn nb-rate nb-rate-red" onclick="window.APP.rateNotebookColor(${currentWord.id}, 'red')" title="Zor — 1 günde bir">
+            <span class="fc-btn-top">🔴 ZOR</span>
+            <span class="fc-btn-sub">1 gün</span>
+            <span class="kbd-badge">1</span>
+          </button>
+          <button class="fc-action-btn nb-rate nb-rate-yellow" onclick="window.APP.rateNotebookColor(${currentWord.id}, 'yellow')" title="Orta — 3 günde bir">
+            <span class="fc-btn-top">🟡 ORTA</span>
+            <span class="fc-btn-sub">3 gün</span>
+            <span class="kbd-badge">2</span>
+          </button>
+          <button class="fc-action-btn nb-rate nb-rate-green" onclick="window.APP.rateNotebookColor(${currentWord.id}, 'green')" title="Kolay — 5 günde bir">
+            <span class="fc-btn-top">🟢 KOLAY</span>
+            <span class="fc-btn-sub">5 gün</span>
+            <span class="kbd-badge">3</span>
+          </button>
+          <button class="fc-action-btn fc-btn-next" onclick="window.APP.nextFlashcard()" title="Sonraki Kart">SONRAKİ &rarr;</button>
+        </div>` : `
         <div class="fc-controls fc-controls-srs">
           <button class="fc-action-btn fc-btn-prev" onclick="window.APP.prevFlashcard()" title="Önceki Kart">
             &larr; ÖNCEKİ
           </button>
-          
+
           <button class="fc-action-btn fc-btn-again ${isReview ? 'active' : ''}" onclick="window.APP.rateFlashcard(${currentWord.id}, 1)" title="Zorlandım / Hatırlamadım (1 gün sonra tekrar sor)">
             <span class="fc-btn-top">${renderIcon('alert', 13)} ZOR / TEKRAR</span>
             <span class="fc-btn-sub">1 gün sonra</span>
@@ -5751,7 +5788,7 @@
           <button class="fc-action-btn fc-btn-next" onclick="window.APP.nextFlashcard()" title="Sonraki Kart">
             SONRAKİ &rarr;
           </button>
-        </div>
+        </div>`}
       </div>
     `;
 
