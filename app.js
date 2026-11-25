@@ -2175,18 +2175,20 @@
     return (STATE.userData.notebooks && STATE.userData.notebooks[wordId]) || null;
   }
 
-  /** (Geçici — Task 2'de getNotebookCandidates ile değişecek) Kelime mezuniyet adayı mı. */
-  function isNotebookEligible(wordId) {
-    const r = getNotebookRecord(wordId);
-    return !!(r && r.candidate && !r.archived);
-  }
-
-  /** (Geçici — Task 2'de getNotebookCandidates ile değişecek) Mezuniyet adayları. */
-  function getNotebookEligibleWords() {
+  /** Aktif modülün (maarifte sınıfın) mezuniyet adayları: kayıtlı ∩ !archived ∩ candidate. */
+  function getNotebookCandidates() {
     if (!STATE.userData.notebooks) return [];
+    const mod = STATE.activeModule;
+    const grade = getActiveGrade();
     return Object.keys(STATE.userData.notebooks)
       .map(Number)
-      .filter(id => { const r = STATE.userData.notebooks[id]; return r && r.candidate && !r.archived; })
+      .filter(id => {
+        const r = STATE.userData.notebooks[id];
+        if (!r || !r.candidate || r.archived) return false;
+        if (r.srcModule !== mod) return false;
+        if (mod === 'maarif' && r.srcGrade != null && r.srcGrade !== grade) return false;
+        return true;
+      })
       .map(id => WORDS_DATA.find(w => w.id === id))
       .filter(Boolean);
   }
@@ -2296,26 +2298,41 @@
     switchView('flashcard');
   }
 
-  /** Kelimeyi tek adım daha kolay renge terfi ettirir (red→yellow→green; yeşil terminal). */
-  function promoteNotebookWord(wordId) {
+  /** Kaydın saklı kaynağından (srcModule/srcGrade) arşiv etiketi üretir. */
+  function notebookArchiveLabel(rec, wordId) {
+    if (!rec) return 'Arşiv';
+    if (rec.srcModule === 'yds') return 'YDS & YÖKDİL';
+    if (rec.srcModule === 'oxford') return 'Kütüphane';
+    if (rec.srcModule === 'all') return 'Tüm Kütüphane';
+    // maarif
+    const grade = rec.srcGrade || getActiveGrade();
+    const word = wordId != null ? WORDS_DATA.find(w => w.id === wordId) : null;
+    const meta = wordId != null ? gradeWordMeta(wordId, grade) : null;
+    const unit = (meta && (meta.unitTitleTr || meta.unitTitle)) || (word && (word.themeTitleTr || word.themeTitle)) || 'Genel';
+    return `${grade}. Sınıf · ${unit}`;
+  }
+
+  /** Kelimeyi arşive kaldırır (mezun): aktif rotasyon/aday dışı; kaynak etiketi + tarih. */
+  function archiveNotebookWord(wordId) {
+    wordId = parseInt(wordId, 10);
     const r = getNotebookRecord(wordId);
     if (!r) return null;
-    r.color = r.color === 'red' ? 'yellow' : (r.color === 'yellow' ? 'green' : 'green');
-    r.good = 0;
-    r.lastGoodDate = null;
-    r.promotedAt = getTodayDateString();
+    r.archived = true;
+    r.candidate = false;
+    r.archiveLabel = notebookArchiveLabel(r, wordId);
+    r.archiveDate = getTodayDateString();
     saveUserData();
     return r;
   }
 
-  /** Terfiye uygun kelime sayısı 20'ye ulaştıysa Seviye Geçme Testi önerilmeli. */
+  /** Mezuniyet adayı sayısı (aktif modül) 20'ye ulaştıysa Seviye Geçme Testi önerilmeli. */
   function shouldOfferLevelUpTest() {
-    return getNotebookEligibleWords().length >= 20;
+    return getNotebookCandidates().length >= 20;
   }
 
-  /** Yalnızca terfiye uygun kelimelerden Seviye Geçme Testi kurar (mevcut quiz motoru). */
+  /** Yalnızca mezuniyet adaylarından Seviye Geçme Testi kurar (mevcut quiz motoru). */
   function startNotebookLevelUpTest() {
-    const pool = getNotebookEligibleWords();
+    const pool = getNotebookCandidates();
     if (pool.length === 0) {
       alert('Henüz seviye atlamaya uygun kelime yok. Kelimeleri çalışmaya devam edin.');
       return;
@@ -2338,7 +2355,8 @@
       mode: 'en-tr',
       source: 'notebook_levelup',
       answered: false,
-      waitingFeedback: false
+      waitingFeedback: false,
+      notebookArchiveQueue: []
     };
     saveQuizState();
     switchView('quiz');
@@ -2366,7 +2384,7 @@
   function _notebookCard(item) {
     const w = item.word, rec = item.rec;
     const ex = displayExample(w.example) || displayExample(w.ydsExample);
-    const eligible = isNotebookEligible(w.id);
+    const eligible = !!(rec && rec.candidate && !rec.archived);
     return `
       <article class="notebook-card" data-notebook-color="${rec.color}">
         <div class="nb-card-head">
@@ -2387,7 +2405,7 @@
     if (!container) return;
     const buckets = _notebookWordsByColor();
     const total = buckets.red.length + buckets.yellow.length + buckets.green.length;
-    const eligibleCount = getNotebookEligibleWords().length;
+    const eligibleCount = getNotebookCandidates().length;
     const dailyCount = getNotebookDailyCount();
     const offerTest = shouldOfferLevelUpTest();
 
@@ -5842,6 +5860,10 @@
 
       if (qState.active) {
         qState.active = false;
+        // Renkli Defterler Seviye Geçme Testi tamamlandı: doğru bilinenleri arşivle.
+        if (qState.source === 'notebook_levelup' && Array.isArray(qState.notebookArchiveQueue)) {
+          qState.notebookArchiveQueue.forEach(id => archiveNotebookWord(id));
+        }
         localStorage.removeItem('learnish_active_quiz');
         STATE.userData.stats.quizzesPlayed++;
         STATE.userData.stats.correctAnswers += qState.score;
@@ -8009,8 +8031,9 @@
 
       // Renkli Defterler Seviye Geçme Testi YALITILMIŞTIR: küresel SRS'e/Hata Defterine yazmaz.
       if (STATE.quizState.source === 'notebook_levelup') {
-        // doğru bilinen kelime tek adım terfi eder (küresel tekrar programına dokunulmaz)
-        promoteNotebookWord(currentQ.targetWord.id);
+        // doğru bilinen kelimeyi arşiv kuyruğuna al — arşivleme test BİTİNCE yapılır
+        if (!Array.isArray(STATE.quizState.notebookArchiveQueue)) STATE.quizState.notebookArchiveQueue = [];
+        STATE.quizState.notebookArchiveQueue.push(currentQ.targetWord.id);
       } else {
         // SM-2 Aralıklı Tekrar ve Hata Defteri senkronizasyonu
         calculateSRS(currentQ.targetWord.id, 4);
@@ -9269,7 +9292,9 @@
     buildNotebookDailySet,
     startNotebookFlashcards,
     rateFlashcard,
-    promoteNotebookWord,
+    getNotebookCandidates,
+    notebookArchiveLabel,
+    archiveNotebookWord,
     shouldOfferLevelUpTest,
     startNotebookLevelUpTest,
     renderNotebooksView,
@@ -9335,6 +9360,7 @@
     stopCoachListening,
     evaluatePronunciation,
     renderFlashcardView,
+    renderQuizView,
     renderDirectoryView,
     searchDirectory,
     getFilteredDirectoryWords,

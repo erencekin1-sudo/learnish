@@ -2521,6 +2521,60 @@ registerTest(1, 'Renkli Defterler', 'test_studying_enrolls_words', () => {
   assert(env.APP.getNotebookRecord(set[0].id) !== null, 'günlük kümeye giren kelime otomatik kaydedilmeli');
 });
 
+// ----- Task 2: mezuniyet adayları, Seviye Geçme Testi ve arşivleme -----
+
+registerTest(1, 'Renkli Defterler', 'test_candidates_scoped_to_active_module', () => {
+  const env = createFreshAppEnvironment({ initialStorage: { learnish_active_module: 'yds' }});
+  const a = env.sandbox.WORDS_DATA[0].id, b = env.sandbox.WORDS_DATA[1].id;
+  const ra = env.APP.enrollNotebookWord(a); ra.candidate = true; ra.srcModule = 'yds';
+  const rb = env.APP.enrollNotebookWord(b); rb.candidate = true; rb.srcModule = 'maarif';
+  const ids = env.APP.getNotebookCandidates().map(w => w.id);
+  assert(ids.includes(a) && !ids.includes(b), 'yalnızca aktif modülün adayları gelmeli');
+});
+
+registerTest(1, 'Renkli Defterler', 'test_levelup_offer_threshold_20_scoped', () => {
+  const env = createFreshAppEnvironment({ initialStorage: { learnish_active_module: 'yds' }});
+  const ids = env.sandbox.WORDS_DATA.slice(0, 20).map(w => w.id);
+  ids.forEach((id, i) => { const r = env.APP.enrollNotebookWord(id); r.srcModule='yds'; r.candidate = i < 19; });
+  assertEqual(env.APP.shouldOfferLevelUpTest(), false, '19 adayda test yok');
+  env.APP.getNotebookRecord(ids[19]).candidate = true;
+  assertEqual(env.APP.shouldOfferLevelUpTest(), true, '20 adayda test önerilmeli');
+});
+
+registerTest(1, 'Renkli Defterler', 'test_archive_label_maarif_and_yds', () => {
+  const env = createFreshAppEnvironment({ initialStorage: { learnish_active_module: 'yds' }});
+  const id = env.sandbox.WORDS_DATA[0].id;
+  const r = env.APP.enrollNotebookWord(id); r.srcModule = 'yds';
+  assert(/YDS/.test(env.APP.notebookArchiveLabel(r)), 'YDS etiketi YDS içermeli');
+  r.srcModule = 'maarif'; r.srcGrade = 5;
+  assert(/5\. Sınıf/.test(env.APP.notebookArchiveLabel(r)), 'maarif etiketi sınıfı içermeli');
+});
+
+registerTest(1, 'Renkli Defterler', 'test_archive_excludes_from_candidates', () => {
+  const env = createFreshAppEnvironment({ initialStorage: { learnish_active_module: 'yds' }});
+  const id = env.sandbox.WORDS_DATA[0].id;
+  const r = env.APP.enrollNotebookWord(id); r.srcModule='yds'; r.candidate = true;
+  env.APP.archiveNotebookWord(id);
+  assert(env.APP.getNotebookRecord(id).archived === true, 'arşivlenmeli');
+  assert(!env.APP.getNotebookCandidates().some(w => w.id === id), 'arşivlenen aday havuzundan düşmeli');
+});
+
+registerTest(1, 'Renkli Defterler', 'test_levelup_archives_correct_on_completion_not_midquit', () => {
+  const env = createFreshAppEnvironment({ initialStorage: { learnish_active_module: 'yds' }});
+  const ids = env.sandbox.WORDS_DATA.slice(0, 22).map(w => w.id);
+  ids.forEach(id => { const r = env.APP.enrollNotebookWord(id); r.srcModule='yds'; r.candidate = true; });
+  env.APP.startNotebookLevelUpTest();
+  const qs = env.APP.getState().quizState;
+  const firstTarget = qs.questions[0].targetWord.id;
+  const correctIdx = qs.questions[0].options.findIndex(o => o.isCorrect);
+  env.APP.handleQuizAnswer(correctIdx);
+  assert(env.APP.getNotebookRecord(firstTarget).archived !== true, 'tek doğru cevapta (test bitmeden) arşivlenmemeli');
+  // tamamlanmayı zorla: son soruya geç ve render et
+  env.APP.getState().quizState.currentIndex = env.APP.getState().quizState.questions.length;
+  env.APP.renderQuizView();
+  assert(env.APP.getNotebookRecord(firstTarget).archived === true, 'test tamamlanınca doğru bilinen arşivlenmeli');
+});
+
 // ----- Task 5: Renkli Defterler görünümü, navigasyon ve stil -----
 
 registerTest(1, 'Renkli Defterler', 'test_notebooks_view_section_and_nav_exist', () => {
