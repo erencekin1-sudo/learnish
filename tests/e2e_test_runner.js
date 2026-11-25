@@ -2371,6 +2371,36 @@ registerTest(4, 'Real-World Scenarios', 'test_scenario_daily_day_points_to_this_
   assert(dayWords.some(w => weekWords.includes(w)), 'Günlük çalışma bu haftanın kelimelerini göstermeli');
 });
 
+registerTest(1, 'Daily Advance', 'test_daily_autoadvances_when_saved_day_is_stale', () => {
+  // Bayat (önceki bir tarihe ait) kayıtlı gün, Maarif modülünde bugünün MEB gününe ilerlemeli.
+  const env = createFreshAppEnvironment({ initialStorage: {
+    learnish_active_module: 'maarif', learnish_selected_grade: '5',
+    mk_current_day: '3', mk_current_day_date: '2000-01-01'
+  }});
+  const today = env.APP.getMEBCalendarInfo().day;
+  assertEqual(env.APP.getState().currentDay, today, 'bayat tarihli kayıt bugünün MEB gününe otomatik ilerlemeli');
+});
+
+registerTest(1, 'Daily Advance', 'test_daily_preserves_same_day_selection', () => {
+  // Aynı güne ait kayıtlı seçim (kullanıcı bugün başka güne göz attıysa) korunmalı.
+  const d = new Date();
+  const todayKey = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+  const env = createFreshAppEnvironment({ initialStorage: {
+    learnish_active_module: 'maarif', learnish_selected_grade: '5',
+    mk_current_day: '3', mk_current_day_date: todayKey
+  }});
+  assertEqual(env.APP.getState().currentDay, 3, 'aynı güne ait manuel gün seçimi korunmalı');
+});
+
+registerTest(1, 'Daily Advance', 'test_daily_yds_keeps_manual_progress', () => {
+  // YDS modülünde gün manuel ilerleme sayacıdır; tarihe bakılmaksızın kaldığı yerden devam eder.
+  const env = createFreshAppEnvironment({ initialStorage: {
+    learnish_active_module: 'yds',
+    mk_current_day: '7', mk_current_day_date: '2000-01-01'
+  }});
+  assertEqual(env.APP.getState().currentDay, 7, 'YDS manuel gün ilerlemesi korunmalı');
+});
+
 // ============================================================================
 // 7.X MENTOR CONCIERGE (Task 1)
 // ============================================================================

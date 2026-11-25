@@ -553,13 +553,29 @@
     };
   }
 
-  // Ensure current day is restored or defaults to MEB calendar day
+  // Yerel tarih anahtarı (YYYY-MM-DD) — "günün" hangi takvim gününde kaydedildiğini izler
+  function mkLocalDateKey(date = new Date()) {
+    return date.getFullYear() + '-' +
+      String(date.getMonth() + 1).padStart(2, '0') + '-' +
+      String(date.getDate()).padStart(2, '0');
+  }
+
+  // Günlük çalışma gününü belirle:
+  // - Maarif (MEB takvimi): her yeni takvim gününde bugünün gününe OTOMATİK ilerle.
+  //   Aynı gün içinde kullanıcı başka bir güne göz attıysa (kayıt bugüne aitse) o seçim korunur.
+  // - YDS/Oxford: gün manuel bir ilerleme sayacıdır; kaldığı yerden devam eder.
   const todayMEBInitial = getMEBCalendarInfo();
   const savedDay = parseInt(localStorage.getItem('mk_current_day'), 10);
-  if (savedDay && savedDay >= 1 && savedDay <= 150) {
-    STATE.currentDay = savedDay;
-  } else if (STATE.activeModule === 'maarif') {
-    STATE.currentDay = todayMEBInitial.day;
+  const savedDayDate = localStorage.getItem('mk_current_day_date');
+  const hasSavedDay = savedDay && savedDay >= 1 && savedDay <= 150;
+  if (STATE.activeModule === 'maarif') {
+    if (hasSavedDay && savedDayDate === mkLocalDateKey()) {
+      STATE.currentDay = savedDay;            // bugün yapılmış manuel seçim korunur
+    } else {
+      STATE.currentDay = todayMEBInitial.day; // yeni güne otomatik ilerle
+    }
+  } else if (hasSavedDay) {
+    STATE.currentDay = savedDay;              // YDS/Oxford: manuel ilerleme sürer
   }
 
   // ==========================================================================
@@ -1728,6 +1744,7 @@
       localStorage.setItem('mk_stats', JSON.stringify(STATE.userData.stats));
       localStorage.setItem('mk_activity_log', JSON.stringify(STATE.userData.activityLog || []));
       localStorage.setItem('mk_current_day', STATE.currentDay.toString());
+      localStorage.setItem('mk_current_day_date', mkLocalDateKey());
       localStorage.setItem('mk_srs', JSON.stringify(STATE.userData.srs || {}));
       localStorage.setItem('mk_mistakes', JSON.stringify(STATE.userData.mistakes || {}));
       localStorage.setItem('mk_schema_version', String(SCHEMA_VERSION));
@@ -1830,7 +1847,7 @@
   function resetProgress() {
     if (!confirm('Tüm öğrenme ilerlemeniz, hata defteriniz ve istatistikleriniz silinecek.\nBu işlem GERİ ALINAMAZ. Devam etmek istiyor musunuz?')) return;
     if (!confirm('Emin misiniz? Bu işlemi geri alamazsınız.')) return;
-    const keysToRemove = ['mk_learned', 'mk_review', 'mk_starred', 'mk_stats', 'mk_activity_log', 'mk_srs', 'mk_mistakes', 'mk_current_day', 'mk_schema_version'];
+    const keysToRemove = ['mk_learned', 'mk_review', 'mk_starred', 'mk_stats', 'mk_activity_log', 'mk_srs', 'mk_mistakes', 'mk_current_day', 'mk_current_day_date', 'mk_schema_version'];
     keysToRemove.forEach(k => { try { localStorage.removeItem(k); } catch (_) {} });
     _showToast('Tüm ilerleme sıfırlandı. Sayfa yenileniyor...', 'success');
     setTimeout(() => location.reload(), 1000);
@@ -3012,6 +3029,7 @@
       localStorage.setItem('learnish_selected_grade', gNum.toString());
       localStorage.setItem('learnish_active_module', 'maarif');
       localStorage.setItem('mk_current_day', String(STATE.currentDay));
+      localStorage.setItem('mk_current_day_date', mkLocalDateKey());
     } catch (e) { /* depolama kapalıysa yalnızca oturumda geçerli */ }
 
     closeGradeModal();
