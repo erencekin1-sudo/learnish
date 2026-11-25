@@ -11,8 +11,8 @@
 Öğrenciye, kendi sınıf müfredatındaki kelimeleri **zorluk kademesine göre** (trafik ışığı mantığı) çalıştıran kişisel bir modül. Düz müfredat listesini; görünür ilerlemesi, kademe atlaması ve "ustalaştıkça kolaylaşan" bir oyuna çevirir.
 
 - 🔴 **Kırmızı = Zor**, 🟡 **Sarı = Orta**, 🟢 **Yeşil = Kolay** olmak üzere üç "defter".
-- Kelimeler öğrencinin **kendi sınıfının müfredatından** gelir: hem şu an işlediği gün hem de geçmişte açılmış (birikmiş) günler. 5. sınıf öğrencisi → 5. sınıf müfredatından o güne dek açılmış kelimeler.
-- Başlangıç rengi **CEFR seviyesinden otomatik** atanır (öğrenci tek tek triyaj yapmaz).
+- Kelimeler öğrencinin **aktif modülünde o güne dek açılmış (birikmiş)** kelimelerden gelir. Maarif'te sınıf müfredatının açılmış günleri; YDS/Oxford'da o güne dek ulaşılmış partiler.
+- Başlangıç rengi **performanstan (mevcut SRS ustalık durumundan) otomatik tohumlanır**: ustalaşılmamış kelime kırmızı başlar, bilindikçe yeşile tırmanır. CEFR yalnızca ilk kademeyi hafif etkiler. Öğrenci tek tek triyaj yapmaz.
 - Kelimeler **mevcut flash kart modülü** gibi çalışılır. Öğrenci ustalaştıkça kelime **tek adım** daha kolay renge terfi eder (🔴→🟡→🟢).
 - Terfi, "en az 5 kez iyi hatırlama" + bir **"Seviye Geçme Testi"** geçmekle gerçekleşir.
 - Hepsi **"Renkli Defterler" koleksiyonunda** (üç ayrı defter) birikir — yeni bir kategori.
@@ -22,8 +22,8 @@
 ## 2. Hedefler
 
 1. Yeni bir modül/görünüm: **"Renkli Defterler"** — üç defter sekmesi.
-2. Kaynak = aktif sınıf müfredat havuzu (`getActiveGradePool`), yalnızca **açılmış** günlerin kelimeleriyle sınırlı. **Kelime havuzuna / korpusa sıfır dokunuş.**
-3. Başlangıç rengi CEFR'den: **A1/A2 → yeşil**, **B1/B2 → sarı**, **C1/C2/C2+ → kırmızı**.
+2. Kaynak = **aktif modülde o güne dek açılmış** kelimeler (maarif: `getActiveGradePool` + açılmış günler; YDS/Oxford: ulaşılmış partiler). **Kelime havuzuna / korpusa sıfır dokunuş.** Tüm modlarda (MEB + YDS + Oxford) çalışır.
+3. Başlangıç rengi **performanstan tohumlanır** (aşağıda 7.1): ustalaşılmamış → kırmızı, öğreniliyor → sarı, ustalaşılmış → yeşil. CEFR yalnızca geçmişi olmayan kelimeler için hafif bir ipucu.
 4. Günlük çalışma: öğrenci **"bugün kaç kelime"** ayarını yapar (sınıfa göre varsayılan, ayarlanabilir); kelimeler **mevcut flash kart akışıyla** sunulur.
 5. "İyi hatırlama" sinyali = **mevcut SRS başarısı** (SM-2'de quality ≥ 4: "İyi" / "KOLAY–ZİHNİMDE"). Yeni sayaç uydurulmaz; SRS olayına bağlanır.
 6. Bir kelime **toplam ≥ 5 iyi hatırlama** topladığında "terfiye uygun" olur.
@@ -62,14 +62,21 @@
 ## 7. Kararlaştırılan "Nasıl"
 
 ### 7.1 Veri modeli (`STATE.userData.notebooks`)
-Yeni map: `notebooks[wordId] = { color, good, enrolledAt, promotedAt }`
-- `color`: `'red' | 'yellow' | 'green'` — kelime modüle ilk girdiğinde CEFR'den atanır.
-- `good`: o anki renkte biriken **iyi hatırlama** sayısı (SRS quality ≥ 4 her gerçekleştiğinde +1). Terfi edince **0'a sıfırlanır**.
+Yeni map: `notebooks[wordId] = { color, good, lastGoodDate, enrolledAt, promotedAt }`
+- `color`: `'red' | 'yellow' | 'green'` — kayıt anında performanstan tohumlanır (7.1), sonra yalnızca test ile değişir.
+- `good`: o anki renkte biriken **iyi hatırlama** sayısı (günde en fazla +1). Terfi edince **0'a sıfırlanır**.
+- `lastGoodDate`: `good`'un son arttığı yerel gün (günlük +1 kapağı için).
 - `enrolledAt`, `promotedAt`: tarih damgaları (telemetri/sıralama için).
 - Bir kelime "modüle kayıtlı" ise `notebooks[id]` vardır; değilse yok.
 
-**Başlangıç rengi (CEFR → renk):**
-`A1,A2 → green` · `B1,B2 → yellow` · `C1,C2,C2+ → red` · (CEFR boşsa → `yellow`, varsayılan orta).
+**Başlangıç rengi (performanstan tohumlama, kayıt anında bir kez):**
+Kelime modüle ilk girdiğinde renk, o anki SRS durumundan türetilir ve **saklanır**:
+- SRS kaydı yok **ya da** `state === 'new'/'learning'` → `red`
+- `state === 'reviewing'` → `yellow`
+- `state === 'mastered'` (interval ≥ 14) → `green`
+- **CEFR hafif ipucu:** geçmişi (SRS kaydı) olmayan kelimelerde A1/A2 ise `red` yerine `yellow` başlar (nesnel kolay kelimeyi gereksiz yere en dibe atmamak için). Diğer tüm no-history kelimeler `red`.
+
+Böylece ustalaşılmamış kelimelerin çoğu kırmızı/sarı başlar → her sınıf ve modülde gerçek bir tırmanış olur. Renk bu tohumlamadan sonra **yalnızca Seviye Geçme Testi ile** değişir.
 
 **Terfiye uygunluk:** `color !== 'green' && good >= 5`.
 
@@ -77,14 +84,21 @@ Yeni map: `notebooks[wordId] = { color, good, enrolledAt, promotedAt }`
 `notebooks` şu listelere eklenir: `saveUserData` payload'ı, `handleImportFile` yükleme, yedek dışa aktarma, `resetProgress` temizleme, varsayılan `STATE.userData` init.
 
 ### 7.3 Günlük akış
-1. Modüle girince sınıfa göre **varsayılan günlük adet** gösterilir, öğrenci ayarlar (`STATE.userData.notebookDailyCount` ya da ayar alanı).
-2. O günün çalışma kümesi = açılmış müfredat kelimelerinden: önce **SRS'e göre bugün tekrarı gelenler**, sonra **henüz modüle kayıtlı olmayanlar** (yeni kayıt → CEFR rengiyle), adet dolana dek.
-3. Küme **mevcut flash kart motoruyla** sunulur (`renderFlashcardView` altyapısı / `filteredFlashcards`). Her "İyi/Kolay" işaretlemesi hem SRS'i günceller hem ilgili kayıtlı kelimenin `good` sayacını artırır.
+1. Modüle girince aktif modül/sınıfa göre **varsayılan günlük adet** gösterilir, öğrenci ayarlar (`STATE.userData.notebookDailyCount`).
+2. Aday havuz = **aktif modülde o güne dek açılmış** kelimeler (`getUnlockedModuleWords()` yardımcısı: maarif → grade pool ∩ açılmış günler; yds/oxford → modül havuzu ∩ ulaşılmış partiler). O günün çalışma kümesi: önce **SRS'e göre bugün tekrarı gelen** kayıtlı kelimeler, sonra **henüz kayıtlı olmayanlar** (lazy kayıt → performanstan renk tohumu), adet dolana dek.
+3. Küme **mevcut flash kart motoruyla** sunulur (`renderFlashcardView` altyapısı / `filteredFlashcards`).
+
+### 7.3.1 `good` sayacının artması (çözülen incelik)
+- `calculateSRS` içine tek merkezî kanca: bir **kayıtlı** kelime için quality ≥ 4 gerçekleştiğinde `good += 1`.
+- **Günde kelime başına en fazla +1** (son artış tarihi saklanır; aynı kelime aynı gün tekrar işaretlense artmaz → oyun bozma engellenir).
+- **Seviye Geçme Testi'nin kendi cevapları `good`'u artırmaz** (test bayrağı ile dışlanır). Test terfiyi ölçer, beslemez.
+- Not: kayıtlı bir kelimenin başarısı normal flash kart/quiz'de de sayılır — bu, "mevcut ilerlemeden besle" isteğiyle uyumludur (bilinçli karar).
 
 ### 7.4 Seviye Geçme Testi
-- Terfiye uygun kelime sayısı **20'ye** ulaşınca öğrenciye test **önerilir** (dayatılmaz).
-- Test içeriği = yalnızca terfiye uygun kelimeler; **mevcut quiz motoru** (`startQuiz` / `renderQuizView`) bu kaynakla beslenir.
-- Testte **doğru** bilinen kelime **bir renk terfi eder** (🔴→🟡→🟢), `good` sıfırlanır, `promotedAt` güncellenir. Yanlış bilinen aynı renkte kalır (ve mevcut Hata Defteri mantığı devreye girer).
+- Terfiye uygun (`color!=='green' && good>=5`) kelime sayısı — **tüm renkler toplamında** (renk başına değil; çözülen incelik) — **20'ye** ulaşınca öğrenciye test **önerilir** (dayatılmaz). Renk başına eşik olsaydı (ör. kırmızı) bazı modlarda hiç tetiklenmezdi.
+- Test içeriği = yalnızca o anda terfiye uygun kelimeler (kırmızı + sarı karışık olabilir); **mevcut quiz motoru** (`startQuiz` / `renderQuizView`) bu kaynakla beslenir.
+- Testte **doğru** bilinen kelime **bir renk terfi eder** (🔴→🟡→🟢), `good` sıfırlanır, `promotedAt` güncellenir. Yanlış bilinen aynı renkte kalır, `good` korunur (ve mevcut Hata Defteri mantığı devreye girer).
+- Test sonrası, geride kalan uygun kelimeler yeniden **20**'ye ulaşınca test tekrar önerilir.
 
 ### 7.5 Koleksiyon görünümü
 - Yeni `view-notebooks` section + `renderNotebooksView()` + nav düğmesi (`data-view="notebooks"`) + `executeSwitchView` kancası + başlık etiketleri.
@@ -105,8 +119,11 @@ Yeni map: `notebooks[wordId] = { color, good, enrolledAt, promotedAt }`
 
 ---
 
-## Açık Noktalar (denetim sonrası netleşecek)
+## Çözülen Kararlar (denetim sonrası)
 
-- Modül yalnızca sınıf/müfredat (maarif) modunda mı görünür, yoksa YDS/Oxford modunda da mı? (v1 kapsamı)
-- "20 uygun kelime" eşiği renk başına mı, toplam mı?
-- Günlük varsayılan adetlerin sınıf bazlı değerleri.
+- **Başlangıç rengi:** saf CEFR değil — **performanstan tohumlanır** (gerçek veride CEFR, düşük sınıflarda kelimelerin ~%70-85'ini baştan yeşil yapıp terfi oyununu boşa çıkarıyordu). CEFR yalnızca geçmişi olmayan kelimelerde hafif ipucu. *(Kullanıcı kararı)*
+- **Kapsam:** tüm modlar — MEB + YDS + Oxford. Kaynak "aktif modülde açılmış kelimeler" olarak genelleştirildi. *(Kullanıcı kararı)*
+- **Test eşiği:** renk başına değil, **toplam** 20 uygun kelime; test sonrası 20'ye yeniden ulaşınca tekrar önerilir. *(Benim kararım)*
+- **`good` artışı:** kayıtlı kelimenin herhangi bir SRS başarısı sayılır (mevcut ilerlemeden besleme); **günde kelime başına +1 kapağı**; **Seviye Geçme Testi'nin kendi cevapları sayılmaz.** *(Benim kararım)*
+
+Geriye yalnızca bölüm 8'deki inşaatçı kararları kalıyor (görsel, metin, sınıf/mod bazlı varsayılan adetler, geçme eşiği ince ayarı, nav yerleşimi).
