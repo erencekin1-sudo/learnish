@@ -2265,6 +2265,54 @@
     switchView('flashcard');
   }
 
+  /** Kelimeyi tek adım daha kolay renge terfi ettirir (red→yellow→green; yeşil terminal). */
+  function promoteNotebookWord(wordId) {
+    const r = getNotebookRecord(wordId);
+    if (!r) return null;
+    r.color = r.color === 'red' ? 'yellow' : (r.color === 'yellow' ? 'green' : 'green');
+    r.good = 0;
+    r.lastGoodDate = null;
+    r.promotedAt = getTodayDateString();
+    saveUserData();
+    return r;
+  }
+
+  /** Terfiye uygun kelime sayısı 20'ye ulaştıysa Seviye Geçme Testi önerilmeli. */
+  function shouldOfferLevelUpTest() {
+    return getNotebookEligibleWords().length >= 20;
+  }
+
+  /** Yalnızca terfiye uygun kelimelerden Seviye Geçme Testi kurar (mevcut quiz motoru). */
+  function startNotebookLevelUpTest() {
+    const pool = getNotebookEligibleWords();
+    if (pool.length === 0) {
+      alert('Henüz seviye atlamaya uygun kelime yok. Kelimeleri çalışmaya devam edin.');
+      return;
+    }
+    const shuffled = shuffleArray(pool);
+    const selectedTargets = shuffled.slice(0, Math.min(10, shuffled.length));
+    const questions = selectedTargets.map(target => {
+      const distractors = pickDistractors(target, 3, pool);
+      const options = [target, ...distractors]
+        .sort(() => Math.random() - 0.5)
+        .map(w => ({ id: w.id, text: w.tr || w.en, isCorrect: w.id === target.id }));
+      return { targetWord: target, clozeSentence: null, options };
+    });
+    STATE.quizState = {
+      active: true,
+      questions,
+      currentIndex: 0,
+      score: 0,
+      streak: 0,
+      mode: 'en-tr',
+      source: 'notebook_levelup',
+      answered: false,
+      waitingFeedback: false
+    };
+    saveQuizState();
+    switchView('quiz');
+  }
+
   /**
    * Hata Defterine yanlış cevap kaydı
    */
@@ -7830,6 +7878,11 @@
         showRecoveryToast(currentQ.targetWord);
       }
 
+      // Renkli Defterler Seviye Geçme Testi: doğru bilinen kelime tek adım terfi eder.
+      if (STATE.quizState.source === 'notebook_levelup') {
+        promoteNotebookWord(currentQ.targetWord.id);
+      }
+
       saveQuizState();
       updateBreadcrumb('quiz');
 
@@ -9075,6 +9128,9 @@
     setNotebookDailyCount,
     buildNotebookDailySet,
     startNotebookFlashcards,
+    promoteNotebookWord,
+    shouldOfferLevelUpTest,
+    startNotebookLevelUpTest,
     calculateSRS,
     openSettingsModal,
     closeSettingsModal,

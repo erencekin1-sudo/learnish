@@ -2514,10 +2514,12 @@ registerTest(1, 'Renkli Defterler', 'test_daily_set_respects_count_and_pool', ()
 });
 
 registerTest(1, 'Renkli Defterler', 'test_daily_set_handles_small_pool_day1', () => {
-  const env = createFreshAppEnvironment({ initialStorage: { learnish_active_module: 'maarif', learnish_selected_grade: '5', mk_current_day: '1', mk_current_day_date: '2000-01-01' }});
-  env.APP.setNotebookDailyCount(50); // havuzdaki açılmış kelimeden fazla
+  // YDS: gün manuel sayaç (auto-advance yok), gün 1 -> açılmış 20 kelime; adet havuzdan büyük.
+  const env = createFreshAppEnvironment({ initialStorage: { learnish_active_module: 'yds', mk_current_day: '1', mk_current_day_date: '2000-01-01' }});
+  env.APP.setNotebookDailyCount(50); // açılmış havuzdan (20) fazla
   const set = env.APP.buildNotebookDailySet();
-  assert(Array.isArray(set) && set.length <= 10, '1. günde açılmış ~10 kelimeyi aşmadan, hatasız dönmeli');
+  assert(Array.isArray(set) && set.length <= 20, 'açılmış havuzu (20) aşmadan, hatasız dönmeli');
+  assert(set.length >= 1, 'en az bir kelime dönmeli');
 });
 
 registerTest(1, 'Renkli Defterler', 'test_studying_enrolls_words', () => {
@@ -2526,6 +2528,51 @@ registerTest(1, 'Renkli Defterler', 'test_studying_enrolls_words', () => {
   assert(set.length > 0, 'küme boş olmamalı');
   assert(env.APP.getNotebookRecord(set[0].id) !== null, 'günlük kümeye giren kelime otomatik kaydedilmeli');
   assert(['red','yellow','green'].includes(env.APP.getNotebookRecord(set[0].id).color), 'kayıtta geçerli tohum rengi olmalı');
+});
+
+// ----- Task 4: Seviye Geçme Testi (tetik 20, özel quiz, tek-adım terfi) -----
+
+registerTest(1, 'Renkli Defterler', 'test_promote_one_step', () => {
+  const env = createFreshAppEnvironment();
+  const id = env.sandbox.WORDS_DATA[0].id;
+  const r = env.APP.enrollNotebookWord(id); r.color = 'red'; r.good = 7;
+  env.APP.promoteNotebookWord(id);
+  assertEqual(env.APP.getNotebookRecord(id).color, 'yellow', 'kırmızı tek adım sarıya terfi etmeli');
+  assertEqual(env.APP.getNotebookRecord(id).good, 0, 'terfi good sıfırlamalı');
+  env.APP.getNotebookRecord(id).good = 6;
+  env.APP.promoteNotebookWord(id);
+  assertEqual(env.APP.getNotebookRecord(id).color, 'green', 'sarı tek adım yeşile terfi etmeli');
+  env.APP.promoteNotebookWord(id);
+  assertEqual(env.APP.getNotebookRecord(id).color, 'green', 'yeşil daha fazla terfi etmemeli');
+});
+
+registerTest(1, 'Renkli Defterler', 'test_promote_resets_eligibility_churn', () => {
+  const env = createFreshAppEnvironment();
+  const id = env.sandbox.WORDS_DATA[1].id;
+  const r = env.APP.enrollNotebookWord(id); r.color = 'red'; r.good = 9;
+  env.APP.promoteNotebookWord(id);
+  assertEqual(env.APP.isNotebookEligible(id), false, 'terfi sonrası good=0 olduğundan anında yeniden uygun olmamalı');
+});
+
+registerTest(1, 'Renkli Defterler', 'test_levelup_offer_threshold_20', () => {
+  const env = createFreshAppEnvironment();
+  const ids = env.sandbox.WORDS_DATA.slice(0, 25).map(w => w.id);
+  ids.forEach((id, i) => { const r = env.APP.enrollNotebookWord(id); r.color='red'; r.good = i < 19 ? 5 : 0; });
+  assertEqual(env.APP.shouldOfferLevelUpTest(), false, '19 uygun kelimede test önerilmemeli');
+  env.APP.getNotebookRecord(ids[19]).good = 5; // 20. uygun
+  assertEqual(env.APP.shouldOfferLevelUpTest(), true, '20 uygun kelimede test önerilmeli');
+});
+
+registerTest(1, 'Renkli Defterler', 'test_levelup_test_uses_eligible_only_and_tags_source', () => {
+  const env = createFreshAppEnvironment();
+  const ids = env.sandbox.WORDS_DATA.slice(0, 22).map(w => w.id);
+  ids.forEach(id => { const r = env.APP.enrollNotebookWord(id); r.color='red'; r.good = 5; });
+  env.APP.startNotebookLevelUpTest();
+  const qs = env.APP.getState().quizState;
+  assertEqual(qs.source, 'notebook_levelup', 'quiz kaynağı notebook_levelup olmalı');
+  assert(qs.active && qs.questions.length > 0, 'test soruları kurulmalı');
+  const eligibleIds = new Set(env.APP.getNotebookEligibleWords().map(w => w.id));
+  assert(qs.questions.every(q => eligibleIds.has(q.targetWord.id)), 'tüm sorular yalnızca uygun kelimelerden olmalı');
 });
 
 // ============================================================================
