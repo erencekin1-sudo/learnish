@@ -2115,6 +2115,18 @@
       STATE.userData.learned.delete(wordId);
     }
 
+    // Renkli Defterler: kayıtlı kelimenin "iyi hatırlama" sayacını besle.
+    // Günde kelime başına en fazla +1; Seviye Geçme Testi'nin kendi cevapları sayılmaz.
+    const _nb = STATE.userData.notebooks && STATE.userData.notebooks[wordId];
+    const _inLevelUp = STATE.quizState && STATE.quizState.active && STATE.quizState.source === 'notebook_levelup';
+    if (_nb && quality >= 4 && !_inLevelUp) {
+      const _today = mkLocalDateKey();
+      if (_nb.lastGoodDate !== _today) {
+        _nb.good = (_nb.good || 0) + 1;
+        _nb.lastGoodDate = _today;
+      }
+    }
+
     saveUserData();
     return record;
   }
@@ -2165,6 +2177,22 @@
   function getNotebookRecord(wordId) {
     wordId = parseInt(wordId, 10);
     return (STATE.userData.notebooks && STATE.userData.notebooks[wordId]) || null;
+  }
+
+  /** Kelime terfiye uygun mu: yeşil değil ve en az 5 iyi hatırlama topladıysa. */
+  function isNotebookEligible(wordId) {
+    const r = getNotebookRecord(wordId);
+    return !!(r && r.color !== 'green' && (r.good || 0) >= 5);
+  }
+
+  /** Terfiye uygun tüm kayıtlı kelimelerin WORDS_DATA nesneleri. */
+  function getNotebookEligibleWords() {
+    if (!STATE.userData.notebooks) return [];
+    return Object.keys(STATE.userData.notebooks)
+      .map(Number)
+      .filter(isNotebookEligible)
+      .map(id => WORDS_DATA.find(w => w.id === id))
+      .filter(Boolean);
   }
 
   /**
@@ -8968,6 +8996,9 @@
     seedNotebookColor,
     enrollNotebookWord,
     getNotebookRecord,
+    isNotebookEligible,
+    getNotebookEligibleWords,
+    calculateSRS,
     openSettingsModal,
     closeSettingsModal,
     handleFabAction,

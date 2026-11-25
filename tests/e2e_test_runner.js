@@ -2449,6 +2449,54 @@ registerTest(1, 'Renkli Defterler', 'test_notebooks_absent_key_defaults_empty', 
   assert(typeof env.APP.getState().userData.notebooks === 'object', 'notebooks daima nesne olmalı');
 });
 
+// ----- Task 2: good sayacı kancası (günlük kapak, test dışlaması) ve uygunluk -----
+
+registerTest(1, 'Renkli Defterler', 'test_good_increments_on_success', () => {
+  const env = createFreshAppEnvironment();
+  const id = env.sandbox.WORDS_DATA[0].id;
+  env.APP.enrollNotebookWord(id);
+  env.APP.calculateSRS(id, 4);
+  assertEqual(env.APP.getNotebookRecord(id).good, 1, 'kayıtlı kelimede quality>=4 good sayacını +1 yapmalı');
+});
+
+registerTest(1, 'Renkli Defterler', 'test_good_daily_cap_once', () => {
+  const env = createFreshAppEnvironment();
+  const id = env.sandbox.WORDS_DATA[1].id;
+  env.APP.enrollNotebookWord(id);
+  env.APP.calculateSRS(id, 4);
+  env.APP.calculateSRS(id, 5); // aynı gün ikinci başarı
+  assertEqual(env.APP.getNotebookRecord(id).good, 1, 'good aynı gün en fazla +1 artmalı');
+});
+
+registerTest(1, 'Renkli Defterler', 'test_good_not_incremented_for_unenrolled', () => {
+  const env = createFreshAppEnvironment();
+  const id = env.sandbox.WORDS_DATA[2].id;
+  env.APP.calculateSRS(id, 4); // kayıtlı değil
+  assertEqual(env.APP.getNotebookRecord(id), null, 'kayıtsız kelime için notebook kaydı oluşmamalı');
+});
+
+registerTest(1, 'Renkli Defterler', 'test_good_excluded_during_levelup_test', () => {
+  const env = createFreshAppEnvironment();
+  const id = env.sandbox.WORDS_DATA[3].id;
+  env.APP.enrollNotebookWord(id);
+  env.APP.getState().quizState.active = true;
+  env.APP.getState().quizState.source = 'notebook_levelup';
+  env.APP.calculateSRS(id, 4);
+  assertEqual(env.APP.getNotebookRecord(id).good, 0, 'Seviye Geçme Testi sırasındaki başarı good artırmamalı');
+});
+
+registerTest(1, 'Renkli Defterler', 'test_eligibility_threshold_and_green', () => {
+  const env = createFreshAppEnvironment();
+  const id = env.sandbox.WORDS_DATA[4].id;
+  const rec = env.APP.enrollNotebookWord(id);
+  rec.color = 'red'; rec.good = 4;
+  assertEqual(env.APP.isNotebookEligible(id), false, 'good=4 uygun olmamalı');
+  rec.good = 5;
+  assertEqual(env.APP.isNotebookEligible(id), true, 'good=5 uygun olmalı');
+  rec.color = 'green';
+  assertEqual(env.APP.isNotebookEligible(id), false, 'yeşil kelime asla uygun olmamalı');
+});
+
 // ============================================================================
 // 7.X MENTOR CONCIERGE (Task 1)
 // ============================================================================
