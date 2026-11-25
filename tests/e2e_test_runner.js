@@ -2514,6 +2514,38 @@ registerTest(1, 'Renkli Defterler', 'test_daily_set_handles_small_pool_day1', ()
   assert(set.length >= 1, 'en az bir kelime dönmeli');
 });
 
+registerTest(1, 'Renkli Defterler', 'test_daily_set_excludes_archived', () => {
+  const env = createFreshAppEnvironment({ initialStorage: { learnish_active_module: 'yds', mk_current_day: '3', mk_current_day_date: '2000-01-01' }});
+  const first = env.APP.getUnlockedModuleWords()[0].id;
+  const r = env.APP.enrollNotebookWord(first); r.archived = true;
+  const set = env.APP.buildNotebookDailySet();
+  assert(!set.some(w => w.id === first), 'arşivlenen kelime günlük kümede olmamalı');
+});
+
+registerTest(1, 'Renkli Defterler', 'test_daily_set_due_by_nextreview', () => {
+  const env = createFreshAppEnvironment({ initialStorage: { learnish_active_module: 'yds', mk_current_day: '3', mk_current_day_date: '2000-01-01' }});
+  const u = env.APP.getUnlockedModuleWords();
+  const future = env.APP.enrollNotebookWord(u[0].id); future.nextReview = env.APP.getTodayDateString(3); // bugün değil
+  const set = env.APP.buildNotebookDailySet();
+  assert(!set.some(w => w.id === u[0].id), 'ileri tarihli nextReview bugünkü kümede gelmemeli');
+});
+
+registerTest(1, 'Renkli Defterler', 'test_daily_cap_not_exceeded_on_repeat', () => {
+  const env = createFreshAppEnvironment({ initialStorage: { learnish_active_module: 'yds', mk_current_day: '5', mk_current_day_date: '2000-01-01' }});
+  env.APP.setNotebookDailyCount(8);
+  const s1 = env.APP.buildNotebookDailySet();
+  const s2 = env.APP.buildNotebookDailySet(); // tekrar "Bugünü Çalış"
+  assert(s1.length <= 8, 'ilk küme adedi aşmamalı');
+  assert(s1.length + s2.length <= 8, 'tekrar basmak günlük tavanı aşmamalı');
+});
+
+registerTest(1, 'Renkli Defterler', 'test_daily_new_words_store_source', () => {
+  const env = createFreshAppEnvironment({ initialStorage: { learnish_active_module: 'yds', mk_current_day: '2', mk_current_day_date: '2000-01-01' }});
+  const set = env.APP.buildNotebookDailySet();
+  assert(set.length > 0, 'küme boş olmamalı');
+  assertEqual(env.APP.getNotebookRecord(set[0].id).srcModule, 'yds', 'yeni kelime kaynağını saklamalı');
+});
+
 registerTest(1, 'Renkli Defterler', 'test_studying_enrolls_words', () => {
   const env = createFreshAppEnvironment({ initialStorage: { learnish_active_module: 'maarif', learnish_selected_grade: '5' }});
   const set = env.APP.buildNotebookDailySet();

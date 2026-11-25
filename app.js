@@ -515,7 +515,8 @@
       srs: lsJSON('mk_srs', {}),
       mistakes: lsJSON('mk_mistakes', {}),
       notebooks: lsJSON('mk_notebooks', {}),
-      notebookDailyCount: lsJSON('mk_notebook_daily', null)
+      notebookDailyCount: lsJSON('mk_notebook_daily', null),
+      notebookDay: lsJSON('mk_notebook_day', null)
     }
   };
 
@@ -1753,6 +1754,8 @@
       localStorage.setItem('mk_notebooks', JSON.stringify(STATE.userData.notebooks || {}));
       if (STATE.userData.notebookDailyCount != null) localStorage.setItem('mk_notebook_daily', JSON.stringify(STATE.userData.notebookDailyCount));
       else localStorage.removeItem('mk_notebook_daily');
+      if (STATE.userData.notebookDay != null) localStorage.setItem('mk_notebook_day', JSON.stringify(STATE.userData.notebookDay));
+      else localStorage.removeItem('mk_notebook_day');
       localStorage.setItem('mk_schema_version', String(SCHEMA_VERSION));
     } catch (e) {
       console.warn('LocalStorage save error:', e);
@@ -1784,7 +1787,8 @@
           srs: STATE.userData.srs,
           mistakes: STATE.userData.mistakes,
           notebooks: STATE.userData.notebooks,
-          notebookDailyCount: STATE.userData.notebookDailyCount
+          notebookDailyCount: STATE.userData.notebookDailyCount,
+          notebookDay: STATE.userData.notebookDay
         },
         currentDay: STATE.currentDay,
         activeModule: STATE.activeModule,
@@ -1830,6 +1834,7 @@
         STATE.userData.mistakes = ud.mistakes && typeof ud.mistakes === 'object' ? ud.mistakes : {};
         STATE.userData.notebooks = ud.notebooks && typeof ud.notebooks === 'object' ? ud.notebooks : {};
         STATE.userData.notebookDailyCount = typeof ud.notebookDailyCount === 'number' ? ud.notebookDailyCount : null;
+        STATE.userData.notebookDay = ud.notebookDay && typeof ud.notebookDay === 'object' ? ud.notebookDay : null;
 
         if (data.settings) {
           if (data.settings.accent) STATE.settings.accent = data.settings.accent;
@@ -1857,7 +1862,7 @@
   function resetProgress() {
     if (!confirm('Tüm öğrenme ilerlemeniz, hata defteriniz ve istatistikleriniz silinecek.\nBu işlem GERİ ALINAMAZ. Devam etmek istiyor musunuz?')) return;
     if (!confirm('Emin misiniz? Bu işlemi geri alamazsınız.')) return;
-    const keysToRemove = ['mk_learned', 'mk_review', 'mk_starred', 'mk_stats', 'mk_activity_log', 'mk_srs', 'mk_mistakes', 'mk_notebooks', 'mk_notebook_daily', 'mk_current_day', 'mk_current_day_date', 'mk_schema_version'];
+    const keysToRemove = ['mk_learned', 'mk_review', 'mk_starred', 'mk_stats', 'mk_activity_log', 'mk_srs', 'mk_mistakes', 'mk_notebooks', 'mk_notebook_daily', 'mk_notebook_day', 'mk_current_day', 'mk_current_day_date', 'mk_schema_version'];
     keysToRemove.forEach(k => { try { localStorage.removeItem(k); } catch (_) {} });
     _showToast('Tüm ilerleme sıfırlandı. Sayfa yenileniyor...', 'success');
     setTimeout(() => location.reload(), 1000);
@@ -2253,33 +2258,59 @@
     saveUserData();
   }
 
+  /** Günlük tavan durumu (bugün değilse sıfırlar). */
+  function notebookDayState() {
+    const today = mkLocalDateKey();
+    let d = STATE.userData.notebookDay;
+    if (!d || d.date !== today) {
+      d = { date: today, used: {} };
+      STATE.userData.notebookDay = d;
+    }
+    return d;
+  }
+
+  /** Bugün aktif modülde kalan günlük kelime kotası. */
+  function getNotebookDailyRemaining() {
+    const d = notebookDayState();
+    const usedToday = (d.used && d.used[STATE.activeModule]) || 0;
+    return Math.max(0, getNotebookDailyCount() - usedToday);
+  }
+
   /**
-   * O günün çalışma kümesi: açılmış kelimelerden
-   *  1) SRS'e göre bugün tekrarı gelen kayıtlı kelimeler,
-   *  2) henüz kayıtlı olmayanlar (kaydedilerek),
-   *  3) kalan kayıtlı kelimeler — günlük adet dolana dek.
+   * O günün çalışma kümesi (aktif modül, arşiv hariç): sabit takvime göre
+   *  1) tekrarı gelen (nextReview yok veya <= bugün) kayıtlı kelimeler,
+   *  2) henüz kayıtlı olmayan yeni kelimeler (kaydedilerek),
+   * günlük tavanın kalanı kadar. Küme boyutu kadar günlük kota düşürülür.
    */
   function buildNotebookDailySet() {
     const unlocked = getUnlockedModuleWords();
-    const unlockedIds = new Set(unlocked.map(w => w.id));
-    const count = getNotebookDailyCount();
+    const today = mkLocalDateKey();
+    const remaining = getNotebookDailyRemaining();
     const result = [];
     const used = new Set();
-    const due = getSRSDueWords().filter(w => unlockedIds.has(w.id) && getNotebookRecord(w.id));
-    for (const w of due) {
-      if (result.length >= count) break;
-      if (!used.has(w.id)) { used.add(w.id); result.push(w); }
-    }
+    if (remaining <= 0) return result;
+    // 1) tekrarı gelen kayıtlı (arşivsiz) kelimeler
     for (const w of unlocked) {
-      if (result.length >= count) break;
+      if (result.length >= remaining) break;
+      const rec = getNotebookRecord(w.id);
+      if (!rec || rec.archived) continue;
+      if (rec.nextReview == null || rec.nextReview <= today) {
+        used.add(w.id); result.push(w);
+      }
+    }
+    // 2) henüz kayıtlı olmayan yeni kelimeler
+    for (const w of unlocked) {
+      if (result.length >= remaining) break;
       if (used.has(w.id) || getNotebookRecord(w.id)) continue;
       enrollNotebookWord(w.id);
       used.add(w.id); result.push(w);
     }
-    for (const w of unlocked) {
-      if (result.length >= count) break;
-      if (used.has(w.id)) continue;
-      used.add(w.id); result.push(w);
+    // kotayı düşür
+    if (result.length > 0) {
+      const d = notebookDayState();
+      if (!d.used) d.used = {};
+      d.used[STATE.activeModule] = ((d.used[STATE.activeModule]) || 0) + result.length;
+      saveUserData();
     }
     return result;
   }
@@ -8596,6 +8627,7 @@
       STATE.userData.mistakes = {};
       STATE.userData.notebooks = {};
       STATE.userData.notebookDailyCount = null;
+      STATE.userData.notebookDay = null;
       STATE.currentDay = 1;
       saveUserData();
       updateUI();
