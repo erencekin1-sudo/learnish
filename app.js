@@ -515,7 +515,8 @@
       srs: lsJSON('mk_srs', {}),
       mistakes: lsJSON('mk_mistakes', {}),
       notebooks: lsJSON('mk_notebooks', {}),
-      notebookDailyCount: lsJSON('mk_notebook_daily', null)
+      notebookDailyCount: lsJSON('mk_notebook_daily', null),
+      notebookDay: lsJSON('mk_notebook_day', null)
     }
   };
 
@@ -1753,6 +1754,8 @@
       localStorage.setItem('mk_notebooks', JSON.stringify(STATE.userData.notebooks || {}));
       if (STATE.userData.notebookDailyCount != null) localStorage.setItem('mk_notebook_daily', JSON.stringify(STATE.userData.notebookDailyCount));
       else localStorage.removeItem('mk_notebook_daily');
+      if (STATE.userData.notebookDay != null) localStorage.setItem('mk_notebook_day', JSON.stringify(STATE.userData.notebookDay));
+      else localStorage.removeItem('mk_notebook_day');
       localStorage.setItem('mk_schema_version', String(SCHEMA_VERSION));
     } catch (e) {
       console.warn('LocalStorage save error:', e);
@@ -1784,7 +1787,8 @@
           srs: STATE.userData.srs,
           mistakes: STATE.userData.mistakes,
           notebooks: STATE.userData.notebooks,
-          notebookDailyCount: STATE.userData.notebookDailyCount
+          notebookDailyCount: STATE.userData.notebookDailyCount,
+          notebookDay: STATE.userData.notebookDay
         },
         currentDay: STATE.currentDay,
         activeModule: STATE.activeModule,
@@ -1830,6 +1834,7 @@
         STATE.userData.mistakes = ud.mistakes && typeof ud.mistakes === 'object' ? ud.mistakes : {};
         STATE.userData.notebooks = ud.notebooks && typeof ud.notebooks === 'object' ? ud.notebooks : {};
         STATE.userData.notebookDailyCount = typeof ud.notebookDailyCount === 'number' ? ud.notebookDailyCount : null;
+        STATE.userData.notebookDay = ud.notebookDay && typeof ud.notebookDay === 'object' ? ud.notebookDay : null;
 
         if (data.settings) {
           if (data.settings.accent) STATE.settings.accent = data.settings.accent;
@@ -1857,7 +1862,7 @@
   function resetProgress() {
     if (!confirm('Tüm öğrenme ilerlemeniz, hata defteriniz ve istatistikleriniz silinecek.\nBu işlem GERİ ALINAMAZ. Devam etmek istiyor musunuz?')) return;
     if (!confirm('Emin misiniz? Bu işlemi geri alamazsınız.')) return;
-    const keysToRemove = ['mk_learned', 'mk_review', 'mk_starred', 'mk_stats', 'mk_activity_log', 'mk_srs', 'mk_mistakes', 'mk_notebooks', 'mk_notebook_daily', 'mk_current_day', 'mk_current_day_date', 'mk_schema_version'];
+    const keysToRemove = ['mk_learned', 'mk_review', 'mk_starred', 'mk_stats', 'mk_activity_log', 'mk_srs', 'mk_mistakes', 'mk_notebooks', 'mk_notebook_daily', 'mk_notebook_day', 'mk_current_day', 'mk_current_day_date', 'mk_schema_version'];
     keysToRemove.forEach(k => { try { localStorage.removeItem(k); } catch (_) {} });
     _showToast('Tüm ilerleme sıfırlandı. Sayfa yenileniyor...', 'success');
     setTimeout(() => location.reload(), 1000);
@@ -2117,18 +2122,6 @@
       STATE.userData.learned.delete(wordId);
     }
 
-    // Renkli Defterler: kayıtlı kelimenin "iyi hatırlama" sayacını besle.
-    // Günde kelime başına en fazla +1; Seviye Geçme Testi'nin kendi cevapları sayılmaz.
-    const _nb = STATE.userData.notebooks && STATE.userData.notebooks[wordId];
-    const _inLevelUp = STATE.quizState && STATE.quizState.active && STATE.quizState.source === 'notebook_levelup';
-    if (_nb && quality >= 4 && !_inLevelUp) {
-      const _today = mkLocalDateKey();
-      if (_nb.lastGoodDate !== _today) {
-        _nb.good = (_nb.good || 0) + 1;
-        _nb.lastGoodDate = _today;
-      }
-    }
-
     saveUserData();
     return record;
   }
@@ -2163,12 +2156,17 @@
     let rec = STATE.userData.notebooks[wordId];
     if (!rec) {
       rec = {
-        color: seedNotebookColor(wordId),
-        good: 0,
-        lastGoodDate: null,
+        color: null,                 // null = henüz işaretlenmemiş (yeni)
+        kolayStreak: 0,              // üst üste 🟢 Kolay sayısı
+        candidate: false,           // kolayStreak >= 5 → mezuniyet adayı
+        nextReview: null,           // sabit takvim tekrar tarihi
         lastReview: null,
-        enrolledAt: getTodayDateString(),
-        promotedAt: null
+        archived: false,
+        archiveLabel: null,
+        archiveDate: null,
+        srcModule: STATE.activeModule,
+        srcGrade: STATE.activeModule === 'maarif' ? getActiveGrade() : null,
+        enrolledAt: getTodayDateString()
       };
       STATE.userData.notebooks[wordId] = rec;
       saveUserData();
@@ -2182,20 +2180,61 @@
     return (STATE.userData.notebooks && STATE.userData.notebooks[wordId]) || null;
   }
 
-  /** Kelime terfiye uygun mu: yeşil değil ve en az 5 iyi hatırlama topladıysa. */
-  function isNotebookEligible(wordId) {
-    const r = getNotebookRecord(wordId);
-    return !!(r && r.color !== 'green' && (r.good || 0) >= 5);
-  }
-
-  /** Terfiye uygun tüm kayıtlı kelimelerin WORDS_DATA nesneleri. */
-  function getNotebookEligibleWords() {
+  /** Aktif modülün (maarifte sınıfın) mezuniyet adayları: kayıtlı ∩ !archived ∩ candidate. */
+  function getNotebookCandidates() {
     if (!STATE.userData.notebooks) return [];
+    const mod = STATE.activeModule;
+    const grade = getActiveGrade();
     return Object.keys(STATE.userData.notebooks)
       .map(Number)
-      .filter(isNotebookEligible)
+      .filter(id => {
+        const r = STATE.userData.notebooks[id];
+        if (!r || !r.candidate || r.archived) return false;
+        if (r.srcModule == null) r.srcModule = mod; // v1 geriye-uyum: eksik kaynağı aktif modülle doldur
+        if (r.srcModule !== mod) return false;
+        if (mod === 'maarif' && r.srcGrade != null && r.srcGrade !== grade) return false;
+        return true;
+      })
       .map(id => WORDS_DATA.find(w => w.id === id))
       .filter(Boolean);
+  }
+
+  /** Renk → sabit tekrar aralığı (gün): kırmızı 1, sarı 3, yeşil 5. */
+  function notebookInterval(color) {
+    return color === 'green' ? 5 : (color === 'yellow' ? 3 : 1);
+  }
+
+  /**
+   * Öğrencinin renkli butonu: kelimenin rengini/kademesini doğrudan belirler,
+   * sabit takvimle sonraki tekrarı planlar. Üst üste 5× yeşil → mezuniyet adayı.
+   * Küresel SRS'e / öğrenilenler / Hata Defterine dokunmaz (izolasyon).
+   */
+  function rateNotebookColor(wordId, color) {
+    wordId = parseInt(wordId, 10);
+    if (color !== 'red' && color !== 'yellow' && color !== 'green') return null;
+    const rec = enrollNotebookWord(wordId);
+    const today = getTodayDateString();
+    const firstToday = rec.lastReview !== today;   // aynı gün ikinci puanlama sayacı artırmaz
+    rec.color = color;
+    rec.nextReview = getTodayDateString(notebookInterval(color));
+    if (color === 'green') {
+      if (firstToday) rec.kolayStreak = (rec.kolayStreak || 0) + 1;
+      if ((rec.kolayStreak || 0) >= 5) rec.candidate = true;
+    } else {
+      rec.kolayStreak = 0;
+    }
+    rec.lastReview = today;
+    saveUserData();
+    // Oturumdaki kartı kümeden düşür; küme bitince renderFlashcardView tamamlanma ekranını gösterir (sarmalamaz).
+    if (Array.isArray(STATE.filteredFlashcards)) {
+      STATE.filteredFlashcards = STATE.filteredFlashcards.filter(w => w.id !== wordId);
+      if (STATE.activeFlashcardIndex >= STATE.filteredFlashcards.length) {
+        STATE.activeFlashcardIndex = Math.max(0, STATE.filteredFlashcards.length - 1);
+      }
+    }
+    STATE.flashcardFlipped = false;
+    renderFlashcardView(true);
+    return rec;
   }
 
   /** Aktif modülün hedef havuzu ve günlük parti boyutu (renderDailyView ile aynı mantık). */
@@ -2228,61 +2267,82 @@
     saveUserData();
   }
 
+  /** Günlük tavan durumu (bugün değilse sıfırlar). `served` = bugün servis edilen kelime id'leri (modül başına). */
+  function notebookDayState() {
+    const today = mkLocalDateKey();
+    let d = STATE.userData.notebookDay;
+    if (!d || d.date !== today) {
+      d = { date: today, served: {} };
+      STATE.userData.notebookDay = d;
+    }
+    if (!d.served) d.served = {};
+    return d;
+  }
+
+  /** Bugün aktif modülde yeni kelime için kalan kota (servis edilen farklı kelime sayısına göre). */
+  function getNotebookDailyRemaining() {
+    const d = notebookDayState();
+    const servedToday = (d.served[STATE.activeModule] || []).length;
+    return Math.max(0, getNotebookDailyCount() - servedToday);
+  }
+
   /**
-   * O günün çalışma kümesi: açılmış kelimelerden
-   *  1) SRS'e göre bugün tekrarı gelen kayıtlı kelimeler,
-   *  2) henüz kayıtlı olmayanlar (kaydedilerek),
-   *  3) kalan kayıtlı kelimeler — günlük adet dolana dek.
+   * O günün çalışma kümesi (aktif modül, arşiv hariç). Kota kelime-id bazlı idempotenttir:
+   *  1) bugün servis edilmiş ama hâlâ tekrarı gelen (puanlanmamış) kelimeler tekrar gösterilir,
+   *  2) kalan kota kadar henüz servis edilmemiş yeni/tekrarı gelen kelime eklenir.
+   * Tekrar "Bugünü Çalış" aynı kelimeleri getirir, günde farklı kelime sayısını adedle sınırlar.
    */
   function buildNotebookDailySet() {
     const unlocked = getUnlockedModuleWords();
-    const unlockedIds = new Set(unlocked.map(w => w.id));
-    const count = getNotebookDailyCount();
+    const today = mkLocalDateKey();
+    const mod = STATE.activeModule;
+    const d = notebookDayState();
+    const served = d.served[mod] = d.served[mod] || [];
+    const servedSet = new Set(served);
+    const N = getNotebookDailyCount();
+    const isDue = rec => rec && !rec.archived && (rec.nextReview == null || rec.nextReview <= today);
     const result = [];
     const used = new Set();
-    const due = getSRSDueWords().filter(w => unlockedIds.has(w.id) && getNotebookRecord(w.id));
-    for (const w of due) {
-      if (result.length >= count) break;
-      if (!used.has(w.id)) { used.add(w.id); result.push(w); }
-    }
+    // 1) bugün servis edilmiş, hâlâ due (puanlanmamış) kelimeler — tekrar göster
     for (const w of unlocked) {
-      if (result.length >= count) break;
-      if (used.has(w.id) || getNotebookRecord(w.id)) continue;
-      enrollNotebookWord(w.id);
-      used.add(w.id); result.push(w);
+      if (!servedSet.has(w.id) || used.has(w.id)) continue;
+      if (isDue(getNotebookRecord(w.id))) { used.add(w.id); result.push(w); }
     }
+    // 2) kalan kota kadar henüz servis edilmemiş due kelime (yeni ise kaydedilerek)
+    let added = 0;
+    const remaining = Math.max(0, N - served.length);
     for (const w of unlocked) {
-      if (result.length >= count) break;
-      if (used.has(w.id)) continue;
-      used.add(w.id); result.push(w);
+      if (added >= remaining) break;
+      if (servedSet.has(w.id) || used.has(w.id)) continue;
+      let rec = getNotebookRecord(w.id);
+      if (!rec) rec = enrollNotebookWord(w.id);
+      if (!isDue(rec)) continue;
+      served.push(w.id); servedSet.add(w.id);
+      used.add(w.id); result.push(w); added++;
     }
+    if (added > 0) saveUserData();
     return result;
   }
 
-  /**
-   * Renkli Defterler kart puanlaması — YALITILMIŞ.
-   * Küresel SRS'e, öğrenilenler/tekrar setlerine ve Hata Defterine HİÇ dokunmaz;
-   * yalnızca defterin kendi 'good' sayacını (günde +1 kapaklı) ve son-çalışma tarihini günceller.
-   * Böylece defter çalışması diğer havuzların tekrar programını değiştirmez.
-   */
-  function markNotebookCard(wordId, quality) {
-    wordId = parseInt(wordId, 10);
-    const rec = enrollNotebookWord(wordId);
-    const today = mkLocalDateKey();
-    if (quality >= 4 && rec.lastGoodDate !== today) {
-      rec.good = (rec.good || 0) + 1;
-      rec.lastGoodDate = today;
-    }
-    rec.lastReview = today;
-    playSound(quality < 3 ? 'flip' : 'correct');
-    saveUserData();
-    nextFlashcard();
+  /** Flash kart puanlama yönlendirici (SRS kaynakları için). Notebook kartları doğrudan rateNotebookColor çağırır. */
+  function rateFlashcard(wordId, quality) {
+    markFlashcardSRS(wordId, quality);
   }
 
-  /** Flash kart puanlama yönlendirici: notebook kaynağında yalıtılmış yola gider. */
-  function rateFlashcard(wordId, quality) {
-    if (STATE.flashcardSource === 'notebook') markNotebookCard(wordId, quality);
-    else markFlashcardSRS(wordId, quality);
+  /**
+   * Klavye 1/2/3 ile mevcut kartı puanlar — KAYNAĞA GÖRE YÖNLENDİRİR.
+   * Notebook kaynağında yalıtılmış rateNotebookColor'a (küresel SRS'e dokunmaz),
+   * diğer kaynaklarda markFlashcardSRS'e gider. (İzolasyonu korur.)
+   */
+  function rateCurrentFlashcardByKey(n) {
+    const pool = STATE.filteredFlashcards || [];
+    const w = pool[STATE.activeFlashcardIndex];
+    if (!w) return;
+    if (STATE.flashcardSource === 'notebook') {
+      rateNotebookColor(w.id, n === 1 ? 'red' : (n === 2 ? 'yellow' : 'green'));
+    } else {
+      markFlashcardSRS(w.id, n === 1 ? 1 : (n === 2 ? 4 : 5));
+    }
   }
 
   /** Renkli Defterler günlük çalışmasını flash kart motorunda başlatır. */
@@ -2294,26 +2354,41 @@
     switchView('flashcard');
   }
 
-  /** Kelimeyi tek adım daha kolay renge terfi ettirir (red→yellow→green; yeşil terminal). */
-  function promoteNotebookWord(wordId) {
+  /** Kaydın saklı kaynağından (srcModule/srcGrade) arşiv etiketi üretir. */
+  function notebookArchiveLabel(rec, wordId) {
+    if (!rec) return 'Arşiv';
+    if (rec.srcModule === 'yds') return 'YDS & YÖKDİL';
+    if (rec.srcModule === 'oxford') return 'Kütüphane';
+    if (rec.srcModule === 'all') return 'Tüm Kütüphane';
+    // maarif
+    const grade = rec.srcGrade || getActiveGrade();
+    const word = wordId != null ? WORDS_DATA.find(w => w.id === wordId) : null;
+    const meta = wordId != null ? gradeWordMeta(wordId, grade) : null;
+    const unit = (meta && (meta.unitTitleTr || meta.unitTitle)) || (word && (word.themeTitleTr || word.themeTitle)) || 'Genel';
+    return `${grade}. Sınıf · ${unit}`;
+  }
+
+  /** Kelimeyi arşive kaldırır (mezun): aktif rotasyon/aday dışı; kaynak etiketi + tarih. */
+  function archiveNotebookWord(wordId) {
+    wordId = parseInt(wordId, 10);
     const r = getNotebookRecord(wordId);
     if (!r) return null;
-    r.color = r.color === 'red' ? 'yellow' : (r.color === 'yellow' ? 'green' : 'green');
-    r.good = 0;
-    r.lastGoodDate = null;
-    r.promotedAt = getTodayDateString();
+    r.archived = true;
+    r.candidate = false;
+    r.archiveLabel = notebookArchiveLabel(r, wordId);
+    r.archiveDate = getTodayDateString();
     saveUserData();
     return r;
   }
 
-  /** Terfiye uygun kelime sayısı 20'ye ulaştıysa Seviye Geçme Testi önerilmeli. */
+  /** Mezuniyet adayı sayısı (aktif modül) 20'ye ulaştıysa Seviye Geçme Testi önerilmeli. */
   function shouldOfferLevelUpTest() {
-    return getNotebookEligibleWords().length >= 20;
+    return getNotebookCandidates().length >= 20;
   }
 
-  /** Yalnızca terfiye uygun kelimelerden Seviye Geçme Testi kurar (mevcut quiz motoru). */
+  /** Yalnızca mezuniyet adaylarından Seviye Geçme Testi kurar (mevcut quiz motoru). */
   function startNotebookLevelUpTest() {
-    const pool = getNotebookEligibleWords();
+    const pool = getNotebookCandidates();
     if (pool.length === 0) {
       alert('Henüz seviye atlamaya uygun kelime yok. Kelimeleri çalışmaya devam edin.');
       return;
@@ -2336,7 +2411,8 @@
       mode: 'en-tr',
       source: 'notebook_levelup',
       answered: false,
-      waitingFeedback: false
+      waitingFeedback: false,
+      notebookArchiveQueue: []
     };
     saveQuizState();
     switchView('quiz');
@@ -2349,32 +2425,53 @@
     green:  { key: 'green',  label: 'Kolay', emoji: '🟢', desc: 'Ustalaşılan kelimeler; uzun aralıklarla tekrar eder.' }
   };
 
+  /** Aktif modülün (maarifte sınıfın), arşivlenmemiş kelimelerini renge göre gruplar. */
   function _notebookWordsByColor() {
     const buckets = { red: [], yellow: [], green: [] };
     const nb = STATE.userData.notebooks || {};
+    const mod = STATE.activeModule;
+    const grade = getActiveGrade();
     Object.keys(nb).forEach(idStr => {
       const rec = nb[idStr];
-      if (!rec || !buckets[rec.color]) return;
+      if (!rec || rec.archived || !buckets[rec.color]) return;
+      if (rec.srcModule == null) rec.srcModule = mod; // v1 geriye-uyum
+      if (rec.srcModule !== mod) return;
+      if (mod === 'maarif' && rec.srcGrade != null && rec.srcGrade !== grade) return;
       const w = WORDS_DATA.find(x => x.id === parseInt(idStr, 10));
       if (w) buckets[rec.color].push({ word: w, rec });
     });
     return buckets;
   }
 
+  /** TÜM modüllerin arşivlenmiş kelimelerini archiveLabel'a göre gruplar. */
+  function _notebookArchiveGroups() {
+    const groups = {};
+    const nb = STATE.userData.notebooks || {};
+    Object.keys(nb).forEach(idStr => {
+      const rec = nb[idStr];
+      if (!rec || !rec.archived) return;
+      const label = rec.archiveLabel || 'Arşiv';
+      const w = WORDS_DATA.find(x => x.id === parseInt(idStr, 10));
+      if (!w) return;
+      (groups[label] = groups[label] || []).push({ word: w, rec });
+    });
+    return groups;
+  }
+
   function _notebookCard(item) {
     const w = item.word, rec = item.rec;
     const ex = displayExample(w.example) || displayExample(w.ydsExample);
-    const eligible = isNotebookEligible(w.id);
+    const eligible = !!(rec && rec.candidate && !rec.archived);
     return `
-      <article class="notebook-card" data-notebook-color="${rec.color}">
+      <article class="notebook-card" data-notebook-color="${rec.color || 'red'}">
         <div class="nb-card-head">
           <strong class="nb-card-en">${escapeHtml(w.en)}</strong>
           <span class="nb-card-tr">${escapeHtml(w.tr || '')}</span>
         </div>
         ${ex ? `<p class="nb-card-ex">“${escapeHtml(ex)}”</p>` : ''}
         <div class="nb-card-foot">
-          <span class="nb-card-good" title="İyi hatırlama">${renderIcon('check', 12)} ${rec.good || 0}/5</span>
-          ${eligible ? `<span class="nb-card-eligible">${renderIcon('zap', 12)} Terfiye hazır</span>` : ''}
+          <span class="nb-card-good" title="Üst üste kolay">${renderIcon('check', 12)} ${rec.kolayStreak || 0}/5</span>
+          ${eligible ? `<span class="nb-card-eligible">${renderIcon('zap', 12)} Teste hazır</span>` : ''}
           ${w.cefr ? `<span class="nb-card-cefr">${escapeHtml(w.cefr)}</span>` : ''}
         </div>
       </article>`;
@@ -2385,7 +2482,7 @@
     if (!container) return;
     const buckets = _notebookWordsByColor();
     const total = buckets.red.length + buckets.yellow.length + buckets.green.length;
-    const eligibleCount = getNotebookEligibleWords().length;
+    const eligibleCount = getNotebookCandidates().length;
     const dailyCount = getNotebookDailyCount();
     const offerTest = shouldOfferLevelUpTest();
 
@@ -2407,16 +2504,41 @@
         </section>`;
     }).join('');
 
+    const archiveGroups = _notebookArchiveGroups();
+    const archiveLabels = Object.keys(archiveGroups);
+    const archiveTotal = archiveLabels.reduce((n, l) => n + archiveGroups[l].length, 0);
+    const archiveHtml = archiveLabels.length === 0 ? '' : `
+      <section class="notebooks-archive">
+        <header class="nb-archive-header">
+          <span class="nb-archive-title">${renderIcon('book', 14)} Arşiv — Ustalaşılan Kelimeler (${archiveTotal})</span>
+        </header>
+        ${archiveLabels.map(label => {
+          const items = archiveGroups[label];
+          const date = (items[0] && items[0].rec && items[0].rec.archiveDate) || '';
+          return `
+          <div class="nb-archive-group" data-nb-archive-group="${escapeHtml(label)}">
+            <div class="nb-archive-group-head">
+              <span class="nb-archive-group-label">${escapeHtml(label)}</span>
+              <span class="nb-archive-group-meta">${items.length} kelime${date ? ' · ' + escapeHtml(date) : ''}</span>
+            </div>
+            <div class="nb-archive-words">
+              ${items.slice(0, 60).map(it => `<span class="nb-archive-word">${escapeHtml(it.word.en)}</span>`).join('')}
+              ${items.length > 60 ? `<span class="nb-archive-more">+${items.length - 60}</span>` : ''}
+            </div>
+          </div>`;
+        }).join('')}
+      </section>`;
+
     container.innerHTML = `
       <div class="notebooks-view">
         <header class="notebooks-hero">
           <div class="nb-hero-main">
             <h2 class="nb-hero-title">Renkli Defterler</h2>
-            <p class="nb-hero-sub">Sınıf müfredatından açılmış kelimeleri zorluk kademesine göre çalış; ustalaştıkça kelime bir üst renge terfi eder.</p>
+            <p class="nb-hero-sub">Açılmış kelimeleri kendi zorluk kademene göre işaretle (🔴/🟡/🟢); ustalaştığın kelimeler Seviye Geçme Testi'nden geçip arşive geçer.</p>
           </div>
           <div class="nb-hero-stats">
             <span class="nb-stat"><strong>${total}</strong> kelime</span>
-            <span class="nb-stat"><strong>${eligibleCount}</strong> terfiye hazır</span>
+            <span class="nb-stat"><strong>${eligibleCount}</strong> teste hazır</span>
           </div>
         </header>
 
@@ -2428,15 +2550,17 @@
             ${renderIcon('layers', 15)} <span>Bugünü Çalış (${dailyCount})</span>
           </button>
           ${offerTest ? `
-            <button type="button" class="fc-action-btn nb-levelup-btn" onclick="window.APP.startNotebookLevelUpTest()" title="${eligibleCount} kelime terfiye hazır">
+            <button type="button" class="fc-action-btn nb-levelup-btn" onclick="window.APP.startNotebookLevelUpTest()" title="${eligibleCount} kelime teste hazır">
               ${renderIcon('zap', 15)} <span>Seviye Geçme Testi (${eligibleCount}) &rarr;</span>
             </button>` : `
-            <span class="nb-levelup-hint">${renderIcon('alert', 13)} Seviye Geçme Testi, 20 kelime terfiye hazır olunca açılır (${eligibleCount}/20).</span>`}
+            <span class="nb-levelup-hint">${renderIcon('alert', 13)} Seviye Geçme Testi, 20 kelime teste hazır olunca açılır (${eligibleCount}/20).</span>`}
         </div>
 
         <div class="notebooks-buckets">
           ${bucketHtml}
         </div>
+
+        ${archiveHtml}
       </div>`;
   }
 
@@ -5529,6 +5653,7 @@
     `;
 
     if (pool.length === 0) {
+      const nbComplete = sourceVal === 'notebook';
       container.innerHTML = `
         <div class="flashcard-wrapper">
           <div class="flashcard-toolbar">
@@ -5536,11 +5661,18 @@
               ${flashcardSourceOptions}
             </select>
           </div>
+          ${nbComplete ? `
+          <div class="glass-panel nb-complete" style="padding: 48px 24px; text-align: center; width: 100%;">
+            <div style="margin-bottom: 12px; font-size: 32px;">✓</div>
+            <h3>Bugünlük bitti</h3>
+            <p style="color: var(--dp-color-ink-muted); margin-top: 6px;">Bugünün Renkli Defterler kotasını tamamladın. Yeni kelimeler ve tekrarlar yarın gelecek.</p>
+            ${shouldOfferLevelUpTest() ? `<button type="button" class="fc-action-btn nb-levelup-btn" style="margin-top:14px;" onclick="window.APP.startNotebookLevelUpTest()">${renderIcon('zap', 15)} <span>Seviye Geçme Testi (${getNotebookCandidates().length}) &rarr;</span></button>` : ''}
+          </div>` : `
           <div class="glass-panel" style="padding: 48px 24px; text-align: center; width: 100%;">
             <div style="margin-bottom: 12px; color: var(--dp-color-ink-muted);">${renderIcon('layers', 40)}</div>
             <h3>${sourceVal === 'srs_due' ? 'Bugün için bekleyen aralıklı tekrarınız yok. Harika!' : (sourceVal === 'mistakes' ? 'Hata Defteriniz tertemiz! Zayıf nokta bulunmuyor.' : 'Bu filtre grubunda henüz kelime bulunmuyor.')}</h3>
             <p style="color: var(--dp-color-ink-muted); margin-top: 6px;">Lütfen yukarıdaki menüden başka bir kelime havuzu seçin.</p>
-          </div>
+          </div>`}
         </div>
       `;
       return;
@@ -5649,14 +5781,15 @@
                   ${currentWord.en} — ${currentWord.desc || ''}
                 </div>
 
-                <!-- Pedagogical Memory Retention Bar -->
+                <!-- Pedagogical Memory Retention Bar (notebook kaynağında gizli) -->
+                ${sourceVal === 'notebook' ? '' : `
                 <div class="srs-card-pedagogy-meta">
                   <span class="srs-pill-item">${renderIcon('repeat', 12)} <strong>Tekrar Aralığı:</strong> ${curSRS ? (curSRS.interval || 1) + ' Gün' : 'Yeni'}</span>
                   <span class="srs-pill-item">${renderIcon('zap', 12)} <strong>Hatırlama:</strong> ${curSRS ? (curSRS.easeFactor >= 2.5 ? 'Kolay' : curSRS.easeFactor >= 2.1 ? 'Orta' : 'Zorlu') : 'Yeni'}</span>
                   ${curMistake && !curMistake.cleared ? `
                     <span class="srs-pill-item srs-pill-mistake">${renderIcon('alert', 12)} <strong>Hata Geçmişi:</strong> ${curMistake.wrongCount}x Yanlış (${Math.max(0, 2 - (curMistake.consecutiveCorrect || 0))} doğru sonra temizlenir)</span>
                   ` : ''}
-                </div>
+                </div>`}
 
                 ${currentWord.definition && currentWord.definition.toLowerCase().trim() !== (currentWord.tr || '').toLowerCase().trim() ? `<div class="word-def" style="max-width: 52ch;">“${currentWord.definition}”</div>` : ''}
                 ${displayExample(currentWord.example) ? `<div class="word-example" style="max-width: 52ch;">“${highlightWordInText(displayExample(currentWord.example), currentWord.en)}”</div>` : ''}
@@ -5674,11 +5807,31 @@
           </div>
         </div>
 
+        ${sourceVal === 'notebook' ? `
+        <div class="fc-controls fc-controls-notebook">
+          <button class="fc-action-btn fc-btn-prev" onclick="window.APP.prevFlashcard()" title="Önceki Kart">&larr; ÖNCEKİ</button>
+          <button class="fc-action-btn nb-rate nb-rate-red" onclick="window.APP.rateNotebookColor(${currentWord.id}, 'red')" title="Zor — 1 günde bir">
+            <span class="fc-btn-top">🔴 ZOR</span>
+            <span class="fc-btn-sub">1 gün</span>
+            <span class="kbd-badge">1</span>
+          </button>
+          <button class="fc-action-btn nb-rate nb-rate-yellow" onclick="window.APP.rateNotebookColor(${currentWord.id}, 'yellow')" title="Orta — 3 günde bir">
+            <span class="fc-btn-top">🟡 ORTA</span>
+            <span class="fc-btn-sub">3 gün</span>
+            <span class="kbd-badge">2</span>
+          </button>
+          <button class="fc-action-btn nb-rate nb-rate-green" onclick="window.APP.rateNotebookColor(${currentWord.id}, 'green')" title="Kolay — 5 günde bir">
+            <span class="fc-btn-top">🟢 KOLAY</span>
+            <span class="fc-btn-sub">5 gün</span>
+            <span class="kbd-badge">3</span>
+          </button>
+          <button class="fc-action-btn fc-btn-next" onclick="window.APP.nextFlashcard()" title="Sonraki Kart">SONRAKİ &rarr;</button>
+        </div>` : `
         <div class="fc-controls fc-controls-srs">
           <button class="fc-action-btn fc-btn-prev" onclick="window.APP.prevFlashcard()" title="Önceki Kart">
             &larr; ÖNCEKİ
           </button>
-          
+
           <button class="fc-action-btn fc-btn-again ${isReview ? 'active' : ''}" onclick="window.APP.rateFlashcard(${currentWord.id}, 1)" title="Zorlandım / Hatırlamadım (1 gün sonra tekrar sor)">
             <span class="fc-btn-top">${renderIcon('alert', 13)} ZOR / TEKRAR</span>
             <span class="fc-btn-sub">1 gün sonra</span>
@@ -5700,7 +5853,7 @@
           <button class="fc-action-btn fc-btn-next" onclick="window.APP.nextFlashcard()" title="Sonraki Kart">
             SONRAKİ &rarr;
           </button>
-        </div>
+        </div>`}
       </div>
     `;
 
@@ -5840,6 +5993,10 @@
 
       if (qState.active) {
         qState.active = false;
+        // Renkli Defterler Seviye Geçme Testi tamamlandı: doğru bilinenleri arşivle.
+        if (qState.source === 'notebook_levelup' && Array.isArray(qState.notebookArchiveQueue)) {
+          qState.notebookArchiveQueue.forEach(id => archiveNotebookWord(id));
+        }
         localStorage.removeItem('learnish_active_quiz');
         STATE.userData.stats.quizzesPlayed++;
         STATE.userData.stats.correctAnswers += qState.score;
@@ -8007,8 +8164,9 @@
 
       // Renkli Defterler Seviye Geçme Testi YALITILMIŞTIR: küresel SRS'e/Hata Defterine yazmaz.
       if (STATE.quizState.source === 'notebook_levelup') {
-        // doğru bilinen kelime tek adım terfi eder (küresel tekrar programına dokunulmaz)
-        promoteNotebookWord(currentQ.targetWord.id);
+        // doğru bilinen kelimeyi arşiv kuyruğuna al — arşivleme test BİTİNCE yapılır
+        if (!Array.isArray(STATE.quizState.notebookArchiveQueue)) STATE.quizState.notebookArchiveQueue = [];
+        STATE.quizState.notebookArchiveQueue.push(currentQ.targetWord.id);
       } else {
         // SM-2 Aralıklı Tekrar ve Hata Defteri senkronizasyonu
         calculateSRS(currentQ.targetWord.id, 4);
@@ -8355,7 +8513,12 @@
   // ==========================================================================
   function nextFlashcard() {
     if (STATE.filteredFlashcards.length === 0) return;
-    STATE.activeFlashcardIndex = (STATE.activeFlashcardIndex + 1) % STATE.filteredFlashcards.length;
+    // Notebook modunda sarmalamaz (günlük küme döngüye girmez); son kartta sabit kalır.
+    if (STATE.flashcardSource === 'notebook') {
+      STATE.activeFlashcardIndex = Math.min(STATE.activeFlashcardIndex + 1, STATE.filteredFlashcards.length - 1);
+    } else {
+      STATE.activeFlashcardIndex = (STATE.activeFlashcardIndex + 1) % STATE.filteredFlashcards.length;
+    }
     STATE.flashcardFlipped = false;
     renderFlashcardView(true);
     updateBreadcrumb('flashcard');
@@ -8363,7 +8526,11 @@
 
   function prevFlashcard() {
     if (STATE.filteredFlashcards.length === 0) return;
-    STATE.activeFlashcardIndex = (STATE.activeFlashcardIndex - 1 + STATE.filteredFlashcards.length) % STATE.filteredFlashcards.length;
+    if (STATE.flashcardSource === 'notebook') {
+      STATE.activeFlashcardIndex = Math.max(STATE.activeFlashcardIndex - 1, 0);
+    } else {
+      STATE.activeFlashcardIndex = (STATE.activeFlashcardIndex - 1 + STATE.filteredFlashcards.length) % STATE.filteredFlashcards.length;
+    }
     STATE.flashcardFlipped = false;
     renderFlashcardView(true);
     updateBreadcrumb('flashcard');
@@ -8571,6 +8738,7 @@
       STATE.userData.mistakes = {};
       STATE.userData.notebooks = {};
       STATE.userData.notebookDailyCount = null;
+      STATE.userData.notebookDay = null;
       STATE.currentDay = 1;
       saveUserData();
       updateUI();
@@ -8650,13 +8818,13 @@
         openSpeechCoach(currentWord.en);
       } else if (e.key === '1') {
         e.preventDefault();
-        markFlashcardSRS(currentWord.id, 1);
+        rateCurrentFlashcardByKey(1);
       } else if (e.key === '2') {
         e.preventDefault();
-        markFlashcardSRS(currentWord.id, 4);
+        rateCurrentFlashcardByKey(2);
       } else if (e.key === '3') {
         e.preventDefault();
-        markFlashcardSRS(currentWord.id, 5);
+        rateCurrentFlashcardByKey(3);
       }
     } else if (STATE.currentView === 'quiz' && STATE.quizState.active) {
       if (STATE.quizState.mode === 'speaking') {
@@ -9258,16 +9426,19 @@
     seedNotebookColor,
     enrollNotebookWord,
     getNotebookRecord,
-    isNotebookEligible,
-    getNotebookEligibleWords,
+    notebookInterval,
+    rateNotebookColor,
+    getTodayDateString,
     getUnlockedModuleWords,
     getNotebookDailyCount,
     setNotebookDailyCount,
     buildNotebookDailySet,
     startNotebookFlashcards,
-    markNotebookCard,
     rateFlashcard,
-    promoteNotebookWord,
+    rateCurrentFlashcardByKey,
+    getNotebookCandidates,
+    notebookArchiveLabel,
+    archiveNotebookWord,
     shouldOfferLevelUpTest,
     startNotebookLevelUpTest,
     renderNotebooksView,
@@ -9333,6 +9504,7 @@
     stopCoachListening,
     evaluatePronunciation,
     renderFlashcardView,
+    renderQuizView,
     renderDirectoryView,
     searchDirectory,
     getFilteredDirectoryWords,
