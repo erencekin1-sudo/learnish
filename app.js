@@ -20,7 +20,7 @@
     "6": { num: 6, code: "THEME 6", title: "LIFE IN THE WORLD", titleTr: "Dünyada Yaşam — Beslenme & Kültür", full: "THEME 6: LIFE IN THE WORLD", color: "#15803d", badgeBg: "#16a34a", border: "#22c55e" },
     "7": { num: 7, code: "THEME 7", title: "LIFE IN NATURE", titleTr: "Doğada Yaşam — Hayvanlar, Bitkiler & Çevre", full: "THEME 7: LIFE IN NATURE", color: "#047857", badgeBg: "#059669", border: "#10b981" },
     "8": { num: 8, code: "THEME 8", title: "LIFE IN THE UNIVERSE AND FUTURE", titleTr: "Evrende ve Gelecekte Yaşam & İleri Kavramlar", full: "THEME 8: LIFE IN THE UNIVERSE AND FUTURE", color: "#6b21a8", badgeBg: "#9333ea", border: "#a855f7" },
-    "9": { num: 9, code: "KÜTÜPHANE", title: "KELİME KÜTÜPHANESİ", titleTr: "Kelime Kütüphanesi (A1-C1 Dünya Standardı)", full: "KELİME KÜTÜPHANESİ (A1-C1)", color: "#0284c7", badgeBg: "#0284c7", border: "#38bdf8" },
+    "9": { num: 9, code: "KÜTÜPHANE", title: "KELİME KÜTÜPHANESİ", titleTr: "Kelime Kütüphanesi (A1–C1)", full: "KELİME KÜTÜPHANESİ (A1-C1)", color: "#0284c7", badgeBg: "#0284c7", border: "#38bdf8" },
     "10": { num: 10, code: "YDS/YÖKDİL", title: "YDS & YÖKDİL AKADEMİK", titleTr: "YDS & YÖKDİL Akademik Sınav Hazırlık (2020–2026)", full: "YDS & YÖKDİL AKADEMİK (B2-C1)", color: "#7c3aed", badgeBg: "#8b5cf6", border: "#a78bfa" }
   };
 
@@ -1498,7 +1498,7 @@
           <div class="speech-coach-icon-badge">${renderIcon('mic', 18)}</div>
           <div>
             <h3 id="speech-coach-title" class="speech-coach-title">Speaking &amp; Telaffuz Koçu</h3>
-            <p class="speech-coach-sub">Yapay Zeka Destekli Fonetik Değerlendirme</p>
+            <p class="speech-coach-sub">Sesli Telaffuz Değerlendirmesi</p>
           </div>
         </div>
         <div style="display:flex; align-items:center; gap:8px;">
@@ -1525,7 +1525,7 @@
             ${w.desc ? `<span class="coach-target-pos">[${escapeHtml(w.desc)}]</span>` : ''}
             ${w.cefr ? getCefrBadgeHtml(w.cefr) : ''}
           </div>
-          ${w.example ? `<div class="coach-target-example">“${highlightWordInText(w.example.replace(/^["“”]|["“”]$/g, ''), w.en)}”</div>` : ''}
+          ${displayExample(w.example) ? `<div class="coach-target-example">“${highlightWordInText(displayExample(w.example), w.en)}”</div>` : ''}
         </div>
 
         ${!isSupported ? `
@@ -2334,6 +2334,31 @@
   }
 
   /**
+   * Sınav kaynağı/alıntı metni mi? (ör. "2020 YDS/1 · S.75 kök", "2022 Ekim · S.44-E [Ç]")
+   * Bu tür köken bilgileri örnek cümle DEĞİLDİR; örnek cümle alanında gösterilmez.
+   */
+  function isSourceCitation(s) {
+    if (!s) return false;
+    s = String(s);
+    var exam = /YDS|YÖKDİL|YOKDIL|YDT|TIPDİL|TIPDIL|KPDS|ÜDS|UDS/i;
+    var month = /\b(Ocak|Şubat|Mart|Nisan|Mayıs|Haziran|Temmuz|Ağustos|Eylül|Ekim|Kasım|Aralık)\b/i;
+    if (s.indexOf('·') !== -1 && (/\bS\.\d/.test(s) || exam.test(s) || month.test(s))) return true;
+    if (/\bS\.\d/.test(s) && (exam.test(s) || month.test(s) || s.indexOf('[') !== -1)) return true;
+    if (/^(19|20)\d\d\s/.test(s) && exam.test(s)) return true;
+    return false;
+  }
+
+  /**
+   * Örnek cümleyi görüntüleme için hazırlar: tırnakları temizler;
+   * metin bir sınav kaynağı/alıntısıysa boş döndürür (sahte örnek cümle gösterilmez).
+   */
+  function displayExample(raw) {
+    if (!raw) return '';
+    var s = String(raw).replace(/^["“”]|["“”]$/g, '').trim();
+    return isSourceCitation(s) ? '' : s;
+  }
+
+  /**
    * Kurtarma başarısı bildirimi (Toast)
    */
   function showRecoveryToast(word) {
@@ -2805,7 +2830,7 @@
     const statsText = document.getElementById('tab-stats-text');
 
     if (moduleName === 'yds') {
-      if (dailyText) dailyText.innerText = "YDS Workout";
+      if (dailyText) dailyText.innerText = "Günün YDS Çalışması";
       if (flashText) flashText.innerText = "Sınav Kartları";
       if (quizText) quizText.innerText = "YDS Simülatör";
       if (dirText) dirText.innerText = "Akademik Havuz";
@@ -3054,7 +3079,7 @@
       </div>
 
       <div class="classifier-rationale-box">
-        <strong>Pedagojik Bağlama Gerekçesi:</strong>
+        <strong>Bağlam Gerekçesi:</strong>
         <p style="margin: 4px 0 0 0;">${result.rationale}</p>
       </div>
 
@@ -3348,8 +3373,8 @@
     let bannerHtml = '';
 
     if (state.template === 'mistakes') {
-      titleMain = 'AKILLI HATA DEFTERİ &amp; KURTARMA ÇALIŞMA FÖYÜ';
-      subTitle = `Bilişsel Hata Analizi • ${gradeLabel} • Toplam ${words.length} Kritik Kelime`;
+      titleMain = 'HATA DEFTERİ ÇALIŞMA FÖYÜ';
+      subTitle = `Hata Analizi • ${gradeLabel} • Toplam ${words.length} Kelime`;
       bannerHtml = `
         <div class="ws-banner">
           <span class="ws-banner-title">${renderIcon('alert', 15)} BİLİŞSEL GELİŞİM VE HATA AYIKLAMA YÖNERGESİ:</span>
@@ -3434,8 +3459,8 @@
             </div>
 
             ${state.showTr ? `<div class="ws-wc-tr"><strong>Türkçe Anlamı:</strong> ${escapeHtml(w.tr || '—')}</div>` : ''}
-            ${state.showExamples && (w.example || w.definition) ? `
-              <div class="ws-wc-example"><strong>Örnek Cümle:</strong> “${escapeHtml(w.example || w.definition)}”</div>
+            ${state.showExamples && (displayExample(w.example) || w.definition) ? `
+              <div class="ws-wc-example"><strong>Örnek Cümle:</strong> “${escapeHtml(displayExample(w.example) || w.definition)}”</div>
             ` : ''}
 
             ${state.showWritingPractice ? `
@@ -3536,7 +3561,7 @@
             <div class="ws-fc-side-tr">
               <span style="font-size:9px; font-weight:800; color:#94a3b8;">TÜRKÇE / ÖRNEK</span>
               ${state.showTr ? `<div style="font-size:13px; font-weight:800; color:#334155; margin:4px 0 2px 0;">${escapeHtml(w.tr || '—')}</div>` : ''}
-              ${state.showExamples && w.example ? `<div style="font-size:10px; color:#475569; font-style:italic; line-height:1.3;">“${escapeHtml(w.example)}”</div>` : ''}
+              ${state.showExamples && displayExample(w.example) ? `<div style="font-size:10px; color:#475569; font-style:italic; line-height:1.3;">“${escapeHtml(displayExample(w.example))}”</div>` : ''}
             </div>
           </div>
         `;
@@ -3569,7 +3594,7 @@
         ${bodyHtml}
 
         <footer class="ws-footer">
-          <span>Learnish Akıllı İngilizce Öğrenim Sistemi • MEB Maarif Modeli</span>
+          <span>Learnish İngilizce Öğrenim Uygulaması • MEB Maarif Modeli</span>
           <span>${dateFormatted} • Başarılar Dileriz!</span>
         </footer>
       </div>
@@ -3702,7 +3727,7 @@
               <button type="button" class="pdf-template-btn ${state.template === 'mistakes' ? 'active' : ''}" onclick="window.APP.updatePdfStudioOption('template', 'mistakes')">
                 <span class="ptb-icon">${renderIcon('alert', 22)}</span>
                 <div class="ptb-info">
-                  <span class="ptb-title">Hata Kampı &amp; Yanlışlar</span>
+                  <span class="ptb-title">Hatalar ve Yanlışlar</span>
                   <span class="ptb-desc">Yanlış yapılan kelimeler, 3x yazım &amp; kurtarma</span>
                 </div>
               </button>
@@ -3984,7 +4009,7 @@
     const timestamp = new Date().toLocaleString('tr-TR');
 
     return [
-      `[Sistem & Telemetri Tanı Bilgileri]`,
+      `[Sistem Tanı Bilgileri]`,
       `• Aktif Rota      : ${activeModName}`,
       `• Açık Ekran      : ${activeViewName}`,
       `• İlerleme        : ${learnedCount} kelime öğrenildi, ${reviewCount} tekrar kuyruğunda`,
@@ -4221,7 +4246,7 @@
               <span class="bento-card-title">HAFIZA KALICILIĞI</span>
               <div class="bento-card-content">
                 <div class="bento-circular-icon">${renderIcon('brain', 18)}</div>
-                <span class="bento-val">%${srsStats.retentionRate} (${srsStats.masteredCount} USTA)</span>
+                <span class="bento-val">%${srsStats.retentionRate} (${srsStats.masteredCount} öğrenildi)</span>
               </div>
             </div>
             <div class="bento-metric-card ${srsDueWords.length > 0 ? 'metric-highlight-due' : ''}">
@@ -4316,7 +4341,7 @@
             </ul>
             <div class="hrc-actions">
               <button type="button" class="hrc-primary-btn" onclick="window.APP.selectModuleAndGo('yds')">
-                ${module === 'yds' ? '✓ Aktif Rota • YDS Workout' : 'YDS Moduna Geç →'}
+                ${module === 'yds' ? '✓ Aktif Rota • YDS Çalışması' : 'YDS Moduna Geç →'}
               </button>
             </div>
           </article>
@@ -4353,13 +4378,13 @@
       </section>
 
       <!-- PEDAGOJİ İSTASYONU -->
-      <section class="pedagogy-station-section" aria-label="Akıllı Hafıza &amp; Tekrar İstasyonu">
+      <section class="pedagogy-station-section" aria-label="Tekrar ve Hata Defteri">
         <div class="pedagogy-station-header">
           <div>
-            <span class="pedagogy-station-badge">${renderIcon('brain', 13)} AKILLI PEDAGOJİ SİSTEMİ</span>
-            <h3 class="pedagogy-station-title">Bilişsel Hafıza &amp; Hata Ayıklama İstasyonu</h3>
+            <span class="pedagogy-station-badge">${renderIcon('brain', 13)} TEKRAR VE HATA DEFTERİ</span>
+            <h3 class="pedagogy-station-title">Tekrar ve Hata Defteri</h3>
           </div>
-          <span class="pedagogy-station-subtitle">SM-2 Spaced Repetition + Hata Defteri</span>
+          <span class="pedagogy-station-subtitle">Aralıklı tekrar ve hata defteri</span>
         </div>
 
         <div class="pedagogy-station-grid">
@@ -4373,7 +4398,7 @@
             <p class="ped-card-desc">
               ${srsDueWords.length > 0
                 ? `Unutma eğrisine göre bugün gözden geçirilmesi gereken <strong>${srsDueWords.length} kelime</strong> var. Kalıcı belleğe aktarmak için hemen drill başlatın.`
-                : `Bugün için bekleyen aralıklı tekrarınız yok! Bilişsel hafıza durumunuz tam kapasite güncel.`}
+                : `Bugün için bekleyen tekrarın yok. Tüm kelimelerin güncel.`}
             </p>
             <div class="ped-card-actions">
               <button type="button" class="ped-btn ped-btn-primary" onclick="window.APP.startSRSDueFlashcards()" ${srsDueWords.length === 0 ? 'disabled' : ''}>
@@ -4391,7 +4416,7 @@
               <span class="ped-tag">${renderIcon('alert', 13)} ZAYIF NOKTALAR &amp; GELİŞİM</span>
               <div class="ped-count-badge mistake ${activeMistakes.length > 0 ? 'active' : ''}">${activeMistakes.length} KRİTİK</div>
             </div>
-            <h4 class="ped-card-title">Akıllı Hata Defteri &amp; Kurtarma Kampı</h4>
+            <h4 class="ped-card-title">Hata Defteri</h4>
             <p class="ped-card-desc">
               ${activeMistakes.length > 0
                 ? `Test ve kartlarda yanıldığınız <strong>${activeMistakes.length} kelime</strong> tespit edildi. 2 ardışık doğru cevapla kelimeleri Hata Defterinden temizleyin.`
@@ -4409,7 +4434,7 @@
 
             <div class="ped-card-actions">
               <button type="button" class="ped-btn ped-btn-mistake" onclick="window.APP.startMistakeQuiz()" ${activeMistakes.length === 0 ? 'disabled' : ''}>
-                ${renderIcon('target', 15)} Kurtarma Kampı Sınavı
+                ${renderIcon('target', 15)} Hata Tekrar Sınavı
               </button>
               <button type="button" class="ped-btn ped-btn-secondary" onclick="window.APP.startMistakeFlashcards()" ${activeMistakes.length === 0 ? 'disabled' : ''}>
                 ${renderIcon('layers', 15)} Hata Kartları
@@ -4869,7 +4894,7 @@
               <div class="feed-card-meta">${w.desc || ''} ${w.cat ? '• ' + w.cat : ''}</div>
               ${w.definition && w.definition.toLowerCase().trim() !== (w.tr || '').toLowerCase().trim() ? `<div class="feed-card-desc">"${w.definition}"</div>` : ''}
               ${syn ? `<div class="feed-card-meta" style="color:var(--dp-color-accent-ink);"><strong>EŞ ANLAM:</strong> ${syn}</div>` : ''}
-              ${w.example ? `<div class="feed-card-example">“${highlightWordInText(w.example.replace(/^["“”]|["“”]$/g, ''), w.en)}”</div>` : ''}
+              ${displayExample(w.example) ? `<div class="feed-card-example">“${highlightWordInText(displayExample(w.example), w.en)}”</div>` : ''}
             </div>
 
             <!-- Trailing Action Buttons -->
@@ -5122,9 +5147,9 @@
     const activeMistakesList = getActiveMistakeWords();
 
     const flashcardSourceOptions = `
-      <optgroup label="Akıllı Pedagoji &amp; Hafıza">
+      <optgroup label="Tekrar ve Hata Defteri">
         <option value="srs_due" ${sourceVal === 'srs_due' ? 'selected' : ''}>Aralıklı Tekrar: Bugün Bekleyenler (${srsDueList.length})</option>
-        <option value="mistakes" ${sourceVal === 'mistakes' ? 'selected' : ''}>Akıllı Hata Defteri: Kurtarma Kampı (${activeMistakesList.length})</option>
+        <option value="mistakes" ${sourceVal === 'mistakes' ? 'selected' : ''}>Hata Defteri (${activeMistakesList.length})</option>
       </optgroup>
       ${isYdsMod ? `
         <option value="daily" ${sourceVal === 'daily' ? 'selected' : ''}>Günün 20 Hedefi (YDS Gün ${STATE.currentDay})</option>
@@ -5223,7 +5248,7 @@
                   ${currentWord.themeCode ? getThemeBadgeHtml(currentWord.themeCode, currentWord.themeTitle) : ''}
                   ${prepBadge ? `<span class="yds-prep-tag">${prepBadge}</span>` : ''}
                   ${curMistake && !curMistake.cleared ? `<span class="pedagogy-badge mistake-badge" title="Hata Defterinde">${renderIcon('alert', 12)} ${curMistake.wrongCount}x HATA</span>` : ''}
-                  ${curSRS ? `<span class="pedagogy-badge srs-badge ${curSRS.state}" title="Aralıklı Tekrar Aralığı: ${curSRS.interval} gün">${renderIcon('repeat', 12)} ${curSRS.state === 'mastered' ? 'Kalıcı Bellek' : (curSRS.interval || 1) + 'g Tekrar'}</span>` : ''}
+                  ${curSRS ? `<span class="pedagogy-badge srs-badge ${curSRS.state}" title="Aralıklı Tekrar Aralığı: ${curSRS.interval} gün">${renderIcon('repeat', 12)} ${curSRS.state === 'mastered' ? 'Öğrenildi' : (curSRS.interval || 1) + 'g sonra'}</span>` : ''}
                 </div>
                 <div class="fc-audio-action-group" style="display:inline-flex; gap:6px; align-items:center;">
                   <button class="speak-btn" data-word="${currentWord.en}" onclick="event.stopPropagation(); window.APP.speakCurrentWord('${currentWord.en}')" title="Dinle" aria-label="Dinle">
@@ -5274,14 +5299,14 @@
                 <!-- Pedagogical Memory Retention Bar -->
                 <div class="srs-card-pedagogy-meta">
                   <span class="srs-pill-item">${renderIcon('repeat', 12)} <strong>Tekrar Aralığı:</strong> ${curSRS ? (curSRS.interval || 1) + ' Gün' : 'Yeni'}</span>
-                  <span class="srs-pill-item">${renderIcon('zap', 12)} <strong>Hafıza Gücü:</strong> %${curSRS ? Math.round(curSRS.easeFactor * 100) : 250}</span>
+                  <span class="srs-pill-item">${renderIcon('zap', 12)} <strong>Hatırlama:</strong> ${curSRS ? (curSRS.easeFactor >= 2.5 ? 'Kolay' : curSRS.easeFactor >= 2.1 ? 'Orta' : 'Zorlu') : 'Yeni'}</span>
                   ${curMistake && !curMistake.cleared ? `
                     <span class="srs-pill-item srs-pill-mistake">${renderIcon('alert', 12)} <strong>Hata Geçmişi:</strong> ${curMistake.wrongCount}x Yanlış (${Math.max(0, 2 - (curMistake.consecutiveCorrect || 0))} doğru sonra temizlenir)</span>
                   ` : ''}
                 </div>
 
                 ${currentWord.definition && currentWord.definition.toLowerCase().trim() !== (currentWord.tr || '').toLowerCase().trim() ? `<div class="word-def" style="max-width: 52ch;">“${currentWord.definition}”</div>` : ''}
-                ${currentWord.example ? `<div class="word-example" style="max-width: 52ch;">“${highlightWordInText(currentWord.example.replace(/^["“”]|["“”]$/g, ''), currentWord.en)}”</div>` : ''}
+                ${displayExample(currentWord.example) ? `<div class="word-example" style="max-width: 52ch;">“${highlightWordInText(displayExample(currentWord.example), currentWord.en)}”</div>` : ''}
               </div>
 
               <div class="fc-footer">
@@ -5400,9 +5425,9 @@
               <div class="config-group">
                 <label for="quiz-source-select">Soru Kaynağı</label>
                 <select id="quiz-source-select">
-                  <optgroup label="Akıllı Pedagoji &amp; Hafıza">
+                  <optgroup label="Tekrar ve Hata Defteri">
                     <option value="srs_due">Aralıklı Tekrar: Bugün Bekleyenler (${getSRSDueWords().length} Kelime)</option>
-                    <option value="mistakes">Akıllı Hata Defteri: Kurtarma Kampı (${getActiveMistakeWords().length} Kelime)</option>
+                    <option value="mistakes">Hata Defteri (${getActiveMistakeWords().length} Kelime)</option>
                   </optgroup>
                   ${isYds ? `
                     <option value="yds_all">Tüm YDS/YÖKDİL Havuzu (${WORDS_DATA.filter(isYDSWord).length.toLocaleString('tr-TR')} Kelime)</option>
@@ -5558,7 +5583,7 @@
     let questionContentHtml = '';
     if (qState.mode === 'cloze') {
       const regex = new RegExp(`\\b${targetWord.en}[a-z]*\\b`, 'i');
-      const clozeText = currentQ.clozeSentence || (targetWord.example ? targetWord.example.replace(regex, '<span class="cloze-blank">_______</span>') : `${targetWord.tr} anlamına gelen kelimeyi seçiniz: <span class="cloze-blank">_______</span>`);
+      const clozeText = currentQ.clozeSentence || (displayExample(targetWord.example) ? displayExample(targetWord.example).replace(regex, '<span class="cloze-blank">_______</span>') : `${targetWord.tr} anlamına gelen kelimeyi seçiniz: <span class="cloze-blank">_______</span>`);
       questionContentHtml = `
         <div class="quiz-cloze-sentence">“${clozeText}”</div>
         <div style="font-family:var(--dp-typography-mono); font-size:0.78rem; color:var(--dp-color-ink-muted); margin-top:10px;">[${targetWord.desc} • ${targetWord.cefr}]</div>
@@ -6259,8 +6284,7 @@
     const prep = extractPreposition(w);
     const descLine = [w.desc, w.cat].filter(Boolean).join(' • ');
     const syns = String(getWordSynonym(w) || '').split(/[,;]/).map(s => s.trim()).filter(Boolean);
-    const example = (STATE.activeModule === 'yds' && w.ydsExample) ? w.ydsExample : w.example;
-    const exampleText = example ? String(example).replace(/^["“”]|["“”]$/g, '') : '';
+    const exampleText = displayExample(w.example) || displayExample(w.ydsExample);
     const shelf = libraryShelfWords();
     const pos = shelf.findIndex(x => x.id === w.id);
     const tool = (act, icon, label, pressed) =>
@@ -6829,7 +6853,7 @@
         <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 16px; margin-bottom: 16px;">
           <div>
             <div style="font-family: var(--dp-typography-mono); font-size: 0.78rem; font-weight: 800; color: var(--dp-color-accent-ink); text-transform: uppercase; margin-bottom: 4px; letter-spacing: 0.04em; display: flex; align-items: center; gap: 6px;">
-              ${renderIcon('target', 15)} <span>[ AKTİF HEDEF MÜFREDAT KAZANIM İSTASYONU ]</span>
+              ${renderIcon('target', 15)} <span>[ AKTİF MÜFREDAT VE KAZANIMLAR ]</span>
             </div>
             <h2 style="font-size: 1.5rem; font-weight: 800; margin: 0; letter-spacing: -0.02em;">
               ${activeCurriculumTitle}
@@ -6945,7 +6969,7 @@
 
           <div class="srs-tier-card tier-mastered">
             <div class="srs-tier-top">
-              <span class="srs-tier-name" style="display:inline-flex; align-items:center; gap:6px;">${renderIcon('check', 13)} Kalıcı Bellek (15+ Gün)</span>
+              <span class="srs-tier-name" style="display:inline-flex; align-items:center; gap:6px;">${renderIcon('check', 13)} Öğrenildi (15+ Gün)</span>
               <strong class="srs-tier-num">${srsStats.masteredCount}</strong>
             </div>
             <div class="srs-tier-bar-bg"><div class="srs-tier-bar-fill" style="width:${Math.round((srsStats.masteredCount / (srsStats.total || 1)) * 100)}%;"></div></div>
@@ -6958,7 +6982,7 @@
       <div class="themes-breakdown-card glass-panel" style="margin-bottom: 20px;">
         <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:14px;">
           <h3 style="margin:0; text-transform: uppercase; letter-spacing: 0.03em; display:flex; align-items:center; gap:8px;">
-            ${renderIcon('alert', 16)} <span>AKILLI HATA DEFTERİ &amp; ZAYIF NOKTALAR</span>
+            ${renderIcon('alert', 16)} <span>HATA DEFTERİ VE ZAYIF NOKTALAR</span>
           </h3>
           <span class="pedagogy-station-badge mistake">KURTARMA BAŞARISI: %${mistakeStats.recoveryRate}</span>
         </div>
@@ -7135,7 +7159,7 @@
 
     const viewTitles = {
       home: 'Kontrol Merkezi',
-      daily: mod === 'yds' ? "Günün 20'si (Workout)" : (mod === 'maarif' ? "Müfredat Takibi" : "Günün Çalışması"),
+      daily: mod === 'yds' ? "Günün 20'si" : (mod === 'maarif' ? "Müfredat Takibi" : "Günün Çalışması"),
       flashcard: 'Flashcard Kartları',
       quiz: mod === 'yds' ? 'YDS Cloze & Test' : (mod === 'maarif' ? 'Kazanım Değerlendirme' : 'Quiz & Sınav'),
       directory: 'Kelime Havuzu',
@@ -7250,7 +7274,7 @@
           const qPct = Math.round(((qState.currentIndex) / totalQ) * 100);
 
           badgeContainer.innerHTML = `
-            <div class="badge-live-progress quiz-mode" title="Canlı Test Telemetrisi">
+            <div class="badge-live-progress quiz-mode" title="Canlı Test İlerlemesi">
               <div class="badge-live-header">
                 <span class="badge-day-label">SORU ${currentIdx}/${totalQ}</span>
                 <span class="badge-live-counter">DOĞRU: ${qState.score}</span>
@@ -7557,9 +7581,9 @@
       const distractors = pickDistractors(target, 3, pool);
 
       let clozeSentence = null;
-      if (mode === 'cloze' && target.example) {
+      if (mode === 'cloze' && displayExample(target.example)) {
         const regex = new RegExp(`\\b${target.en}[a-z]*\\b`, 'i');
-        clozeSentence = target.example.replace(regex, '<span class="cloze-blank">_______</span>');
+        clozeSentence = displayExample(target.example).replace(regex, '<span class="cloze-blank">_______</span>');
       }
 
       const options = [target, ...distractors]
@@ -7693,10 +7717,10 @@
             <span class=”feedback-meaning-label”>DOĞRU ANLAM:</span>
             <strong class=”feedback-meaning-tr”>${escapeHtml(targetWord.tr)}</strong>
           </div>
-          ${targetWord.example ? `
+          ${displayExample(targetWord.example) ? `
             <div class=”feedback-example-row”>
               <span class=”feedback-ex-label”>ÖRNEK KULLANIM:</span>
-              <p class=”feedback-example”>”${highlightWordInText(targetWord.example, targetWord.en)}”</p>
+              <p class=”feedback-example”>”${highlightWordInText(displayExample(targetWord.example), targetWord.en)}”</p>
             </div>
           ` : ''}
           ${(STATE.quizState.mode === 'cloze' || STATE.quizState.mode === 'definition') ? (() => {
@@ -8863,6 +8887,8 @@
   })();
 
   window.APP = {
+    isSourceCitation,
+    displayExample,
     openSettingsModal,
     closeSettingsModal,
     handleFabAction,

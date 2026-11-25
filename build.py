@@ -640,7 +640,7 @@ def load_dictionary_expansion():
             'themeNum': 9,
             'themeCode': 'OXFORD 5000',
             'themeTitle': 'THE OXFORD 5000',
-            'themeTitleTr': 'The Oxford 5000 (A1-C1 Dünya Standardı)',
+            'themeTitleTr': 'The Oxford 5000 (A1–C1)',
             'dataset': 'oxford',
             'datasets': ['oxford'],
             'isMaarif': False,
@@ -846,7 +846,7 @@ def write_word_database(combined_words):
     themes_js = """/**
  * Learnish - Maarif Modeli, The Oxford 5000 ve YDS/YÖKDİL Birleşik Kelime Veritabanı
  * Toplam: %d Benzersiz Kelime ve Kalıp (Maarif: %d, Oxford: %d, YDS: %d)
- * Yüksek Verimlilikli Sıkıştırılmış Sözlük Havuzu (6 ms Monomorfik V8 Başlatma)
+ * Sıkıştırılmış birleşik sözlük havuzu.
  */
 const THEMES_DATA = {
   "1": {
@@ -933,7 +933,7 @@ const THEMES_DATA = {
     "num": 9,
     "code": "OXFORD 5000",
     "title": "THE OXFORD 5000",
-    "titleTr": "The Oxford 5000 (A1-C1 Dünya Standardı)",
+    "titleTr": "The Oxford 5000 (A1–C1)",
     "full": "THE OXFORD 5000 (A1-C1)",
     "color": "#0284c7",
     "badgeBg": "#0284c7",

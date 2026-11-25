@@ -627,7 +627,7 @@ registerTest(1, 'Navigation & Canopy', 'test_nav_home_view_orientation_and_modul
   assert(homeSection.innerHTML.includes('MEB Türkiye Yüzyılı Maarif Modeli'), 'Home view should describe MEB module');
   assert(homeSection.innerHTML.includes('YDS, YÖKDİL, YDT'), 'Home view should describe YDS module');
   assert(homeSection.innerHTML.includes('Kelime Kütüphanesi'), 'Home view should describe Library module');
-  assert(homeSection.innerHTML.includes('AKILLI PEDAGOJİ SİSTEMİ') || homeSection.innerHTML.includes('Bilişsel Hafıza'), 'Home view should provide the methodology / cognitive-learning station');
+  assert(homeSection.innerHTML.includes('TEKRAR VE HATA DEFTERİ') || homeSection.innerHTML.includes('Tekrar ve Hata Defteri'), 'Home view should provide the spaced-repetition / mistake-review station');
   assert(homeSection.innerHTML.includes('AI Speaking &amp; Telaffuz Koçu') || homeSection.innerHTML.includes('Telaffuz'), 'Home view should showcase speaking coach feature');
   assert(homeSection.innerHTML.includes('PDF &amp; Çalışma Kağıdı Stüdyosu') || homeSection.innerHTML.includes('PDF'), 'Home view should showcase PDF studio feature');
 });
@@ -1410,6 +1410,44 @@ registerTest(3, 'Library Review Fixes', 'test_library_leaving_view_closes_sheets
   assert(!env.document.getElementById('view-directory').innerHTML.includes('id="lib-filters"'));
 });
 
+// --- Örnek Cümle / Sınav Kaynağı ---
+
+registerTest(1, 'Example vs Source', 'test_source_citation_detection', () => {
+  const env = createFreshAppEnvironment();
+  const isCit = env.APP.isSourceCitation;
+  assert(typeof isCit === 'function', 'APP.isSourceCitation must be exposed');
+  // Gerçek sınav kaynağı/alıntıları → true
+  assert(isCit('2020 YDS/1 · S.75 kök'), '"2020 YDS/1 · S.75 kök" bir kaynaktır');
+  assert(isCit('2022 Ekim · S.44-E [Ç]'), '"2022 Ekim · S.44-E [Ç]" bir kaynaktır');
+  assert(isCit('2023 Nisan · S.70-D [DC] 2023 Nisan · S.70 kök'), 'çoklu kaynak dizgisi kaynaktır');
+  // Gerçek örnek cümle/kalıp → false
+  assert(!isCit("I usually wake up at six o'clock and go for a run before work."), 'gerçek cümle kaynak değildir');
+  assert(!isCit('a college/university student'), 'kısa eşdizim kaynak değildir');
+  assert(!isCit(''), 'boş dize kaynak değildir');
+});
+
+registerTest(1, 'Example vs Source', 'test_display_example_suppresses_citation', () => {
+  const env = createFreshAppEnvironment();
+  const disp = env.APP.displayExample;
+  assert(typeof disp === 'function', 'APP.displayExample must be exposed');
+  assertEqual(disp('2020 YDS/1 · S.75 kök'), '', 'kaynak dizgisi örnek cümle olarak gösterilmez');
+  assertEqual(disp('“The abolition of slavery transformed the economy.”'), 'The abolition of slavery transformed the economy.', 'gerçek cümle tırnaksız döner');
+  assertEqual(disp(''), '', 'boş girişte boş döner');
+});
+
+registerTest(1, 'Example vs Source', 'test_yds_authored_example_not_citation', () => {
+  const env = createFreshAppEnvironment();
+  const byId = {};
+  env.window.WORDS_DATA.forEach(w => { byId[w.id] = w; });
+  // 9096 "wake up" ve 6816 "free-time" için elle yazılmış örnek uygulanmış olmalı
+  const wake = byId[9096];
+  assert(wake && wake.en === 'wake up', 'id 9096 wake up olmalı');
+  assert(!env.APP.isSourceCitation(wake.example), 'authored kelimenin example alanı kaynak OLMAMALI');
+  assert(wake.example.toLowerCase().includes('wake up'), 'example gerçekten kelimeyi içermeli');
+  // Köken bilgisi ydsExample alanında korunmalı (kayıp yok)
+  assert(env.APP.isSourceCitation(wake.ydsExample), 'sınav kaynağı ydsExample alanında korunmalı');
+});
+
 // --- 1.5 Word Directory Search & Filters (6 Tests) ---
 
 registerTest(1, 'Word Directory', 'test_directory_filter_by_pos', () => {
@@ -1613,7 +1651,7 @@ registerTest(1, 'PDF & Worksheet Studio', 'test_pdf_studio_open_and_close', () =
   env.APP.openPdfStudio('mistakes');
   assert(backdrop.classList.contains('active'), 'openPdfStudio should activate backdrop');
   assert(dialog.classList.contains('active'), 'openPdfStudio should activate dialog');
-  assert(body.innerHTML.includes('Hata Kampı &amp; Yanlışlar') || body.innerHTML.includes('Hata Kampı & Yanlışlar'), 'Dialog body should have template options');
+  assert(body.innerHTML.includes('Hatalar ve Yanlışlar'), 'Dialog body should have template options');
   assert(body.innerHTML.includes('ÇALIŞMA ŞABLONU'), 'Dialog body should contain studio controls');
 
   env.APP.closePdfStudio();
