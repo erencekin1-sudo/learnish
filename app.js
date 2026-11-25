@@ -2534,11 +2534,11 @@
         <header class="notebooks-hero">
           <div class="nb-hero-main">
             <h2 class="nb-hero-title">Renkli Defterler</h2>
-            <p class="nb-hero-sub">Sınıf müfredatından açılmış kelimeleri zorluk kademesine göre çalış; ustalaştıkça kelime bir üst renge terfi eder.</p>
+            <p class="nb-hero-sub">Açılmış kelimeleri kendi zorluk kademene göre işaretle (🔴/🟡/🟢); ustalaştığın kelimeler Seviye Geçme Testi'nden geçip arşive geçer.</p>
           </div>
           <div class="nb-hero-stats">
             <span class="nb-stat"><strong>${total}</strong> kelime</span>
-            <span class="nb-stat"><strong>${eligibleCount}</strong> terfiye hazır</span>
+            <span class="nb-stat"><strong>${eligibleCount}</strong> teste hazır</span>
           </div>
         </header>
 
@@ -2550,10 +2550,10 @@
             ${renderIcon('layers', 15)} <span>Bugünü Çalış (${dailyCount})</span>
           </button>
           ${offerTest ? `
-            <button type="button" class="fc-action-btn nb-levelup-btn" onclick="window.APP.startNotebookLevelUpTest()" title="${eligibleCount} kelime terfiye hazır">
+            <button type="button" class="fc-action-btn nb-levelup-btn" onclick="window.APP.startNotebookLevelUpTest()" title="${eligibleCount} kelime teste hazır">
               ${renderIcon('zap', 15)} <span>Seviye Geçme Testi (${eligibleCount}) &rarr;</span>
             </button>` : `
-            <span class="nb-levelup-hint">${renderIcon('alert', 13)} Seviye Geçme Testi, 20 kelime terfiye hazır olunca açılır (${eligibleCount}/20).</span>`}
+            <span class="nb-levelup-hint">${renderIcon('alert', 13)} Seviye Geçme Testi, 20 kelime teste hazır olunca açılır (${eligibleCount}/20).</span>`}
         </div>
 
         <div class="notebooks-buckets">
@@ -8513,7 +8513,12 @@
   // ==========================================================================
   function nextFlashcard() {
     if (STATE.filteredFlashcards.length === 0) return;
-    STATE.activeFlashcardIndex = (STATE.activeFlashcardIndex + 1) % STATE.filteredFlashcards.length;
+    // Notebook modunda sarmalamaz (günlük küme döngüye girmez); son kartta sabit kalır.
+    if (STATE.flashcardSource === 'notebook') {
+      STATE.activeFlashcardIndex = Math.min(STATE.activeFlashcardIndex + 1, STATE.filteredFlashcards.length - 1);
+    } else {
+      STATE.activeFlashcardIndex = (STATE.activeFlashcardIndex + 1) % STATE.filteredFlashcards.length;
+    }
     STATE.flashcardFlipped = false;
     renderFlashcardView(true);
     updateBreadcrumb('flashcard');
@@ -8521,7 +8526,11 @@
 
   function prevFlashcard() {
     if (STATE.filteredFlashcards.length === 0) return;
-    STATE.activeFlashcardIndex = (STATE.activeFlashcardIndex - 1 + STATE.filteredFlashcards.length) % STATE.filteredFlashcards.length;
+    if (STATE.flashcardSource === 'notebook') {
+      STATE.activeFlashcardIndex = Math.max(STATE.activeFlashcardIndex - 1, 0);
+    } else {
+      STATE.activeFlashcardIndex = (STATE.activeFlashcardIndex - 1 + STATE.filteredFlashcards.length) % STATE.filteredFlashcards.length;
+    }
     STATE.flashcardFlipped = false;
     renderFlashcardView(true);
     updateBreadcrumb('flashcard');

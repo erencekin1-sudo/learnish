@@ -2714,6 +2714,26 @@ registerTest(1, 'Renkli Defterler', 'test_notebooks_view_levelup_cta_at_20_candi
   assert(/startNotebookLevelUpTest/.test(env.document.getElementById('view-notebooks').innerHTML), '20 adayda test CTA görünmeli');
 });
 
+registerTest(1, 'Renkli Defterler', 'test_notebooks_copy_is_v2_accurate', () => {
+  // M4: v1 "bir üst renge terfi" / "terfiye hazır" ibareleri kaldırılmalı (v2: öğrenci rengi seçer, test→arşiv).
+  const env = createFreshAppEnvironment({ initialStorage: { learnish_active_module: 'yds' }});
+  env.APP.switchView('notebooks');
+  const html = env.document.getElementById('view-notebooks').innerHTML;
+  assert(!/bir üst renge terfi/.test(html), 'v1 "bir üst renge terfi" ibaresi olmamalı');
+  assert(!/terfiye hazır/.test(html), 'v1 "terfiye hazır" ibaresi olmamalı (v2: teste hazır)');
+});
+
+registerTest(1, 'Renkli Defterler', 'test_notebook_next_does_not_wrap', () => {
+  // M5: notebook modunda son kartta "Sonraki" başa sarmamalı.
+  const env = createFreshAppEnvironment({ initialStorage: { learnish_active_module: 'yds', mk_current_day: '2', mk_current_day_date: '2000-01-01' }});
+  env.APP.setNotebookDailyCount(3);
+  env.APP.startNotebookFlashcards();
+  const n = env.APP.getState().filteredFlashcards.length;
+  env.APP.getState().activeFlashcardIndex = n - 1; // son kart
+  env.APP.nextFlashcard();
+  assertEqual(env.APP.getState().activeFlashcardIndex, n - 1, 'son kartta Sonraki sarmamalı (indeks sabit)');
+});
+
 // ----- Final inceleme düzeltmeleri -----
 
 registerTest(1, 'Renkli Defterler', 'test_notebook_flashcard_source_option_selected', () => {
