@@ -2497,6 +2497,37 @@ registerTest(1, 'Renkli Defterler', 'test_eligibility_threshold_and_green', () =
   assertEqual(env.APP.isNotebookEligible(id), false, 'yeşil kelime asla uygun olmamalı');
 });
 
+// ----- Task 3: açılmış havuz kaynağı, günlük küme ve flash kart entegrasyonu -----
+
+registerTest(1, 'Renkli Defterler', 'test_unlocked_words_is_cumulative_slice', () => {
+  const env = createFreshAppEnvironment({ initialStorage: { learnish_active_module: 'yds', mk_current_day: '3', mk_current_day_date: '2000-01-01' }});
+  const unlocked = env.APP.getUnlockedModuleWords();
+  assertEqual(unlocked.length, 60, '3. günde açılmış YDS kelime sayısı 3*20=60 olmalı');
+});
+
+registerTest(1, 'Renkli Defterler', 'test_daily_set_respects_count_and_pool', () => {
+  const env = createFreshAppEnvironment({ initialStorage: { learnish_active_module: 'maarif', learnish_selected_grade: '5' }});
+  env.APP.setNotebookDailyCount(8);
+  const set = env.APP.buildNotebookDailySet();
+  assert(set.length <= 8, 'günlük küme ayarlanan adedi aşmamalı');
+  assert(set.length >= 1, 'açılmış havuzdan en az bir kelime gelmeli');
+});
+
+registerTest(1, 'Renkli Defterler', 'test_daily_set_handles_small_pool_day1', () => {
+  const env = createFreshAppEnvironment({ initialStorage: { learnish_active_module: 'maarif', learnish_selected_grade: '5', mk_current_day: '1', mk_current_day_date: '2000-01-01' }});
+  env.APP.setNotebookDailyCount(50); // havuzdaki açılmış kelimeden fazla
+  const set = env.APP.buildNotebookDailySet();
+  assert(Array.isArray(set) && set.length <= 10, '1. günde açılmış ~10 kelimeyi aşmadan, hatasız dönmeli');
+});
+
+registerTest(1, 'Renkli Defterler', 'test_studying_enrolls_words', () => {
+  const env = createFreshAppEnvironment({ initialStorage: { learnish_active_module: 'maarif', learnish_selected_grade: '5' }});
+  const set = env.APP.buildNotebookDailySet();
+  assert(set.length > 0, 'küme boş olmamalı');
+  assert(env.APP.getNotebookRecord(set[0].id) !== null, 'günlük kümeye giren kelime otomatik kaydedilmeli');
+  assert(['red','yellow','green'].includes(env.APP.getNotebookRecord(set[0].id).color), 'kayıtta geçerli tohum rengi olmalı');
+});
+
 // ============================================================================
 // 7.X MENTOR CONCIERGE (Task 1)
 // ============================================================================

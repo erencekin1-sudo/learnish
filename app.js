@@ -2195,6 +2195,76 @@
       .filter(Boolean);
   }
 
+  /** Aktif modülün hedef havuzu ve günlük parti boyutu (renderDailyView ile aynı mantık). */
+  function _activeModuleTargetAndBatch() {
+    const module = STATE.activeModule;
+    if (module === 'yds') return { targetPool: WORDS_DATA.filter(isYDSWord), batchSize: 20 };
+    if (module === 'oxford') return { targetPool: WORDS_DATA.filter(isOxfordWord), batchSize: 25 };
+    if (module === 'all') return { targetPool: WORDS_DATA, batchSize: 25 };
+    return { targetPool: getActiveGradePool(), batchSize: 10 };
+  }
+
+  /** Aktif modülde o güne dek açılmış (birikmiş) kelimeler. */
+  function getUnlockedModuleWords() {
+    const { targetPool, batchSize } = _activeModuleTargetAndBatch();
+    const end = Math.min(STATE.currentDay * batchSize, targetPool.length);
+    return targetPool.slice(0, end);
+  }
+
+  /** Günlük çalışılacak kelime adedi (kayıtlı ayar yoksa modül parti boyutu). */
+  function getNotebookDailyCount() {
+    const v = STATE.userData.notebookDailyCount;
+    if (typeof v === 'number' && v >= 1) return v;
+    return _activeModuleTargetAndBatch().batchSize;
+  }
+
+  /** Günlük adet ayarını kalıcı yapar (1..50). */
+  function setNotebookDailyCount(n) {
+    n = Math.max(1, Math.min(50, parseInt(n, 10) || 1));
+    STATE.userData.notebookDailyCount = n;
+    saveUserData();
+  }
+
+  /**
+   * O günün çalışma kümesi: açılmış kelimelerden
+   *  1) SRS'e göre bugün tekrarı gelen kayıtlı kelimeler,
+   *  2) henüz kayıtlı olmayanlar (kaydedilerek),
+   *  3) kalan kayıtlı kelimeler — günlük adet dolana dek.
+   */
+  function buildNotebookDailySet() {
+    const unlocked = getUnlockedModuleWords();
+    const unlockedIds = new Set(unlocked.map(w => w.id));
+    const count = getNotebookDailyCount();
+    const result = [];
+    const used = new Set();
+    const due = getSRSDueWords().filter(w => unlockedIds.has(w.id) && getNotebookRecord(w.id));
+    for (const w of due) {
+      if (result.length >= count) break;
+      if (!used.has(w.id)) { used.add(w.id); result.push(w); }
+    }
+    for (const w of unlocked) {
+      if (result.length >= count) break;
+      if (used.has(w.id) || getNotebookRecord(w.id)) continue;
+      enrollNotebookWord(w.id);
+      used.add(w.id); result.push(w);
+    }
+    for (const w of unlocked) {
+      if (result.length >= count) break;
+      if (used.has(w.id)) continue;
+      used.add(w.id); result.push(w);
+    }
+    return result;
+  }
+
+  /** Renkli Defterler günlük çalışmasını flash kart motorunda başlatır. */
+  function startNotebookFlashcards() {
+    STATE.flashcardSource = 'notebook';
+    STATE.activeFlashcardIndex = 0;
+    STATE.flashcardFlipped = false;
+    STATE.flashcardIsShuffled = false;
+    switchView('flashcard');
+  }
+
   /**
    * Hata Defterine yanlış cevap kaydı
    */
@@ -5230,6 +5300,8 @@
         pool = getSRSDueWords();
       } else if (sourceVal === 'mistakes') {
         pool = getActiveMistakeWords();
+      } else if (sourceVal === 'notebook') {
+        pool = buildNotebookDailySet();
       } else {
         pool = WORDS_DATA;
       }
@@ -8998,6 +9070,11 @@
     getNotebookRecord,
     isNotebookEligible,
     getNotebookEligibleWords,
+    getUnlockedModuleWords,
+    getNotebookDailyCount,
+    setNotebookDailyCount,
+    buildNotebookDailySet,
+    startNotebookFlashcards,
     calculateSRS,
     openSettingsModal,
     closeSettingsModal,
