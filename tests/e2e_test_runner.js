@@ -2402,99 +2402,91 @@ registerTest(1, 'Daily Advance', 'test_daily_yds_keeps_manual_progress', () => {
 });
 
 // ============================================================================
-// RENKLİ DEFTERLER — Task 1: veri çekirdeği (renk tohumlama, kayıt, kalıcılık)
+// RENKLİ DEFTERLER v2 — Task 1: renk-butonu çekirdeği (renk + sabit takvim + aday)
 // ============================================================================
 
-registerTest(1, 'Renkli Defterler', 'test_seed_color_new_word_is_red', () => {
+registerTest(1, 'Renkli Defterler', 'test_rate_red_sets_color_and_interval', () => {
   const env = createFreshAppEnvironment();
-  const w = env.sandbox.WORDS_DATA.find(x => x.cefr && x.cefr !== 'A1' && x.cefr !== 'A2');
-  assertEqual(env.APP.seedNotebookColor(w.id), 'red', 'SRS geçmişi olmayan (A1/A2 olmayan) kelime kırmızı tohumlanmalı');
+  const id = env.sandbox.WORDS_DATA[0].id;
+  env.APP.rateNotebookColor(id, 'red');
+  const r = env.APP.getNotebookRecord(id);
+  assertEqual(r.color, 'red', 'renk kırmızı olmalı');
+  assertEqual(r.nextReview, env.APP.getTodayDateString(1), 'kırmızı 1 gün sonraya planlanmalı');
 });
 
-registerTest(1, 'Renkli Defterler', 'test_seed_color_a1_nohistory_is_yellow', () => {
+registerTest(1, 'Renkli Defterler', 'test_rate_yellow_green_intervals', () => {
   const env = createFreshAppEnvironment();
-  const w = env.sandbox.WORDS_DATA.find(x => x.cefr === 'A1');
-  assertEqual(env.APP.seedNotebookColor(w.id), 'yellow', 'geçmişi olmayan A1 kelime sarı tohumlanmalı (hafif CEFR ipucu)');
+  const y = env.sandbox.WORDS_DATA[1].id, g = env.sandbox.WORDS_DATA[2].id;
+  env.APP.rateNotebookColor(y, 'yellow');
+  env.APP.rateNotebookColor(g, 'green');
+  assertEqual(env.APP.getNotebookRecord(y).nextReview, env.APP.getTodayDateString(3), 'sarı 3 gün');
+  assertEqual(env.APP.getNotebookRecord(g).nextReview, env.APP.getTodayDateString(5), 'yeşil 5 gün');
 });
 
-registerTest(1, 'Renkli Defterler', 'test_seed_color_mastered_is_green', () => {
+registerTest(1, 'Renkli Defterler', 'test_green_five_times_makes_candidate', () => {
   const env = createFreshAppEnvironment();
-  const realId = env.sandbox.WORDS_DATA[0].id;
-  env.APP.getState().userData.srs[realId] = { state: 'mastered', interval: 30, repetitions: 5, easeFactor: 2.6, streak: 5 };
-  assertEqual(env.APP.seedNotebookColor(realId), 'green', 'ustalaşılmış SRS durumu yeşil tohumlanmalı');
+  const id = env.sandbox.WORDS_DATA[3].id;
+  for (let i = 0; i < 5; i++) { const r = env.APP.getNotebookRecord(id); if (r) r.lastReview = null; env.APP.rateNotebookColor(id, 'green'); }
+  assertEqual(env.APP.getNotebookRecord(id).candidate, true, '5 kez yeşil mezuniyet adayı yapmalı');
+});
+
+registerTest(1, 'Renkli Defterler', 'test_red_resets_kolay_streak', () => {
+  const env = createFreshAppEnvironment();
+  const id = env.sandbox.WORDS_DATA[4].id;
+  const r = env.APP.getNotebookRecord(id) || env.APP.enrollNotebookWord(id);
+  r.kolayStreak = 3;
+  env.APP.rateNotebookColor(id, 'red');
+  assertEqual(env.APP.getNotebookRecord(id).kolayStreak, 0, 'kırmızı kolay sayacını sıfırlamalı');
+});
+
+registerTest(1, 'Renkli Defterler', 'test_rate_same_day_does_not_double_streak', () => {
+  const env = createFreshAppEnvironment();
+  const id = env.sandbox.WORDS_DATA[5].id;
+  env.APP.rateNotebookColor(id, 'green');
+  env.APP.rateNotebookColor(id, 'green'); // aynı gün ikinci
+  assertEqual(env.APP.getNotebookRecord(id).kolayStreak, 1, 'aynı gün kolay sayacı en fazla +1');
+});
+
+registerTest(1, 'Renkli Defterler', 'test_rate_does_not_touch_global_srs', () => {
+  const env = createFreshAppEnvironment();
+  const id = env.sandbox.WORDS_DATA[6].id;
+  env.APP.rateNotebookColor(id, 'green');
+  assert(env.APP.getState().userData.srs[id] == null, 'renk butonu küresel SRS yazmamalı');
+  assert(!env.APP.getState().userData.learned.has(id), 'öğrenilenler setine yazmamalı');
+});
+
+registerTest(1, 'Renkli Defterler', 'test_enroll_stores_source_and_defaults', () => {
+  const env = createFreshAppEnvironment({ initialStorage: { learnish_active_module: 'yds' }});
+  const id = env.sandbox.WORDS_DATA[7].id;
+  const r = env.APP.enrollNotebookWord(id);
+  assertEqual(r.srcModule, 'yds', 'kaynak modül kayıtta saklanmalı');
+  assertEqual(r.color, null, 'yeni kelime renksiz başlamalı');
+  assertEqual(r.archived, false, 'yeni kelime arşivsiz olmalı');
+});
+
+registerTest(1, 'Renkli Defterler', 'test_v1_record_loads_without_crash', () => {
+  const id = 54321;
+  const env = createFreshAppEnvironment({ initialStorage: {
+    mk_notebooks: JSON.stringify({ [id]: { color:'green', good:4, lastGoodDate:null, enrolledAt:'2026-01-01', promotedAt:null } })
+  }});
+  const r = env.APP.getNotebookRecord(id);
+  assertEqual(r.color, 'green', 'v1 rengi korunmalı');
+  assert(env.APP.getState().userData.notebooks[id] != null, 'v1 kaydı yüklenmeli, çökmemeli');
 });
 
 registerTest(1, 'Renkli Defterler', 'test_enroll_is_idempotent', () => {
   const env = createFreshAppEnvironment();
   const id = env.sandbox.WORDS_DATA[0].id;
   const r1 = env.APP.enrollNotebookWord(id);
-  r1.good = 3;
+  r1.kolayStreak = 3;
   const r2 = env.APP.enrollNotebookWord(id);
-  assertEqual(r2.good, 3, 'tekrar kayıt mevcut kaydı korumalı (üzerine yazmamalı)');
-  assert(['red','yellow','green'].includes(r2.color), 'renk geçerli olmalı');
-});
-
-registerTest(1, 'Renkli Defterler', 'test_notebooks_persist_roundtrip', () => {
-  const id = 12345;
-  const env = createFreshAppEnvironment({ initialStorage: {
-    mk_notebooks: JSON.stringify({ [id]: { color:'yellow', good:2, lastGoodDate:null, enrolledAt:'2026-01-01', promotedAt:null } })
-  }});
-  assertEqual(env.APP.getNotebookRecord(id).color, 'yellow', 'kayıtlı notebooks map yüklenmeli');
-  assertEqual(env.APP.getNotebookRecord(id).good, 2, 'good değeri round-trip olmalı');
+  assertEqual(r2.kolayStreak, 3, 'tekrar kayıt mevcut kaydı korumalı (üzerine yazmamalı)');
 });
 
 registerTest(1, 'Renkli Defterler', 'test_notebooks_absent_key_defaults_empty', () => {
   const env = createFreshAppEnvironment(); // mk_notebooks yok
   assertEqual(env.APP.getNotebookRecord(777777), null, 'kayıt yoksa null dönmeli, çökmemeli');
   assert(typeof env.APP.getState().userData.notebooks === 'object', 'notebooks daima nesne olmalı');
-});
-
-// ----- Task 2: good sayacı kancası (günlük kapak, test dışlaması) ve uygunluk -----
-
-registerTest(1, 'Renkli Defterler', 'test_good_increments_on_success', () => {
-  const env = createFreshAppEnvironment();
-  const id = env.sandbox.WORDS_DATA[0].id;
-  env.APP.enrollNotebookWord(id);
-  env.APP.calculateSRS(id, 4);
-  assertEqual(env.APP.getNotebookRecord(id).good, 1, 'kayıtlı kelimede quality>=4 good sayacını +1 yapmalı');
-});
-
-registerTest(1, 'Renkli Defterler', 'test_good_daily_cap_once', () => {
-  const env = createFreshAppEnvironment();
-  const id = env.sandbox.WORDS_DATA[1].id;
-  env.APP.enrollNotebookWord(id);
-  env.APP.calculateSRS(id, 4);
-  env.APP.calculateSRS(id, 5); // aynı gün ikinci başarı
-  assertEqual(env.APP.getNotebookRecord(id).good, 1, 'good aynı gün en fazla +1 artmalı');
-});
-
-registerTest(1, 'Renkli Defterler', 'test_good_not_incremented_for_unenrolled', () => {
-  const env = createFreshAppEnvironment();
-  const id = env.sandbox.WORDS_DATA[2].id;
-  env.APP.calculateSRS(id, 4); // kayıtlı değil
-  assertEqual(env.APP.getNotebookRecord(id), null, 'kayıtsız kelime için notebook kaydı oluşmamalı');
-});
-
-registerTest(1, 'Renkli Defterler', 'test_good_excluded_during_levelup_test', () => {
-  const env = createFreshAppEnvironment();
-  const id = env.sandbox.WORDS_DATA[3].id;
-  env.APP.enrollNotebookWord(id);
-  env.APP.getState().quizState.active = true;
-  env.APP.getState().quizState.source = 'notebook_levelup';
-  env.APP.calculateSRS(id, 4);
-  assertEqual(env.APP.getNotebookRecord(id).good, 0, 'Seviye Geçme Testi sırasındaki başarı good artırmamalı');
-});
-
-registerTest(1, 'Renkli Defterler', 'test_eligibility_threshold_and_green', () => {
-  const env = createFreshAppEnvironment();
-  const id = env.sandbox.WORDS_DATA[4].id;
-  const rec = env.APP.enrollNotebookWord(id);
-  rec.color = 'red'; rec.good = 4;
-  assertEqual(env.APP.isNotebookEligible(id), false, 'good=4 uygun olmamalı');
-  rec.good = 5;
-  assertEqual(env.APP.isNotebookEligible(id), true, 'good=5 uygun olmalı');
-  rec.color = 'green';
-  assertEqual(env.APP.isNotebookEligible(id), false, 'yeşil kelime asla uygun olmamalı');
 });
 
 // ----- Task 3: açılmış havuz kaynağı, günlük küme ve flash kart entegrasyonu -----
@@ -2527,52 +2519,6 @@ registerTest(1, 'Renkli Defterler', 'test_studying_enrolls_words', () => {
   const set = env.APP.buildNotebookDailySet();
   assert(set.length > 0, 'küme boş olmamalı');
   assert(env.APP.getNotebookRecord(set[0].id) !== null, 'günlük kümeye giren kelime otomatik kaydedilmeli');
-  assert(['red','yellow','green'].includes(env.APP.getNotebookRecord(set[0].id).color), 'kayıtta geçerli tohum rengi olmalı');
-});
-
-// ----- Task 4: Seviye Geçme Testi (tetik 20, özel quiz, tek-adım terfi) -----
-
-registerTest(1, 'Renkli Defterler', 'test_promote_one_step', () => {
-  const env = createFreshAppEnvironment();
-  const id = env.sandbox.WORDS_DATA[0].id;
-  const r = env.APP.enrollNotebookWord(id); r.color = 'red'; r.good = 7;
-  env.APP.promoteNotebookWord(id);
-  assertEqual(env.APP.getNotebookRecord(id).color, 'yellow', 'kırmızı tek adım sarıya terfi etmeli');
-  assertEqual(env.APP.getNotebookRecord(id).good, 0, 'terfi good sıfırlamalı');
-  env.APP.getNotebookRecord(id).good = 6;
-  env.APP.promoteNotebookWord(id);
-  assertEqual(env.APP.getNotebookRecord(id).color, 'green', 'sarı tek adım yeşile terfi etmeli');
-  env.APP.promoteNotebookWord(id);
-  assertEqual(env.APP.getNotebookRecord(id).color, 'green', 'yeşil daha fazla terfi etmemeli');
-});
-
-registerTest(1, 'Renkli Defterler', 'test_promote_resets_eligibility_churn', () => {
-  const env = createFreshAppEnvironment();
-  const id = env.sandbox.WORDS_DATA[1].id;
-  const r = env.APP.enrollNotebookWord(id); r.color = 'red'; r.good = 9;
-  env.APP.promoteNotebookWord(id);
-  assertEqual(env.APP.isNotebookEligible(id), false, 'terfi sonrası good=0 olduğundan anında yeniden uygun olmamalı');
-});
-
-registerTest(1, 'Renkli Defterler', 'test_levelup_offer_threshold_20', () => {
-  const env = createFreshAppEnvironment();
-  const ids = env.sandbox.WORDS_DATA.slice(0, 25).map(w => w.id);
-  ids.forEach((id, i) => { const r = env.APP.enrollNotebookWord(id); r.color='red'; r.good = i < 19 ? 5 : 0; });
-  assertEqual(env.APP.shouldOfferLevelUpTest(), false, '19 uygun kelimede test önerilmemeli');
-  env.APP.getNotebookRecord(ids[19]).good = 5; // 20. uygun
-  assertEqual(env.APP.shouldOfferLevelUpTest(), true, '20 uygun kelimede test önerilmeli');
-});
-
-registerTest(1, 'Renkli Defterler', 'test_levelup_test_uses_eligible_only_and_tags_source', () => {
-  const env = createFreshAppEnvironment();
-  const ids = env.sandbox.WORDS_DATA.slice(0, 22).map(w => w.id);
-  ids.forEach(id => { const r = env.APP.enrollNotebookWord(id); r.color='red'; r.good = 5; });
-  env.APP.startNotebookLevelUpTest();
-  const qs = env.APP.getState().quizState;
-  assertEqual(qs.source, 'notebook_levelup', 'quiz kaynağı notebook_levelup olmalı');
-  assert(qs.active && qs.questions.length > 0, 'test soruları kurulmalı');
-  const eligibleIds = new Set(env.APP.getNotebookEligibleWords().map(w => w.id));
-  assert(qs.questions.every(q => eligibleIds.has(q.targetWord.id)), 'tüm sorular yalnızca uygun kelimelerden olmalı');
 });
 
 // ----- Task 5: Renkli Defterler görünümü, navigasyon ve stil -----
@@ -2599,14 +2545,6 @@ registerTest(1, 'Renkli Defterler', 'test_notebooks_view_renders_three_buckets',
   env.APP.switchView('notebooks');
   const html = env.document.getElementById('view-notebooks').innerHTML;
   assert(/data-notebook-color="red"/.test(html) && /data-notebook-color="yellow"/.test(html) && /data-notebook-color="green"/.test(html), 'üç renk kovası da işaretli DOM üretmeli');
-});
-
-registerTest(1, 'Renkli Defterler', 'test_notebooks_view_shows_levelup_cta_at_threshold', () => {
-  const env = createFreshAppEnvironment({ initialStorage: { learnish_active_module: 'maarif', learnish_selected_grade: '5' }});
-  env.sandbox.WORDS_DATA.slice(0, 20).forEach(w => { const r = env.APP.enrollNotebookWord(w.id); r.color='red'; r.good=5; });
-  env.APP.switchView('notebooks');
-  const html = env.document.getElementById('view-notebooks').innerHTML;
-  assert(/startNotebookLevelUpTest/.test(html), 'uygun≥20 iken Seviye Geçme Testi CTA görünmeli');
 });
 
 // ----- Final inceleme düzeltmeleri -----
@@ -2646,56 +2584,6 @@ registerTest(1, 'Renkli Defterler', 'test_reset_clears_notebook_daily_key', () =
   assertEqual(env.localStorage.getItem('mk_notebook_daily'), null, 'null değerde mk_notebook_daily anahtarı silinmeli');
 });
 
-// ----- İzolasyon: defter puanlaması küresel SRS'i değiştirmemeli -----
-
-registerTest(1, 'Renkli Defterler', 'test_notebook_rating_does_not_touch_global_srs', () => {
-  const env = createFreshAppEnvironment();
-  const id = env.sandbox.WORDS_DATA[0].id;
-  env.APP.enrollNotebookWord(id);
-  env.APP.markNotebookCard(id, 5); // KOLAY
-  assert(env.APP.getState().userData.srs[id] == null, 'defter puanlaması küresel SRS kaydı oluşturmamalı');
-  assert(!env.APP.getState().userData.learned.has(id), 'defter puanlaması öğrenilenler setine yazmamalı');
-  assertEqual(env.APP.getNotebookRecord(id).good, 1, 'defter puanlaması defterin good sayacını artırmalı');
-});
-
-registerTest(1, 'Renkli Defterler', 'test_notebook_rating_daily_cap', () => {
-  const env = createFreshAppEnvironment();
-  const id = env.sandbox.WORDS_DATA[1].id;
-  env.APP.enrollNotebookWord(id);
-  env.APP.markNotebookCard(id, 4);
-  env.APP.markNotebookCard(id, 5); // aynı gün ikinci
-  assertEqual(env.APP.getNotebookRecord(id).good, 1, 'defter good günde en fazla +1 artmalı');
-});
-
-registerTest(1, 'Renkli Defterler', 'test_flashcard_rating_routes_by_source', () => {
-  const env = createFreshAppEnvironment();
-  const nbId = env.sandbox.WORDS_DATA[2].id;
-  const normId = env.sandbox.WORDS_DATA[3].id;
-  // notebook kaynağı -> küresel SRS'e dokunmaz
-  env.APP.getState().flashcardSource = 'notebook';
-  env.APP.enrollNotebookWord(nbId);
-  env.APP.rateFlashcard(nbId, 4);
-  assert(env.APP.getState().userData.srs[nbId] == null, 'notebook kaynağında puanlama küresel SRS yazmamalı');
-  assertEqual(env.APP.getNotebookRecord(nbId).good, 1, 'notebook kaynağında good artmalı');
-  // normal kaynak -> küresel SRS yazar (mevcut davranış korunur)
-  env.APP.getState().flashcardSource = 'daily';
-  env.APP.rateFlashcard(normId, 4);
-  assert(env.APP.getState().userData.srs[normId] != null, 'normal kaynakta küresel SRS kaydı oluşmalı');
-});
-
-registerTest(1, 'Renkli Defterler', 'test_levelup_quiz_answer_isolated_from_global_srs', () => {
-  const env = createFreshAppEnvironment();
-  const ids = env.sandbox.WORDS_DATA.slice(0, 22).map(w => w.id);
-  ids.forEach(id => { const r = env.APP.enrollNotebookWord(id); r.color = 'red'; r.good = 5; });
-  env.APP.startNotebookLevelUpTest();
-  const q = env.APP.getState().quizState.questions[0];
-  const tid = q.targetWord.id;
-  const correctIdx = q.options.findIndex(o => o.isCorrect);
-  env.APP.handleQuizAnswer(correctIdx);
-  assert(env.APP.getState().userData.srs[tid] == null, 'Seviye Geçme Testi küresel SRS yazmamalı');
-  assert(!env.APP.getState().userData.mistakes[tid], 'Seviye Geçme Testi hata defterine yazmamalı');
-  assertEqual(env.APP.getNotebookRecord(tid).color, 'yellow', 'doğru cevap kelimeyi terfi ettirmeli');
-});
 
 // ============================================================================
 // 7.X MENTOR CONCIERGE (Task 1)

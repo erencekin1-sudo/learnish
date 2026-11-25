@@ -2117,18 +2117,6 @@
       STATE.userData.learned.delete(wordId);
     }
 
-    // Renkli Defterler: kayıtlı kelimenin "iyi hatırlama" sayacını besle.
-    // Günde kelime başına en fazla +1; Seviye Geçme Testi'nin kendi cevapları sayılmaz.
-    const _nb = STATE.userData.notebooks && STATE.userData.notebooks[wordId];
-    const _inLevelUp = STATE.quizState && STATE.quizState.active && STATE.quizState.source === 'notebook_levelup';
-    if (_nb && quality >= 4 && !_inLevelUp) {
-      const _today = mkLocalDateKey();
-      if (_nb.lastGoodDate !== _today) {
-        _nb.good = (_nb.good || 0) + 1;
-        _nb.lastGoodDate = _today;
-      }
-    }
-
     saveUserData();
     return record;
   }
@@ -2163,12 +2151,17 @@
     let rec = STATE.userData.notebooks[wordId];
     if (!rec) {
       rec = {
-        color: seedNotebookColor(wordId),
-        good: 0,
-        lastGoodDate: null,
+        color: null,                 // null = henüz işaretlenmemiş (yeni)
+        kolayStreak: 0,              // üst üste 🟢 Kolay sayısı
+        candidate: false,           // kolayStreak >= 5 → mezuniyet adayı
+        nextReview: null,           // sabit takvim tekrar tarihi
         lastReview: null,
-        enrolledAt: getTodayDateString(),
-        promotedAt: null
+        archived: false,
+        archiveLabel: null,
+        archiveDate: null,
+        srcModule: STATE.activeModule,
+        srcGrade: STATE.activeModule === 'maarif' ? getActiveGrade() : null,
+        enrolledAt: getTodayDateString()
       };
       STATE.userData.notebooks[wordId] = rec;
       saveUserData();
@@ -2182,20 +2175,50 @@
     return (STATE.userData.notebooks && STATE.userData.notebooks[wordId]) || null;
   }
 
-  /** Kelime terfiye uygun mu: yeşil değil ve en az 5 iyi hatırlama topladıysa. */
+  /** (Geçici — Task 2'de getNotebookCandidates ile değişecek) Kelime mezuniyet adayı mı. */
   function isNotebookEligible(wordId) {
     const r = getNotebookRecord(wordId);
-    return !!(r && r.color !== 'green' && (r.good || 0) >= 5);
+    return !!(r && r.candidate && !r.archived);
   }
 
-  /** Terfiye uygun tüm kayıtlı kelimelerin WORDS_DATA nesneleri. */
+  /** (Geçici — Task 2'de getNotebookCandidates ile değişecek) Mezuniyet adayları. */
   function getNotebookEligibleWords() {
     if (!STATE.userData.notebooks) return [];
     return Object.keys(STATE.userData.notebooks)
       .map(Number)
-      .filter(isNotebookEligible)
+      .filter(id => { const r = STATE.userData.notebooks[id]; return r && r.candidate && !r.archived; })
       .map(id => WORDS_DATA.find(w => w.id === id))
       .filter(Boolean);
+  }
+
+  /** Renk → sabit tekrar aralığı (gün): kırmızı 1, sarı 3, yeşil 5. */
+  function notebookInterval(color) {
+    return color === 'green' ? 5 : (color === 'yellow' ? 3 : 1);
+  }
+
+  /**
+   * Öğrencinin renkli butonu: kelimenin rengini/kademesini doğrudan belirler,
+   * sabit takvimle sonraki tekrarı planlar. Üst üste 5× yeşil → mezuniyet adayı.
+   * Küresel SRS'e / öğrenilenler / Hata Defterine dokunmaz (izolasyon).
+   */
+  function rateNotebookColor(wordId, color) {
+    wordId = parseInt(wordId, 10);
+    if (color !== 'red' && color !== 'yellow' && color !== 'green') return null;
+    const rec = enrollNotebookWord(wordId);
+    const today = getTodayDateString();
+    const firstToday = rec.lastReview !== today;   // aynı gün ikinci puanlama sayacı artırmaz
+    rec.color = color;
+    rec.nextReview = getTodayDateString(notebookInterval(color));
+    if (color === 'green') {
+      if (firstToday) rec.kolayStreak = (rec.kolayStreak || 0) + 1;
+      if ((rec.kolayStreak || 0) >= 5) rec.candidate = true;
+    } else {
+      rec.kolayStreak = 0;
+    }
+    rec.lastReview = today;
+    saveUserData();
+    nextFlashcard();
+    return rec;
   }
 
   /** Aktif modülün hedef havuzu ve günlük parti boyutu (renderDailyView ile aynı mantık). */
@@ -2259,30 +2282,9 @@
     return result;
   }
 
-  /**
-   * Renkli Defterler kart puanlaması — YALITILMIŞ.
-   * Küresel SRS'e, öğrenilenler/tekrar setlerine ve Hata Defterine HİÇ dokunmaz;
-   * yalnızca defterin kendi 'good' sayacını (günde +1 kapaklı) ve son-çalışma tarihini günceller.
-   * Böylece defter çalışması diğer havuzların tekrar programını değiştirmez.
-   */
-  function markNotebookCard(wordId, quality) {
-    wordId = parseInt(wordId, 10);
-    const rec = enrollNotebookWord(wordId);
-    const today = mkLocalDateKey();
-    if (quality >= 4 && rec.lastGoodDate !== today) {
-      rec.good = (rec.good || 0) + 1;
-      rec.lastGoodDate = today;
-    }
-    rec.lastReview = today;
-    playSound(quality < 3 ? 'flip' : 'correct');
-    saveUserData();
-    nextFlashcard();
-  }
-
-  /** Flash kart puanlama yönlendirici: notebook kaynağında yalıtılmış yola gider. */
+  /** Flash kart puanlama yönlendirici (SRS kaynakları için). Notebook kartları doğrudan rateNotebookColor çağırır. */
   function rateFlashcard(wordId, quality) {
-    if (STATE.flashcardSource === 'notebook') markNotebookCard(wordId, quality);
-    else markFlashcardSRS(wordId, quality);
+    markFlashcardSRS(wordId, quality);
   }
 
   /** Renkli Defterler günlük çalışmasını flash kart motorunda başlatır. */
@@ -9258,14 +9260,14 @@
     seedNotebookColor,
     enrollNotebookWord,
     getNotebookRecord,
-    isNotebookEligible,
-    getNotebookEligibleWords,
+    notebookInterval,
+    rateNotebookColor,
+    getTodayDateString,
     getUnlockedModuleWords,
     getNotebookDailyCount,
     setNotebookDailyCount,
     buildNotebookDailySet,
     startNotebookFlashcards,
-    markNotebookCard,
     rateFlashcard,
     promoteNotebookWord,
     shouldOfferLevelUpTest,
