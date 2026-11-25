@@ -2402,6 +2402,54 @@ registerTest(1, 'Daily Advance', 'test_daily_yds_keeps_manual_progress', () => {
 });
 
 // ============================================================================
+// RENKLİ DEFTERLER — Task 1: veri çekirdeği (renk tohumlama, kayıt, kalıcılık)
+// ============================================================================
+
+registerTest(1, 'Renkli Defterler', 'test_seed_color_new_word_is_red', () => {
+  const env = createFreshAppEnvironment();
+  const w = env.sandbox.WORDS_DATA.find(x => x.cefr && x.cefr !== 'A1' && x.cefr !== 'A2');
+  assertEqual(env.APP.seedNotebookColor(w.id), 'red', 'SRS geçmişi olmayan (A1/A2 olmayan) kelime kırmızı tohumlanmalı');
+});
+
+registerTest(1, 'Renkli Defterler', 'test_seed_color_a1_nohistory_is_yellow', () => {
+  const env = createFreshAppEnvironment();
+  const w = env.sandbox.WORDS_DATA.find(x => x.cefr === 'A1');
+  assertEqual(env.APP.seedNotebookColor(w.id), 'yellow', 'geçmişi olmayan A1 kelime sarı tohumlanmalı (hafif CEFR ipucu)');
+});
+
+registerTest(1, 'Renkli Defterler', 'test_seed_color_mastered_is_green', () => {
+  const env = createFreshAppEnvironment();
+  const realId = env.sandbox.WORDS_DATA[0].id;
+  env.APP.getState().userData.srs[realId] = { state: 'mastered', interval: 30, repetitions: 5, easeFactor: 2.6, streak: 5 };
+  assertEqual(env.APP.seedNotebookColor(realId), 'green', 'ustalaşılmış SRS durumu yeşil tohumlanmalı');
+});
+
+registerTest(1, 'Renkli Defterler', 'test_enroll_is_idempotent', () => {
+  const env = createFreshAppEnvironment();
+  const id = env.sandbox.WORDS_DATA[0].id;
+  const r1 = env.APP.enrollNotebookWord(id);
+  r1.good = 3;
+  const r2 = env.APP.enrollNotebookWord(id);
+  assertEqual(r2.good, 3, 'tekrar kayıt mevcut kaydı korumalı (üzerine yazmamalı)');
+  assert(['red','yellow','green'].includes(r2.color), 'renk geçerli olmalı');
+});
+
+registerTest(1, 'Renkli Defterler', 'test_notebooks_persist_roundtrip', () => {
+  const id = 12345;
+  const env = createFreshAppEnvironment({ initialStorage: {
+    mk_notebooks: JSON.stringify({ [id]: { color:'yellow', good:2, lastGoodDate:null, enrolledAt:'2026-01-01', promotedAt:null } })
+  }});
+  assertEqual(env.APP.getNotebookRecord(id).color, 'yellow', 'kayıtlı notebooks map yüklenmeli');
+  assertEqual(env.APP.getNotebookRecord(id).good, 2, 'good değeri round-trip olmalı');
+});
+
+registerTest(1, 'Renkli Defterler', 'test_notebooks_absent_key_defaults_empty', () => {
+  const env = createFreshAppEnvironment(); // mk_notebooks yok
+  assertEqual(env.APP.getNotebookRecord(777777), null, 'kayıt yoksa null dönmeli, çökmemeli');
+  assert(typeof env.APP.getState().userData.notebooks === 'object', 'notebooks daima nesne olmalı');
+});
+
+// ============================================================================
 // 7.X MENTOR CONCIERGE (Task 1)
 // ============================================================================
 

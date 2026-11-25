@@ -512,7 +512,9 @@
       }, lsJSON('mk_stats', {})),
       activityLog: lsJSON('mk_activity_log', []),
       srs: lsJSON('mk_srs', {}),
-      mistakes: lsJSON('mk_mistakes', {})
+      mistakes: lsJSON('mk_mistakes', {}),
+      notebooks: lsJSON('mk_notebooks', {}),
+      notebookDailyCount: lsJSON('mk_notebook_daily', null)
     }
   };
 
@@ -1747,6 +1749,8 @@
       localStorage.setItem('mk_current_day_date', mkLocalDateKey());
       localStorage.setItem('mk_srs', JSON.stringify(STATE.userData.srs || {}));
       localStorage.setItem('mk_mistakes', JSON.stringify(STATE.userData.mistakes || {}));
+      localStorage.setItem('mk_notebooks', JSON.stringify(STATE.userData.notebooks || {}));
+      if (STATE.userData.notebookDailyCount != null) localStorage.setItem('mk_notebook_daily', JSON.stringify(STATE.userData.notebookDailyCount));
       localStorage.setItem('mk_schema_version', String(SCHEMA_VERSION));
     } catch (e) {
       console.warn('LocalStorage save error:', e);
@@ -1776,7 +1780,9 @@
           stats: STATE.userData.stats,
           activityLog: STATE.userData.activityLog,
           srs: STATE.userData.srs,
-          mistakes: STATE.userData.mistakes
+          mistakes: STATE.userData.mistakes,
+          notebooks: STATE.userData.notebooks,
+          notebookDailyCount: STATE.userData.notebookDailyCount
         },
         currentDay: STATE.currentDay,
         activeModule: STATE.activeModule,
@@ -1820,6 +1826,8 @@
         STATE.userData.activityLog = Array.isArray(ud.activityLog) ? ud.activityLog : [];
         STATE.userData.srs = ud.srs && typeof ud.srs === 'object' ? ud.srs : {};
         STATE.userData.mistakes = ud.mistakes && typeof ud.mistakes === 'object' ? ud.mistakes : {};
+        STATE.userData.notebooks = ud.notebooks && typeof ud.notebooks === 'object' ? ud.notebooks : {};
+        STATE.userData.notebookDailyCount = typeof ud.notebookDailyCount === 'number' ? ud.notebookDailyCount : null;
 
         if (data.settings) {
           if (data.settings.accent) STATE.settings.accent = data.settings.accent;
@@ -1847,7 +1855,7 @@
   function resetProgress() {
     if (!confirm('Tüm öğrenme ilerlemeniz, hata defteriniz ve istatistikleriniz silinecek.\nBu işlem GERİ ALINAMAZ. Devam etmek istiyor musunuz?')) return;
     if (!confirm('Emin misiniz? Bu işlemi geri alamazsınız.')) return;
-    const keysToRemove = ['mk_learned', 'mk_review', 'mk_starred', 'mk_stats', 'mk_activity_log', 'mk_srs', 'mk_mistakes', 'mk_current_day', 'mk_current_day_date', 'mk_schema_version'];
+    const keysToRemove = ['mk_learned', 'mk_review', 'mk_starred', 'mk_stats', 'mk_activity_log', 'mk_srs', 'mk_mistakes', 'mk_notebooks', 'mk_notebook_daily', 'mk_current_day', 'mk_current_day_date', 'mk_schema_version'];
     keysToRemove.forEach(k => { try { localStorage.removeItem(k); } catch (_) {} });
     _showToast('Tüm ilerleme sıfırlandı. Sayfa yenileniyor...', 'success');
     setTimeout(() => location.reload(), 1000);
@@ -2109,6 +2117,54 @@
 
     saveUserData();
     return record;
+  }
+
+  // ==========================================================================
+  // RENKLİ DEFTERLER MODÜLÜ
+  // Aktif modülde açılmış kelimeleri zorluk kademesine (kırmızı/sarı/yeşil) göre
+  // çalıştıran katman. Renk kayıt anında performanstan tohumlanır, sonra yalnızca
+  // Seviye Geçme Testi ile değişir. Kelime havuzuna/korpusa dokunmaz.
+  // ==========================================================================
+
+  /** Kelimenin kayıt anındaki başlangıç rengini performanstan (SRS durumu) tohumlar. Yan etkisizdir. */
+  function seedNotebookColor(wordId) {
+    wordId = parseInt(wordId, 10);
+    const srs = STATE.userData.srs && STATE.userData.srs[wordId];
+    if (srs) {
+      if (srs.state === 'mastered' || (typeof srs.interval === 'number' && srs.interval >= 14)) return 'green';
+      if (srs.state === 'reviewing') return 'yellow';
+      return 'red'; // 'new' / 'learning' / diğer
+    }
+    // SRS geçmişi yok: CEFR hafif ipucu — nesnel kolay (A1/A2) kelimeyi en dibe atma
+    const w = WORDS_DATA.find(x => x.id === wordId);
+    const cefr = w && w.cefr;
+    if (cefr === 'A1' || cefr === 'A2') return 'yellow';
+    return 'red';
+  }
+
+  /** Kelimeyi Renkli Defterler'e kaydeder (idempotent). Yoksa oluşturur, varsa mevcut kaydı döndürür. */
+  function enrollNotebookWord(wordId) {
+    wordId = parseInt(wordId, 10);
+    if (!STATE.userData.notebooks) STATE.userData.notebooks = {};
+    let rec = STATE.userData.notebooks[wordId];
+    if (!rec) {
+      rec = {
+        color: seedNotebookColor(wordId),
+        good: 0,
+        lastGoodDate: null,
+        enrolledAt: getTodayDateString(),
+        promotedAt: null
+      };
+      STATE.userData.notebooks[wordId] = rec;
+      saveUserData();
+    }
+    return rec;
+  }
+
+  /** Kelimenin Renkli Defter kaydını döndürür (yoksa null). */
+  function getNotebookRecord(wordId) {
+    wordId = parseInt(wordId, 10);
+    return (STATE.userData.notebooks && STATE.userData.notebooks[wordId]) || null;
   }
 
   /**
@@ -8223,6 +8279,8 @@
       STATE.userData.activityLog = [];
       STATE.userData.srs = {};
       STATE.userData.mistakes = {};
+      STATE.userData.notebooks = {};
+      STATE.userData.notebookDailyCount = null;
       STATE.currentDay = 1;
       saveUserData();
       updateUI();
@@ -8907,6 +8965,9 @@
   window.APP = {
     isSourceCitation,
     displayExample,
+    seedNotebookColor,
+    enrollNotebookWord,
+    getNotebookRecord,
     openSettingsModal,
     closeSettingsModal,
     handleFabAction,
