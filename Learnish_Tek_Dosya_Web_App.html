@@ -7689,6 +7689,76 @@ h1, h2, h3 { text-wrap: balance; line-height: 1.2; }
   .lb-bubble, .lb-spot-hole, .lb-cg { transition: none !important; }
 }
 
+/* ==========================================================================
+   RENKLİ DEFTERLER MODÜLÜ
+   ========================================================================== */
+.notebooks-view { padding: 4px 0 24px; }
+.notebooks-hero {
+  display: flex; flex-wrap: wrap; gap: 16px; align-items: flex-end; justify-content: space-between;
+  padding: 18px; border-radius: 16px; background: var(--dp-color-surface-1);
+  border: 1px solid var(--dp-color-border-subtle); margin-bottom: 16px;
+}
+.nb-hero-title { font-size: 1.35rem; font-weight: 800; color: var(--dp-color-ink); margin: 0 0 4px; }
+.nb-hero-sub { font-size: 0.9rem; color: var(--dp-color-ink-muted); margin: 0; max-width: 60ch; line-height: 1.4; }
+.nb-hero-stats { display: flex; gap: 12px; }
+.nb-stat { font-size: 0.82rem; color: var(--dp-color-ink-muted); background: var(--dp-color-surface-2);
+  padding: 6px 12px; border-radius: 10px; border: 1px solid var(--dp-color-border-subtle); }
+.nb-stat strong { color: var(--dp-color-ink); font-size: 1rem; }
+
+.notebooks-controls {
+  display: flex; flex-wrap: wrap; gap: 10px; align-items: center;
+  padding: 14px 16px; border-radius: 14px; background: var(--dp-color-surface-1);
+  border: 1px solid var(--dp-color-border-subtle); margin-bottom: 18px;
+}
+.nb-daily-label { font-size: 0.85rem; font-weight: 700; color: var(--dp-color-ink); }
+.nb-daily-input {
+  width: 72px; min-height: 44px; padding: 8px 10px; border-radius: 10px;
+  border: 1px solid var(--dp-color-border); background: var(--dp-color-field);
+  color: var(--dp-color-ink); font-size: 1rem; font-weight: 700;
+}
+.nb-levelup-btn { background: var(--dp-color-accent); color: var(--dp-color-accent-ink, #fff); }
+.nb-levelup-hint { font-size: 0.8rem; color: var(--dp-color-ink-muted); display: inline-flex; align-items: center; gap: 6px; }
+
+.notebooks-buckets { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; }
+.notebook-bucket {
+  --nb: var(--dp-color-ink-muted);
+  border-radius: 16px; padding: 14px; background: var(--dp-color-surface-1);
+  border: 1px solid var(--dp-color-border-subtle); border-top: 4px solid var(--nb);
+}
+.notebook-bucket[data-notebook-color="red"]    { --nb: var(--dp-color-red); }
+.notebook-bucket[data-notebook-color="yellow"] { --nb: var(--dp-color-amber); }
+.notebook-bucket[data-notebook-color="green"]  { --nb: var(--dp-color-green); }
+.nb-bucket-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px; }
+.nb-bucket-title { font-size: 1rem; font-weight: 800; color: var(--dp-color-ink); }
+.nb-bucket-count {
+  font-size: 0.85rem; font-weight: 800; color: var(--nb);
+  background: var(--dp-color-surface-2); border-radius: 999px; padding: 2px 10px; min-width: 28px; text-align: center;
+}
+.nb-bucket-desc { font-size: 0.78rem; color: var(--dp-color-ink-muted); margin: 0 0 10px; line-height: 1.35; }
+.nb-bucket-cards { display: flex; flex-direction: column; gap: 8px; }
+.nb-bucket-empty { font-size: 0.82rem; color: var(--dp-color-ink-faint); font-style: italic; padding: 8px 0; }
+.nb-bucket-more { font-size: 0.78rem; color: var(--dp-color-ink-muted); margin: 8px 0 0; text-align: center; }
+
+.notebook-card {
+  --nb: var(--dp-color-ink-muted);
+  border-radius: 12px; padding: 10px 12px; background: var(--dp-color-surface-2);
+  border: 1px solid var(--dp-color-border-subtle); border-left: 3px solid var(--nb);
+}
+.notebook-card[data-notebook-color="red"]    { --nb: var(--dp-color-red); }
+.notebook-card[data-notebook-color="yellow"] { --nb: var(--dp-color-amber); }
+.notebook-card[data-notebook-color="green"]  { --nb: var(--dp-color-green); }
+.nb-card-head { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+.nb-card-en { font-size: 0.95rem; font-weight: 800; color: var(--dp-color-ink); }
+.nb-card-tr { font-size: 0.85rem; color: var(--dp-color-ink-muted); }
+.nb-card-ex { font-size: 0.8rem; color: var(--dp-color-ink-muted); font-style: italic; margin: 6px 0 0; line-height: 1.35; }
+.nb-card-foot { display: flex; align-items: center; gap: 10px; margin-top: 8px; flex-wrap: wrap; }
+.nb-card-good, .nb-card-eligible, .nb-card-cefr {
+  font-size: 0.72rem; font-weight: 700; color: var(--dp-color-ink-muted);
+  display: inline-flex; align-items: center; gap: 4px;
+}
+.nb-card-eligible { color: var(--dp-color-accent); }
+.nb-card-cefr { background: var(--dp-color-surface-3); border-radius: 6px; padding: 1px 6px; }
+
 </style>
 </head>
 <body>
@@ -7764,6 +7834,10 @@ h1, h2, h3 { text-wrap: balance; line-height: 1.2; }
         <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
         <span>İstatistik &amp; Analiz</span>
       </button>
+      <button type="button" class="desktop-nav-btn nav-btn" data-view="notebooks">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M4 4.5A2.5 2.5 0 0 1 6.5 2H20v15H6.5A2.5 2.5 0 0 0 4 19.5z"/><path d="M8 7h8"/><path d="M8 11h5"/></svg>
+        <span>Renkli Defterler</span>
+      </button>
       <button type="button" class="desktop-nav-btn nav-btn" onclick="window.APP.openPdfStudio()" title="PDF Çalışma Kağıdı &amp; Hata Kampı">
         <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
         <span>PDF &amp; Yazdır</span>
@@ -7801,6 +7875,11 @@ h1, h2, h3 { text-wrap: balance; line-height: 1.2; }
       <!-- View 5: İstatistik (#stats) -->
       <section id="view-stats" class="view-section" aria-labelledby="tab-stats">
         <!-- Rendered by app.js -->
+      </section>
+
+      <!-- View 6: Renkli Defterler (#notebooks) -->
+      <section id="view-notebooks" class="view-section" aria-labelledby="tab-notebooks">
+        <!-- Rendered by app.js (renderNotebooksView) -->
       </section>
 
     </main>
@@ -9104,6 +9183,7 @@ if (typeof module !== 'undefined' && module.exports) {
     currentView: 'home', // 'home', 'daily', 'flashcard', 'quiz', 'directory', 'stats'
     viewHistory: ['home'],
     currentDay: 1, // Maarif: 1-82, YDS: 1-145
+    // not: 'notebooks' görünümü (Renkli Defterler) currentView değerlerine dahildir
     activeFlashcardIndex: 0,
     filteredFlashcards: [],
     flashcardFlipped: false,
@@ -9148,7 +9228,9 @@ if (typeof module !== 'undefined' && module.exports) {
       }, lsJSON('mk_stats', {})),
       activityLog: lsJSON('mk_activity_log', []),
       srs: lsJSON('mk_srs', {}),
-      mistakes: lsJSON('mk_mistakes', {})
+      mistakes: lsJSON('mk_mistakes', {}),
+      notebooks: lsJSON('mk_notebooks', {}),
+      notebookDailyCount: lsJSON('mk_notebook_daily', null)
     }
   };
 
@@ -10383,6 +10465,8 @@ if (typeof module !== 'undefined' && module.exports) {
       localStorage.setItem('mk_current_day_date', mkLocalDateKey());
       localStorage.setItem('mk_srs', JSON.stringify(STATE.userData.srs || {}));
       localStorage.setItem('mk_mistakes', JSON.stringify(STATE.userData.mistakes || {}));
+      localStorage.setItem('mk_notebooks', JSON.stringify(STATE.userData.notebooks || {}));
+      if (STATE.userData.notebookDailyCount != null) localStorage.setItem('mk_notebook_daily', JSON.stringify(STATE.userData.notebookDailyCount));
       localStorage.setItem('mk_schema_version', String(SCHEMA_VERSION));
     } catch (e) {
       console.warn('LocalStorage save error:', e);
@@ -10412,7 +10496,9 @@ if (typeof module !== 'undefined' && module.exports) {
           stats: STATE.userData.stats,
           activityLog: STATE.userData.activityLog,
           srs: STATE.userData.srs,
-          mistakes: STATE.userData.mistakes
+          mistakes: STATE.userData.mistakes,
+          notebooks: STATE.userData.notebooks,
+          notebookDailyCount: STATE.userData.notebookDailyCount
         },
         currentDay: STATE.currentDay,
         activeModule: STATE.activeModule,
@@ -10456,6 +10542,8 @@ if (typeof module !== 'undefined' && module.exports) {
         STATE.userData.activityLog = Array.isArray(ud.activityLog) ? ud.activityLog : [];
         STATE.userData.srs = ud.srs && typeof ud.srs === 'object' ? ud.srs : {};
         STATE.userData.mistakes = ud.mistakes && typeof ud.mistakes === 'object' ? ud.mistakes : {};
+        STATE.userData.notebooks = ud.notebooks && typeof ud.notebooks === 'object' ? ud.notebooks : {};
+        STATE.userData.notebookDailyCount = typeof ud.notebookDailyCount === 'number' ? ud.notebookDailyCount : null;
 
         if (data.settings) {
           if (data.settings.accent) STATE.settings.accent = data.settings.accent;
@@ -10483,7 +10571,7 @@ if (typeof module !== 'undefined' && module.exports) {
   function resetProgress() {
     if (!confirm('Tüm öğrenme ilerlemeniz, hata defteriniz ve istatistikleriniz silinecek.\nBu işlem GERİ ALINAMAZ. Devam etmek istiyor musunuz?')) return;
     if (!confirm('Emin misiniz? Bu işlemi geri alamazsınız.')) return;
-    const keysToRemove = ['mk_learned', 'mk_review', 'mk_starred', 'mk_stats', 'mk_activity_log', 'mk_srs', 'mk_mistakes', 'mk_current_day', 'mk_current_day_date', 'mk_schema_version'];
+    const keysToRemove = ['mk_learned', 'mk_review', 'mk_starred', 'mk_stats', 'mk_activity_log', 'mk_srs', 'mk_mistakes', 'mk_notebooks', 'mk_notebook_daily', 'mk_current_day', 'mk_current_day_date', 'mk_schema_version'];
     keysToRemove.forEach(k => { try { localStorage.removeItem(k); } catch (_) {} });
     _showToast('Tüm ilerleme sıfırlandı. Sayfa yenileniyor...', 'success');
     setTimeout(() => location.reload(), 1000);
@@ -10743,8 +10831,300 @@ if (typeof module !== 'undefined' && module.exports) {
       STATE.userData.learned.delete(wordId);
     }
 
+    // Renkli Defterler: kayıtlı kelimenin "iyi hatırlama" sayacını besle.
+    // Günde kelime başına en fazla +1; Seviye Geçme Testi'nin kendi cevapları sayılmaz.
+    const _nb = STATE.userData.notebooks && STATE.userData.notebooks[wordId];
+    const _inLevelUp = STATE.quizState && STATE.quizState.active && STATE.quizState.source === 'notebook_levelup';
+    if (_nb && quality >= 4 && !_inLevelUp) {
+      const _today = mkLocalDateKey();
+      if (_nb.lastGoodDate !== _today) {
+        _nb.good = (_nb.good || 0) + 1;
+        _nb.lastGoodDate = _today;
+      }
+    }
+
     saveUserData();
     return record;
+  }
+
+  // ==========================================================================
+  // RENKLİ DEFTERLER MODÜLÜ
+  // Aktif modülde açılmış kelimeleri zorluk kademesine (kırmızı/sarı/yeşil) göre
+  // çalıştıran katman. Renk kayıt anında performanstan tohumlanır, sonra yalnızca
+  // Seviye Geçme Testi ile değişir. Kelime havuzuna/korpusa dokunmaz.
+  // ==========================================================================
+
+  /** Kelimenin kayıt anındaki başlangıç rengini performanstan (SRS durumu) tohumlar. Yan etkisizdir. */
+  function seedNotebookColor(wordId) {
+    wordId = parseInt(wordId, 10);
+    const srs = STATE.userData.srs && STATE.userData.srs[wordId];
+    if (srs) {
+      if (srs.state === 'mastered' || (typeof srs.interval === 'number' && srs.interval >= 14)) return 'green';
+      if (srs.state === 'reviewing') return 'yellow';
+      return 'red'; // 'new' / 'learning' / diğer
+    }
+    // SRS geçmişi yok: CEFR hafif ipucu — nesnel kolay (A1/A2) kelimeyi en dibe atma
+    const w = WORDS_DATA.find(x => x.id === wordId);
+    const cefr = w && w.cefr;
+    if (cefr === 'A1' || cefr === 'A2') return 'yellow';
+    return 'red';
+  }
+
+  /** Kelimeyi Renkli Defterler'e kaydeder (idempotent). Yoksa oluşturur, varsa mevcut kaydı döndürür. */
+  function enrollNotebookWord(wordId) {
+    wordId = parseInt(wordId, 10);
+    if (!STATE.userData.notebooks) STATE.userData.notebooks = {};
+    let rec = STATE.userData.notebooks[wordId];
+    if (!rec) {
+      rec = {
+        color: seedNotebookColor(wordId),
+        good: 0,
+        lastGoodDate: null,
+        enrolledAt: getTodayDateString(),
+        promotedAt: null
+      };
+      STATE.userData.notebooks[wordId] = rec;
+      saveUserData();
+    }
+    return rec;
+  }
+
+  /** Kelimenin Renkli Defter kaydını döndürür (yoksa null). */
+  function getNotebookRecord(wordId) {
+    wordId = parseInt(wordId, 10);
+    return (STATE.userData.notebooks && STATE.userData.notebooks[wordId]) || null;
+  }
+
+  /** Kelime terfiye uygun mu: yeşil değil ve en az 5 iyi hatırlama topladıysa. */
+  function isNotebookEligible(wordId) {
+    const r = getNotebookRecord(wordId);
+    return !!(r && r.color !== 'green' && (r.good || 0) >= 5);
+  }
+
+  /** Terfiye uygun tüm kayıtlı kelimelerin WORDS_DATA nesneleri. */
+  function getNotebookEligibleWords() {
+    if (!STATE.userData.notebooks) return [];
+    return Object.keys(STATE.userData.notebooks)
+      .map(Number)
+      .filter(isNotebookEligible)
+      .map(id => WORDS_DATA.find(w => w.id === id))
+      .filter(Boolean);
+  }
+
+  /** Aktif modülün hedef havuzu ve günlük parti boyutu (renderDailyView ile aynı mantık). */
+  function _activeModuleTargetAndBatch() {
+    const module = STATE.activeModule;
+    if (module === 'yds') return { targetPool: WORDS_DATA.filter(isYDSWord), batchSize: 20 };
+    if (module === 'oxford') return { targetPool: WORDS_DATA.filter(isOxfordWord), batchSize: 25 };
+    if (module === 'all') return { targetPool: WORDS_DATA, batchSize: 25 };
+    return { targetPool: getActiveGradePool(), batchSize: 10 };
+  }
+
+  /** Aktif modülde o güne dek açılmış (birikmiş) kelimeler. */
+  function getUnlockedModuleWords() {
+    const { targetPool, batchSize } = _activeModuleTargetAndBatch();
+    const end = Math.min(STATE.currentDay * batchSize, targetPool.length);
+    return targetPool.slice(0, end);
+  }
+
+  /** Günlük çalışılacak kelime adedi (kayıtlı ayar yoksa modül parti boyutu). */
+  function getNotebookDailyCount() {
+    const v = STATE.userData.notebookDailyCount;
+    if (typeof v === 'number' && v >= 1) return v;
+    return _activeModuleTargetAndBatch().batchSize;
+  }
+
+  /** Günlük adet ayarını kalıcı yapar (1..50). */
+  function setNotebookDailyCount(n) {
+    n = Math.max(1, Math.min(50, parseInt(n, 10) || 1));
+    STATE.userData.notebookDailyCount = n;
+    saveUserData();
+  }
+
+  /**
+   * O günün çalışma kümesi: açılmış kelimelerden
+   *  1) SRS'e göre bugün tekrarı gelen kayıtlı kelimeler,
+   *  2) henüz kayıtlı olmayanlar (kaydedilerek),
+   *  3) kalan kayıtlı kelimeler — günlük adet dolana dek.
+   */
+  function buildNotebookDailySet() {
+    const unlocked = getUnlockedModuleWords();
+    const unlockedIds = new Set(unlocked.map(w => w.id));
+    const count = getNotebookDailyCount();
+    const result = [];
+    const used = new Set();
+    const due = getSRSDueWords().filter(w => unlockedIds.has(w.id) && getNotebookRecord(w.id));
+    for (const w of due) {
+      if (result.length >= count) break;
+      if (!used.has(w.id)) { used.add(w.id); result.push(w); }
+    }
+    for (const w of unlocked) {
+      if (result.length >= count) break;
+      if (used.has(w.id) || getNotebookRecord(w.id)) continue;
+      enrollNotebookWord(w.id);
+      used.add(w.id); result.push(w);
+    }
+    for (const w of unlocked) {
+      if (result.length >= count) break;
+      if (used.has(w.id)) continue;
+      used.add(w.id); result.push(w);
+    }
+    return result;
+  }
+
+  /** Renkli Defterler günlük çalışmasını flash kart motorunda başlatır. */
+  function startNotebookFlashcards() {
+    STATE.flashcardSource = 'notebook';
+    STATE.activeFlashcardIndex = 0;
+    STATE.flashcardFlipped = false;
+    STATE.flashcardIsShuffled = false;
+    switchView('flashcard');
+  }
+
+  /** Kelimeyi tek adım daha kolay renge terfi ettirir (red→yellow→green; yeşil terminal). */
+  function promoteNotebookWord(wordId) {
+    const r = getNotebookRecord(wordId);
+    if (!r) return null;
+    r.color = r.color === 'red' ? 'yellow' : (r.color === 'yellow' ? 'green' : 'green');
+    r.good = 0;
+    r.lastGoodDate = null;
+    r.promotedAt = getTodayDateString();
+    saveUserData();
+    return r;
+  }
+
+  /** Terfiye uygun kelime sayısı 20'ye ulaştıysa Seviye Geçme Testi önerilmeli. */
+  function shouldOfferLevelUpTest() {
+    return getNotebookEligibleWords().length >= 20;
+  }
+
+  /** Yalnızca terfiye uygun kelimelerden Seviye Geçme Testi kurar (mevcut quiz motoru). */
+  function startNotebookLevelUpTest() {
+    const pool = getNotebookEligibleWords();
+    if (pool.length === 0) {
+      alert('Henüz seviye atlamaya uygun kelime yok. Kelimeleri çalışmaya devam edin.');
+      return;
+    }
+    const shuffled = shuffleArray(pool);
+    const selectedTargets = shuffled.slice(0, Math.min(10, shuffled.length));
+    const questions = selectedTargets.map(target => {
+      const distractors = pickDistractors(target, 3, pool);
+      const options = [target, ...distractors]
+        .sort(() => Math.random() - 0.5)
+        .map(w => ({ id: w.id, text: w.tr || w.en, isCorrect: w.id === target.id }));
+      return { targetWord: target, clozeSentence: null, options };
+    });
+    STATE.quizState = {
+      active: true,
+      questions,
+      currentIndex: 0,
+      score: 0,
+      streak: 0,
+      mode: 'en-tr',
+      source: 'notebook_levelup',
+      answered: false,
+      waitingFeedback: false
+    };
+    saveQuizState();
+    switchView('quiz');
+  }
+
+  // --- Renkli Defterler görünümü ---
+  const NOTEBOOK_COLOR_META = {
+    red:    { key: 'red',    label: 'Zor',   emoji: '🔴', desc: 'Henüz oturmamış, en çok tekrar isteyen kelimeler.' },
+    yellow: { key: 'yellow', label: 'Orta',  emoji: '🟡', desc: 'İlerleme kaydeden, pekişmekte olan kelimeler.' },
+    green:  { key: 'green',  label: 'Kolay', emoji: '🟢', desc: 'Ustalaşılan kelimeler; uzun aralıklarla tekrar eder.' }
+  };
+
+  function _notebookWordsByColor() {
+    const buckets = { red: [], yellow: [], green: [] };
+    const nb = STATE.userData.notebooks || {};
+    Object.keys(nb).forEach(idStr => {
+      const rec = nb[idStr];
+      if (!rec || !buckets[rec.color]) return;
+      const w = WORDS_DATA.find(x => x.id === parseInt(idStr, 10));
+      if (w) buckets[rec.color].push({ word: w, rec });
+    });
+    return buckets;
+  }
+
+  function _notebookCard(item) {
+    const w = item.word, rec = item.rec;
+    const ex = displayExample(w.example) || displayExample(w.ydsExample);
+    const eligible = isNotebookEligible(w.id);
+    return `
+      <article class="notebook-card" data-notebook-color="${rec.color}">
+        <div class="nb-card-head">
+          <strong class="nb-card-en">${escapeHtml(w.en)}</strong>
+          <span class="nb-card-tr">${escapeHtml(w.tr || '')}</span>
+        </div>
+        ${ex ? `<p class="nb-card-ex">“${escapeHtml(ex)}”</p>` : ''}
+        <div class="nb-card-foot">
+          <span class="nb-card-good" title="İyi hatırlama">${renderIcon('check', 12)} ${rec.good || 0}/5</span>
+          ${eligible ? `<span class="nb-card-eligible">${renderIcon('zap', 12)} Terfiye hazır</span>` : ''}
+          ${w.cefr ? `<span class="nb-card-cefr">${escapeHtml(w.cefr)}</span>` : ''}
+        </div>
+      </article>`;
+  }
+
+  function renderNotebooksView() {
+    const container = document.getElementById('view-notebooks');
+    if (!container) return;
+    const buckets = _notebookWordsByColor();
+    const total = buckets.red.length + buckets.yellow.length + buckets.green.length;
+    const eligibleCount = getNotebookEligibleWords().length;
+    const dailyCount = getNotebookDailyCount();
+    const offerTest = shouldOfferLevelUpTest();
+
+    const bucketHtml = ['red', 'yellow', 'green'].map(color => {
+      const meta = NOTEBOOK_COLOR_META[color];
+      const items = buckets[color];
+      const cards = items.slice(0, 60).map(_notebookCard).join('');
+      return `
+        <section class="notebook-bucket" data-notebook-color="${color}">
+          <header class="nb-bucket-head">
+            <span class="nb-bucket-title">${meta.emoji} ${meta.label}</span>
+            <span class="nb-bucket-count">${items.length}</span>
+          </header>
+          <p class="nb-bucket-desc">${meta.desc}</p>
+          <div class="nb-bucket-cards">
+            ${cards || `<p class="nb-bucket-empty">Bu defterde henüz kelime yok.</p>`}
+          </div>
+          ${items.length > 60 ? `<p class="nb-bucket-more">+${items.length - 60} kelime daha</p>` : ''}
+        </section>`;
+    }).join('');
+
+    container.innerHTML = `
+      <div class="notebooks-view">
+        <header class="notebooks-hero">
+          <div class="nb-hero-main">
+            <h2 class="nb-hero-title">Renkli Defterler</h2>
+            <p class="nb-hero-sub">Sınıf müfredatından açılmış kelimeleri zorluk kademesine göre çalış; ustalaştıkça kelime bir üst renge terfi eder.</p>
+          </div>
+          <div class="nb-hero-stats">
+            <span class="nb-stat"><strong>${total}</strong> kelime</span>
+            <span class="nb-stat"><strong>${eligibleCount}</strong> terfiye hazır</span>
+          </div>
+        </header>
+
+        <div class="notebooks-controls">
+          <label class="nb-daily-label" for="nb-daily-count">Bugün kaç kelime?</label>
+          <input type="number" id="nb-daily-count" class="nb-daily-input" min="1" max="50" value="${dailyCount}"
+            onchange="window.APP.setNotebookDailyCount(this.value); window.APP.renderNotebooksView();" aria-label="Günlük kelime adedi">
+          <button type="button" class="fc-action-btn nb-study-btn" onclick="window.APP.startNotebookFlashcards()">
+            ${renderIcon('layers', 15)} <span>Bugünü Çalış (${dailyCount})</span>
+          </button>
+          ${offerTest ? `
+            <button type="button" class="fc-action-btn nb-levelup-btn" onclick="window.APP.startNotebookLevelUpTest()" title="${eligibleCount} kelime terfiye hazır">
+              ${renderIcon('zap', 15)} <span>Seviye Geçme Testi (${eligibleCount}) &rarr;</span>
+            </button>` : `
+            <span class="nb-levelup-hint">${renderIcon('alert', 13)} Seviye Geçme Testi, 20 kelime terfiye hazır olunca açılır (${eligibleCount}/20).</span>`}
+        </div>
+
+        <div class="notebooks-buckets">
+          ${bucketHtml}
+        </div>
+      </div>`;
   }
 
   /**
@@ -13782,6 +14162,8 @@ if (typeof module !== 'undefined' && module.exports) {
         pool = getSRSDueWords();
       } else if (sourceVal === 'mistakes') {
         pool = getActiveMistakeWords();
+      } else if (sourceVal === 'notebook') {
+        pool = buildNotebookDailySet();
       } else {
         pool = WORDS_DATA;
       }
@@ -16066,7 +16448,8 @@ if (typeof module !== 'undefined' && module.exports) {
       flashcard: 'FLASHCARD • KART İNCELEME',
       quiz: 'KAZANIM SINAVI • TEST',
       directory: 'KELİME HAVUZU • ARAMA',
-      stats: 'ÖĞRENİM TELEMETRİSİ • ANALİZ'
+      stats: 'ÖĞRENİM TELEMETRİSİ • ANALİZ',
+      notebooks: 'RENKLİ DEFTERLER • KADEME'
     };
     const activeModName = modTitles[STATE.activeModule] || 'MEB Müfredatı';
     if (labelEl) {
@@ -16080,6 +16463,7 @@ if (typeof module !== 'undefined' && module.exports) {
       else if (viewName === 'quiz') titleEl.textContent = `Quiz & Test (${activeModName})`;
       else if (viewName === 'directory') titleEl.textContent = `Kelime Havuzu (${activeModName})`;
       else if (viewName === 'stats') titleEl.textContent = `İstatistik (${activeModName})`;
+      else if (viewName === 'notebooks') titleEl.textContent = `Renkli Defterler (${activeModName})`;
     }
 
     // Trigger Context Canopy ("İşte Buradasınız" Tülü & Haber Verici Çizgisi)
@@ -16091,6 +16475,7 @@ if (typeof module !== 'undefined' && module.exports) {
     if (viewName === 'quiz') renderQuizView();
     if (viewName === 'directory') renderDirectoryView();
     if (viewName === 'stats') renderStatsView();
+    if (viewName === 'notebooks') renderNotebooksView();
 
     if (typeof Buddy !== 'undefined' && Buddy.onView) Buddy.onView(viewName);
   }
@@ -16308,6 +16693,11 @@ if (typeof module !== 'undefined' && module.exports) {
       const rec = recordMistakeSuccess(currentQ.targetWord.id);
       if (rec && rec.cleared) {
         showRecoveryToast(currentQ.targetWord);
+      }
+
+      // Renkli Defterler Seviye Geçme Testi: doğru bilinen kelime tek adım terfi eder.
+      if (STATE.quizState.source === 'notebook_levelup') {
+        promoteNotebookWord(currentQ.targetWord.id);
       }
 
       saveQuizState();
@@ -16859,6 +17249,8 @@ if (typeof module !== 'undefined' && module.exports) {
       STATE.userData.activityLog = [];
       STATE.userData.srs = {};
       STATE.userData.mistakes = {};
+      STATE.userData.notebooks = {};
+      STATE.userData.notebookDailyCount = null;
       STATE.currentDay = 1;
       saveUserData();
       updateUI();
@@ -17543,6 +17935,21 @@ if (typeof module !== 'undefined' && module.exports) {
   window.APP = {
     isSourceCitation,
     displayExample,
+    seedNotebookColor,
+    enrollNotebookWord,
+    getNotebookRecord,
+    isNotebookEligible,
+    getNotebookEligibleWords,
+    getUnlockedModuleWords,
+    getNotebookDailyCount,
+    setNotebookDailyCount,
+    buildNotebookDailySet,
+    startNotebookFlashcards,
+    promoteNotebookWord,
+    shouldOfferLevelUpTest,
+    startNotebookLevelUpTest,
+    renderNotebooksView,
+    calculateSRS,
     openSettingsModal,
     closeSettingsModal,
     handleFabAction,
