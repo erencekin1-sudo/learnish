@@ -2646,6 +2646,57 @@ registerTest(1, 'Renkli Defterler', 'test_reset_clears_notebook_daily_key', () =
   assertEqual(env.localStorage.getItem('mk_notebook_daily'), null, 'null değerde mk_notebook_daily anahtarı silinmeli');
 });
 
+// ----- İzolasyon: defter puanlaması küresel SRS'i değiştirmemeli -----
+
+registerTest(1, 'Renkli Defterler', 'test_notebook_rating_does_not_touch_global_srs', () => {
+  const env = createFreshAppEnvironment();
+  const id = env.sandbox.WORDS_DATA[0].id;
+  env.APP.enrollNotebookWord(id);
+  env.APP.markNotebookCard(id, 5); // KOLAY
+  assert(env.APP.getState().userData.srs[id] == null, 'defter puanlaması küresel SRS kaydı oluşturmamalı');
+  assert(!env.APP.getState().userData.learned.has(id), 'defter puanlaması öğrenilenler setine yazmamalı');
+  assertEqual(env.APP.getNotebookRecord(id).good, 1, 'defter puanlaması defterin good sayacını artırmalı');
+});
+
+registerTest(1, 'Renkli Defterler', 'test_notebook_rating_daily_cap', () => {
+  const env = createFreshAppEnvironment();
+  const id = env.sandbox.WORDS_DATA[1].id;
+  env.APP.enrollNotebookWord(id);
+  env.APP.markNotebookCard(id, 4);
+  env.APP.markNotebookCard(id, 5); // aynı gün ikinci
+  assertEqual(env.APP.getNotebookRecord(id).good, 1, 'defter good günde en fazla +1 artmalı');
+});
+
+registerTest(1, 'Renkli Defterler', 'test_flashcard_rating_routes_by_source', () => {
+  const env = createFreshAppEnvironment();
+  const nbId = env.sandbox.WORDS_DATA[2].id;
+  const normId = env.sandbox.WORDS_DATA[3].id;
+  // notebook kaynağı -> küresel SRS'e dokunmaz
+  env.APP.getState().flashcardSource = 'notebook';
+  env.APP.enrollNotebookWord(nbId);
+  env.APP.rateFlashcard(nbId, 4);
+  assert(env.APP.getState().userData.srs[nbId] == null, 'notebook kaynağında puanlama küresel SRS yazmamalı');
+  assertEqual(env.APP.getNotebookRecord(nbId).good, 1, 'notebook kaynağında good artmalı');
+  // normal kaynak -> küresel SRS yazar (mevcut davranış korunur)
+  env.APP.getState().flashcardSource = 'daily';
+  env.APP.rateFlashcard(normId, 4);
+  assert(env.APP.getState().userData.srs[normId] != null, 'normal kaynakta küresel SRS kaydı oluşmalı');
+});
+
+registerTest(1, 'Renkli Defterler', 'test_levelup_quiz_answer_isolated_from_global_srs', () => {
+  const env = createFreshAppEnvironment();
+  const ids = env.sandbox.WORDS_DATA.slice(0, 22).map(w => w.id);
+  ids.forEach(id => { const r = env.APP.enrollNotebookWord(id); r.color = 'red'; r.good = 5; });
+  env.APP.startNotebookLevelUpTest();
+  const q = env.APP.getState().quizState.questions[0];
+  const tid = q.targetWord.id;
+  const correctIdx = q.options.findIndex(o => o.isCorrect);
+  env.APP.handleQuizAnswer(correctIdx);
+  assert(env.APP.getState().userData.srs[tid] == null, 'Seviye Geçme Testi küresel SRS yazmamalı');
+  assert(!env.APP.getState().userData.mistakes[tid], 'Seviye Geçme Testi hata defterine yazmamalı');
+  assertEqual(env.APP.getNotebookRecord(tid).color, 'yellow', 'doğru cevap kelimeyi terfi ettirmeli');
+});
+
 // ============================================================================
 // 7.X MENTOR CONCIERGE (Task 1)
 // ============================================================================

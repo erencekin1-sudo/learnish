@@ -2166,6 +2166,7 @@
         color: seedNotebookColor(wordId),
         good: 0,
         lastGoodDate: null,
+        lastReview: null,
         enrolledAt: getTodayDateString(),
         promotedAt: null
       };
@@ -2256,6 +2257,32 @@
       used.add(w.id); result.push(w);
     }
     return result;
+  }
+
+  /**
+   * Renkli Defterler kart puanlaması — YALITILMIŞ.
+   * Küresel SRS'e, öğrenilenler/tekrar setlerine ve Hata Defterine HİÇ dokunmaz;
+   * yalnızca defterin kendi 'good' sayacını (günde +1 kapaklı) ve son-çalışma tarihini günceller.
+   * Böylece defter çalışması diğer havuzların tekrar programını değiştirmez.
+   */
+  function markNotebookCard(wordId, quality) {
+    wordId = parseInt(wordId, 10);
+    const rec = enrollNotebookWord(wordId);
+    const today = mkLocalDateKey();
+    if (quality >= 4 && rec.lastGoodDate !== today) {
+      rec.good = (rec.good || 0) + 1;
+      rec.lastGoodDate = today;
+    }
+    rec.lastReview = today;
+    playSound(quality < 3 ? 'flip' : 'correct');
+    saveUserData();
+    nextFlashcard();
+  }
+
+  /** Flash kart puanlama yönlendirici: notebook kaynağında yalıtılmış yola gider. */
+  function rateFlashcard(wordId, quality) {
+    if (STATE.flashcardSource === 'notebook') markNotebookCard(wordId, quality);
+    else markFlashcardSRS(wordId, quality);
   }
 
   /** Renkli Defterler günlük çalışmasını flash kart motorunda başlatır. */
@@ -5652,19 +5679,19 @@
             &larr; ÖNCEKİ
           </button>
           
-          <button class="fc-action-btn fc-btn-again ${isReview ? 'active' : ''}" onclick="window.APP.markFlashcardSRS(${currentWord.id}, 1)" title="Zorlandım / Hatırlamadım (1 gün sonra tekrar sor)">
+          <button class="fc-action-btn fc-btn-again ${isReview ? 'active' : ''}" onclick="window.APP.rateFlashcard(${currentWord.id}, 1)" title="Zorlandım / Hatırlamadım (1 gün sonra tekrar sor)">
             <span class="fc-btn-top">${renderIcon('alert', 13)} ZOR / TEKRAR</span>
             <span class="fc-btn-sub">1 gün sonra</span>
             <span class="kbd-badge">1</span>
           </button>
 
-          <button class="fc-action-btn fc-btn-good ${isLearned ? 'active' : ''}" onclick="window.APP.markFlashcardSRS(${currentWord.id}, 4)" title="İyi / Hatırladım">
+          <button class="fc-action-btn fc-btn-good ${isLearned ? 'active' : ''}" onclick="window.APP.rateFlashcard(${currentWord.id}, 4)" title="İyi / Hatırladım">
             <span class="fc-btn-top">${renderIcon('zap', 13)} İYİ / HATIRLADIM</span>
             <span class="fc-btn-sub">${nextGoodDays} gün sonra</span>
             <span class="kbd-badge">2</span>
           </button>
 
-          <button class="fc-action-btn fc-btn-easy" onclick="window.APP.markFlashcardSRS(${currentWord.id}, 5)" title="Çok Kolay / Zihnimde">
+          <button class="fc-action-btn fc-btn-easy" onclick="window.APP.rateFlashcard(${currentWord.id}, 5)" title="Çok Kolay / Zihnimde">
             <span class="fc-btn-top">${renderIcon('check', 13)} KOLAY / ZİHNİMDE</span>
             <span class="fc-btn-sub">${nextEasyDays} gün sonra</span>
             <span class="kbd-badge">3</span>
@@ -7978,16 +8005,17 @@
       STATE.quizState.streak++;
       playSound('correct');
 
-      // SM-2 Aralıklı Tekrar ve Hata Defteri senkronizasyonu
-      calculateSRS(currentQ.targetWord.id, 4);
-      const rec = recordMistakeSuccess(currentQ.targetWord.id);
-      if (rec && rec.cleared) {
-        showRecoveryToast(currentQ.targetWord);
-      }
-
-      // Renkli Defterler Seviye Geçme Testi: doğru bilinen kelime tek adım terfi eder.
+      // Renkli Defterler Seviye Geçme Testi YALITILMIŞTIR: küresel SRS'e/Hata Defterine yazmaz.
       if (STATE.quizState.source === 'notebook_levelup') {
+        // doğru bilinen kelime tek adım terfi eder (küresel tekrar programına dokunulmaz)
         promoteNotebookWord(currentQ.targetWord.id);
+      } else {
+        // SM-2 Aralıklı Tekrar ve Hata Defteri senkronizasyonu
+        calculateSRS(currentQ.targetWord.id, 4);
+        const rec = recordMistakeSuccess(currentQ.targetWord.id);
+        if (rec && rec.cleared) {
+          showRecoveryToast(currentQ.targetWord);
+        }
       }
 
       saveQuizState();
@@ -8005,9 +8033,11 @@
       STATE.quizState.streak = 0;
       playSound('wrong');
 
-      // Hata Defterine kaydet ve Aralıklı Tekrarı başa al
-      calculateSRS(currentQ.targetWord.id, 1);
-      recordMistake(currentQ.targetWord.id, `quiz_${STATE.quizState.mode}`);
+      // Hata Defterine kaydet ve Aralıklı Tekrarı başa al (Seviye Geçme Testi hariç — yalıtılmış)
+      if (STATE.quizState.source !== 'notebook_levelup') {
+        calculateSRS(currentQ.targetWord.id, 1);
+        recordMistake(currentQ.targetWord.id, `quiz_${STATE.quizState.mode}`);
+      }
 
       saveUserData();
       saveQuizState();
@@ -9235,6 +9265,8 @@
     setNotebookDailyCount,
     buildNotebookDailySet,
     startNotebookFlashcards,
+    markNotebookCard,
+    rateFlashcard,
     promoteNotebookWord,
     shouldOfferLevelUpTest,
     startNotebookLevelUpTest,
