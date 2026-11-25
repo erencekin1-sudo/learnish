@@ -2575,6 +2575,40 @@ registerTest(1, 'Renkli Defterler', 'test_levelup_test_uses_eligible_only_and_ta
   assert(qs.questions.every(q => eligibleIds.has(q.targetWord.id)), 'tüm sorular yalnızca uygun kelimelerden olmalı');
 });
 
+// ----- Task 5: Renkli Defterler görünümü, navigasyon ve stil -----
+
+registerTest(1, 'Renkli Defterler', 'test_notebooks_view_section_and_nav_exist', () => {
+  const env = createFreshAppEnvironment();
+  assert(env.document.getElementById('view-notebooks'), 'view-notebooks section index.html içinde olmalı');
+  assert(env.document.querySelector('[data-view="notebooks"]'), 'notebooks nav düğmesi olmalı');
+});
+
+registerTest(1, 'Renkli Defterler', 'test_switch_to_notebooks_activates_section', () => {
+  const env = createFreshAppEnvironment({ initialStorage: { learnish_active_module: 'maarif', learnish_selected_grade: '5' }});
+  env.APP.switchView('notebooks');
+  assertEqual(env.APP.getState().currentView, 'notebooks', 'currentView notebooks olmalı');
+  assert(env.document.getElementById('view-notebooks').classList.contains('active'), 'section aktifleşmeli');
+});
+
+registerTest(1, 'Renkli Defterler', 'test_notebooks_view_renders_three_buckets', () => {
+  const env = createFreshAppEnvironment({ initialStorage: { learnish_active_module: 'maarif', learnish_selected_grade: '5' }});
+  const a = env.sandbox.WORDS_DATA[0].id, b = env.sandbox.WORDS_DATA[1].id, c = env.sandbox.WORDS_DATA[2].id;
+  env.APP.enrollNotebookWord(a); env.APP.getNotebookRecord(a).color = 'red';
+  env.APP.enrollNotebookWord(b); env.APP.getNotebookRecord(b).color = 'yellow';
+  env.APP.enrollNotebookWord(c); env.APP.getNotebookRecord(c).color = 'green';
+  env.APP.switchView('notebooks');
+  const html = env.document.getElementById('view-notebooks').innerHTML;
+  assert(/data-notebook-color="red"/.test(html) && /data-notebook-color="yellow"/.test(html) && /data-notebook-color="green"/.test(html), 'üç renk kovası da işaretli DOM üretmeli');
+});
+
+registerTest(1, 'Renkli Defterler', 'test_notebooks_view_shows_levelup_cta_at_threshold', () => {
+  const env = createFreshAppEnvironment({ initialStorage: { learnish_active_module: 'maarif', learnish_selected_grade: '5' }});
+  env.sandbox.WORDS_DATA.slice(0, 20).forEach(w => { const r = env.APP.enrollNotebookWord(w.id); r.color='red'; r.good=5; });
+  env.APP.switchView('notebooks');
+  const html = env.document.getElementById('view-notebooks').innerHTML;
+  assert(/startNotebookLevelUpTest/.test(html), 'uygun≥20 iken Seviye Geçme Testi CTA görünmeli');
+});
+
 // ============================================================================
 // 7.X MENTOR CONCIERGE (Task 1)
 // ============================================================================

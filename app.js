@@ -468,6 +468,7 @@
     currentView: 'home', // 'home', 'daily', 'flashcard', 'quiz', 'directory', 'stats'
     viewHistory: ['home'],
     currentDay: 1, // Maarif: 1-82, YDS: 1-145
+    // not: 'notebooks' görünümü (Renkli Defterler) currentView değerlerine dahildir
     activeFlashcardIndex: 0,
     filteredFlashcards: [],
     flashcardFlipped: false,
@@ -2311,6 +2312,104 @@
     };
     saveQuizState();
     switchView('quiz');
+  }
+
+  // --- Renkli Defterler görünümü ---
+  const NOTEBOOK_COLOR_META = {
+    red:    { key: 'red',    label: 'Zor',   emoji: '🔴', desc: 'Henüz oturmamış, en çok tekrar isteyen kelimeler.' },
+    yellow: { key: 'yellow', label: 'Orta',  emoji: '🟡', desc: 'İlerleme kaydeden, pekişmekte olan kelimeler.' },
+    green:  { key: 'green',  label: 'Kolay', emoji: '🟢', desc: 'Ustalaşılan kelimeler; uzun aralıklarla tekrar eder.' }
+  };
+
+  function _notebookWordsByColor() {
+    const buckets = { red: [], yellow: [], green: [] };
+    const nb = STATE.userData.notebooks || {};
+    Object.keys(nb).forEach(idStr => {
+      const rec = nb[idStr];
+      if (!rec || !buckets[rec.color]) return;
+      const w = WORDS_DATA.find(x => x.id === parseInt(idStr, 10));
+      if (w) buckets[rec.color].push({ word: w, rec });
+    });
+    return buckets;
+  }
+
+  function _notebookCard(item) {
+    const w = item.word, rec = item.rec;
+    const ex = displayExample(w.example) || displayExample(w.ydsExample);
+    const eligible = isNotebookEligible(w.id);
+    return `
+      <article class="notebook-card" data-notebook-color="${rec.color}">
+        <div class="nb-card-head">
+          <strong class="nb-card-en">${escapeHtml(w.en)}</strong>
+          <span class="nb-card-tr">${escapeHtml(w.tr || '')}</span>
+        </div>
+        ${ex ? `<p class="nb-card-ex">“${escapeHtml(ex)}”</p>` : ''}
+        <div class="nb-card-foot">
+          <span class="nb-card-good" title="İyi hatırlama">${renderIcon('check', 12)} ${rec.good || 0}/5</span>
+          ${eligible ? `<span class="nb-card-eligible">${renderIcon('zap', 12)} Terfiye hazır</span>` : ''}
+          ${w.cefr ? `<span class="nb-card-cefr">${escapeHtml(w.cefr)}</span>` : ''}
+        </div>
+      </article>`;
+  }
+
+  function renderNotebooksView() {
+    const container = document.getElementById('view-notebooks');
+    if (!container) return;
+    const buckets = _notebookWordsByColor();
+    const total = buckets.red.length + buckets.yellow.length + buckets.green.length;
+    const eligibleCount = getNotebookEligibleWords().length;
+    const dailyCount = getNotebookDailyCount();
+    const offerTest = shouldOfferLevelUpTest();
+
+    const bucketHtml = ['red', 'yellow', 'green'].map(color => {
+      const meta = NOTEBOOK_COLOR_META[color];
+      const items = buckets[color];
+      const cards = items.slice(0, 60).map(_notebookCard).join('');
+      return `
+        <section class="notebook-bucket" data-notebook-color="${color}">
+          <header class="nb-bucket-head">
+            <span class="nb-bucket-title">${meta.emoji} ${meta.label}</span>
+            <span class="nb-bucket-count">${items.length}</span>
+          </header>
+          <p class="nb-bucket-desc">${meta.desc}</p>
+          <div class="nb-bucket-cards">
+            ${cards || `<p class="nb-bucket-empty">Bu defterde henüz kelime yok.</p>`}
+          </div>
+          ${items.length > 60 ? `<p class="nb-bucket-more">+${items.length - 60} kelime daha</p>` : ''}
+        </section>`;
+    }).join('');
+
+    container.innerHTML = `
+      <div class="notebooks-view">
+        <header class="notebooks-hero">
+          <div class="nb-hero-main">
+            <h2 class="nb-hero-title">Renkli Defterler</h2>
+            <p class="nb-hero-sub">Sınıf müfredatından açılmış kelimeleri zorluk kademesine göre çalış; ustalaştıkça kelime bir üst renge terfi eder.</p>
+          </div>
+          <div class="nb-hero-stats">
+            <span class="nb-stat"><strong>${total}</strong> kelime</span>
+            <span class="nb-stat"><strong>${eligibleCount}</strong> terfiye hazır</span>
+          </div>
+        </header>
+
+        <div class="notebooks-controls">
+          <label class="nb-daily-label" for="nb-daily-count">Bugün kaç kelime?</label>
+          <input type="number" id="nb-daily-count" class="nb-daily-input" min="1" max="50" value="${dailyCount}"
+            onchange="window.APP.setNotebookDailyCount(this.value); window.APP.renderNotebooksView();" aria-label="Günlük kelime adedi">
+          <button type="button" class="fc-action-btn nb-study-btn" onclick="window.APP.startNotebookFlashcards()">
+            ${renderIcon('layers', 15)} <span>Bugünü Çalış (${dailyCount})</span>
+          </button>
+          ${offerTest ? `
+            <button type="button" class="fc-action-btn nb-levelup-btn" onclick="window.APP.startNotebookLevelUpTest()" title="${eligibleCount} kelime terfiye hazır">
+              ${renderIcon('zap', 15)} <span>Seviye Geçme Testi (${eligibleCount}) &rarr;</span>
+            </button>` : `
+            <span class="nb-levelup-hint">${renderIcon('alert', 13)} Seviye Geçme Testi, 20 kelime terfiye hazır olunca açılır (${eligibleCount}/20).</span>`}
+        </div>
+
+        <div class="notebooks-buckets">
+          ${bucketHtml}
+        </div>
+      </div>`;
   }
 
   /**
@@ -7634,7 +7733,8 @@
       flashcard: 'FLASHCARD • KART İNCELEME',
       quiz: 'KAZANIM SINAVI • TEST',
       directory: 'KELİME HAVUZU • ARAMA',
-      stats: 'ÖĞRENİM TELEMETRİSİ • ANALİZ'
+      stats: 'ÖĞRENİM TELEMETRİSİ • ANALİZ',
+      notebooks: 'RENKLİ DEFTERLER • KADEME'
     };
     const activeModName = modTitles[STATE.activeModule] || 'MEB Müfredatı';
     if (labelEl) {
@@ -7648,6 +7748,7 @@
       else if (viewName === 'quiz') titleEl.textContent = `Quiz & Test (${activeModName})`;
       else if (viewName === 'directory') titleEl.textContent = `Kelime Havuzu (${activeModName})`;
       else if (viewName === 'stats') titleEl.textContent = `İstatistik (${activeModName})`;
+      else if (viewName === 'notebooks') titleEl.textContent = `Renkli Defterler (${activeModName})`;
     }
 
     // Trigger Context Canopy ("İşte Buradasınız" Tülü & Haber Verici Çizgisi)
@@ -7659,6 +7760,7 @@
     if (viewName === 'quiz') renderQuizView();
     if (viewName === 'directory') renderDirectoryView();
     if (viewName === 'stats') renderStatsView();
+    if (viewName === 'notebooks') renderNotebooksView();
 
     if (typeof Buddy !== 'undefined' && Buddy.onView) Buddy.onView(viewName);
   }
@@ -9131,6 +9233,7 @@
     promoteNotebookWord,
     shouldOfferLevelUpTest,
     startNotebookLevelUpTest,
+    renderNotebooksView,
     calculateSRS,
     openSettingsModal,
     closeSettingsModal,
