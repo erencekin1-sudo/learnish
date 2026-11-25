@@ -7729,3 +7729,14 @@ h1, h2, h3 { text-wrap: balance; line-height: 1.2; }
 .nb-rate-green  { border-color: var(--dp-color-green); color: var(--dp-color-green); }
 .nb-rate .fc-btn-sub { font-weight: 700; opacity: 0.8; }
 .nb-complete h3 { font-size: 1.25rem; font-weight: 800; color: var(--dp-color-ink); }
+
+/* Renkli Defterler v2 — Arşiv bölümü */
+.notebooks-archive { margin-top: 20px; padding: 16px; border-radius: 16px; background: var(--dp-color-surface-1); border: 1px solid var(--dp-color-border-subtle); }
+.nb-archive-title { font-size: 1rem; font-weight: 800; color: var(--dp-color-ink); display: inline-flex; align-items: center; gap: 6px; }
+.nb-archive-group { margin-top: 12px; padding: 10px 12px; border-radius: 12px; background: var(--dp-color-surface-2); border: 1px solid var(--dp-color-border-subtle); }
+.nb-archive-group-head { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; margin-bottom: 6px; }
+.nb-archive-group-label { font-weight: 800; color: var(--dp-color-ink); font-size: 0.9rem; }
+.nb-archive-group-meta { font-size: 0.78rem; color: var(--dp-color-ink-muted); }
+.nb-archive-words { display: flex; flex-wrap: wrap; gap: 6px; }
+.nb-archive-word { font-size: 0.8rem; font-weight: 700; color: var(--dp-color-ink); background: var(--dp-color-surface-3); border-radius: 6px; padding: 2px 8px; }
+.nb-archive-more { font-size: 0.8rem; color: var(--dp-color-ink-muted); }

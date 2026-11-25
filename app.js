@@ -2408,16 +2408,36 @@
     green:  { key: 'green',  label: 'Kolay', emoji: '🟢', desc: 'Ustalaşılan kelimeler; uzun aralıklarla tekrar eder.' }
   };
 
+  /** Aktif modülün (maarifte sınıfın), arşivlenmemiş kelimelerini renge göre gruplar. */
   function _notebookWordsByColor() {
     const buckets = { red: [], yellow: [], green: [] };
     const nb = STATE.userData.notebooks || {};
+    const mod = STATE.activeModule;
+    const grade = getActiveGrade();
     Object.keys(nb).forEach(idStr => {
       const rec = nb[idStr];
-      if (!rec || !buckets[rec.color]) return;
+      if (!rec || rec.archived || !buckets[rec.color]) return;
+      if (rec.srcModule !== mod) return;
+      if (mod === 'maarif' && rec.srcGrade != null && rec.srcGrade !== grade) return;
       const w = WORDS_DATA.find(x => x.id === parseInt(idStr, 10));
       if (w) buckets[rec.color].push({ word: w, rec });
     });
     return buckets;
+  }
+
+  /** TÜM modüllerin arşivlenmiş kelimelerini archiveLabel'a göre gruplar. */
+  function _notebookArchiveGroups() {
+    const groups = {};
+    const nb = STATE.userData.notebooks || {};
+    Object.keys(nb).forEach(idStr => {
+      const rec = nb[idStr];
+      if (!rec || !rec.archived) return;
+      const label = rec.archiveLabel || 'Arşiv';
+      const w = WORDS_DATA.find(x => x.id === parseInt(idStr, 10));
+      if (!w) return;
+      (groups[label] = groups[label] || []).push({ word: w, rec });
+    });
+    return groups;
   }
 
   function _notebookCard(item) {
@@ -2425,15 +2445,15 @@
     const ex = displayExample(w.example) || displayExample(w.ydsExample);
     const eligible = !!(rec && rec.candidate && !rec.archived);
     return `
-      <article class="notebook-card" data-notebook-color="${rec.color}">
+      <article class="notebook-card" data-notebook-color="${rec.color || 'red'}">
         <div class="nb-card-head">
           <strong class="nb-card-en">${escapeHtml(w.en)}</strong>
           <span class="nb-card-tr">${escapeHtml(w.tr || '')}</span>
         </div>
         ${ex ? `<p class="nb-card-ex">“${escapeHtml(ex)}”</p>` : ''}
         <div class="nb-card-foot">
-          <span class="nb-card-good" title="İyi hatırlama">${renderIcon('check', 12)} ${rec.good || 0}/5</span>
-          ${eligible ? `<span class="nb-card-eligible">${renderIcon('zap', 12)} Terfiye hazır</span>` : ''}
+          <span class="nb-card-good" title="Üst üste kolay">${renderIcon('check', 12)} ${rec.kolayStreak || 0}/5</span>
+          ${eligible ? `<span class="nb-card-eligible">${renderIcon('zap', 12)} Teste hazır</span>` : ''}
           ${w.cefr ? `<span class="nb-card-cefr">${escapeHtml(w.cefr)}</span>` : ''}
         </div>
       </article>`;
@@ -2466,6 +2486,31 @@
         </section>`;
     }).join('');
 
+    const archiveGroups = _notebookArchiveGroups();
+    const archiveLabels = Object.keys(archiveGroups);
+    const archiveTotal = archiveLabels.reduce((n, l) => n + archiveGroups[l].length, 0);
+    const archiveHtml = archiveLabels.length === 0 ? '' : `
+      <section class="notebooks-archive">
+        <header class="nb-archive-header">
+          <span class="nb-archive-title">${renderIcon('book', 14)} Arşiv — Ustalaşılan Kelimeler (${archiveTotal})</span>
+        </header>
+        ${archiveLabels.map(label => {
+          const items = archiveGroups[label];
+          const date = (items[0] && items[0].rec && items[0].rec.archiveDate) || '';
+          return `
+          <div class="nb-archive-group" data-nb-archive-group="${escapeHtml(label)}">
+            <div class="nb-archive-group-head">
+              <span class="nb-archive-group-label">${escapeHtml(label)}</span>
+              <span class="nb-archive-group-meta">${items.length} kelime${date ? ' · ' + escapeHtml(date) : ''}</span>
+            </div>
+            <div class="nb-archive-words">
+              ${items.slice(0, 60).map(it => `<span class="nb-archive-word">${escapeHtml(it.word.en)}</span>`).join('')}
+              ${items.length > 60 ? `<span class="nb-archive-more">+${items.length - 60}</span>` : ''}
+            </div>
+          </div>`;
+        }).join('')}
+      </section>`;
+
     container.innerHTML = `
       <div class="notebooks-view">
         <header class="notebooks-hero">
@@ -2496,6 +2541,8 @@
         <div class="notebooks-buckets">
           ${bucketHtml}
         </div>
+
+        ${archiveHtml}
       </div>`;
   }
 

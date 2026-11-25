@@ -2664,6 +2664,26 @@ registerTest(1, 'Renkli Defterler', 'test_notebooks_view_renders_three_buckets',
   assert(/data-notebook-color="red"/.test(html) && /data-notebook-color="yellow"/.test(html) && /data-notebook-color="green"/.test(html), 'üç renk kovası da işaretli DOM üretmeli');
 });
 
+registerTest(1, 'Renkli Defterler', 'test_buckets_exclude_archived_and_other_modules', () => {
+  const env = createFreshAppEnvironment({ initialStorage: { learnish_active_module: 'yds', learnish_selected_grade: '5' }});
+  const a = env.sandbox.WORDS_DATA[0].id, b = env.sandbox.WORDS_DATA[1].id, c = env.sandbox.WORDS_DATA[2].id;
+  const ra = env.APP.enrollNotebookWord(a); ra.color='red'; ra.srcModule='yds';
+  const rb = env.APP.enrollNotebookWord(b); rb.color='red'; rb.srcModule='yds'; rb.archived=true; rb.archiveLabel='YDS & YÖKDİL'; rb.archiveDate='2026-11-25';
+  const rc = env.APP.enrollNotebookWord(c); rc.color='red'; rc.srcModule='maarif';
+  env.APP.switchView('notebooks');
+  const html = env.document.getElementById('view-notebooks').innerHTML;
+  assert(new RegExp('#' + a + '(?![0-9])').test(html) || /data-notebook-color="red"/.test(html), 'aktif modül (yds) kelimesi kovada görünmeli');
+  assert(!new RegExp('nb-card[^>]*>[^<]*#' + c).test(html), 'başka modülün (maarif) kelimesi aktif kovada olmamalı');
+  assert(/data-nb-archive-group/.test(html), 'arşiv bölümü render edilmeli');
+});
+
+registerTest(1, 'Renkli Defterler', 'test_notebooks_view_levelup_cta_at_20_candidates', () => {
+  const env = createFreshAppEnvironment({ initialStorage: { learnish_active_module: 'yds' }});
+  env.sandbox.WORDS_DATA.slice(0, 20).forEach(w => { const r = env.APP.enrollNotebookWord(w.id); r.srcModule='yds'; r.candidate = true; });
+  env.APP.switchView('notebooks');
+  assert(/startNotebookLevelUpTest/.test(env.document.getElementById('view-notebooks').innerHTML), '20 adayda test CTA görünmeli');
+});
+
 // ----- Final inceleme düzeltmeleri -----
 
 registerTest(1, 'Renkli Defterler', 'test_notebook_flashcard_source_option_selected', () => {
