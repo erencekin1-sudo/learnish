@@ -9263,7 +9263,17 @@ if (typeof module !== 'undefined' && module.exports) {
    * ve tatiller (CURRICULUM_CLASSIFIER.getSchedule) kullanılır. "day", günde 10 kelimelik çalışmada
    * bu haftanın kelimelerinin başladığı gündür.
    */
-  function getMEBCalendarInfo(date = new Date()) {
+  // Sanal tarih: sessionStorage'daki debug offset'i ekler (prod'da 0, test ortamında ayarlanabilir)
+  function getVirtualDate() {
+    const d = new Date();
+    try {
+      const offset = parseInt(sessionStorage.getItem('mk_debug_date_offset') || '0', 10);
+      if (offset) d.setDate(d.getDate() + offset);
+    } catch (e) {}
+    return d;
+  }
+
+  function getMEBCalendarInfo(date = getVirtualDate()) {
     const trMonths = ['', 'Ocak', 'Şubat', 'Mart', 'Nisan', 'Mayıs', 'Haziran', 'Temmuz', 'Ağustos', 'Eylül', 'Ekim', 'Kasım', 'Aralık'];
     const trDays = ['Pazar', 'Pazartesi', 'Salı', 'Çarşamba', 'Perşembe', 'Cuma', 'Cumartesi'];
     const dateFormatted = `${date.getDate()} ${trMonths[date.getMonth() + 1]} ${trDays[date.getDay()]}`;
@@ -9293,7 +9303,7 @@ if (typeof module !== 'undefined' && module.exports) {
   }
 
   // Yerel tarih anahtarı (YYYY-MM-DD) — "günün" hangi takvim gününde kaydedildiğini izler
-  function mkLocalDateKey(date = new Date()) {
+  function mkLocalDateKey(date = getVirtualDate()) {
     return date.getFullYear() + '-' +
       String(date.getMonth() + 1).padStart(2, '0') + '-' +
       String(date.getDate()).padStart(2, '0');
@@ -10764,7 +10774,7 @@ if (typeof module !== 'undefined' && module.exports) {
   // ==========================================================================
 
   function getTodayDateString(offsetDays = 0) {
-    const d = new Date();
+    const d = getVirtualDate();
     if (offsetDays !== 0) {
       d.setDate(d.getDate() + offsetDays);
     }
@@ -18155,6 +18165,29 @@ if (typeof module !== 'undefined' && module.exports) {
     return { init, onView, open, startTour, pronounce, react, say, hide, normalize, resolveWordLookup, getCommands, matchCommands, buildSuggestions, openConcierge };
   })();
 
+  // ==========================================================================
+  // DEBUG YARDIMCILARI — Sadece geliştirme/test için (prod'da etki yoktur)
+  // Kullanım: window.APP.debugAdvanceDay(1)  → uygulamayı 1 gün ileri al
+  //           window.APP.debugResetDate()    → gerçek tarihe geri dön
+  // ==========================================================================
+  function debugAdvanceDay(n) {
+    const days = (typeof n === 'number' && isFinite(n)) ? Math.round(n) : 1;
+    try {
+      const current = parseInt(sessionStorage.getItem('mk_debug_date_offset') || '0', 10) || 0;
+      sessionStorage.setItem('mk_debug_date_offset', String(current + days));
+      console.info('[Learnish] Tarih ' + (current + days > 0 ? '+' : '') + (current + days) + ' gün: ' + mkLocalDateKey());
+    } catch (e) {}
+    updateUI();
+  }
+
+  function debugResetDate() {
+    try {
+      sessionStorage.removeItem('mk_debug_date_offset');
+      console.info('[Learnish] Tarih sıfırlandı (gerçek tarih): ' + mkLocalDateKey());
+    } catch (e) {}
+    updateUI();
+  }
+
   window.APP = {
     isSourceCitation,
     displayExample,
@@ -18313,7 +18346,9 @@ if (typeof module !== 'undefined' && module.exports) {
     sendFeedbackViaWhatsApp,
     copyFeedbackToClipboard,
     getState: () => STATE,
-    buddy: Buddy
+    buddy: Buddy,
+    debugAdvanceDay,
+    debugResetDate
   };
 
   document.addEventListener('DOMContentLoaded', initApp);
