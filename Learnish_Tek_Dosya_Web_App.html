@@ -9273,6 +9273,41 @@ if (typeof module !== 'undefined' && module.exports) {
     return d;
   }
 
+  /**
+   * Sınıfa ait ilk ders gününden başlayarak bugüne kadar geçen okul günü sayısını döndürür.
+   * Hafta sonu (Cmt/Paz) ve tam tatil günleri sayılmaz.
+   * Her okul günü = 10 yeni kelime, bu sayı STATE.currentDay olarak kullanılır.
+   */
+  function getSchoolDayIndex(date, gNum) {
+    const cData = typeof window !== 'undefined' ? window.CURRICULUM_DATA : null;
+    if (!cData) return 1;
+    const gData = cData[gNum] || cData[5];
+    const cal = gData && gData.calendar;
+    if (!cal || !cal.length || !cal[0].start) return 1;
+
+    const pad = n => String(n).padStart(2, '0');
+    const toIso = d => `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+    const startStr = cal[0].start;
+    const isoToday = toIso(date);
+    if (isoToday < startStr) return 1;
+
+    const holidays = typeof window !== 'undefined' && window.ACADEMIC_CALENDAR
+      ? (window.ACADEMIC_CALENDAR.holidays || [])
+      : [];
+    const [sy, sm, sd] = startStr.split('-').map(Number);
+    let count = 0;
+    const cur = new Date(sy, sm - 1, sd);
+    const target = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+    while (cur <= target) {
+      const dow = cur.getDay();
+      const iso = toIso(cur);
+      const isHoliday = holidays.some(h => h.full && iso >= h.start && iso <= h.end);
+      if (dow !== 0 && dow !== 6 && !isHoliday) count++;
+      cur.setDate(cur.getDate() + 1);
+    }
+    return Math.max(1, count);
+  }
+
   function getMEBCalendarInfo(date = getVirtualDate()) {
     const trMonths = ['', 'Ocak', 'Şubat', 'Mart', 'Nisan', 'Mayıs', 'Haziran', 'Temmuz', 'Ağustos', 'Eylül', 'Ekim', 'Kasım', 'Aralık'];
     const trDays = ['Pazar', 'Pazartesi', 'Salı', 'Çarşamba', 'Perşembe', 'Cuma', 'Cumartesi'];
@@ -9283,15 +9318,8 @@ if (typeof module !== 'undefined' && module.exports) {
       return { day: 1, weekNum: 1, themeNum: 1, themeName: '', dateFormatted, isBreak: false, breakName: '', weekType: 'theme', schedule: null };
     }
     const s = classifier.getSchedule(gNum, date);
-    const pool = getActiveGradePool(gNum);
-    const positions = new Map(pool.map((w, i) => [w.id, i]));
-    let firstIdx = -1;
-    (s.targetWords || []).forEach(t => {
-      const w = lookupCurriculumWord(t);
-      const i = w ? positions.get(w.id) : undefined;
-      if (i !== undefined && (firstIdx < 0 || i < firstIdx)) firstIdx = i;
-    });
-    const day = Math.floor(Math.max(0, firstIdx) / 10) + 1;
+    // Günlük bazda: her okul günü 10 yeni kelime gösterir (haftalık yerine günlük yenilenme)
+    const day = getSchoolDayIndex(date, gNum);
     let themeName;
     if (s.isBreak) themeName = `${s.breakName} • ${s.unitTitleTr || s.unitTitle} tekrarı`;
     else if (s.weekType === 'theme') themeName = `${s.unitCode}: ${s.unitTitle} (${s.unitTitleTr})`;
@@ -18332,6 +18360,7 @@ if (typeof module !== 'undefined' && module.exports) {
     lookupCurriculumWord,
     getActiveGradePool,
     gradeWordMeta,
+    getSchoolDayIndex,
     getMEBCalendarInfo,
     pickDistractors,
     PDF_STUDIO_STATE,

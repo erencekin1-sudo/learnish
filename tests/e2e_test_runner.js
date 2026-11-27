@@ -2360,15 +2360,26 @@ registerTest(3, 'Grade Pool', 'test_distractors_come_from_selected_grade_pool', 
   }
 });
 
-registerTest(4, 'Real-World Scenarios', 'test_scenario_daily_day_points_to_this_weeks_words', () => {
+registerTest(4, 'Real-World Scenarios', 'test_scenario_daily_day_advances_each_school_day', () => {
+  // Yeni günlük mantık: her okul günü = 10 benzersiz kelime.
+  // 7 Ekim (Çarşamba) = 18. okul günü → pool[170..179]
+  // 8 Ekim (Perşembe) = 19. okul günü → pool[180..189]  (farklı kelimeler)
+  // 10-11 Ekim (hafta sonu) → tatil, sayılmaz
+  // 12 Ekim (Pazartesi) = 21. okul günü
   const env = createFreshAppEnvironment();
   env.APP.switchGrade(5);
-  const info = env.APP.getMEBCalendarInfo(new Date(2026, 9, 7));    // 7 Ekim 2026: 4. hafta, Tema 1 ilk hafta
-  assertEqual(info.weekNum, 4, '7 Ekim 4. hafta');
+  const info7 = env.APP.getMEBCalendarInfo(new Date(2026, 9, 7));   // 7 Ekim (Çar)
+  const info8 = env.APP.getMEBCalendarInfo(new Date(2026, 9, 8));   // 8 Ekim (Per)
+  const info12 = env.APP.getMEBCalendarInfo(new Date(2026, 9, 12)); // 12 Ekim (Pzt)
+  assertEqual(info7.day, 18, '7 Ekim 18. okul günü olmalı');
+  assertEqual(info8.day, 19, '8 Ekim 19. okul günü olmalı');
+  assertEqual(info12.day, 21, '12 Ekim 21. okul günü olmalı (hafta sonu atlandı)');
+  // Her gün farklı kelime dilimi göstermeli
   const pool = env.APP.getActiveGradePool();
-  const dayWords = pool.slice((info.day - 1) * 10, info.day * 10).map(w => w.en.toLowerCase());
-  const weekWords = info.schedule.targetWords.map(t => (env.APP.lookupCurriculumWord(t) || { en: '' }).en.toLowerCase());
-  assert(dayWords.some(w => weekWords.includes(w)), 'Günlük çalışma bu haftanın kelimelerini göstermeli');
+  const words7 = pool.slice((info7.day - 1) * 10, info7.day * 10).map(w => w.en);
+  const words8 = pool.slice((info8.day - 1) * 10, info8.day * 10).map(w => w.en);
+  assert(words7.length > 0 || pool.length < 10, '7 Ekim için kelime dilimi mevcut olmalı');
+  assert(words7.join() !== words8.join(), '7 Ekim ve 8 Ekim farklı kelimeler göstermeli');
 });
 
 registerTest(1, 'Daily Advance', 'test_daily_autoadvances_when_saved_day_is_stale', () => {
