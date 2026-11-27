@@ -9645,5 +9645,37 @@
     debugResetDate
   };
 
+  function initStaticHandlers() {
+    function bind(id, event, fn) {
+      var el = document.getElementById(id);
+      if (el) el.addEventListener(event, fn);
+    }
+    bind('sw-update-btn',               'click',  function() { window.APP.applySwUpdate(); });
+    bind('sw-update-dismiss',           'click',  function() { var b = document.getElementById('sw-update-banner'); if (b) b.style.display = 'none'; });
+    bind('header-route-pill-btn',       'click',  function() { window.APP.openGradeModal(); });
+    bind('pdf-header-btn',              'click',  function() { window.APP.openPdfStudio(); });
+    bind('header-feedback-btn',         'click',  function() { window.APP.openFeedbackModal(); });
+    bind('header-profile-trigger',      'click',  function() { window.APP.openSettingsModal(); });
+    bind('desktop-nav-pdf-btn',         'click',  function() { window.APP.openPdfStudio(); });
+    bind('floating-center-fab',         'click',  function() { window.APP.handleFabAction(); });
+    bind('settings-close-btn',          'click',  function() { window.APP.closeSettingsModal(); });
+    bind('settings-shortcut-directory', 'click',  function() { window.APP.switchViewAndClose('directory'); });
+    bind('settings-shortcut-stats',     'click',  function() { window.APP.switchViewAndClose('stats'); });
+    bind('settings-shortcut-feedback',  'click',  function() { window.APP.openFeedbackModal(); });
+    bind('data-export-btn',             'click',  function() { window.APP.exportProgress(); });
+    bind('data-import-btn',             'click',  function() { window.APP.importProgress(); });
+    bind('data-reset-btn',              'click',  function() { window.APP.resetProgress(); });
+    bind('import-file-input',           'change', function() { window.APP.handleImportFile(this); });
+    bind('grade-close-btn',             'click',  function() { window.APP.closeGradeModal(); });
+    bind('classifier-close-btn',        'click',  function() { window.APP.closeClassifierModal(); });
+    bind('pdf-close-btn',               'click',  function() { window.APP.closePdfStudio(); });
+    bind('feedback-close-btn',          'click',  function() { window.APP.closeFeedbackModal(); });
+    bind('feedback-include-telemetry',  'change', function() { window.APP.toggleTelemetryInReport(this.checked); });
+    bind('feedback-mail-btn',           'click',  function() { window.APP.sendFeedbackViaMail(); });
+    bind('feedback-whatsapp-btn',       'click',  function() { window.APP.sendFeedbackViaWhatsApp(); });
+    bind('feedback-copy-btn',           'click',  function() { window.APP.copyFeedbackToClipboard(); });
+  }
+
   document.addEventListener('DOMContentLoaded', initApp);
+  document.addEventListener('DOMContentLoaded', initStaticHandlers);
 })();
