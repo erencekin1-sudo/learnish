@@ -49,7 +49,9 @@ self.addEventListener('activate', (event) => {
 // SW bunu alınca beklemeyi atlayıp hemen aktif hale geçer.
 self.addEventListener('message', (event) => {
   if (event.data && event.data.type === 'SKIP_WAITING') {
-    self.skipWaiting();
+    if (event.origin === self.location.origin) {
+      self.skipWaiting();
+    }
   }
 });
 
